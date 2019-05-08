@@ -9,6 +9,7 @@ import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -113,6 +114,32 @@ public class ParseChemidplusHTML {
 
 		parseWebpage(cr, divTabs, headerTags, innerBody);
 		return cr;
+	}
+	
+	/**
+	 * Moves files from a search to the main folder with all the webpages
+	 * 
+	 * @throws IOException
+	 */
+	void copyFilesToFolder() throws IOException {
+
+		String sourceFolder = "L:\\Priv\\Cin\\NRMRL\\CompTox\\javax\\web-test\\AA Dashboard\\Data\\Chemidplus\\Oral LD50 webpages";
+		File destinationFolder = new File(
+				"L:\\Priv\\Cin\\NRMRL\\CompTox\\javax\\web-test\\AA Dashboard\\Data\\Chemidplus\\All Webpages");
+
+		File fileFolder = new File(sourceFolder);
+		File[] files = fileFolder.listFiles();
+
+		for (int i = 0; i < files.length; i++) {
+			File inputFile = files[i];
+
+//			if (inputFile.exists())
+//				continue;
+
+			FileUtils.copyFileToDirectory(inputFile, destinationFolder);
+
+		}
+
 	}
 	
 	public ArrayList<ChemidplusRecord> parseHTML(String htmlFolder) {

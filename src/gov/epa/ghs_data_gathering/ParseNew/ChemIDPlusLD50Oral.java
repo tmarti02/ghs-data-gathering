@@ -12,6 +12,12 @@ import org.jsoup.select.Elements;
 
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
+/**
+ * TODO delete this class?
+ * 
+ * @author TMARTI02
+ *
+ */
 public class ChemIDPlusLD50Oral {
 
 		public static final String folder = "L:\\Priv\\Cin\\NRMRL\\CompTox\\javax\\web-test\\AA Dashboard\\Data\\Chemidplus\\";
