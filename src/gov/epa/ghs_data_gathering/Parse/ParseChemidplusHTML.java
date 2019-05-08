@@ -26,9 +26,7 @@ public class ParseChemidplusHTML {
 	public static final String webpageFolder = folder + "All Webpages";
 
 	class CASRecord {
-
 		ArrayList<String> CAS = new ArrayList<>();
-
 	}
 
 	class PhysicalPropertyRecord {
@@ -121,11 +119,9 @@ public class ParseChemidplusHTML {
 	 * 
 	 * @throws IOException
 	 */
-	void copyFilesToFolder() throws IOException {
+	private void copyFilesToFolder(String sourceFolder,String destFolder)  {
 
-		String sourceFolder = "L:\\Priv\\Cin\\NRMRL\\CompTox\\javax\\web-test\\AA Dashboard\\Data\\Chemidplus\\Oral LD50 webpages";
-		File destinationFolder = new File(
-				"L:\\Priv\\Cin\\NRMRL\\CompTox\\javax\\web-test\\AA Dashboard\\Data\\Chemidplus\\All Webpages");
+		File destinationFolder = new File(destFolder);
 
 		File fileFolder = new File(sourceFolder);
 		File[] files = fileFolder.listFiles();
@@ -136,7 +132,11 @@ public class ParseChemidplusHTML {
 //			if (inputFile.exists())
 //				continue;
 
-			FileUtils.copyFileToDirectory(inputFile, destinationFolder);
+			try {
+				FileUtils.copyFileToDirectory(inputFile, destinationFolder);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 
 		}
 
@@ -191,7 +191,7 @@ public class ParseChemidplusHTML {
 	 * and stores them in the CAS record class
 	 * downloads the webpages and writes CAS #'s to text file
 	 */
-	@SuppressWarnings("unused")
+	
 	private void htmlParse(String htmlFolder) {
 
 		CASRecord cr = new CASRecord();
@@ -590,6 +590,22 @@ public class ParseChemidplusHTML {
 
 		ParseChemidplusHTML ph = new ParseChemidplusHTML();
 
+		//Go through search webpages and download the individual webpages:
+		String htmlFolder = folder + "Oral LD50 searches";
+		ph.htmlParse(htmlFolder);
+		
+		String sourceFolder = "AA Dashboard\\Data\\Chemidplus\\Oral LD50 webpages";
+		String destFolder="AA Dashboard\\Data\\Chemidplus\\All Webpages";
+		ph.copyFilesToFolder(sourceFolder,destFolder);
+		
+		
+//		String htmlFolder = folder + "Skin LD50 searches";
+//		ph.htmlParse(htmlFolder);
+//		
+//		String htmlFolder = folder + "Inhalation LC50 searches";
+//		ph.htmlParse(htmlFolder);
+
+		
 		ph.parseHTML(webpageFolder);
 
 	}
