@@ -1,0 +1,292 @@
+{
+  "systemic_keywords": [
+    "respiratory",
+    "blood",
+    "kidney",
+    "liver",
+    "adrenal",
+    "gastro",
+    "systemic",
+    "eye",
+    "heart",
+    "bone",
+    "hematop",
+    "cardio",
+    "spleen",
+    "thyroid",
+    "lung",
+    "gingi",
+    "testes",
+    "urinary"
+  ],
+  "neuro_keywords": [
+    "neuro",
+    "nervous"
+  ],
+  "translationPatterns": {
+    "1": {
+      "Category 1": 4,
+      "Category 1A": 4,
+      "Category 1B": 4,
+      "Category 2": 3,
+      "Not classified": 2
+    },
+    "2": {
+      "Category 1": 5,
+      "Category 2": 5,
+      "Category 3": 4,
+      "Category 4": 3,
+      "Category 5": 2,
+      "Not classified": 2
+    },
+    "3": {
+      "Category 1": 5,
+      "Category 2": 4,
+      "Category 3": 3,
+      "Not classified": 2
+    },
+    "4": {
+      "Category 1": 4,
+      "Category 2": 3,
+      "Not classified": 2
+    },
+    "5": {
+      "Category 1A": 4,
+      "Category 1B": 3,
+      "Not classified": 2,
+      "Category 1": 4
+    },
+    "6": {
+      "Category 1": 5,
+      "Category 2A": 4,
+      "Category 2B": 3,
+      "Category 2": 4,
+      "Not classified": 2
+    },
+    "7": {
+      "Category 4": 3
+    },
+    "8": {
+      "Not classified": 2
+    },
+    "9": {
+      "Category 1": 3,
+      "Not classified": 2
+    },
+    "10": {
+      "Category 1": 5,
+      "Category 2": 4,
+      "Category 3": 3,
+      "Category 4": 3,
+      "Not classified": 2
+    },
+    "11": {
+      "Category 1": 4,
+      "Not classified": 2
+    },
+    "12": {
+      "Category 1": 4,
+      "Category 2": 3,
+      "Category A": 3,
+      "Category B": 2,
+      "Not classified": 2
+    },
+    "13": {
+      "Category 1": 4,
+      "Category 2": 3,
+      "Category 3": 2,
+      "Not classified": 2
+    },
+    "14": {
+      "Category 1A": 5,
+      "Category 1B": 5,
+      "Category 1": 5,
+      "Category 2": 4,
+      "Classification not possible": 0,
+      "Not classified": 2
+    }
+  },
+  "translationCriteria": {
+    "Acute Aquatic Toxicity": {
+      "native_classification": [
+        "acute_aquatic_toxicity"
+      ],
+      "pattern": [
+        "3"
+      ],
+      "requires_parsing": false
+    },
+    "Chronic Aquatic Toxicity": {
+      "native_classification": [
+        "chronic_aquatic_toxicity"
+      ],
+      "pattern": [
+        "10"
+      ],
+      "requires_parsing": false
+    },
+    "Acute Mammalian Toxicity Oral": {
+      "native_classification": [
+        "acute_toxicity_oral"
+      ],
+      "pattern": [
+        "2"
+      ],
+      "requires_parsing": false
+    },
+    "Acute Mammalian Toxicity Dermal": {
+      "native_classification": [
+        "acute_toxicity_dermal"
+      ],
+      "pattern": [
+        "2"
+      ],
+      "requires_parsing": false
+    },
+    "Acute Mammalian Toxicity Inhalation": {
+      "native_classification": [
+        "acute_toxicity_inhalation_gas",
+        "acute_toxicity_inhalation_vapor",
+        "acute_toxicity_inhalation_dust"
+      ],
+      "pattern": [
+        "2",
+        "2",
+        "2"
+      ],
+      "requires_parsing": false
+    },
+    "Carcinogenicity": {
+      "native_classification": [
+        "carcinogenicity"
+      ],
+      "pattern": [
+        "14"
+      ],
+      "requires_parsing": false
+    },
+    "Genotoxicity Mutagenicity": {
+      "native_classification": [
+        "germ_cell_mutagenicity"
+      ],
+      "pattern": [
+        "1"
+      ],
+      "requires_parsing": false
+    },
+    "Skin Irritation": {
+      "native_classification": [
+        "skin_corrosion_irritation"
+      ],
+      "pattern": [
+        "3"
+      ],
+      "requires_parsing": false
+    },
+    "Eye Irritation": {
+      "native_classification": [
+        "serious_eye_damage_irritation"
+      ],
+      "pattern": [
+        "6"
+      ],
+      "requires_parsing": false
+    },
+    "Skin Sensitization": {
+      "native_classification": [
+        "skin_sensitizer"
+      ],
+      "pattern": [
+        "5"
+      ],
+      "requires_parsing": false
+    },
+    "Developmental": {
+      "native_classification": [
+        "reproductive_toxicity"
+      ],
+      "pattern": [
+        "1"
+      ],
+      "requires_parsing": false
+    },
+    "Reproductive": {
+      "native_classification": [
+        "reproductive_toxicity"
+      ],
+      "pattern": [
+        "1"
+      ],
+      "requires_parsing": false
+    },
+    "Persistence": {
+      "native_classification": [],
+      "pattern": [],
+      "requires_parsing": false
+    },
+    "Bioaccumulation": {
+      "native_classification": [],
+      "pattern": [],
+      "requires_parsing": false
+    },
+    "E": {
+      "name": "Endocrine Activity",
+      "native_classification": [],
+      "pattern": [],
+      "requires_parsing": false
+    },
+    "Respiratory Sensitization": {
+      "native_classification": [
+        "respiratory_sensitizer"
+      ],
+      "pattern": [
+        "5"
+      ],
+      "requires_parsing": false
+    },
+    "Neurotoxicity Repeat Exposure": {
+      "native_classification": [
+        "systemic_toxicity_repeat_exposure"
+      ],
+      "pattern": [
+        "4"
+      ],
+      "requires_parsing": true,
+      "regex": "regex",
+      "keywords": "neuro_keywords"
+    },
+    "Neurotoxicity Single Exposure": {
+      "native_classification": [
+        "systemic_toxicity_single_exposure"
+      ],
+      "pattern": [
+        "4"
+      ],
+      "requires_parsing": true,
+      "regex": "regex",
+      "keywords": "neuro_keywords"
+    },
+    "Systemic Toxicity Repeat Exposure": {
+      "native_classification": [
+        "systemic_toxicity_repeat_exposure"
+      ],
+      "pattern": [
+        "3"
+      ],
+      "requires_parsing": true,
+      "regex": "regex",
+      "keywords": "systemic_keywords"
+    },
+    "Systemic Toxicity Single Exposure": {
+      "native_classification": [
+        "systemic_toxicity_single_exposure"
+      ],
+      "pattern": [
+        "3"
+      ],
+      "requires_parsing": true,
+      "regex": "regex",
+      "keywords": "systemic_keywords"
+    }
+  }
+}

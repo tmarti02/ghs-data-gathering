@@ -1,0 +1,887 @@
+package AADashboard.Parse;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Vector;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import AADashboard.AADashboard.AADashboard;
+
+import AADashboard.Utilities.DoubleTypeAdapter;
+import gov.epa.api.Chemical;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
+
+public class ParseGermany {
+
+	public static String sourceName = ScoreRecord.sourceGermany;
+	String fileNameSourceJSON = "\\germany.json";
+
+	public static String mainFolder = AADashboard.dataFolder + File.separator + sourceName;
+	public static String jsonFolder = mainFolder + "/json files";
+
+	public class GermanyRecord implements Parse {
+
+		String name = "";
+		String name_Superscript = "";
+		String CAS = "";
+		String Formula = "";
+		String MAK_ppm = "";
+		String MAK_ppm_Superscript = "";
+		String MAK = "";
+		String MAK_Superscript = "";
+		String Peak_Limitation = "";
+		String Peak_Limitation_Superscript = "";
+		String H_S = "";
+		String H_S_Superscript = "";
+		String Carcinogen_Category = "";
+		String Carcinogen_Category_Superscript = "";
+		String Pregnancy_Risk_Group = "";
+		String Pregnancy_Risk_Group_Superscript = "";
+		String Germ_Cell_Mutagen_Category = "";
+		String Germ_Cell_Mutagen_Category_Superscript = "";
+		String Vapour_Pressure = "";
+		String Vapour_Pressure_Superscript = "";
+
+		public String toString() {
+			return name + "\t" + name_Superscript + "\t" + CAS + "\t" + Formula + "\t" + MAK_ppm + "\t"
+					+ MAK_ppm_Superscript + "\t" + MAK + "\t" + MAK_Superscript + "\t" + Peak_Limitation + "\t"
+					+ Peak_Limitation_Superscript + "\t" + H_S + "\t" + H_S_Superscript + "\t" + Carcinogen_Category
+					+ "\t" + Carcinogen_Category_Superscript + "\t" + Pregnancy_Risk_Group + "\t"
+					+ Pregnancy_Risk_Group_Superscript + "\t" + Germ_Cell_Mutagen_Category + "\t"
+					+ Germ_Cell_Mutagen_Category_Superscript + "\t" + Vapour_Pressure + "\t"
+					+ Vapour_Pressure_Superscript + "\r\n";
+		}
+
+		@Override
+		public void createJSONFiles() {
+			// TODO Auto-generated method stub
+
+		}
+	}
+
+	private void convertExcelToText(String excelFilePath, String textFilePath) {
+
+		try {
+
+			File file = new File(excelFilePath);
+
+			// System.out.println(file.exists());
+
+			FileInputStream inputStream = new FileInputStream(new File(excelFilePath));
+			FileWriter fw = new FileWriter(textFilePath);
+
+			Workbook workbook = new XSSFWorkbook(inputStream);
+			Sheet firstSheet = workbook.getSheetAt(0);
+			// Iterator<Row> iterator = firstSheet.iterator();
+
+			int row = 0;
+
+			while (true) {
+				Row nextRow = firstSheet.getRow(row);
+				row++;
+
+				if (nextRow == null) {
+					fw.write("\r\n");
+					continue;
+				}
+
+				// Iterator<Cell> cellIterator = nextRow.cellIterator();
+
+				short lastColumn = nextRow.getLastCellNum();
+
+				// System.out.println(lastColumn);
+
+				if (nextRow.getCell(0) == null) {
+					fw.write("\r\n");
+				}
+
+				if (nextRow.getCell(0) != null && nextRow.getCell(0).getStringCellValue().equals("")) {
+					fw.write("\r\n");
+				}
+
+				if (nextRow.getCell(0) != null
+						&& nextRow.getCell(0).getStringCellValue().indexOf("Superscript Table") > -1) {
+					break;
+				}
+
+				// while (cellIterator.hasNext()) {
+				for (int i = 0; i < 20; i++) {
+
+					Cell cell = nextRow.getCell(i);
+
+					// getCellTypeEnum shown as deprecated for version 3.15
+					// getCellTypeEnum will be renamed to getCellType starting from version 4.0
+					// cell.getCellTypeEnum();
+
+					if (cell != null) {
+
+						switch (cell.getCellType()) {
+						case Cell.CELL_TYPE_STRING:
+							// System.out.print(cell.getStringCellValue());
+
+							// String val=cell.getStringCellValue().trim();
+							String val = cell.getStringCellValue();
+
+							val = val.replace("\n", "|").replace("â", "-").replace("â ", "");
+
+							fw.write(val);
+							break;
+						case Cell.CELL_TYPE_BOOLEAN:
+							// System.out.print(cell.getBooleanCellValue());
+							fw.write(cell.getBooleanCellValue() + "");
+							break;
+						case Cell.CELL_TYPE_NUMERIC:
+							fw.write(cell.getNumericCellValue() + "");
+							break;
+
+						}
+					}
+
+					// if (cellIterator.hasNext()) {
+					fw.write("\t");
+					// }
+
+					// System.out.print(" - ");
+				}
+
+				fw.write("\r\n");
+				// System.out.println();
+			}
+
+			// workbook.close();
+			inputStream.close();
+			fw.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	private void parseExcelFile(String srcExcelFilePath, String textFilePath) {
+
+		try {
+
+			File file = new File(srcExcelFilePath);
+
+			// System.out.println(file.exists());
+
+			FileInputStream inputStream = new FileInputStream(new File(srcExcelFilePath));
+
+			FileWriter fw = new FileWriter(textFilePath);
+
+			// HSSFWorkbook wb = new HSSFWorkbook();
+			// HSSFSheet sheet = wb.createSheet("Germany");
+
+			// FileWriter fw=new FileWriter(folder+"/"+name+".txt");
+
+			Workbook workbook = new XSSFWorkbook(inputStream);
+			Sheet firstSheet = workbook.getSheetAt(0);
+			Iterator<Row> rowIterator = firstSheet.iterator();
+
+			Chemical chemical = null;
+
+			int rowNum = 1;
+
+			Row headerRow = rowIterator.next();// discard for now
+			headerRow = rowIterator.next();
+
+			Vector<String> uniqueHazardClasses = new Vector<String>();
+
+			int count = 0;
+
+			Vector<Row> rows = new Vector<Row>();
+
+			while (rowIterator.hasNext()) {
+				Row row = rowIterator.next();
+
+				if (row.getCell(0) != null) {
+					String cellColA = row.getCell(0).getStringCellValue();
+					if (cellColA.indexOf("Superscript Table") > -1)
+						break;
+				}
+
+				for (int i = 0; i < 20; i++) {
+
+					Cell cell = row.getCell(i);
+
+					if (cell == null) {
+						// do nothing
+					} else if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
+						fw.write(cell.getStringCellValue());
+					} else if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+						fw.write(cell.getNumericCellValue() + "");
+					} else {
+						System.out.println(cell.getCellType());
+					}
+
+					if (i < 19) {
+						fw.write("\t");
+					} else {
+						fw.write("\n");
+					}
+
+				}
+
+				rowNum++;
+
+			}
+
+			inputStream.close();
+
+			// write out excel file:
+			// FileOutputStream fOut = new FileOutputStream(destExcelFilePath);
+			// wb.setActiveSheet(0);
+			// wb.write(fOut);
+			fw.flush();
+			fw.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * Read until blank line, store lines in arraylist
+	 * 
+	 * @param br
+	 * @return
+	 */
+	private ArrayList<String> readUntilBlankLine(BufferedReader br) {
+
+		ArrayList<String> lines = new ArrayList<String>();
+
+		try {
+			while (true) {
+				String Line = br.readLine();
+
+				if (Line == null)
+					return null;
+
+				// System.out.println(Line);
+
+				if (Line.equals("")) {
+					return lines;
+				} else {
+					lines.add(Line);
+				}
+			}
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return null;
+
+	}
+
+	private void loopThroughTextFile2(String srcFilePath, String outputFilePath, String textOutputFilePath) {
+		// List<String> lines = new ArrayList<String>();
+		try {
+
+			GsonBuilder builder = new GsonBuilder();
+			builder.setPrettyPrinting();
+			Gson gson = builder.create();
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(srcFilePath)));
+			FileWriter fw = new FileWriter(outputFilePath);
+			FileWriter fw2 = new FileWriter(textOutputFilePath);
+			// List<String> lines = new ArrayList<String>();
+
+			String header = br.readLine();
+			String blank = br.readLine();
+
+			ArrayList<GermanyRecord> records = new ArrayList<GermanyRecord>();
+
+			while (true) {
+
+				ArrayList<String> lines = this.readUntilBlankLine(br);
+
+				if (lines == null) {
+					break;
+				}
+
+				if (lines.isEmpty())
+					continue;
+
+				String namecas = "";
+
+				GermanyRecord gr = new GermanyRecord();
+
+				for (int i = 0; i < lines.size(); i++) {
+					// System.out.println(lines.get(i));
+
+					LinkedList<String> fields = ToxPredictor.Utilities.Utilities.Parse(lines.get(i), "\t");
+
+					String field1 = fields.get(0);
+					namecas += field1;
+					gr.name_Superscript += fields.get(1);
+					gr.Formula += fields.get(3);
+					gr.MAK_ppm += fields.get(4);
+					gr.MAK_ppm_Superscript += fields.get(5);
+					gr.MAK += fields.get(6);
+					gr.MAK_Superscript += fields.get(7);
+					gr.Peak_Limitation += fields.get(8);
+					gr.Peak_Limitation_Superscript += fields.get(9);
+					gr.H_S += fields.get(10);
+					gr.H_S_Superscript += fields.get(11);
+					gr.Carcinogen_Category += fields.get(12);
+					gr.Carcinogen_Category_Superscript += fields.get(13);
+					gr.Pregnancy_Risk_Group += fields.get(14);
+					gr.Pregnancy_Risk_Group_Superscript += fields.get(15);
+					gr.Germ_Cell_Mutagen_Category += fields.get(16);
+					gr.Germ_Cell_Mutagen_Category_Superscript += fields.get(17);
+					gr.Vapour_Pressure += fields.get(18);
+					gr.Vapour_Pressure_Superscript += fields.get(19);
+
+				}
+				if (namecas.indexOf("[") > -1) {
+					gr.name = namecas.substring(0, namecas.indexOf("[")).trim();
+					gr.CAS = namecas.substring(namecas.indexOf("[") + 1, namecas.indexOf("]")).trim();
+				} else {
+					gr.name = namecas;
+				}
+
+				System.out.println(gr);
+
+				records.add(gr);
+				fw2.write(gr.toString());
+
+			}
+
+			// System.out.println(gson.toJson(records));
+
+			fw.write(gson.toJson(records));
+
+			fw.close();
+			fw2.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+
+		}
+	}
+
+	/**
+	 * Loops through text file, assumes each chemicals is on its own line
+	 * 
+	 * @param srcFilePath
+	 * @param jsonFilePath
+	 */
+	private void loopThroughTextFile3(String srcFilePath, String jsonFilePath) {
+		// List<String> lines = new ArrayList<String>();
+		try {
+
+			GsonBuilder builder = new GsonBuilder();
+			builder.setPrettyPrinting();
+			Gson gson = builder.create();
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(srcFilePath)));
+			FileWriter fw = new FileWriter(jsonFilePath);
+			// List<String> lines = new ArrayList<String>();
+
+			ArrayList<GermanyRecord> records = new ArrayList<GermanyRecord>();
+
+			while (true) {
+
+				String Line = br.readLine();
+
+				if (Line == null)
+					break;
+
+				LinkedList<String> fields = ToxPredictor.Utilities.Utilities.Parse(Line, "\t");
+
+				GermanyRecord gr = new GermanyRecord();
+
+				int num = 0;
+
+				gr.name = fields.get(num++);
+				gr.name_Superscript = fields.get(num++);
+				gr.CAS = fields.get(num++);
+				gr.Formula += fields.get(num++);
+				gr.MAK_ppm += fields.get(num++);
+				gr.MAK_ppm_Superscript += fields.get(num++);
+				gr.MAK += fields.get(num++);
+				gr.MAK_Superscript += fields.get(num++);
+				gr.Peak_Limitation += fields.get(num++);
+				gr.Peak_Limitation_Superscript += fields.get(num++);
+				gr.H_S += fields.get(num++);
+				gr.H_S_Superscript += fields.get(num++);
+				gr.Carcinogen_Category += fields.get(num++);
+				gr.Carcinogen_Category_Superscript += fields.get(num++);
+				gr.Pregnancy_Risk_Group += fields.get(num++);
+				gr.Pregnancy_Risk_Group_Superscript += fields.get(num++);
+				gr.Germ_Cell_Mutagen_Category += fields.get(num++);
+				gr.Germ_Cell_Mutagen_Category_Superscript += fields.get(num++);
+				gr.Vapour_Pressure += fields.get(num++);
+				gr.Vapour_Pressure_Superscript += fields.get(num++);
+
+				// MAK, ml/m3, (ppm) Superscript MAK, mg/m3 Superscript Peak Limitation
+				// Superscript H;S Superscript Carcinogen Category Superscript Pregnancy Risk
+				// Group Superscript Germ Cell Mutagen Category Superscript Vapour Pressure in
+				// hPa at 20 C Superscript
+				// System.out.println(gr.name);
+				// System.out.print(gr);
+
+				records.add(gr);
+
+			}
+
+			// System.out.println(gson.toJson(records));
+
+			fw.write(gson.toJson(records));
+
+			fw.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+
+		}
+	}
+
+	private void loopThroughTextFile(String srcFilePath, String outputFilePath) {
+		List<String> lines = new ArrayList<String>();
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(srcFilePath)));
+			FileWriter fw = new FileWriter(outputFilePath);
+
+			// List<String> lines = new ArrayList<String>();
+
+			// separate into variables,
+			while (true) {
+				String line = br.readLine();
+
+				if (line == null) {
+					break;
+				}
+
+				if (line.length() > 0) {
+					lines.add(line.substring(0, line.indexOf("\t")));
+				}
+
+				if (line.length() < 1) {
+					lines.add(line);
+				}
+
+			}
+
+			List<String> mergedList = new ArrayList<String>();
+			String previous;
+			String total = "";
+
+			for (int i = 0; i < lines.size(); i++) {
+
+				previous = lines.get(i);
+
+				while (true) {
+					total += (previous + " ");
+					if (lines.get(i).length() < 1) {
+						mergedList.add(total);
+						total = "";
+
+						break;
+					}
+
+					break;
+				}
+			}
+
+			String casNumber = "";
+			List<String> splitList = new ArrayList<String>();
+			for (int i = 0; i < mergedList.size(); i++) {
+				System.out.println(mergedList.get(i));
+				if (mergedList.get(i).contains("[")) { // && mergedList.get(i).contains("]")){
+					casNumber = mergedList.get(i).substring(mergedList.get(i).indexOf("["),
+							mergedList.get(i).indexOf("]"));
+					StringBuffer line = new StringBuffer(mergedList.get(i));
+					line.replace(line.indexOf("["), line.indexOf("]"), "");
+					splitList.add(line + "\t" + casNumber + "]");
+				} else {
+					splitList.add(mergedList.get(i));
+				}
+
+			}
+
+			for (String s : splitList) {
+				System.out.println(s);
+			}
+			fw.close();
+			br.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Create Chemical from GermanyRecord
+	 * 
+	 * @param gr
+	 * @return
+	 */
+	private Chemical createChemical(GermanyRecord gr) {
+
+		// A,B,C,D pregnancy risk groups or “−” (see p. 216)
+		// H danger of percutaneous absorption (see p. 213)
+		// Sa danger of sensitization of the airways (see Section IV p. 190)
+		// Sh danger of sensitization of the skin (see Section IV p. 188)
+		// Sah danger of sensitization of the airways and the skin (see Section IV p.
+		// 192)
+		// SP danger of photocontact sensitization (see Section IV p. 187)
+		// ° not registered as a pesticide
+		// I/II peak limitation categories (excursion factors in parentheses), or “−”
+		// (see p. 212)
+
+		Chemical chemical = new Chemical();
+
+		chemical.CAS = gr.CAS;
+		chemical.name = gr.name;
+
+		assignValuesFromH_S(gr, chemical);
+		assignValuesFromCancer(gr, chemical);
+		assignValuesFromMutagenicity(gr, chemical);
+		assignValuesFromPregnancy(gr, chemical);
+
+		return chemical;
+
+	}
+
+	/**
+	 * 
+	 * Assign values to chemical class for mutagenicity
+	 * 
+	 * 
+	 * 1. Germ cell mutagens which have been shown to increase the mutant frequency
+	 * in the progeny of exposed humans
+	 * 
+	 * 2. Germ cell mutagens which have been shown to increase the mutant frequency
+	 * in the progeny of exposed mammals
+	 * 
+	 * 3A. Substances which have been shown to induce genetic damage in germ cells
+	 * of humans or animals, or which produce mutagenic effects in somatic cells of
+	 * mammals in vivo and have been shown to reach the germ cells in an active form
+	 * 
+	 * 3B. Substances which are suspected of being germ cell mutagens because of
+	 * their genotoxic effects in mammalian somatic cells in vivo; in exceptional
+	 * cases, substances for which there are no in vivo data but which are clearly
+	 * mutagenic in vitro and structurally related to known in vivo mutagens
+	 * 
+	 * 4. not applicable since Category 4 carcinogenic substances are those with
+	 * non‐genotoxic mechanisms of action. By definition, germ cell mutagens are
+	 * genotoxic. Therefore, a Category 4 for germ cell mutagens cannot apply. At
+	 * some time in the future it is conceivable that a Category 4 could be
+	 * established for genotoxic substances with primary targets other than the DNA
+	 * (e. g. purely aneugenic substances) if research results make this seem
+	 * sensible.
+	 * 
+	 * 5. Germ cell mutagens or suspected substances (according to the definition of
+	 * Category 3A and 3B), the potency of which is considered to be so low that,
+	 * provided the MAK and BAT values are observed, their contribution to genetic
+	 * risk for man is considered to be very slight ( **)
+	 * 
+	 * 
+	 * 
+	 * @param gr
+	 * @param chemical
+	 */
+	private void assignValuesFromMutagenicity(GermanyRecord gr, Chemical chemical) {
+		String mutagenicity = gr.Germ_Cell_Mutagen_Category.trim().replace(".0", "");
+
+		if (mutagenicity.equals(""))
+			return;
+
+		String strScore = null;
+
+		if (mutagenicity.equals("1") || mutagenicity.equals("2")) {
+			strScore = ScoreRecord.scoreVH;
+		} else if (mutagenicity.equals("3A") || mutagenicity.equals("3B")) {
+			strScore = ScoreRecord.scoreH;
+		} else if (mutagenicity.equals("5")) {
+			strScore = ScoreRecord.scoreM;
+		} else {
+			System.out.println(chemical.CAS + "\tmutagenicity_unknown:\t" + mutagenicity);
+		}
+
+		if (strScore != null) {
+			ScoreRecord sr = new ScoreRecord();
+			sr.score = strScore;
+			sr.category = "Category " + mutagenicity;
+			sr.source = ScoreRecord.sourceMAK;
+			sr.rationale = "Score of " + sr.score + " was assigned based on a germ cell mutagenicity category of "
+					+ sr.category;
+			Score score = chemical.scoreGenotoxicity_Mutagenicity;
+			score.records.add(sr);
+		}
+
+	}
+
+	/**
+	 * Assign developmental toxicity scores
+	 * 
+	 * Group A: Damage to the embryo or foetus in humans has been unequivocally
+	 * demonstrated and is to be expected even when MAK and BAT values are observed.
+	 * 
+	 * Group B: According to currently available information damage to the embryo or
+	 * foetus cannot be excluded after exposure to concentrations at the level of
+	 * the MAK and BAT values. The documentation indicates, when the Commission’s
+	 * assessment of the data makes it possible, which concentration would
+	 * correspond to the classification in Pregnancy Risk Group C. Substances with
+	 * this indication have the footnote “prerequisite for Group C, see
+	 * documentation”.
+	 * 
+	 * Group C: Damage to the embryo or foetus is unlikely when the MAK value or the
+	 * BAT value is observed.
+	 * 
+	 * Group D: Either there are no data for an assessment of damage to the embryo
+	 * or foetus or the currently available data are not sufficient for
+	 * classification in one of the groups A – C. Substances without a MAK or BAT
+	 * value (carcinogenic substances or substances included in Section IIb) have no
+	 * entry (−) in this column. *
+	 * 
+	 * @param gr
+	 * @param chemical
+	 */
+	private void assignValuesFromPregnancy(GermanyRecord gr, Chemical chemical) {
+
+		String preg = gr.Pregnancy_Risk_Group;
+
+		if (preg.equals("") || preg.equals("-"))
+			return;
+
+		String strScore = null;
+
+		// TODO- check these score assignments:
+		if (preg.equals("A")) {
+			strScore = ScoreRecord.scoreVH;
+		} else if (preg.equals("B")) {
+			strScore = ScoreRecord.scoreH;
+		} else if (preg.equals("C")) {
+			strScore = ScoreRecord.scoreL;// damage unlikely at MAK or BAT- assign M?
+		} else if (preg.equals("D")) {
+			strScore = ScoreRecord.scoreNA;// insufficient data
+		} else {
+			System.out.println(chemical.CAS + "\tpregnancy_unknown:\t" + preg);
+		}
+
+		if (strScore != null) {
+			ScoreRecord sr = new ScoreRecord();
+			sr.score = strScore;
+			sr.category = "Pregancy risk group " + preg;
+			sr.source = ScoreRecord.sourceMAK;
+			sr.rationale = "Score of " + sr.score + " was assigned based on a pregnancy risk group of " + sr.category;
+			Score score = chemical.scoreDevelopmental;
+			score.records.add(sr);
+		}
+
+	}
+
+	/**
+	 * Assign scores for cancer<br>
+	 * <ul>
+	 * <li>Category 1- substances which have been shown to be carcinogenic in
+	 * man</li>
+	 * 
+	 * <li>Category 2- substances which have been shown to be carcinogenic in
+	 * experimental animals</li>
+	 * 
+	 * 
+	 * <li>Category 3 - suspected carcinogens.</li>
+	 * 
+	 * <li>Category 4- known to act typically by non‐genotoxic mechanisms.</li>
+	 * 
+	 * <li>Category 5 contains genotoxic carcinogens of weak potency.</li>
+	 * 
+	 * <li>Categories 1 or 2 and are not assigned MAK or BAT values.</li>
+	 * 
+	 * <li>Category 3 and are assigned a MAK or BAT value only if neither the
+	 * substance nor any of its metabolites is genotoxic.</li>
+	 * 
+	 * <li>In the Categories 4 and 5 are classified substances with carcinogenic
+	 * properties for which the available data are sufficient for assessment of the
+	 * carcinogenic potency. For these substances an occupational exposure level
+	 * (MAK or BAT value) is defined at which no or at most a very slight
+	 * contribution to the cancer risk of the exposed persons is to be
+	 * expected.</li>
+	 * 
+	 * </ul>
+	 * 
+	 * 
+	 * @param gr
+	 * @param chemical
+	 */
+	private void assignValuesFromCancer(GermanyRecord gr, Chemical chemical) {
+
+		String cancer = gr.Carcinogen_Category.trim().replace(".0", "");
+
+		if (cancer.equals(""))
+			return;
+
+		String strScore = null;
+
+		// TODO- check these score assignments:
+		if (cancer.equals("1") || cancer.equals("2")) {
+			strScore = ScoreRecord.scoreVH;
+		} else if (cancer.equals("3A") || cancer.equals("3B")) {
+			strScore = ScoreRecord.scoreH;
+		} else if (cancer.equals("4") || cancer.equals("5")) {
+			strScore = ScoreRecord.scoreM;
+		} else if (cancer.equals("-")) {
+			strScore = ScoreRecord.scoreNA;
+		} else {
+			System.out.println(chemical.CAS + "\tcancer_unknown:\t" + cancer);
+		}
+
+		if (strScore != null) {
+			ScoreRecord sr = new ScoreRecord();
+			sr.score = strScore;
+			sr.category = "Category " + cancer;
+			sr.source = ScoreRecord.sourceMAK;
+			sr.rationale = "Score of " + sr.score + " was assigned based on a carcinogenicity category of "
+					+ sr.category;
+			Score score = chemical.scoreCarcinogenicity;
+			score.records.add(sr);
+		}
+
+	}
+
+	/**
+	 * Assign skin sensitization values<br>
+	 * 
+	 * H danger of percutaneous absorption (see p. 213) Sa danger of sensitization
+	 * of the airways (see Section IV p. 190) Sh danger of sensitization of the skin
+	 * (see Section IV p. 188) Sah danger of sensitization of the airways and the
+	 * skin (see Sect Section IV p. 192)
+	 * 
+	 * @param gr
+	 * @param chemical
+	 */
+	private void assignValuesFromH_S(GermanyRecord gr, Chemical chemical) {
+		/*
+		 */
+
+		gr.H_S = gr.H_S.replace("  ", " ");
+
+		LinkedList<String> vals = ToxPredictor.Utilities.Utilities.Parse(gr.H_S, " ");
+
+		for (int i = 0; i < vals.size(); i++) {
+			String vali = vals.get(i);
+
+			String strScore = null;
+
+			if (vali.equals("Sh") || vali.equals("Sah")) {
+				strScore = ScoreRecord.scoreM;
+			} else if (vali.equals("Sa")) {
+				// TODO add respiratory sensitization?
+			} else if (vali.equals("SP")) {
+				// TODO add photocontact sensitization?
+			} else if (vali.equals("H")) {
+				// TODO add danger of percutaneous absorption?
+			} else if (vali.equals("")) {
+				// blank value, do nothing
+			} else {
+				System.out.println(chemical.CAS + "\tH_S_unknown:\t" + vali);
+			}
+
+			if (strScore != null) {
+				ScoreRecord sr = new ScoreRecord();
+				sr.score = strScore;
+				sr.category = vali;
+				sr.source = ScoreRecord.sourceMAK;
+				sr.rationale = "Score of " + sr.score + " was assigned based on a category of " + sr.category;
+				Score score = chemical.scoreSkin_Sensitization;
+				score.records.add(sr);
+			}
+
+		} // end loop over vals
+	}
+
+	public void createJSONFiles() {
+
+		String folder = "L:/Priv/Cin/NRMRL/CompTox/javax/web-test/AA Dashboard/Data/Germany/germany";
+
+		String jsonFilePath = folder + fileNameSourceJSON;
+
+		Gson gson = new GsonBuilder().registerTypeAdapter(double.class, new DoubleTypeAdapter()).create();
+
+		try {
+
+			GermanyRecord[] records = gson.fromJson(new FileReader(jsonFilePath), GermanyRecord[].class);
+
+			for (int i = 0; i < records.length; i++) {
+				GermanyRecord gr = records[i];
+
+				if (gr.CAS.length() < 7)
+					continue;
+
+				if (gr.CAS.length() > 13) {
+					if (gr.CAS.indexOf(";") == -1)
+						continue;
+
+					LinkedList<String> casNumbers = ToxPredictor.Utilities.Utilities.Parse(gr.CAS, ";");
+
+					for (int j = 0; j < casNumbers.size(); j++) {
+						String cas = casNumbers.get(j).trim();
+						Chemical chemical = this.createChemical(gr);
+						AADashboard.writeChemical(cas, jsonFolder, chemical);
+
+						// System.out.println(j+"\t"+cas);
+					}
+
+				} else {
+					Chemical chemical = this.createChemical(gr);
+					AADashboard.writeChemical(jsonFolder, chemical);
+				}
+
+				// System.out.println(gr.CAS);
+
+			}
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+		String folder = "L:\\Priv\\Cin\\NRMRL\\CompTox\\javax\\web-test\\AA Dashboard\\Data\\Germany\\germany";
+		String srcExcelFilePath = folder + "\\ch2-substance list.xlsx";
+
+		String destTextFilePath = folder + "\\ch2-substance list.txt";
+		String srcTextFilePath = destTextFilePath;
+		String outputFilePath = folder + "\\ch2-substance list.json";
+		String outputTextFilePath = folder + "\\Check ch2-substance list.txt";
+
+		ParseGermany pg = new ParseGermany();
+		// pg.parseExcelFile(srcExcelFilePath, destTextFilePath);
+		// pg.convertExcelToText(srcExcelFilePath, destTextFilePath);
+
+		// pg.loopThroughTextFile2(srcTextFilePath, outputFilePath, outputTextFilePath);
+
+		// String finalTextFilePath = folder+"\\Check ch2-substance list.txt";
+		// String jsonFilePath = folder+"\\germany.json";
+		// pg.loopThroughTextFile3(finalTextFilePath, jsonFilePath);
+		
+		pg.createJSONFiles();
+
+	}
+
+}

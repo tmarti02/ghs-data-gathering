@@ -1,0 +1,7 @@
+AA Dashboard/*
+bin/*
+target/*
+.settings/*
+/target/
+.classpath
+.project
