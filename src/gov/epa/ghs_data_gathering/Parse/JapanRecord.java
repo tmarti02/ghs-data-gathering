@@ -28,7 +28,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
-import gov.epa.ghs_data_gathering.Utilities.Utilities;
 import gov.epa.ghs_data_gathering.API.AADashboard;
 import gov.epa.ghs_data_gathering.API.HazardRecord;
 
@@ -255,7 +254,7 @@ public class JapanRecord {
 			//Create a zip file
 			for (File file:files) {
 				if (file.getName().contains(".html")); {
-					Utilities.writeToZipFile(file.getName(),destFolder,folderNameWebpages, zipOS);
+					FileUtilities.writeToZipFile(file.getName(),destFolder,folderNameWebpages, zipOS);
 //					file.delete();//could delete to avoid having lots of files on drive
 				}
 			}

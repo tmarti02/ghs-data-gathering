@@ -45,33 +45,7 @@ public class Utilities {
 		
 	}
 
-	/**
-	 * * Add a file into Zip archive in Java. *
-	 * 
-	 * @param fileName 
-	 * @param zos 
-	 * @throws FileNotFoundException 
-	 * @throws IOException
-	 */
-//	Read more: http://www.java67.com/2016/12/how-to-create-zip-file-in-java-zipentry-example.html#ixzz5nHcSycBK
-	public static void writeToZipFile(String fileName,String folderSrc, String folderDest,ZipOutputStream zipStream)
-			throws FileNotFoundException, IOException {
-		
-//		System.out.println("Writing file : '" + path + "' to zip file");
-		File aFile = new File(folderSrc+File.separator+fileName);
-		FileInputStream fis = new FileInputStream(aFile);
-		
-		ZipEntry zipEntry = new ZipEntry(folderDest+File.separator+fileName);
-		zipStream.putNextEntry(zipEntry);
-		
-		byte[] bytes = new byte[1024];
-		int length;
-		while ((length = fis.read(bytes)) >= 0) {
-			zipStream.write(bytes, 0, length);
-		}
-		zipStream.closeEntry();
-		fis.close();
-	}	
+
 	
   
   public static LinkedList<String> Parse(String Line, String Delimiter) {
