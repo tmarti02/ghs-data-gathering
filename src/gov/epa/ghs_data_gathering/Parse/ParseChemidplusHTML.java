@@ -19,7 +19,7 @@ import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 public class ParseChemidplusHTML {
 
-	public static final String folder = "L:\\Priv\\Cin\\NRMRL\\CompTox\\javax\\web-test\\AA Dashboard\\Data\\Chemidplus\\";
+	public static final String folder = "AA Dashboard\\Data\\Chemidplus\\";
 
 	public static final String textFile = folder + "CAS Numbers Inhalation.txt";
 
@@ -192,7 +192,7 @@ public class ParseChemidplusHTML {
 	 * downloads the webpages and writes CAS #'s to text file
 	 */
 	
-	private void htmlParse(String htmlFolder) {
+	private void htmlParse(String filePathFolder_HTMLSearch,String destFolder) {
 
 		CASRecord cr = new CASRecord();
 
@@ -200,7 +200,7 @@ public class ParseChemidplusHTML {
 
 		try {
 
-			File fileFolder = new File(htmlFolder);
+			File fileFolder = new File(filePathFolder_HTMLSearch);
 			File[] files = fileFolder.listFiles();
 
 			for (int i = 0; i < files.length; i++) {
@@ -228,7 +228,7 @@ public class ParseChemidplusHTML {
 				}
 			}
 			writeToTextFile(cr);
-			downloadWebPages(cr);
+			downloadWebPages(cr,destFolder);
 
 		} catch (IOException ex) {
 			ex.printStackTrace();
@@ -262,7 +262,7 @@ public class ParseChemidplusHTML {
 	 * loops through all of the CAS numbers
 	 * and downloads respective webpages
 	 */
-	private void downloadWebPages(CASRecord cr) {
+	private void downloadWebPages(CASRecord cr,String destFolder) {
 
 		String url = "https://chem.nlm.nih.gov/chemidplus/rn/";
 
@@ -274,7 +274,7 @@ public class ParseChemidplusHTML {
 
 				String strURL = url + CAS;
 
-				String destFilePath = webpageFolder + "/" + CAS + ".html";
+				String destFilePath = destFolder + "/" + CAS + ".html";
 
 				File destFile = new File(destFilePath);
 
@@ -591,22 +591,13 @@ public class ParseChemidplusHTML {
 		ParseChemidplusHTML ph = new ParseChemidplusHTML();
 
 		//Go through search webpages and download the individual webpages:
-		String htmlFolder = folder + "Oral LD50 searches";
-		ph.htmlParse(htmlFolder);
+		ph.htmlParse(folder + "Oral LD50 searches",webpageFolder);
+		ph.htmlParse(folder + "Skin LD50 searches",webpageFolder);
+		ph.htmlParse(folder + "Inhalation LC50 searches",webpageFolder);
 		
-		String sourceFolder = "AA Dashboard\\Data\\Chemidplus\\Oral LD50 webpages";
-		String destFolder="AA Dashboard\\Data\\Chemidplus\\All Webpages";
-		ph.copyFilesToFolder(sourceFolder,destFolder);
-		
-		
-//		String htmlFolder = folder + "Skin LD50 searches";
-//		ph.htmlParse(htmlFolder);
-//		
-//		String htmlFolder = folder + "Inhalation LC50 searches";
-//		ph.htmlParse(htmlFolder);
 
-		
-		ph.parseHTML(webpageFolder);
+		//Parse all the webpages into json file:
+//		 ArrayList<ChemidplusRecord>records=ph.parseHTML(webpageFolder);
 
 	}
 }
