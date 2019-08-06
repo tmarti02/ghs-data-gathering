@@ -37,6 +37,7 @@ public class RecordEchemportal  {
 	public String Type_of_method="";
 	public String Type_of_study="";
 	public String Test_guideline_Qualifier="";
+	public String GLP_Compliance="";
 	public String Test_guideline_Guideline="";
 	public String Species="";
 	public String Strain="";

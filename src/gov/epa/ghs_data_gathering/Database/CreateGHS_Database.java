@@ -555,9 +555,9 @@ public class CreateGHS_Database  {
 		//Create files for all sources:
 //		Parse.recreateFilesAllSources();
 		
-		String folder="AA Dashboard/Data/dictionary/text output";
-		String filename="flat file 2018-12-07.txt";
-		String textFilePath=folder+"/"+filename;
+		String folder=AADashboard.dataFolder+"\\dictionary\\text output";
+		String filename="flat file 2019-05-29.txt";
+		String textFilePath=folder+"\\"+filename;
 
 //		FlatFileRecord.createFlatFileFromAllSources(textFilePath);
 
