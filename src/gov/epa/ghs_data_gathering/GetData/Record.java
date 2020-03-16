@@ -23,7 +23,7 @@ public class Record {
 	Hashtable<String,String>htVals;
 	
 	
-	String get(String fieldName) {
+	public String get(String fieldName) {
 		return htVals.get(fieldName);
 	}
 	
@@ -31,7 +31,7 @@ public class Record {
 		htVals.put(fieldName,value);
 	}
 
-	String getJSON() {
+	public String getJSON() {
 		GsonBuilder builder = new GsonBuilder();
 //		builder.setPrettyPrinting().serializeNulls();
 		builder.setPrettyPrinting();

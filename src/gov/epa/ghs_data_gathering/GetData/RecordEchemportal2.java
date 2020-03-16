@@ -1,7 +1,9 @@
 package gov.epa.ghs_data_gathering.GetData;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import com.google.common.collect.HashMultimap;
@@ -68,10 +70,13 @@ import com.google.common.collect.Multimap;
 public class RecordEchemportal2  {
 
 	//File format based on output from echemportal on 5-14-19
+
+	public String Record_Number;
 	public String Substance_Name="";
 	public String Name_Type="";
 	public String Substance_Number="";
 	public String Number_type="";
+	public String Hyperlink="";
 	
 //	public String Member_of_Category="";
 //	public String Participant="";
@@ -86,7 +91,8 @@ public class RecordEchemportal2  {
 	public String Type_of_study="";
 	public String Type_of_information="";	
 	public String Endpoint="";
-
+	public String Type_of_coverage="";
+	
 	public String formula="";//TMM added
 	public String CAS_final="";//TMM added
 	public String CAS_warning="";//TMM added
@@ -97,9 +103,9 @@ public class RecordEchemportal2  {
 	public String FinalScore="";
 
 
-	static String[] varlist = { "Substance_Name", "Name_Type","Substance_Number", "Number_type", 
+	static String[] varlist = { "Record_Number","Hyperlink","Substance_Name", "Name_Type","Substance_Number", "Number_type", 
 			"Test_guideline_Qualifier", "Test_guideline_Guideline", "GLP_Compliance", "Reliability", "Species",
-			"Type_of_study", "Type_of_information", "Endpoint", "formula","CAS_final", "CAS_warning", "omit_reason","Interpretation_of_results","InterpretationBasis","FinalScore"};
+			"Type_of_study", "Type_of_information", "Endpoint", "Type_of_coverage","formula","CAS_final", "CAS_warning", "omit_reason","Interpretation_of_results","InterpretationBasis","FinalScore"};
 
 	/**
 	 * Create record based on header list and data list in csv using reflection to assign by header name
@@ -156,6 +162,22 @@ public class RecordEchemportal2  {
 		return str;
 	}
 	
+	public static void writeToFile(String filepath,Vector<RecordEchemportal2>records) {
+		try {
+			
+			FileWriter fw=new FileWriter(filepath,StandardCharsets.UTF_8);
+			fw.write(RecordEchemportal2.getHeader()+"\r\n");
+			
+			for (RecordEchemportal2 r:records) {
+				fw.write(r+"\r\n");
+			}
+			
+			fw.close();
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
 	
 	public String toCSV() {
 		String str="";

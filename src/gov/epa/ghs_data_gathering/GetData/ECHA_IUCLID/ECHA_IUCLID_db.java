@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.GetData;
+package gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,10 +39,12 @@ import com.google.gson.JsonPrimitive;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
-import gov.epa.ghs_data_gathering.GetData.IUCLID_Document.Part2.AdministrativeData;
-import gov.epa.ghs_data_gathering.GetData.IUCLID_Document.Part2.DataSource;
-import gov.epa.ghs_data_gathering.GetData.IUCLID_Document.Part2.MaterialsAndMethods;
-import gov.epa.ghs_data_gathering.GetData.IUCLID_Document.Part2.ResultsAndDiscussion;
+
+import gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID.IUCLID_Document.Part1;
+import gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID.IUCLID_Document.Part2.AdministrativeData;
+import gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID.IUCLID_Document.Part2.DataSource;
+import gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID.IUCLID_Document.Part2.MaterialsAndMethods;
+import gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID.IUCLID_Document.Part2.ResultsAndDiscussion;
 
 
 /**

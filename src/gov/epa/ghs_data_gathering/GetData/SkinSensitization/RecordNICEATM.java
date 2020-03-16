@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.GetData;
+package gov.epa.ghs_data_gathering.GetData.SkinSensitization;
 
 import java.lang.reflect.Field;
 import java.util.Comparator;
@@ -14,10 +14,12 @@ public class RecordNICEATM {
 	public String LLNA_Vehicle;
 	public String EC3;
 	public String LLNA_Result;
+	public String Class;
 	public String Reference;
+	public String Smiles;
 	
-	static String[] varlist = { "Chemical_Name","CASRN","Molecular_Weight","Chemical_Class",
-			"LLNA_Vehicle","EC3","LLNA_Result","Reference"};
+	static String[] varlist = { "Chemical_Name","CASRN","Molecular_Weight","Chemical_Class","Smiles",
+			"LLNA_Vehicle","EC3","LLNA_Result","Class","Reference"};
 
 	static String[] varlist2 = { "CASRN","Chemical_Name","Molecular_Weight","LLNA_Result","Reference"};
 

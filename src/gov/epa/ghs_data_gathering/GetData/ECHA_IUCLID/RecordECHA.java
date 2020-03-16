@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.GetData;
+package gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID;
 
 import java.io.File;
 import java.lang.reflect.Field;

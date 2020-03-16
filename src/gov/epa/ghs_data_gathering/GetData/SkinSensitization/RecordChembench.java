@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.GetData;
+package gov.epa.ghs_data_gathering.GetData.SkinSensitization;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -140,7 +140,7 @@ public class RecordChembench {
 		return records;
 	}
 	
-	String getJSON() {
+	public String getJSON() {
 		GsonBuilder builder = new GsonBuilder();
 //		builder.setPrettyPrinting().serializeNulls();
 		builder.setPrettyPrinting();

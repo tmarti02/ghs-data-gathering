@@ -1,7 +1,12 @@
-package gov.epa.ghs_data_gathering.GetData;
+package gov.epa.ghs_data_gathering.GetData.SkinSensitization;
 import java.util.*;
 
 import com.google.common.collect.Multimap;
+
+import gov.epa.ghs_data_gathering.GetData.Record;
+import gov.epa.ghs_data_gathering.GetData.RecordEchemportal;
+import gov.epa.ghs_data_gathering.GetData.RecordEchemportal2;
+import gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID.RecordECHA;
 
 public class CompareSkinSensitizationFiles {
 	

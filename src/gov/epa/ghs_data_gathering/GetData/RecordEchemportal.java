@@ -8,6 +8,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID.RecordECHA;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 import com.google.common.collect.Multimap;

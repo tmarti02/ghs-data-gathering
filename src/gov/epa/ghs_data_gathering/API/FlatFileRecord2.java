@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
 
-import gov.epa.ghs_data_gathering.GetData.RecordChembench;
+import gov.epa.ghs_data_gathering.GetData.SkinSensitization.RecordChembench;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 

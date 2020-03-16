@@ -629,9 +629,9 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 
 	}
 	public static void main(String[] args) {
-//		Parse.recreateFilesAllSources();
+		Parse.recreateFilesAllSources();
 //		Parse.checkFileForSpecialChars("L:\\Priv\\Cin\\NRMRL\\CompTox\\javax\\web-test\\AA Dashboard\\Data\\Australia\\Australia Chemical Records.txt");
-		Parse.checkFileForSpecialChars("AA Dashboard\\Data\\dictionary\\text output\\flat file 2018-08-03.txt");
+//		Parse.checkFileForSpecialChars("AA Dashboard\\Data\\dictionary\\text output\\flat file 2018-08-03.txt");
 		
 	}
 	

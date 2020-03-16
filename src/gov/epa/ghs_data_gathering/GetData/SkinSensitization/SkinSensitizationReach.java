@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.GetData;
+package gov.epa.ghs_data_gathering.GetData.SkinSensitization;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -17,6 +17,8 @@ import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.formula.MolecularFormula;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
+import gov.epa.ghs_data_gathering.GetData.ScifinderRecord;
+import gov.epa.ghs_data_gathering.GetData.ECHA_IUCLID.RecordECHA;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 /***

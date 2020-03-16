@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.GetData;
+package gov.epa.ghs_data_gathering.GetData.SkinSensitization;
 
 import java.io.FileWriter;
 import java.io.InputStream;
