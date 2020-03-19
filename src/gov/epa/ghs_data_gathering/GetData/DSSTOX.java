@@ -315,6 +315,11 @@ public class DSSTOX {
 
 				RecordChemReg recordChemReg = null;
 
+				//Original records are linked to chemreg records by using CAS+Name as the key 
+				//(since ChemReg doesnt store an incremented record number field that allows 
+				//you to link the records). If the CAS+Name fails, it attempts to link them 
+				// via just the CAS:
+				
 				if (htChemRegCAS_Name.get(keyCAS_Name) == null) {
 					if (htChemRegCAS.get(recordTox.CAS) != null) {// try looking up just by CAS:
 						recordChemReg = htChemRegCAS.get(recordTox.CAS);

@@ -30,8 +30,6 @@ import gov.epa.ghs_data_gathering.Utilities.ExcelUtilities;
 public class SkinSensitizationNICEATM {
 
 	
-	
-	
 	void writeToFile(String filepath,Vector<RecordNICEATM>records) {
 		try {
 			
@@ -468,8 +466,8 @@ public class SkinSensitizationNICEATM {
 		
 		Vector<RecordTox> recordsTox2=new Vector<>();
 		
-		for (RecordNICEATM recordOECD_Toolbox:recordsTox) {
-			RecordTox recTox=getRecordTox(recordOECD_Toolbox);		
+		for (RecordNICEATM recordSource:recordsTox) {
+			RecordTox recTox=getRecordTox(recordSource);		
 			recordsTox2.add(recTox);
 		}
 		
