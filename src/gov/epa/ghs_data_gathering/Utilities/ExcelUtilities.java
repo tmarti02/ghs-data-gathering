@@ -12,7 +12,8 @@ public class ExcelUtilities {
 	static DataFormatter formatter = new DataFormatter();
 
 	public static String getValue(DataFormatter formatter, int colName, Row row) {
-		String val=formatter.formatCellValue(row.getCell(colName)).strip();
+//		String val=formatter.formatCellValue(row.getCell(colName)).strip();
+		String val=formatter.formatCellValue(row.getCell(colName)).trim();
 		val=val.replace("\n", "; ");
 		return val;
 	}

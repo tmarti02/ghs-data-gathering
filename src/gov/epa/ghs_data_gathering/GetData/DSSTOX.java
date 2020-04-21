@@ -159,12 +159,12 @@ public class DSSTOX {
 				
 				String omitReason=DSSTOX.getOmitReason(SID, recordsDashboard);
 				
-				if (omitReason.isBlank()) {
+				if (omitReason.isEmpty()) {
 					if (tox>0.2 && tox < 0.8) omitReason="0.2 < Avg Score < 0.8";	
 					if (count==0) omitReason="No non ambiguous records";
 				}
 				
-				if (omitReason.isBlank()) {
+				if (omitReason.isEmpty()) {
 					uniqueChemicalsWithTox++;
 					htInChi.put(recordDashboard.INCHIKEY,SID);
 					fw1.write(recordDashboard+"\t"+tox+"\t"+binaryTox+"\r\n");
@@ -415,12 +415,12 @@ public class DSSTOX {
 				
 				String omitReason=DSSTOX.getOmitReason(SID, recordsDashboard);
 				
-				if (omitReason.isBlank()) {
+				if (omitReason.isEmpty()) {
 					if (tox>0.2 && tox < 0.8) omitReason="0.2 < Avg Score < 0.8";	
 					if (count==0) omitReason="No non ambiguous records";
 				}
 				
-				if (omitReason.isBlank()) {
+				if (omitReason.isEmpty()) {
 					uniqueChemicalsWithTox++;
 					htInChi.put(recordDashboard.INCHIKEY,SID);
 					fw1.write(recordDashboard+"\t"+tox+"\t"+count+"\t"+binaryTox+"\r\n");

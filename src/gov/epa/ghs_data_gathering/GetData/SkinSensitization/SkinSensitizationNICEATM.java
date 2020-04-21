@@ -495,7 +495,7 @@ public class SkinSensitizationNICEATM {
 
 		if (recordNICEATM.EC3.contentEquals("NC")) {
 			r.binaryToxResult=0;
-		} else if (recordNICEATM.EC3.contains(">") || recordNICEATM.EC3.isBlank() || recordNICEATM.EC3.contentEquals("IDR")) {
+		} else if (recordNICEATM.EC3.contains(">") || recordNICEATM.EC3.isEmpty() || recordNICEATM.EC3.contentEquals("IDR")) {
 			r.binaryToxResult=-1;//Weak ambiguous
 		} else {
 			double EC3=Double.parseDouble(recordNICEATM.EC3);			
@@ -520,7 +520,7 @@ public class SkinSensitizationNICEATM {
 
 		if (recordNICEATM.EC3.contentEquals("NC")) {
 			r.binaryToxResult=0;
-		} else if (recordNICEATM.EC3.contains(">") || recordNICEATM.EC3.isBlank() || recordNICEATM.EC3.contentEquals("IDR")) {
+		} else if (recordNICEATM.EC3.contains(">") || recordNICEATM.EC3.isEmpty() || recordNICEATM.EC3.contentEquals("IDR")) {
 			r.binaryToxResult=-1;//ambiguous
 		} else {
 

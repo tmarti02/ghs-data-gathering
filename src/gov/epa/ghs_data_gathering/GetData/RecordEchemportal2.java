@@ -165,7 +165,8 @@ public class RecordEchemportal2  {
 	public static void writeToFile(String filepath,Vector<RecordEchemportal2>records) {
 		try {
 			
-			FileWriter fw=new FileWriter(filepath,StandardCharsets.UTF_8);
+//			FileWriter fw=new FileWriter(filepath,StandardCharsets.UTF_8);
+			FileWriter fw=new FileWriter(filepath);
 			fw.write(RecordEchemportal2.getHeader()+"\r\n");
 			
 			for (RecordEchemportal2 r:records) {

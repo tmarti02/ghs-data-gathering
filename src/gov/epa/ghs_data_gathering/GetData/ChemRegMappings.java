@@ -141,7 +141,7 @@ public class ChemRegMappings {
 //		RecordEchemportalExport recordEchemportal=recordsEchemportalExport.get(0);
 
 		for (RecordEchemportalExport recordEchemportalExport:recordsEchemportalExport) {
-			if (recordEchemportalExport.CAS==null || recordEchemportalExport.CAS.isBlank()) continue;
+			if (recordEchemportalExport.CAS==null || recordEchemportalExport.CAS.isEmpty()) continue;
 			
 			Vector<String>vecSid=getChemRegRecordByCAS(recordEchemportalExport.CAS, recordsChemReg);
 			String sids=getString(vecSid);

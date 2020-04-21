@@ -4,6 +4,7 @@ public class ScoreRecord {
 
 	public String name;//chemical name
 	public String source;// where the record came from
+	public String sourceOriginal;// where the record came from
 	public String score;// i.e. L,M,H,VH
 
 	// following fields will be a work in progress as we gather data from different
@@ -47,6 +48,7 @@ public class ScoreRecord {
 	
 	public static String[] actualFieldNames2 = { "source", "score", "route", "category", "hazard_code",
 			"hazard_statement", "rationale", "note","note2","valueMassOperator","valueMass","valueMassUnits"};
+	
 
 
 	public static final String scoreVH = "VH";
@@ -97,6 +99,9 @@ public class ScoreRecord {
 	public static final String sourceAcute_Toxicity_Data_from_EPA_HPVIS = "Acute Toxicity Data from EPA HPVIS";
 	public static final String sourceReproductive_Toxicity_Data_In_Vitro_from_EPA_HPVIS = "Reproductive Toxicity Data in Vitro from EPA HPVIS";
 
+	public static final String sourceToxVal="ToxVal";
+	
+	
 //	public static final float weightECHA_CLP = 20.0f;
 //	public static final float weightIRIS = 20.0f;
 //
