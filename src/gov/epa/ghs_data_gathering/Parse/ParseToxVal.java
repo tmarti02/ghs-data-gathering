@@ -97,55 +97,67 @@ public class ParseToxVal extends Parse {
 					
 					
 				} else if (r.risk_assessment_class.contentEquals("cancer")) {
-					createCancerScore(chemical,r);
+					createCancerRecords(chemical,r);
+					
 				} else if (r.risk_assessment_class.contentEquals("developmental")) {
-					createDevelopmentalScore(chemical,r);
+					createDevelopmentalRecords(chemical,r);
+				
 					
 					/* Added the rest of the rac here but need to add methods.  -Leora 4/24/20 */
 					
 				} else if (r.risk_assessment_class.contentEquals("mortality:acute")) {
-					createEcoToxAcuteScore(chemical,r);	
+					createEcoToxAcuteRecords(chemical,r);	
+					
 				} else if (r.risk_assessment_class.contentEquals("mortality:chronic")) {
-					createEcoToxChronicScore(chemical,r);
+					createEcoToxChronicRecords(chemical,r);
 					
 					/* Need to double check that these are all eco.  -Leora 4/23/20 */
 					
 				} else if (r.risk_assessment_class.contentEquals("chronic")) {
-					createChronicScore(chemical,r);
+					createChronicRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("subchronic")) {
-					createSubchronicScore(chemical,r);
+					createSubchronicRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("short-term")) {
-					createShorttermScore(chemical,r);
+					createShorttermRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("repeat dose")) {
-					createRepeatDoseScore(chemical,r);
+					createRepeatDoseRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("subacute")) {
-					createSubacuteScore(chemical,r);
+					createSubacuteRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("growth:acute")) {
-					createGrowthAcuteScore(chemical,r);
+					createGrowthAcuteRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("growth:chronic")) {
-					createGrowthChronicScore(chemical,r);
+					createGrowthChronicRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("reproductive")) {
-					createReproductiveScore(chemical,r);
+					createReproductiveRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("neurotoxicity")) {
-					createNeurotoxicityScore(chemical,r);
+					createNeurotoxicityRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("developmental neurotoxicity")) {
-					createDevelopmentalNeurotoxicityScore(chemical,r);
+					createDevelopmentalNeurotoxicityRecords(chemical,r);
 					
 				} else if (r.risk_assessment_class.contentEquals("ecotoxicity invertebrate")) {
-					createEcotoxInvertebrateScore(chemical,r);
+					createEcotoxInvertebrateRecords(chemical,r);
 					
 					
+					/* There does not appear to be a rac for genetox. However, there is a separate file called
+					 * toxval_genetox_summary_2020-01-16
+					 * that I downloaded from the ftp site
+					 * I want to do something like:
+					 * If the chemical is in the toxval_genetox_summary_2020-01-16 file then
+					 * createGenetoxScore(chemical,r);
+					 * 
+					 * -Leora*/
 					
-				} else {
+					
+				//} else {
 					//TODO add methods for other risk assessment classes
 					/* System.out.println("unknown rac="+r.risk_assessment_class);
 					 * 
@@ -188,8 +200,8 @@ public class ParseToxVal extends Parse {
 						for example for acute oral I only used “toxval_type”= “LD50”
 						and the 4 species that we used earlier in the ParseChemIdplus class.
 						
-						****[I think the point is to look at what Richard did and suggest
-						changes if we don't agree.  -Leora 4/23/20]****
+				****[I think the point is to look at what Richard did and suggest
+					changes if we don't agree.  -Leora 4/23/20]****
 						
 						If you didn’t remember, pressing F3 will jump to a different method when
 						the cursor is on it. Alt + left arrow will go back to where you were.
@@ -225,22 +237,125 @@ public class ParseToxVal extends Parse {
 	}
 	
 	
-	private void createCancerScore(Chemical chemical, RecordToxVal r) {
-
-		if (r.toxval_type.contentEquals("NOAEL")) {
-			//TODO
-		} else if (r.toxval_type.contentEquals("cancer unit risk")) {
-			//TODO
+	private void createCancerRecords(Chemical chemical, RecordToxVal r) {
 		
+		/* if cancer_call is not missing then
+		 * [L,M,H,VH,N/A based on dictionary that I added for cancer_call]
+		 * 	
+		 * else if cancer_call is missing or if cancer_call is N/A then
+		 * 
+		 * I want to code something like the above to use the cancer_call if there is one
+		 * and only use the other toxval data if there is no cancer_call.
+		 * The cancer call is in the separate file
+		 * toxval_cancer_summary_2020-01-16
+		 * I downloaded this file from the rtp site.
+		 * This file includes 2,827 records.
+		 * 
+		 * (It looks like there is probably a lot of overlap with this database and our CHA Database.)
+		 * 
+		 * I created a dictionary in Excel based on the possible cancer_call values:
+		 * 
+		 * VH: A (Human carcinogen); A (Human carcinogen) (Inhalation route);  B1 (Probable human carcinogen - based on limited evidence of carcinogenicity in humans); B2 (Probable human carcinogen - based on sufficient evidence of carcinogenicity in animals); Carcinogenic to humans; Carcinogenic to humans (Inhalation route); Group 1 - Carcinogenic to humans; Group 2A - Probably carcinogenic to humans; Group A Human Carcinogen; Group A Human Carcinogen by Inhalation; Group B1 Probable Human Carcinogen; Group B2 Probable Human Carcinogen; Group I: CEPA (carcinogenic to humans); Group II: CEPA (probably carcinogenic to humans); "Group II: CEPA (probably carcinogenic to humans) Group 2A: IARC (probably carcinogenic to humans)"; "Group IV: CEPA (unlikely to be carcinogenic to humans) Group 2A: IARC (probably carcinogenic to humans)"; "IRIS (inadequate data for evaluation of carcinogenicity) Group 2A: IARC (probably carcinogenic to humans)"; IRIS (likely to be carcinogenic to humans); Known Human Carcinogen; Known/likely human carcinogen (Oral route); Known/Likely; Known/likely human carcinogen; Known/likely human carcinogen (Inhalation route); Likely Human Carcinogen; Likely to be carcinogenic to humans; Likely to be carcinogenic to humans (Combined route);  Likely to be carcinogenic to humans (inhalation route. IN for oral route); Likely to be carcinogenic to humans (oral route); Likely to be carcinogenic to humans (oral); inadequate (inhalation); Likely to be carcinogenic to humans following prolonged, high-level exposures causing cytotoxicity and regenerative cell hyperplasia in the proximal region of the small intestine (oral exposure) or the respiratory tract (inhalation exposure), but not like; Likely to be carcinogenic to humans for oral exposure. Inadequate information for inhalation.; potential occupational carcinogen; Reasonably Anticipated To Be Human Carcinogen; Suggestive Evidence for Carcinogenicity in Humans; 
+		 * H: C (Possible human carcinogen); Group 2B - Possibly carcinogenic to humans; Group 2B: IARC (possibly carcinogenic to humans); Group C Possible Human Carcinogen; Group C: IRIS (a possible human carcinogen); "Group D: IRIS (not classifiable as to human carcinogenicity) (IRIS), 1991/Group 2B: IARC (possibly carcinogenic to humans)/ GCDWQ: HC, 1986"; "Group D: IRIS (not classifiable as to human carcinogenicity); Group 2B: IARC (possibly carcinogenic to humans)"; Group III: CEPA (possible germ cell mutagen, and possibly carcinogenic to humans); Group IIIB (possibly carcinogenic to humans, limited evidence of carcinogenicity); Group IIIB: (possibly carcinogenic to humans); "Likely to be Carcinogenic in Humans at High Doses; Not Likely to be Carcinogenic to Humans at Low Doses"; "Likely to be Carcinogenic to Humans (High Doses), Not Likely to be Carcinogenic to Humans (Low Doses)"; Suggestive evidence of carcinogenic potential; Suggestive evidence of carcinogenic potential (oral. Inhalation is not likely to be carcinogenic); Suggestive evidence of carcinogenic potential for oral exposure.; Suggestive evidence of carcinogenic potential for oral exposure. Inadequate information for inhalation.; Suggestive evidence of the carcinogenic potential for the inhalation route (IN for oral); Suggestive Evidence of Carcinogenicity but Not Sufficient to Assess Human Carcinogenic Potential; Suggestive evidence of carcinogenicity, but not sufficient to assess human carcinogenic potential (Inhalation route)
+		 * M: [None of the cancer_call values fit in the M category based on DfE/AA/CHA]
+		 * L: E (Evidence of non-carcinogenicity for humans); Group 4 - Probably not carcinogenic to humans; Group E Evidence of Non-carcinogenicity for Humans; Group IV: CEPA (unlikely to be carcinogenic to humans); Group IVC: CEPA (probably not carcinogenic to humans); IOM does not consider manganese carcinogenic to humans; IOM does not consider molybdenum carcinogenic to humans; IOM does not consider zinc carcinogenic to humans; Not Likely to Be Carcinogenic in Humans; Not likely to be carcinogenic to humans (Oral route)
+		 * N/A: Carcinogenic potential cannot be determined; Carcinogenic potential cannot be determined (Inhalation route);  Carcinogenic potential cannot be determined (Oral route); CEPA (Although there is some evidence for the carcinogenicity of inorganic fluoride, available data are inconclusive.); D (Not classifiable as to human carcinogenicity); D (Not classifiable as to human carcinogenicity) (Oral route); Data are inadequate for an assessment of human carcinogenic potential; Data are inadequate for an assessment of human carcinogenic potential (Oral route); Group 3 - Not classifiable as to its carcinogenicity to humans; Group D Not Classifiable as to Human Carcinogenicity; Group D: IRIS (not classifiable as to human carcinogenicity); Group V (inadequate data for evaluation of carcinogenicity); Group V: CEPA (probably not carcinogenic to humans); Group VA: CEPA (inadequate data for evaluation); Group VI: CEPA (unclassifiable with respect to carcinogenicity to humans); Group VIA: CEPA (unclassifiable with respect to carcinogenicity to humans); Group VIB: CEPA (unclassifiable with respect to carcinogenesis in humans); Inadequate for an assessment of carcinogenic potential; Inadequate information to assess carcinogenic potential; Inadequate information to assess carcinogenic potential (Oral route); Inadequate information to assess carcinogenic potential (oral, inhalation is not likely to be carcinogenic); "IOM does not consider selenium carcinogenic to humans. Group 3: IARC (not classifiable as to human carcinogenicity) Group B2: U.S. EPA (probable human carcinogen) for selenium sulphide"; IOM, 2001 ("There is little convincing evidence indicating that copper is causally associated with the development of cancer in humans."); IRIS (inadequate data to assess human carcinogenic potential); no adequate data to characterize in terms of carcinogenicity; No Data Available; Not Likely to be Carcinogenic to Humans at Doses that Do Not Alter Rat Thyroid Hormone Homeostasis; Not likely to be carcinogenic to Non-humans; Not Yet  Determined
+		 * 
+		 * Need to convert this dictionary to Java code.
+		 * 
+		 * -Leora
+		 *  */
+
+		if (r.toxval_type.contentEquals("NOAEL") && r.toxval_units.contentEquals("mg/kg bw/day")) {
+			//TODO
+			
+			/*I added units above.  I want to say if the content contains "mg/kg bw/day" so that would include
+			 *cases where it says something additional such as "mg/kg bw/day (actual dose received)."
+			 *Need to figure out how to do that.
+			 * units for acrylamide:
+			 * mg/kg bw/day
+			 * mg/kg bw/day (actual dose received) 
+			 * 
+			 * NOAEL for acrylamide = 0.5 or 0.1
+			 * 
+			 * Determining cutoffs based on ToxVals has a lot of uncertainty because typically, a weight of evidence
+			 * approach is used to qualitatively estimate risk for cancer.
+			 * Thus, DfE and GHS and the Tiger Team don't have numeric cutoffs for cancer.
+			 * 
+			 * So I'm not sure whether we should use numeric cutoffs.
+			 * 
+			 * Maybe we should only use the data that have a cancer_call,
+			 * though that is a relatively small number of chemicals.
+			 * 
+			 *
+			 * 
+			 * If we want to consider numeric cutoffs for the dictionary for NOAEL:
+			 * 
+			 * If toxval_numeric_qualifier is = or >= or >
+			 * 
+			 * Maybe:
+			 * >0 & <=1 VH
+			 * >1 & <=10 H
+			 * >10 & <=1000 M
+			 * >1000 L
+			 * 
+			 * * If toxval_numeric_qualifier is <= or < & toxval_numeric is <=1 then score= VH
+			 * else if toxval_numeric_qualifier is <= or < then skip or score=n/a
+			 * 
+			 * The NOAEL is used to calculate the RfD in humans by dividing by uncertainty factors.
+			 * Typically, the NOAEL would be divided by at least 100.
+			 * 
+			 * -Leora
+			 * */
+			
+		} else if (r.toxval_type.contentEquals("cancer unit risk")&& r.toxval_units.contentEquals("ug/m3)-1")) {
+			//TODO
+			
+			/* 
+			 * The cancer unit risk is an estimate of the increased cancer risk from (usually inhalation) exposure
+			 * to a concentration of 1 µg/m3 for a lifetime.
+			 * 
+			 * I added units because the meaning of the numeric values will change if the units are different.
+			 * For acrylamide, the only units for unit risk are (ug/m3)-1.  This is the typical units, but
+			 * need to check whether there are any other units for other chemicals.
+			 * 
+			 * For acrylamide, the unit risk is 0.0001.
+			 * 
+			 * Options for dictionary for unit risk:
+			 * 
+			 * Option 1.  If there is a unit risk (or unit risk greater than zero) then score VH
+			 * because a unit risk indicates risk in humans.
+			 * 
+			 * Option 2.  Numeric cutoff points: maybe:
+			 * 
+			 * If toxval_numeric_qualifier is = or < or <=
+			 * 
+			 *  >= 0.000001 (1 in a million) VH
+			 *  < 0.000001 & >= 0.0000001 H
+			 *  < 0.0000001 & >= 0.00000001 M
+			 *  = 0 L
+			 *  [blank] N/A
+			 *  
+			 * If toxval_numeric_qualifier is >= or > & toxval_numeric is >= 0.000001 then score= VH
+			 * else if toxval_numeric_qualifier is >= or > then skip or score=n/a
+			 * 
+			 *  
+			 *  -Leora
+			 */
+			
+			
 		} else {//need code for all important toxval_types
 			
-			/* NOAEL and cancer unit risk are the only toxval_types for acrylamide. -Leora 4/23/20
+			/* NOAEL and cancer unit risk are the only toxval_types for acrylamide. -Leora 4/23/20 */
 			
-			/* Richard seemed to be suggesting that we treat all toxval_types the same and just use
+			
+			/* Richard seemed to be suggesting that we treat all toxval_types and all rac the same and just use
 			If(min value < 1) high
 			Else if(min value < 10) medium
 			Else low
-			I'm just making a note of this for now, will come back to it.  -Leora 4/23/20
+			I think that is oversimplifying and doesn't scale properly
+			and we need to use appropriate cutoffs for the different rac.
+			-Leora
  
 */
 			
@@ -250,85 +365,380 @@ public class ParseToxVal extends Parse {
 		
 	}
 
-	private void createDevelopmentalScore(Chemical chemical, RecordToxVal r) {
-		// TODO Auto-generated method stub
+	/* There does not appear to be a rac for genetox. However, there is a separate file called
+	 toxval_genetox_summary_2020-01-16
+	 that I downloaded from the ftp site
+	 I want to do something like:
+	 If the chemical is in the toxval_genetox_summary_2020-01-16 file then
+	 createGenetoxScore(chemical,r);
+	  
+	 Need to import the toxval_genetox_summary_2020-01-16 Excel file.  Then:
+	 private void createGenetoxRecords(Chemical chemical, RecordToxVal r) {
+	 if genetox_call = "clastogen" OR "gentox" OR "pred clastogen" OR "pred gentox" then score= VH
+	 [the vertical line key to indicate "OR" is not working on my keyboard]
+	 [there are no genetox_call data that would indicate H or M]
+	 if genetox_call = "non gentox" OR "pred non gentox" then score= L
+	 if genetox_call = "inconclusive" OR "not clastogen" then score= N/A
+	 -Leora */
+			
+			
+	private void createDevelopmentalRecords(Chemical chemical, RecordToxVal r) {
+		if (r.toxval_type_supercategory.contentEquals("Point of Departure") &&
+			r.toxval_units.contentEquals("mg/kg bw/day") && r.exposure_route.contentEquals("oral")) {
+			createDevelopmentalOralRecord(chemical, r);	
+		} else if(r.toxval_type_supercategory.contentEquals("Point of Departure") &&
+			r.toxval_units.contentEquals("mg/kg bw/day") && r.exposure_route.contentEquals("dermal")) {
+			createDevelopmentalDermalRecord(chemical, r);
+		} else if(r.toxval_type_supercategory.contentEquals("Point of Departure") &&
+				r.toxval_units.contentEquals("mg/L/day") && r.exposure_route.contentEquals("inhalation")) {
+			createDevelopmentalInhalationRecord(chemical, r);
+		}
+	}	
+			
+	private void createDevelopmentalOralRecord(Chemical chemical, RecordToxVal tr) {
+			System.out.println("Creating Developmental Oral Record");
+			//This is not printing.
+
+			ScoreRecord sr = new ScoreRecord();
+			sr = new ScoreRecord();
+			sr.source = ScoreRecord.sourceToxVal;
+			sr.sourceOriginal=tr.source;
+			
+			sr.route = "Oral";
+
+			sr.valueMassOperator=tr.toxval_numeric_qualifier;
+			sr.valueMass = Double.parseDouble(tr.toxval_numeric);
+			sr.valueMassUnits = tr.toxval_units;
+
+			setDevelopmentalOralScore(sr, chemical);
+
+			sr.note=this.createNote(tr);
+				
+			chemical.scoreDevelopmental.records.add(sr);
+				
+		}
+	
+				
+	private void setDevelopmentalOralScore(ScoreRecord sr, Chemical chemical) {
+				
+		sr.rationale = "route: " + sr.route + ", ";
+		double dose = sr.valueMass;
+		String strDose = this.formatDose(dose);
+							
+		System.out.println(chemical.CAS+"\t"+strDose);
+					
+		System.out.println("****"+strDose);			
+				
+		if (dose < 50) {
+			sr.score = ScoreRecord.scoreH;
+			sr.rationale = "Oral POD" + " (" + strDose + " mg/kg) < 50 mg/kg";
+		} else if (dose >= 50 && dose <= 250) {
+			sr.score = ScoreRecord.scoreM;
+			sr.rationale = "50 mg/kg <= Oral POD (" + strDose + " mg/kg) <=250 mg/kg";
+		} else if (dose > 250) {
+			sr.score = ScoreRecord.scoreL;
+			sr.rationale = "Oral POD" + "(" + strDose + " mg/kg) > 250 mg/kg";
+		} else { System.out.println(chemical.CAS + "\toral\t" + strDose);
+				 
+		}
+			
+		}
+
+		private void createDevelopmentalDermalRecord(Chemical chemical, RecordToxVal tr) {
+			System.out.println("Creating Developmental Dermal Record");
+
+			ScoreRecord sr = new ScoreRecord();
+			sr = new ScoreRecord();
+			sr.source = ScoreRecord.sourceToxVal;
+			sr.sourceOriginal=tr.source;
+
+			sr.valueMassOperator=tr.toxval_numeric_qualifier;
+			sr.valueMass = Double.parseDouble(tr.toxval_numeric);
+			sr.valueMassUnits = tr.toxval_units;
+
+			setDevelopmentalDermalScore(sr, chemical);
+
+			sr.note=this.createNote(tr);
+					
+			chemical.scoreDevelopmental.records.add(sr);
+					
+			}
+		
+					
+		private void setDevelopmentalDermalScore(ScoreRecord sr, Chemical chemical) {
+					
+			sr.rationale = "route: " + sr.route + ", ";
+			double dose = sr.valueMass;
+			String strDose = this.formatDose(dose);
+				
+			if (dose < 100) {
+				sr.score = ScoreRecord.scoreH;
+				sr.rationale = "Dermal POD" + " (" + strDose + " mg/kg) < 100 mg/kg";
+			} else if (dose >= 100 && dose <= 500) {
+				sr.score = ScoreRecord.scoreM;
+				sr.rationale = "100 mg/kg <= Dermal POD (" + strDose + " mg/kg) <=500 mg/kg";
+			} else if (dose > 500) {
+				sr.score = ScoreRecord.scoreL;
+				sr.rationale = "Dermal POD" + "(" + strDose + " mg/kg) > 500 mg/kg";
+					/*
+					 * } else { System.out.println(chemical.CAS + "\toral\t" + strDose);
+					 */
+			}
+		}
+				
+				
+				
+		private void createDevelopmentalInhalationRecord(Chemical chemical, RecordToxVal tr){
+					// System.out.println("Creating Developmental Inhalation Record");
+
+					ScoreRecord sr = new ScoreRecord();
+					sr = new ScoreRecord();
+					sr.source = ScoreRecord.sourceToxVal;
+					sr.sourceOriginal=tr.source;
+
+					sr.valueMassOperator=tr.toxval_numeric_qualifier;
+					sr.valueMass = Double.parseDouble(tr.toxval_numeric);
+					sr.valueMassUnits = tr.toxval_units;
+
+					setDevelopmentalDermalScore(sr, chemical);
+
+					sr.note=this.createNote(tr);
+					
+					chemical.scoreDevelopmental.records.add(sr);
+					
+				}
+		
+		private void setDevelopmentalInhalationScore(ScoreRecord sr, Chemical chemical) {
+					
+						sr.rationale = "route: " + sr.route + ", ";
+						double dose = sr.valueMass;
+						String strDose = this.formatDose(dose);
+						
+//						System.out.println(chemical.CAS+"\t"+strDose);
+						
+//						System.out.println("****"+strDose);					
+				
+				
+					if (dose < 1) {
+						sr.score = ScoreRecord.scoreH;
+						sr.rationale = "Inhalation POD" + " (" + strDose + " mg/L) < 1 mg/L";
+					} else if (dose >= 1 && dose <= 2.5) {
+						sr.score = ScoreRecord.scoreM;
+						sr.rationale = "1 mg/L <= Inhalation POD (" + strDose + " mg/L) <=2.5 mg/L";
+					} else if (dose > 2.5) {
+						sr.score = ScoreRecord.scoreL;
+						sr.rationale = "Inhalation POD" + "(" + strDose + " mg/L) > 2.5 mg/L";
+						/*
+						 * } else { System.out.println(chemical.CAS + "\toral\t" + strDose);
+						 */
+					}
+			}		
+		
+		/* Just doing if toxval_type_supercategory is "Point of Departure"
+		 * rather than separating NOAEL, LOAEL, NEL, LEL.
+		 * DfE is based on the NOAEL OR LOAEL.  Maybe we should omit NEL and LEL.
+		 * 
+		 * DfE criteria for Reproductive and Developmental Toxicity:
+		 * DfE has no VH for Reproductive and Developmental Toxicity
+		 * Dfe has a VL category, which will just be included in the L category here.
+		 * 
+		 * Route						H				M			L				(VL)
+		 * Oral(mg/kg/day)				< 50		50 - 250	250 - 1000			(> 1000)
+		 * Dermal (mg/kg/day)			< 100		100 - 500	> 500 - 2000		(> 2000)
+		 * Inhalation (mg/L/day)
+		 * 		vapor/gas				< 1			1 - 2.5		> 2.5 - 20			(> 20)
+		 * 		dust/mist/fume			< 0.1		0.1 - 0.5	> 0.5 - 5			(> 5)
+		 * 
+		 * For inhalation, using DfE criteria for vapor/gas because that's what we did for acute toxicity.
+		 * But if vapor/gas vs. dust/mist/fume is specified in ToxVal, then we should use the specific criteria.
+		 * For acrylamide, data only includes oral (no inhalation data),
+		 * so I need to look at the data for other chemicals.
+		 * -Leora
+		 * */						
+		 
+
+	
+	private void createEcoToxAcuteRecords(Chemical chemical, RecordToxVal tr) {
+
+			ScoreRecord sr = new ScoreRecord();
+			sr = new ScoreRecord();
+			sr.source = ScoreRecord.sourceToxVal;
+			sr.sourceOriginal=tr.source;
+		
+
+			sr.valueMassOperator=tr.toxval_numeric_qualifier;
+			sr.valueMass = Double.parseDouble(tr.toxval_numeric);
+			sr.valueMassUnits = tr.toxval_units;
+
+			setEcoToxAcuteScore(sr, chemical);
+
+			sr.note=this.createNote(tr);
+				
+			chemical.scoreEcoToxAcute.records.add(sr);
+			//Need to address this error message.
+				
+		}
+	
+				
+	private void setEcoToxAcuteScore(ScoreRecord sr, Chemical chemical) {
+				
+		sr.rationale = "route: " + sr.route + ", ";
+		double dose = sr.valueMass;
+		String strDose = this.formatDose(dose);		
+		
+		/* DfE criteria:
+		 * LC50 or EC50
+		 * mg/L
+		 * < 1.0 VH
+		 * 1 - 10 H
+		 * >10 - 100 M
+		 * >100 L
+		 * -Leora */
+				
+		if (dose < 1) {
+			sr.score = ScoreRecord.scoreVH;
+			sr.rationale = "LC50 or EC50" + " (" + strDose + " mg/L) < 1 mg/L";
+		} else if (dose >= 1 && dose <= 10) {
+			sr.score = ScoreRecord.scoreH;
+			sr.rationale = "1 mg/kg <= LC50 or EC50 (" + strDose + " mg/L) <=10 mg/L";
+		} else if (dose > 10 && dose <= 100) {
+			sr.score = ScoreRecord.scoreM;
+			sr.rationale = "10 mg/kg < LC50 or EC50 (" + strDose + " mg/L) <=100 mg/L";
+		} else if (dose > 100) {
+			sr.score = ScoreRecord.scoreL;
+			sr.rationale = "LC50 or EC50" + "(" + strDose + " mg/L) > 100 mg/L";
+		} else { System.out.println(chemical.CAS + "\tEcoToxAcute\t" + strDose);
+				 
+		}
+	}
+		
+	
+	
+	private void createEcoToxChronicRecords(Chemical chemical, RecordToxVal tr) {
+		
+		ScoreRecord sr = new ScoreRecord();
+		sr = new ScoreRecord();
+		sr.source = ScoreRecord.sourceToxVal;
+		sr.sourceOriginal=tr.source;
+	
+
+		sr.valueMassOperator=tr.toxval_numeric_qualifier;
+		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
+		sr.valueMassUnits = tr.toxval_units;
+
+		setEcoToxChronicScore(sr, chemical);
+
+		sr.note=this.createNote(tr);
+			
+		chemical.scoreEcoToxChronic.records.add(sr);
+		//Need to address this error message.
+		
+		
+	}
+	
+	private void setEcoToxChronicScore(ScoreRecord sr, Chemical chemical) {
+		
+		sr.rationale = "route: " + sr.route + ", ";
+		double dose = sr.valueMass;
+		String strDose = this.formatDose(dose);	
+		
+		/* DfE criteria:
+		 * NOEC or LOEC
+		 * mg/L
+		 * < 0.1 VH
+		 * 0.1 - 1 H
+		 * > 1 - 10 M
+		 * > 10 L
+		 * -Leora */
+		
+		if (dose < .1) {
+			sr.score = ScoreRecord.scoreVH;
+			sr.rationale = "NOEC or LOEC" + " (" + strDose + " mg/L) < 1 mg/L";
+		} else if (dose >= 0.1 && dose <= 1) {
+			sr.score = ScoreRecord.scoreH;
+			sr.rationale = "0.1 mg/L <= NOEC or LOEC (" + strDose + " mg/L) <=1 mg/L";
+		} else if (dose > 1 && dose <= 10) {
+			sr.score = ScoreRecord.scoreM;
+			sr.rationale = "1 mg/L < NOEC or LOEC (" + strDose + " mg/L) <=10 mg/L";
+		} else if (dose > 10) {
+			sr.score = ScoreRecord.scoreL;
+			sr.rationale = "NOEC or LOEC" + "(" + strDose + " mg/L) > 10 mg/L";
+		} else { System.out.println(chemical.CAS + "\tEcoToxChronic\t" + strDose);
+		
+	}
+		
+	}
+	
+	private void createChronicRecords(Chemical chemical, RecordToxVal r) {
+		
+		// Need to add method.  -Leora 4/24/20
+		
+	}
+	
+	private void createSubchronicRecords(Chemical chemical, RecordToxVal r) {
+		
+		/*
+		 * // study_duration_value and study_duration_units can be used to determine the
+		 * actual duration for studies called subchronic, short term, or repeat dose.
+		 * Then DfE criteria for repeated dose toxicity (28, 40-50, or 90 days) can be used.
+		 */
 		
 	}
 
-	
-	private void createEcoToxAcuteScore(Chemical chemical, RecordToxVal r) {
-		
-		// Need to add method.  -Leora 4/24/20
-	}
-	
-	
-	private void createEcoToxChronicScore(Chemical chemical, RecordToxVal r) {
-		
-		// Need to add method.  -Leora 4/24/20
-		
-	}
-	
-	private void createChronicScore(Chemical chemical, RecordToxVal r) {
-		
-		// Need to add method.  -Leora 4/24/20
-		
-	}
-	
-	private void createSubchronicScore(Chemical chemical, RecordToxVal r) {
+	private void createShorttermRecords(Chemical chemical, RecordToxVal r) {
 		
 		// Need to add method.  -Leora 4/24/20
 		
 	}
 
-	private void createShorttermScore(Chemical chemical, RecordToxVal r) {
+	private void createRepeatDoseRecords(Chemical chemical, RecordToxVal r) {
 		
-		// Need to add method.  -Leora 4/24/20
+		// For repeat dose, if study_type is... need to come back to this. 
 		
 	}
-
-	private void createRepeatDoseScore(Chemical chemical, RecordToxVal r) {
+	
+	private void createSubacuteRecords(Chemical chemical, RecordToxVal r) {
 		
 		// Need to add method.  -Leora 4/24/20
 		
 	}
 	
-	private void createSubacuteScore(Chemical chemical, RecordToxVal r) {
+	private void createGrowthAcuteRecords(Chemical chemical, RecordToxVal r) {
 		
-		// Need to add method.  -Leora 4/24/20
-		
-	}
-	
-	private void createGrowthAcuteScore(Chemical chemical, RecordToxVal r) {
-		
-		// Need to add method.  -Leora 4/24/20
+		// Growth is for ecotox.  Maybe use the same cutoffs as ecotox.
 		
 	}
 	
-	private void createGrowthChronicScore(Chemical chemical, RecordToxVal r) {
+	private void createGrowthChronicRecords(Chemical chemical, RecordToxVal r) {
 		
-		// Need to add method.  -Leora 4/24/20
-		
-	}
-	
-	private void createReproductiveScore(Chemical chemical, RecordToxVal r) {
-		
-		// Need to add method.  -Leora 4/24/20
+		// Growth is for ecotox.  Maybe use the same cutoffs as ecotox.
 		
 	}
 	
-	private void createNeurotoxicityScore(Chemical chemical, RecordToxVal r) {
+	private void createReproductiveRecords(Chemical chemical, RecordToxVal r) {
 		
-		// Need to add method.  -Leora 4/24/20
-		
-	}
-	
-	private void createDevelopmentalNeurotoxicityScore(Chemical chemical, RecordToxVal r) {
-		
-		// Need to add method.  -Leora 4/24/20
+		/* Reproductive will have the same code as Developmental (same DfE criteria),
+		 * which is detailed above.  I'll add the code for Reproductive when I'm sure Developmental is correct.
+		 * -Leora */
 		
 	}
 	
-	private void createEcotoxInvertebrateScore(Chemical chemical, RecordToxVal r) {
+	private void createNeurotoxicityRecords(Chemical chemical, RecordToxVal r) {
+		
+		// study_duration_value and study_duration_units
+		// DfE criteria
+		
+	}
+	
+	private void createDevelopmentalNeurotoxicityRecords(Chemical chemical, RecordToxVal r) {
+		
+		/* DevelopmentalNeurotoxicity will have the same code as Developmental (same DfE criteria),
+		 * which is detailed above.
+		 * -Leora */
+		
+	}
+	
+	private void createEcotoxInvertebrateRecords(Chemical chemical, RecordToxVal r) {
 		
 		// Need to add method.  -Leora 4/24/20
 		
@@ -359,6 +769,12 @@ public class ParseToxVal extends Parse {
 			return;
 		}
 		
+		/*
+		 * This is printing {invalid inhalation toxval_type=LC0.  I wouldn't use LC0 (the maximum dose without deaths).
+		 * We probably should just restrict to LC50 because LC50 is the typical acute inhalation toxicity value.
+		 * -Leora
+		 */
+		
 		
 		/*
 		 * EPA Health Effects Test Guidelines OPPTS 870.1300 Acute Inhalation Toxicity:
@@ -378,10 +794,10 @@ public class ParseToxVal extends Parse {
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
 		
-		/* Okay, I understand the code.  This basically renames what Richard called toxval_numeric
-		 * into valueMass and then valueMass is renamed score and then for acute toxicity,
+		/* I think I understand the code.  This basically renames what Richard called toxval_numeric
+		 * into valueMass and then valueMass is renamed score,
 		 * so then for AcuteMammalianToxicity, the same code that we used for the
-		 * AA Dashboard/CHA Database is directly used.  -Leora 4/23/20  */
+		 * AA Dashboard/CHA Database is directly used.  -Leora  */
 		
 
 
@@ -421,9 +837,11 @@ public class ParseToxVal extends Parse {
 		double dose = sr.valueMass;
 		String strDose = this.formatDose(dose);
 		
-//		System.out.println(chemical.CAS+"\t"+strDose);
+		System.out.println(chemical.CAS+"\t"+strDose);
 		
-//		System.out.println("****"+strDose);
+		System.out.println("****"+strDose);
+		
+		// These statements aren't printing.
 		
 		if (sr.valueMassOperator.equals(">")) {
 
@@ -456,9 +874,6 @@ public class ParseToxVal extends Parse {
 				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) > 20 mg/L";
 			} else {
 				System.out.println(chemical.CAS + "\tinhalation\t" + dose);
-				/* Should "\toral\t" in the line above be "\tinhalation\t"?
-				 * Is this a mistake that is also in our ChemIDplus code?
-				 * -Leora 4/23/20 */
 				
 			}
 		} else {
@@ -715,9 +1130,10 @@ public class ParseToxVal extends Parse {
 	
 	/* So this class is just for creating the individual scores.  Do we also want to integrate into one score
 	 * for each chemical?  Or is it actually best to not even do that so that we are not assigning a "final" score?
-	 * But integrating the scores is one of the main things that I've been contemplating for the ToxVal data.
+	 * But integrating the scores is one of the things that I've been contemplating for the ToxVal data.
 	 * As we discussed, it might make sense to use the priority_id field and take the minimum score from each of
 	 * the seven priority_id categories and then priority_id 1>2>3>4>5>6>7 in the trumping method.
+	 * 
 	 * Also, instead of, or in combination with, the trumping scheme, we could remove extreme outliers and
 	 * then take the minimum of the remaining scores.
 	 * Since the values are continuous instead of ordinal, removing outliers makes sense. 
@@ -727,6 +1143,7 @@ public class ParseToxVal extends Parse {
 	 * toxval type: NO(A)EL or NO(A)EC
 	 * species: rats, mice, rabbits
 	 * To derive representative values, she removed outliers that exceeded the IQR.
+	 * Maybe we should remove outliers similar to what Grace did.
 	 *
 	 * -Leora 4/23/20  */
 	
@@ -741,7 +1158,9 @@ public class ParseToxVal extends Parse {
 		
 		String folder="C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
 		
-		String CAS="79-06-1";
+		String CAS="79-06-1"; //acrylamide
+		
+		//  Want to add CAS 79-01-6 trichloroethylene as another chemical with a lot of data.  -Leora
 				
 		String filePathDatabaseAsText=folder+File.separator+"toxval_pod_summary_with_references_2020-01-16.txt";
 		String filePathRecordsForCAS=folder+File.separator+"toxval_pod_summary_"+CAS+".txt";
