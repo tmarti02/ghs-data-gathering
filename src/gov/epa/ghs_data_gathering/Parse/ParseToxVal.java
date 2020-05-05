@@ -574,7 +574,7 @@ public class ParseToxVal extends Parse {
 
 			sr.note=this.createNote(tr);
 				
-			chemical.scoreEcoToxAcute.records.add(sr);
+			chemical.scoreAcute_Aquatic_Toxicity.records.add(sr);
 			//Need to address this error message.
 				
 		}
@@ -629,8 +629,9 @@ public class ParseToxVal extends Parse {
 		setEcoToxChronicScore(sr, chemical);
 
 		sr.note=this.createNote(tr);
-			
-		chemical.scoreEcoToxChronic.records.add(sr);
+		
+		chemical.scoreChronic_Aquatic_Toxicity.records.add(sr);
+		
 		//Need to address this error message.
 		
 		
