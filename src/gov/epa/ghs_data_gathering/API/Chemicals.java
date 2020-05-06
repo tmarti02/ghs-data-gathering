@@ -141,11 +141,11 @@ public class Chemicals extends ArrayList<Chemical> {
 
 	}
 	
-	public void toFlatFile(String filepath) {
+	public void toFlatFile(String filepath,String del) {
 		
 		try {
 			
-			String del="|";
+			
 			
 			FileWriter fw=new FileWriter(filepath);
 			

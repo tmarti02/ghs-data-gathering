@@ -317,7 +317,7 @@ public class Parse {
 		}
 	}
 	
-	String fixChars(String str) {
+	protected String fixChars(String str) {
 /**
 Added code to fix these:
 （	\uff08	100-21-0|Terephthalic Acid|Systemic Toxicity Single Exposure|Japan|M||Category 3 （Respiratory tract irritation）|H335|May cause respiratory irritation (respiratory tract irritation)|Score of M was assigned based on a hazard code of H335|-|06-imcg-0155e.html; Revised by 14-mhlw-2064e.html|||
@@ -610,7 +610,7 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 
 		if (writeFlatFile) {
 			System.out.println("Writing flat file for chemical records");
-			chemicals.toFlatFile(mainFolder+File.separator+fileNameFlatChemicalRecords);
+			chemicals.toFlatFile(mainFolder+File.separator+fileNameFlatChemicalRecords,"|");
 		}
 		
 		if (writeJsonChemicalsFile) {

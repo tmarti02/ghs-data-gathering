@@ -1009,6 +1009,7 @@ public class Chemical {
 				f.hazard_name=score.hazard_name;
 				
 				f.source=sr.source;
+				f.sourceOriginal=sr.sourceOriginal;
 				f.score=sr.score;
 				f.category=sr.category;
 				f.hazard_code=sr.hazard_code;
@@ -1410,6 +1411,37 @@ public class Chemical {
 	public void writeToFile(String destFolder) {
 		writeToFile(CAS, destFolder);
 	}
+	
+	public void toFlatFile(String filepath,String delimiter) {
+
+		try {
+
+			
+			FileWriter fw=new FileWriter(filepath);
+
+			fw.write(FlatFileRecord.getHeader(delimiter)+"\r\n");
+
+			ArrayList<String>uniqueCAS=new ArrayList<>();
+
+			ArrayList<String>lines=this.toStringArray(delimiter);
+
+			if (!uniqueCAS.contains(this.CAS)) uniqueCAS.add(this.CAS);
+
+
+			for (String line:lines) {
+				line=line.replace("–", "-").replace("’", "'");//TODO use StringEscapeUtils?
+				fw.write(line+"\r\n");
+			}
+
+			fw.flush();
+			fw.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
+
 	
 	
 	public static void main(String[] args) {

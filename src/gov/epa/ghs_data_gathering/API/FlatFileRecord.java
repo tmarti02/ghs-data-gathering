@@ -24,6 +24,7 @@ public class FlatFileRecord {
 	public String hazard_name;
 	
 	public String source;// where the record came from
+	public String sourceOriginal;
 	public String score;// i.e. L,M,H,VH
 
 	public String category;// i.e. Category 1
@@ -43,7 +44,7 @@ public class FlatFileRecord {
 
 
 
-	public static String[] fieldNames = { "CAS","name","hazard_name","source", "score", "route", "category", "hazard_code",
+	public static String[] fieldNames = { "CAS","name","hazard_name","source", "sourceOriginal","score", "route", "category", "hazard_code",
 			"hazard_statement", "rationale", "note","note2","valueMassOperator","valueMass","valueMassUnits"};
 
 	

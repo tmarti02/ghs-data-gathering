@@ -1,7 +1,10 @@
-package gov.epa.ghs_data_gathering.Parse;
+package gov.epa.ghs_data_gathering.Parse.ToxVal;
 
 import java.lang.reflect.Field;
+import java.util.LinkedList;
 import java.util.List;
+
+import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 
 public class RecordToxVal {
@@ -100,16 +103,29 @@ public class RecordToxVal {
 		 * @param list
 		 * @return
 		 */
-		public static RecordToxVal createRecord(List<String> hlist, List<String> list) {
+		public static RecordToxVal createRecord(String headerLine, String Line) {
+			
+			
 			RecordToxVal r=new RecordToxVal();
 			//convert to record:
 			try {
-				for (int i=0;i<hlist.size();i++) {
-					Field myField =r.getClass().getField(hlist.get(i));
-					myField.set(r, list.get(i));
+//				LinkedList<String>list=Utilities.Parse3(Line, "\t");
+
+				String [] list=Line.split("\t");
+				String [] hlist=headerLine.split("\t");
+				
+//				if (list.length!=hlist.size()) {
+//					System.out.println(list.length+"\t"+hlist.size());
+//					System.out.println(Line);
+//				}
+				
+				for (int i=0;i<hlist.length;i++) {
+					Field myField =r.getClass().getField(hlist[i]);
+					myField.set(r, list[i]);
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
+				System.out.println(Line);
 			}
 			return r;
 		}
