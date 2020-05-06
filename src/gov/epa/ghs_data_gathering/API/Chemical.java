@@ -14,6 +14,8 @@ import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.ghs_data_gathering.Parse.Parse;
+
 
 /**
  * Class to store hazard profile for a chemical
@@ -1407,6 +1409,31 @@ public class Chemical {
 		}
 
 	}
+	
+	public void writeChemicalToJsonFile(String filepath) {
+
+		try {
+			GsonBuilder builder = new GsonBuilder();
+			builder.setPrettyPrinting();
+			Gson gson = builder.create();
+			
+			FileWriter fw = new FileWriter(filepath);
+			String strRecords=gson.toJson(this);
+			
+//			getUniqueChars(strRecords);
+			
+			
+			strRecords=Parse.fixChars(strRecords);
+			
+			fw.write(strRecords);
+			fw.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+
 
 	public void writeToFile(String destFolder) {
 		writeToFile(CAS, destFolder);

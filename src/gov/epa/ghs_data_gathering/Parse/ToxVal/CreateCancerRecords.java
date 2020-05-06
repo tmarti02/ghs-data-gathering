@@ -2,6 +2,11 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal;
 
 import gov.epa.ghs_data_gathering.API.Chemical;
 
+/**
+ * This class is to create records based on the quantitative cancer data (rather than cancer calls)
+ * @author Todd Martin
+ *
+ */
 public class CreateCancerRecords {
 
 	

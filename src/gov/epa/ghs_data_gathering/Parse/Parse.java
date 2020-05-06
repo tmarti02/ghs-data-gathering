@@ -317,7 +317,7 @@ public class Parse {
 		}
 	}
 	
-	protected String fixChars(String str) {
+	public static String fixChars(String str) {
 /**
 Added code to fix these:
 （	\uff08	100-21-0|Terephthalic Acid|Systemic Toxicity Single Exposure|Japan|M||Category 3 （Respiratory tract irritation）|H335|May cause respiratory irritation (respiratory tract irritation)|Score of M was assigned based on a hazard code of H335|-|06-imcg-0155e.html; Revised by 14-mhlw-2064e.html|||

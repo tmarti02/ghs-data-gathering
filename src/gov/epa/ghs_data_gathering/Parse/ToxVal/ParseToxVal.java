@@ -91,7 +91,7 @@ public class ParseToxVal extends Parse {
 				
 			}
 			
-			writeChemicalToFile(chemical, destFilepathJSON);
+			chemical.writeChemicalToJsonFile(destFilepathJSON);
 			chemical.toFlatFile(destFilepathTXT,"\t");
 			
 			br.close();
@@ -445,33 +445,6 @@ public class ParseToxVal extends Parse {
 		 * -Leora */
 		
 	}
-	
-	
-	void writeChemicalToFile(Chemical chemical, String filepath) {
-
-		try {
-			GsonBuilder builder = new GsonBuilder();
-			builder.setPrettyPrinting();
-			Gson gson = builder.create();
-			
-			FileWriter fw = new FileWriter(filepath);
-			String strRecords=gson.toJson(chemical);
-			
-//			getUniqueChars(strRecords);
-			
-			
-			strRecords=this.fixChars(strRecords);
-			
-			fw.write(strRecords);
-			fw.close();
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	
-	
 	
 	
 	
