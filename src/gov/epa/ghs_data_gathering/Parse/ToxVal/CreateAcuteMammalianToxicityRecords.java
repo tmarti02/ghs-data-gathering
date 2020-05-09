@@ -5,17 +5,50 @@ import java.util.ArrayList;
 import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
+/* Inclusion criteria for Acute Mammalian Toxicity:
+ All routes
+ 	human_eco: human health
+ 	species_common: rat, mouse, rabbit, or guinea pig
+ 		(another possible choice would be to just include all mammals:
+ 		 species_supercategory = mammals, but those are the typical four)
+ Oral
+   exposure_route: oral
+   toxval_type: LD50
+   toxval_units: mg/kg
+ Dermal
+   exposure_route: dermal
+   toxval_type: LD50
+   toxval_units: mg/kg
+ Inhalation
+   exposure_route: inhalation
+   toxval_type: LD50
+   toxval_units: mg/kg
+-Leora
+*/
+
 public class CreateAcuteMammalianToxicityRecords {
 
 	static void createAcuteMammalianToxicityRecords(Chemical chemical, RecordToxVal r) {
-		if(r.exposure_route.contentEquals("oral")) {
+		if(r.exposure_route.contentEquals("oral") &&
+				r.toxval_type.contentEquals("LD50") &&
+				r.toxval_units.contentEquals("mg/kg") &&
+				r.human_eco.contentEquals("human health")) {
 			createAcuteMammalianToxicityOralRecord(chemical, r);						
-		} else if(r.exposure_route.contentEquals("dermal")) {
+		} else if(r.exposure_route.contentEquals("dermal") &&
+				r.toxval_type.contentEquals("LD50") &&
+				r.toxval_units.contentEquals("mg/kg") &&
+				r.human_eco.contentEquals("human health")) {
 			createAcuteMammalianToxicityDermalRecord(chemical, r);
-		} else if(r.exposure_route.contentEquals("inhalation")) {
+		} else if(r.exposure_route.contentEquals("inhalation") &&
+				r.toxval_type.contentEquals("LC50") &&
+				r.toxval_units.contentEquals("mg/L") &&
+				r.human_eco.contentEquals("human health")){
 			createAcuteMammalianToxicityInhalationRecord(chemical, r);
 		}
 	}
+	
+	/* I added criteria here (in the code above).  Its easier to see the criteria here
+	 towards the top of the code. */
 
 	private static void createAcuteMammalianToxicityInhalationRecord(Chemical chemical, RecordToxVal tr) {
 		// System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
@@ -38,6 +71,11 @@ public class CreateAcuteMammalianToxicityRecords {
 		if (!tr.toxval_type.contentEquals("LC50")) { 
 //			System.out.println("invalid inhalation toxval_type="+tr.toxval_type);
 			return;
+			
+			/* So this prints the toxval_type if it isn't LC50. But I think we need to add
+			 code to specify that the toxval_type needs to be LC50 and units need to be mg/L
+			 for inhalation, and for oral and dermal, need LD50 and mg/kg.
+			 */
 		}
 
 

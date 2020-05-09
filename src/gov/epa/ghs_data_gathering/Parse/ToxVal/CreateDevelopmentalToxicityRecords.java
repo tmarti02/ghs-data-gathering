@@ -5,10 +5,32 @@ import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 public class CreateDevelopmentalToxicityRecords {
 
+	/* Inclusion criteria for Developmental Toxicity:
+	 All routes
+	 	human_eco: human health
+	 	species_common: rat, mouse, rabbit, or guinea pig
+	 		(another possible choice would be to just include all mammals:
+	 		 species_supercategory = mammals, but those are the typical four)
+	 	toxval_type: NOAEL or LOAEL
+	 Oral
+	   exposure_route: oral
+	   toxval_units: mg/kg-day
+	 Dermal
+	   exposure_route: dermal
+	   toxval_units: mg/kg-day
+	 Inhalation
+	   exposure_route: inhalation
+	   toxval_units: mg/L-day
+	-Leora
+	*/	
 	
-	/* Just doing if toxval_type_supercategory is "Point of Departure"
+	
+	
+	/* [Not doing this: Just doing if toxval_type_supercategory is "Point of Departure"
 	 * rather than separating NOAEL, LOAEL, NEL, LEL.
-	 * DfE is based on the NOAEL OR LOAEL.  Maybe we should omit NEL and LEL.
+	 * DfE is based on the NOAEL OR LOAEL.  Maybe we should omit NEL and LEL.]
+	 * 
+	 * toxval_type should be NOAEL or LOAEL
 	 * 
 	 * DfE criteria for Reproductive and Developmental Toxicity:
 	 * DfE has no VH for Reproductive and Developmental Toxicity
@@ -30,15 +52,14 @@ public class CreateDevelopmentalToxicityRecords {
 
 		
 	static void createDevelopmentalRecords(Chemical chemical, RecordToxVal r) {
-		if (r.toxval_type_supercategory.contentEquals("Point of Departure") &&
-			r.toxval_units.contentEquals("mg/kg bw/day") && r.exposure_route.contentEquals("oral")) {
-			createDevelopmentalOralRecord(chemical, r);	
-		} else if(r.toxval_type_supercategory.contentEquals("Point of Departure") &&
-			r.toxval_units.contentEquals("mg/kg bw/day") && r.exposure_route.contentEquals("dermal")) {
-			createDevelopmentalDermalRecord(chemical, r);
-		} else if(r.toxval_type_supercategory.contentEquals("Point of Departure") &&
-				r.toxval_units.contentEquals("mg/L/day") && r.exposure_route.contentEquals("inhalation")) {
-			createDevelopmentalInhalationRecord(chemical, r);
+		if (r.toxval_type.contentEquals("NOAEL") || r.toxval_type.contentEquals("LOAEL")) {
+			if (r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("oral")) {
+				createDevelopmentalOralRecord(chemical, r);	
+			} else if(r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("dermal")) {
+				createDevelopmentalDermalRecord(chemical, r);
+			} else if(r.toxval_units.contentEquals("mg/L-day") && r.exposure_route.contentEquals("inhalation")) {
+				createDevelopmentalInhalationRecord(chemical, r);
+			}
 		}
 	}	
 

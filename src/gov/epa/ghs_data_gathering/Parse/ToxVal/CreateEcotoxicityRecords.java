@@ -4,6 +4,14 @@ import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 public class CreateEcotoxicityRecords {
+	
+	/* Inclusion criteria for Ecotox:
+	 	human_eco: eco
+	 	toxval_type:: NOEC or LOEC
+	 	toxval_units: mg/L
+		-Leora
+	*/	
+	
 
 	
 	static void createEcoToxAcuteRecords(Chemical chemical, RecordToxVal tr) {

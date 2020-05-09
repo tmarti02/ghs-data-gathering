@@ -478,8 +478,8 @@ public class ParseToxVal extends Parse {
 		ParseToxVal p=new ParseToxVal();
 //		p.createFiles();
 		
-//		String folder="C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
-		String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
+		String folder="C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
+//		String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
 		
 		String CAS="79-06-1"; //acrylamide
 		
