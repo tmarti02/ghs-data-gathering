@@ -3,18 +3,29 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal;
 import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
-public class CreateEcotoxicityRecords {
+public class CreateAquaticToxicityRecords {
 	
-	/* Inclusion criteria for Ecotox:
-	 	human_eco: eco
-	 	toxval_type:: NOEC or LOEC
-	 	toxval_units: mg/L
+	/*  Need to separate into acute and chronic.
+	 	
+	 	Inclusion criteria for acute aquatic toxicity:
+	 	r.human_eco = "eco" and
+		r.risk_assessment_class="acute" or "mortality:acute" or "growth:acute" or "reproduction:acute" or "ecotoxicity invertebrate" or "ecotoxicity plants" and
+		tr.habitat = "aquatic" and
+		tr.toxval_type = "LC50" or "EC50" and
+		tr.toxval_units = "mg/L"
+		
+		Inclusion criteria for chronic aquatic toxicity:
+		r.human_eco = "eco" and
+		r.risk_assessment_class = "chronic" or "mortality:chronic" or "growth:chronic" or "reproduction:chronic" or "ecotoxicity invertebrate" or "ecotoxicity plants" and
+		tr.habitat = "aquatic" and
+		tr.toxval_type = "NOEC" or "LOEC" and
+		tr.toxval_units = "mg/L"
 		-Leora
 	*/	
 	
 
 	
-	static void createEcoToxAcuteRecords(Chemical chemical, RecordToxVal tr) {
+	static void createAquaticToxAcuteRecords(Chemical chemical, RecordToxVal tr) {
 
 		ScoreRecord sr = new ScoreRecord();
 		sr = new ScoreRecord();
@@ -26,25 +37,19 @@ public class CreateEcotoxicityRecords {
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
 
-		setEcoToxAcuteScore(sr, chemical);
+		setAquaticToxAcuteScore(sr, chemical);
 
 		sr.note=ParseToxVal.createNote(tr);
 			
 		chemical.scoreAcute_Aquatic_Toxicity.records.add(sr);
-		//Need to address this error message.
+
 			
 					
-	}
-	
-	static void createEcotoxInvertebrateRecords(Chemical chemical, RecordToxVal r) {
-		
-		// Need to add method.  -Leora 4/24/20
-		
 	}
 
 	
 	
-	static void createEcoToxChronicRecords(Chemical chemical, RecordToxVal tr) {
+	static void createAquaticToxChronicRecords(Chemical chemical, RecordToxVal tr) {
 		
 		ScoreRecord sr = new ScoreRecord();
 		sr = new ScoreRecord();
@@ -56,7 +61,7 @@ public class CreateEcotoxicityRecords {
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
 
-		setEcoToxChronicScore(sr, chemical);
+		setAquaticToxChronicScore(sr, chemical);
 
 		sr.note=ParseToxVal.createNote(tr);
 		
@@ -68,7 +73,7 @@ public class CreateEcotoxicityRecords {
 	}
 	
 	
-	private static void setEcoToxChronicScore(ScoreRecord sr, Chemical chemical) {
+	private static void setAquaticToxChronicScore(ScoreRecord sr, Chemical chemical) {
 		
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;
@@ -102,7 +107,7 @@ public class CreateEcotoxicityRecords {
 	}
 		
 	
-	private static void setEcoToxAcuteScore(ScoreRecord sr, Chemical chemical) {
+	private static void setAquaticToxAcuteScore(ScoreRecord sr, Chemical chemical) {
 		
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;

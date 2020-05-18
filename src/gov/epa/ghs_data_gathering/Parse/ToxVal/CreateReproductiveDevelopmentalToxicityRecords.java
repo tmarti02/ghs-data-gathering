@@ -3,7 +3,7 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal;
 import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
-public class CreateDevelopmentalToxicityRecords {
+public class CreateReproductiveDevelopmentalToxicityRecords {
 
 	/* Inclusion criteria for Developmental Toxicity:
 	 All routes
@@ -26,11 +26,7 @@ public class CreateDevelopmentalToxicityRecords {
 	
 	
 	
-	/* [Not doing this: Just doing if toxval_type_supercategory is "Point of Departure"
-	 * rather than separating NOAEL, LOAEL, NEL, LEL.
-	 * DfE is based on the NOAEL OR LOAEL.  Maybe we should omit NEL and LEL.]
-	 * 
-	 * toxval_type should be NOAEL or LOAEL
+	/* toxval_type should be NOAEL or LOAEL
 	 * 
 	 * DfE criteria for Reproductive and Developmental Toxicity:
 	 * DfE has no VH for Reproductive and Developmental Toxicity
@@ -51,21 +47,21 @@ public class CreateDevelopmentalToxicityRecords {
 	 * */						
 
 		
-	static void createDevelopmentalRecords(Chemical chemical, RecordToxVal r) {
+	static void createReproductiveDevelopmentalRecords(Chemical chemical, RecordToxVal r) {
 		if (r.toxval_type.contentEquals("NOAEL") || r.toxval_type.contentEquals("LOAEL")) {
 			if (r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("oral")) {
-				createDevelopmentalOralRecord(chemical, r);	
+				createOralRecord(chemical, r);	
 			} else if(r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("dermal")) {
-				createDevelopmentalDermalRecord(chemical, r);
+				createDermalRecord(chemical, r);
 			} else if(r.toxval_units.contentEquals("mg/L-day") && r.exposure_route.contentEquals("inhalation")) {
-				createDevelopmentalInhalationRecord(chemical, r);
+				createInhalationRecord(chemical, r);
 			}
 		}
 	}	
 
 	
-	private static void createDevelopmentalOralRecord(Chemical chemical, RecordToxVal tr) {
-//		System.out.println("Creating Developmental Oral Record");
+	private static void createOralRecord(Chemical chemical, RecordToxVal tr) {
+//		System.out.println("Creating Oral Record");
 		//This is not printing.
 
 		ScoreRecord sr = new ScoreRecord();
@@ -79,15 +75,20 @@ public class CreateDevelopmentalToxicityRecords {
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
 
-		setDevelopmentalOralScore(sr, chemical);
+		setOralScore(sr, chemical);
 
 		sr.note=ParseToxVal.createNote(tr);
 			
-		chemical.scoreDevelopmental.records.add(sr);
+		if (tr.risk_assessment_class.contentEquals("developmental") ||
+			tr.risk_assessment_class.contentEquals("developmental neurotoxicity")) {
+			chemical.scoreDevelopmental.records.add(sr);
+		} else if (tr.risk_assessment_class.contentEquals("reproductive")) {
+			chemical.scoreReproductive.records.add(sr);
+		}
 			
 	}
 	
-	private static void setDevelopmentalOralScore(ScoreRecord sr, Chemical chemical) {
+	private static void setOralScore(ScoreRecord sr, Chemical chemical) {
 		
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;
@@ -112,8 +113,8 @@ public class CreateDevelopmentalToxicityRecords {
 			
 		}
 
-	private static void createDevelopmentalDermalRecord(Chemical chemical, RecordToxVal tr) {
-		System.out.println("Creating Developmental Dermal Record");
+	private static void createDermalRecord(Chemical chemical, RecordToxVal tr) {
+		System.out.println("Creating Dermal Record");
 
 		ScoreRecord sr = new ScoreRecord();
 		sr = new ScoreRecord();
@@ -124,16 +125,17 @@ public class CreateDevelopmentalToxicityRecords {
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
 
-		setDevelopmentalDermalScore(sr, chemical);
+		setDermalScore(sr, chemical);
 
 		sr.note=ParseToxVal.createNote(tr);
 
+		chemical.scoreReproductive.records.add(sr);
 		chemical.scoreDevelopmental.records.add(sr);
 
 	}
 
 
-	private static void setDevelopmentalDermalScore(ScoreRecord sr, Chemical chemical) {
+	private static void setDermalScore(ScoreRecord sr, Chemical chemical) {
 
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;
@@ -148,16 +150,13 @@ public class CreateDevelopmentalToxicityRecords {
 		} else if (dose > 500) {
 			sr.score = ScoreRecord.scoreL;
 			sr.rationale = "Dermal POD" + "(" + strDose + " mg/kg) > 500 mg/kg";
-			/*
-			 * } else { System.out.println(chemical.CAS + "\toral\t" + strDose);
-			 */
 		}
 	}
 
 
 
-	private static void createDevelopmentalInhalationRecord(Chemical chemical, RecordToxVal tr){
-		// System.out.println("Creating Developmental Inhalation Record");
+	private static void createInhalationRecord(Chemical chemical, RecordToxVal tr){
+		// System.out.println("Creating Inhalation Record");
 
 		ScoreRecord sr = new ScoreRecord();
 		sr = new ScoreRecord();
@@ -168,15 +167,16 @@ public class CreateDevelopmentalToxicityRecords {
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
 
-		setDevelopmentalDermalScore(sr, chemical);
+		setInhalationScore(sr, chemical);
 
 		sr.note=ParseToxVal.createNote(tr);
-
+		
+		chemical.scoreReproductive.records.add(sr);
 		chemical.scoreDevelopmental.records.add(sr);
 
 	}
 
-	private void setDevelopmentalInhalationScore(ScoreRecord sr, Chemical chemical) {
+	private static void setInhalationScore(ScoreRecord sr, Chemical chemical) {
 
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;

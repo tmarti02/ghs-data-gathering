@@ -21,8 +21,8 @@ import gov.epa.ghs_data_gathering.API.ScoreRecord;
    toxval_units: mg/kg
  Inhalation
    exposure_route: inhalation
-   toxval_type: LD50
-   toxval_units: mg/kg
+   toxval_type: LC50
+   toxval_units: mg/L
 -Leora
 */
 

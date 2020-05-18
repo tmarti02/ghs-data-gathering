@@ -53,6 +53,7 @@ public class CreateCancerRecords {
 			 * 
 			 * Determining cutoffs based on ToxVals has a lot of uncertainty because typically, a weight of evidence
 			 * approach is used to qualitatively estimate risk for cancer.
+			 * Also, traditionally, there is assumed to be no threshold, or no safe level.
 			 * Thus, DfE and GHS and the Tiger Team don't have numeric cutoffs for cancer.
 			 * 
 			 * So I'm not sure whether we should use numeric cutoffs.
