@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.Parse.ToxVal;
+package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
 import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.ScoreRecord;

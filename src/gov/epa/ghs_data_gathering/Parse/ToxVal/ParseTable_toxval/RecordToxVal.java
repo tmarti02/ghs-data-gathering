@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.Parse.ToxVal;
+package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
 import java.lang.reflect.Field;
 import java.util.LinkedList;
@@ -7,6 +7,12 @@ import java.util.List;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 
+/**
+ * Emulates the fields contained in the "toxval_pod_summary_with_references_2020-01-16" spreadsheet/query
+ * 
+ * @author Todd Martin
+ *
+ */
 public class RecordToxVal {
 
 		
@@ -80,7 +86,7 @@ public class RecordToxVal {
 		
 		
 		
-		transient static String[] varlist = { "dtxsid", "casrn", "name", "toxval_id", "source", "subsource", "toxval_type",
+		public transient static String[] varlist = { "dtxsid", "casrn", "name", "toxval_id", "source", "subsource", "toxval_type",
 				"toxval_type_original", "toxval_subtype", "toxval_subtype_original", "toxval_type_supercategory",
 				"toxval_numeric_qualifier", "toxval_numeric_qualifier_original", "toxval_numeric",
 				"toxval_numeric_original", "toxval_numeric_converted", "toxval_units", "toxval_units_original",

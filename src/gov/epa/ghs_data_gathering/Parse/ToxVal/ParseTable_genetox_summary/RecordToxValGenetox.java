@@ -1,21 +1,24 @@
-package gov.epa.ghs_data_gathering.Parse.ToxVal;
+package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_genetox_summary;
 
 import java.lang.reflect.Field;
 
-public class RecordToxValCancer {
+public class RecordToxValGenetox {
 	
 	public String casrn;
 	public String name;
 	public String dtxsid;
-	public String source;
-	public String cancer_call;
-	public String exposure_route;
-	public String url;
+
+	public String reports_pos;
+	public String reports_neg;
+	public String reports_other;
+	public String ames;
+	public String micronucleus;
+	public String genetox_call;
 	
 	transient static String[] varlist = { 
-			"casrn","name","dtxsid","source","cancer_call","exposure_route","url"};
-
-
+			"casrn","name","dtxsid","reports_pos","reports_neg","reports_other","ames","micronucleus","genetox_call"};
+	
+	
 	/**
 	 * Create record based on header list and data list in csv using reflection to assign by header name
 	 * 
@@ -23,21 +26,13 @@ public class RecordToxValCancer {
 	 * @param list
 	 * @return
 	 */
-	public static RecordToxValCancer createRecord(String headerLine, String Line) {
-		
-		
-		RecordToxValCancer r=new RecordToxValCancer();
-		//convert to record:
+	public static RecordToxValGenetox createRecord(String headerLine, String Line) {
+				
+		RecordToxValGenetox r=new RecordToxValGenetox();
 		try {
-//			LinkedList<String>list=Utilities.Parse3(Line, "\t");
 
 			String [] list=Line.split("\t");
 			String [] hlist=headerLine.split("\t");
-			
-//			if (list.length!=hlist.size()) {
-//				System.out.println(list.length+"\t"+hlist.size());
-//				System.out.println(Line);
-//			}
 			
 			for (int i=0;i<hlist.length;i++) {
 				Field myField =r.getClass().getField(hlist[i]);

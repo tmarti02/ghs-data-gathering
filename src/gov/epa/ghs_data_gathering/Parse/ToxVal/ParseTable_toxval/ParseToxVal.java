@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.Parse.ToxVal;
+package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
 import java.io.*;
 import java.text.DecimalFormat;
@@ -162,14 +162,18 @@ public class ParseToxVal extends Parse {
 
 	}
 
-	private void createScoreRecord(Chemical chemical, RecordToxVal r) {
+	public static void createScoreRecord(Chemical chemical, RecordToxVal r) {
 
+		
+		
 		if (chemical.CAS == null) {
 			chemical.CAS = r.casrn;
 			chemical.name = r.name;
 		}
 
 		if (r.risk_assessment_class.contentEquals("acute") && r.human_eco.contentEquals("human health")) {
+			
+			
 			CreateAcuteMammalianToxicityRecords.createAcuteMammalianToxicityRecords(chemical, r);
 
 			/*
@@ -437,7 +441,7 @@ private void createReproductiveRecords(Chemical chemical, RecordToxVal r) {
 
 }
 
-private void createNeurotoxicityRecords(Chemical chemical, RecordToxVal r) {
+private static void createNeurotoxicityRecords(Chemical chemical, RecordToxVal r) {
 
 	// study_duration_value and study_duration_units
 	// DfE criteria

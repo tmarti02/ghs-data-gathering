@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.Parse.ToxVal;
+package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_cancer_summary;
 
 import java.io.BufferedReader;
 import java.io.File;

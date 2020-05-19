@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.Parse.ToxVal;
+package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
 import gov.epa.ghs_data_gathering.API.Chemical;
 
@@ -10,7 +10,7 @@ import gov.epa.ghs_data_gathering.API.Chemical;
 public class CreateCancerRecords {
 
 	
-	static void createCancerRecords(Chemical chemical, RecordToxVal r) {
+	public static void createCancerRecords(Chemical chemical, RecordToxVal r) {
 		
 		/* if cancer_call is not missing then
 		 * [L,M,H,VH,N/A based on dictionary that I added for cancer_call]

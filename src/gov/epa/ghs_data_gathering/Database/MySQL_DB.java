@@ -227,7 +227,24 @@ public class MySQL_DB {
 			ex.printStackTrace();
 			return null;
 		}
+	}
+	
+	public static ResultSet getRecords(Statement stat,String sql) {
+
+		try {
+			
+//			System.out.println(query);
+			ResultSet rs = stat.executeQuery(sql);
+//			ResultSetMetaData rsmd = rs.getMetaData();
+			
+			return rs;
+//			this.printResultSet(rs);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
 	}	
+
 	
 	private void createSQliteDB_FromTextFilesSimple(String dbFilePath,String textFileFolder) {
 		
