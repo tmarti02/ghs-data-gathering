@@ -33,6 +33,9 @@ public class ScoreRecord {
 	// Should this be concentration instead of mass?
 	public String valueMassUnits;
 	public String valueMassOperator;// "<",">", or ""
+	
+	public Double duration;
+	public String durationUnits;
 
 	// public static String [] displayFieldNames=
 	// {"Source","Score","Route","Classification","Hazard
@@ -42,12 +45,14 @@ public class ScoreRecord {
 
 	public static String[] displayFieldNames = { "Name","Source", "Score", "Route", "Category", "Hazard Code",
 			"Hazard Statement", "Rationale", "Note" };
+
+	
 	public static String[] actualFieldNames = { "name","source", "score", "route", "category", "hazard_code",
 			"hazard_statement", "rationale", "note" };
 
 	
 	public static String[] actualFieldNames2 = { "source", "score", "route", "category", "hazard_code",
-			"hazard_statement", "rationale", "note","note2","valueMassOperator","valueMass","valueMassUnits"};
+			"hazard_statement", "rationale", "note","note2","valueMassOperator","valueMass","valueMassUnits","duration","durationUnits"};
 	
 
 
@@ -494,6 +499,7 @@ public class ScoreRecord {
 	
 	public ScoreRecord clone() {
 		ScoreRecord clone=new ScoreRecord();
+		
 		clone.source=source;
 		clone.score=score;
 		clone.category=category;
@@ -506,6 +512,9 @@ public class ScoreRecord {
 		clone.valueMass=valueMass;
 		clone.valueMassUnits=valueMassUnits;
 		clone.valueMassOperator=valueMassOperator;
+		clone.duration=duration;
+		clone.durationUnits=durationUnits;
+		
 		return clone;
 		
 	}

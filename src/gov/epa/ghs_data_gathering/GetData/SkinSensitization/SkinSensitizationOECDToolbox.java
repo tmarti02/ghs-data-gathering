@@ -450,16 +450,16 @@ public class SkinSensitizationOECDToolbox {
 		//Omit weak tox (EC3>10%)
 		
 		if (recordOECD_Toolbox.EC3.contentEquals("Negative")) {
-			r.binaryToxResult=0;
+			r.binaryResult=0;
 		} else if (recordOECD_Toolbox.EC3.contentEquals("Strongly positive") || recordOECD_Toolbox.EC3.contentEquals("Weakly positive")) {
-			r.binaryToxResult=1;
+			r.binaryResult=1;
 		} else {
 			try {
 				double EC3=Double.parseDouble(recordOECD_Toolbox.EC3);			
-				r.binaryToxResult=1;
+				r.binaryResult=1;
 			
 			}  catch (Exception ex) {				
-				r.binaryToxResult=-1;
+				r.binaryResult=-1;
 				System.out.println(recordOECD_Toolbox.CAS+"\t"+recordOECD_Toolbox.EC3+"\tAmbiguous");				
 			}
 		}
@@ -481,15 +481,15 @@ public class SkinSensitizationOECDToolbox {
 		//Omit weak tox (EC3>10%)
 		
 		if (recordOECD_Toolbox.EC3.contentEquals("Negative")) {
-			r.binaryToxResult=0;
+			r.binaryResult=0;
 		} else if (recordOECD_Toolbox.EC3.contentEquals("Strongly positive")) {
-			r.binaryToxResult=1;
+			r.binaryResult=1;
 		} else if (recordOECD_Toolbox.EC3.contentEquals("Weakly positive")) {
-			r.binaryToxResult=-1;
+			r.binaryResult=-1;
 		} else {
 			double EC3=Double.parseDouble(recordOECD_Toolbox.EC3);			
-			if (EC3>10) r.binaryToxResult=-1;//Weak ambiguous
-			else r.binaryToxResult=1;			
+			if (EC3>10) r.binaryResult=-1;//Weak ambiguous
+			else r.binaryResult=1;			
 		}
 				
 //		if (recordOECD_Toolbox.CAS.contentEquals("10461-98-0")) {

@@ -17,10 +17,10 @@ public class RecordTox {
 	String SMILES;//Needed?
 	
 	boolean isBinary=true;//needed?
-	public int binaryToxResult=-1;//1 = positive, 0 = negative, -1 = ambiguous
+	public int binaryResult=-1;//1 = positive, 0 = negative, -1 = ambiguous
 	
-	double continuousToxResult;
-	String continuousToxUnits;
+	double continuousResult;
+	String continuousUnits;
 			
 	
 	

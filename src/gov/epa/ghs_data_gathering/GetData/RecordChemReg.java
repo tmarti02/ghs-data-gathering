@@ -1,6 +1,7 @@
 package gov.epa.ghs_data_gathering.GetData;
 
 import java.lang.reflect.Field;
+import java.util.Vector;
 
 
 public class RecordChemReg {
@@ -28,6 +29,17 @@ public class RecordChemReg {
 	
 	public static String getHeader() {
 		return getHeader(varlist);
+	}
+	
+	public static void getUniqueSIDs(Vector<RecordChemReg> recordsChemReg) {
+		Vector<String>uniqueChemRegSIDS=new Vector<>();
+		
+		for (RecordChemReg r:recordsChemReg) {
+			if(r.Top_HIT_DSSTox_Substance_Id!=null && !uniqueChemRegSIDS.contains(r.Top_HIT_DSSTox_Substance_Id)) {
+				System.out.println(r.Top_HIT_DSSTox_Substance_Id);
+				uniqueChemRegSIDS.add(r.Top_HIT_DSSTox_Substance_Id);
+			}
+		}
 	}
 	
 	public void setValue(String fieldName,String fieldValue) {

@@ -145,8 +145,8 @@ public class DSSTOX {
 				int count=0;//count of non ambig tox records
 				
 				for (RecordTox record:records) {				
-					if (record.binaryToxResult>-1)	{
-						tox+=record.binaryToxResult;
+					if (record.binaryResult>-1)	{
+						tox+=record.binaryResult;
 						count++;
 					}
 				}
@@ -327,7 +327,7 @@ public class DSSTOX {
 						System.out.println(recordTox.CAS + "\tNotFound");
 					}
 				} else {
-					recordChemReg = htChemRegCAS_Name.get(keyCAS_Name);//look up by key CAS
+					recordChemReg = htChemRegCAS_Name.get(keyCAS_Name);//look up by CAS+Name
 				}
 
 //				if (recordChemReg == null) {
@@ -393,8 +393,8 @@ public class DSSTOX {
 				int count=0;//count of non ambig tox records
 				
 				for (RecordTox record:records) {				
-					if (record.binaryToxResult>-1)	{
-						tox+=record.binaryToxResult;
+					if (record.binaryResult>-1)	{
+						tox+=record.binaryResult;
 						count++;
 					}
 					
@@ -415,8 +415,7 @@ public class DSSTOX {
 				} else {
 					tox=-1;
 				}
-				
-				
+								
 				
 				String omitReason=DSSTOX.getOmitReason(SID, recordsDashboard);
 				

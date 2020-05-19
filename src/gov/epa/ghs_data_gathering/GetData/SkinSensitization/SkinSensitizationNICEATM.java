@@ -492,13 +492,13 @@ public class SkinSensitizationNICEATM {
 		//Omit weak tox (EC3>10%)
 
 		if (recordNICEATM.EC3.contentEquals("NC")) {
-			r.binaryToxResult=0;
+			r.binaryResult=0;
 		} else if (recordNICEATM.EC3.contains(">") || recordNICEATM.EC3.isEmpty() || recordNICEATM.EC3.contentEquals("IDR")) {
-			r.binaryToxResult=-1;//Weak ambiguous
+			r.binaryResult=-1;//Weak ambiguous
 		} else {
 			double EC3=Double.parseDouble(recordNICEATM.EC3);			
-			if (EC3>10) r.binaryToxResult=-1;//Weak ambiguous
-			else r.binaryToxResult=1;			
+			if (EC3>10) r.binaryResult=-1;//Weak ambiguous
+			else r.binaryResult=1;			
 		}
 
 		return r;
@@ -517,18 +517,18 @@ public class SkinSensitizationNICEATM {
 		r.chemicalName=recordNICEATM.Chemical_Name;
 
 		if (recordNICEATM.EC3.contentEquals("NC")) {
-			r.binaryToxResult=0;
+			r.binaryResult=0;
 		} else if (recordNICEATM.EC3.contains(">") || recordNICEATM.EC3.isEmpty() || recordNICEATM.EC3.contentEquals("IDR")) {
-			r.binaryToxResult=-1;//ambiguous
+			r.binaryResult=-1;//ambiguous
 		} else {
 
 			//If have an EC3 value, assign to positive (makes models protective):
 			try {
 				double EC3=Double.parseDouble(recordNICEATM.EC3);
-				r.binaryToxResult=1;				
+				r.binaryResult=1;				
 			} catch (Exception ex) {
 				System.out.println(recordNICEATM.CASRN+"\t"+recordNICEATM.EC3+"\tAmbiguous");
-				r.binaryToxResult=-1;
+				r.binaryResult=-1;
 			}
 			
 		}
