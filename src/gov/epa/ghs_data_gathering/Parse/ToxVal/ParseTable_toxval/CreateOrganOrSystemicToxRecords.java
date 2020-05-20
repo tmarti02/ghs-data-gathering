@@ -42,6 +42,8 @@ public class CreateOrganOrSystemicToxRecords {
 			study_dur_in_days=study_duration_value/24.0;
 		} else if (tr.study_duration_units.contentEquals("minute")) {
 			study_dur_in_days=study_duration_value/1440.0;
+		} else if (tr.study_duration_units.contentEquals("-")) {
+			return;
 		} else {
 			System.out.println("unknown units="+tr.study_duration_units);
 			return;
@@ -118,13 +120,11 @@ public class CreateOrganOrSystemicToxRecords {
 			}
 		}	
 		
-		if (sr.score!=null) {
-//			System.out.println(sr.scoreToInt());
-		} else {
-//			System.out.println("no score, duration="+study_dur_in_days+" days");
-			//Cant add record since score not assigned (doesnt fall into above if statements)
-			return;
-		}
+				
+		if (sr.score==null) return;
+			
+//		System.out.println(sr.scoreToInt());
+		
 				
 		if (study_dur_in_days>1) {
 			chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);

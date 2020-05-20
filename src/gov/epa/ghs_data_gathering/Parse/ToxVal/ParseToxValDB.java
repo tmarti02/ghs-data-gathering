@@ -8,13 +8,18 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Vector;
 
 
 import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.FlatFileRecord;
+
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_cancer_summary.ParseToxValCancer;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_cancer_summary.RecordToxValCancer;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_genetox_summary.ParseToxValGenetox;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_genetox_summary.RecordToxValGenetox;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.ParseToxVal;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.RecordToxVal;
 
@@ -24,22 +29,17 @@ public class ParseToxValDB {
 	
     public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 	
-    public static Statement statAA_Dashboard_Records = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
+    public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
 	
-    private String createToxValQuery(String CAS) {
+    private String createSQLQuery_toxval(String CAS) {
     	
-//    	SELECT toxval.dtxsid, toxval.risk_assessment_class, chemical_list.dtxsid, chemical_list.casrn
-//    	FROM chemical_list 
-//    	LEFT JOIN toxval on toxval.dtxsid = chemical_list.dtxsid
-//    	where chemical_list.casrn="79-06-1";
-
     	String SQL="SELECT ";
     	    	    	
     	for(String field : RecordToxVal.varlist) {    		
 
     		//Following comes from chemical_list table:
-    		if(field.contentEquals("casrn")) continue;
+    		if(field.contentEquals("casrn")) continue;//skip it
     		if(field.contentEquals("name")) continue;
     		
     		//Following comes from toxval_type_dictionary:
@@ -65,111 +65,138 @@ public class ParseToxValDB {
     		SQL+="toxval."+field+", ";    		
     	}
     	
-    	SQL+="chemical_list.casrn, chemical_list.name, ";
+    	SQL+="chemical.casrn, chemical.name, ";
     	SQL+="species.species_common, species.species_supercategory, species.habitat, \n";
     	SQL+="long_ref, title, author, journal, volume, issue, url, document_name, record_source_type, record_source_hash \n";
     	    	
-    	SQL+="FROM chemical_list\n";
+    	SQL+="FROM chemical\n";
     	
-    	SQL+="LEFT JOIN toxval ON toxval.dtxsid = chemical_list.dtxsid\n";
+    	SQL+="LEFT JOIN toxval ON toxval.dtxsid = chemical.dtxsid\n";
     	SQL+="LEFT JOIN species ON toxval.species_id=species.species_id\n";
     	SQL+="LEFT JOIN record_source ON toxval.toxval_id=record_source.toxval_id\n";
     	
-    	SQL+="WHERE chemical_list.casrn=\""+CAS+"\";";		
+    	SQL+="WHERE chemical.casrn=\""+CAS+"\";";		
+    	
+    	System.out.println(SQL);
+    	
+    	return SQL;
+    	    	    	
+
+    }
+    
+        
+    
+    private String createSQLQuery(String CAS,String table,String [] varlist) {
+    	
+
+    	String SQL="SELECT ";
+    	
+    	    	    	
+    	for(String field : varlist) {    		
+
+    		//Following comes from chemical_list table:
+    		if(field.contentEquals("casrn")) continue;
+    		if(field.contentEquals("name")) continue;
+    		    		
+    		SQL+=table+"."+field+", ";    		
+    	}
+    	
+    	SQL+="chemical.casrn, chemical.name\n";   	    	
+    	SQL+="FROM chemical\n";    	
+    	SQL+="LEFT JOIN "+table+" ON "+table+".dtxsid = chemical.dtxsid\n";
+    	
+    	SQL+="WHERE chemical.casrn=\""+CAS+"\";";		
     	
     	System.out.println(SQL);
     	
     	return SQL;
     	    	
-//    	String SQL="SELECT * from ["+table1+"], * from [chemical_list]\n";
-//    	SQL+="FROM ["+table1+"] LEFT JOIN [chemical_list] on ["+table1+"].chemical_id = [chemical_list].chemical_id\n";
-//    	SQL+="WHERE [chemical_list].casrn = "+CAS;
-//    	ORDER BY Len([01 96 hr bg LC50 median]!CAS), [01 96 hr bg LC50 median].CAS;
-    	
 
     }
-    
-	public static RecordToxVal createRecord(String headerLine, String Line) {
+
+	
+	
+	void getDataFromTable_toxval(Chemical chemical) {
 		
-		
-		RecordToxVal r=new RecordToxVal();
-		//convert to record:
 		try {
-//			LinkedList<String>list=Utilities.Parse3(Line, "\t");
+			
+			String sql=createSQLQuery_toxval(chemical.CAS);				
+			ResultSet rs=MySQL_DB.getRecords(statToxVal, sql);
 
-			String [] list=Line.split("\t");
-			String [] hlist=headerLine.split("\t");
+			int count=0;
 			
-//			if (list.length!=hlist.size()) {
-//				System.out.println(list.length+"\t"+hlist.size());
-//				System.out.println(Line);
-//			}
-			
-			for (int i=0;i<hlist.length;i++) {
-				Field myField =r.getClass().getField(hlist[i]);
-				myField.set(r, list[i]);
+			while (rs.next()) {						 
+				RecordToxVal r=createRecordToxVal(rs);
+				ParseToxVal.createScoreRecord(chemical, r);
+				//System.out.println(r.risk_assessment_class);
+				count++;
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			System.out.println(Line);
-		}
-		return r;
-	}
-
-    
-    
-	void goThroughRecordsMultipleChemicals(Vector<String>casList,String destfilepathJson, String destfilepathText) {
 			
-
-		try {
-
-			Chemicals chemicals = new Chemicals();
-
-			Chemical chemical = new Chemical();
-
-			String oldCAS = "";
-
-			for (int i=0;i<casList.size();i++) {
-
-				String CAS=casList.get(i);
-
-				chemical = new Chemical();
-				chemical.CAS = CAS;				
-				chemicals.add(chemical);
-																	    	 
-				try {
-					
-					String sql=createToxValQuery(CAS);				
-					ResultSet rs=MySQL_DB.getRecords(statAA_Dashboard_Records, sql);
-
-					while (rs.next()) {						 
-						RecordToxVal r=createRecordToxVal(rs);
-						ParseToxVal.createScoreRecord(chemical, r);
-						//System.out.println(r.risk_assessment_class);
-					}
-
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-
-			}
-
-			chemicals.writeToFile(destfilepathJson);
-			chemicals.toFlatFile(destfilepathText, "\t");
-			//			writeChemicalToFile(chemical, destfilepath);
-			
+			System.out.println("toxval count for "+chemical.CAS+" = "+count);
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-
+		
 	}
 	
-	private  static RecordToxVal createRecordToxVal(ResultSet rs) {
+	void getDataFromTable_cancer_summary(Chemical chemical) {
 		
-		RecordToxVal r=new RecordToxVal();
-		
+		try {
+			
+			String sql=createSQLQuery(chemical.CAS,"cancer_summary",RecordToxValCancer.varlist);				
+			ResultSet rs=MySQL_DB.getRecords(statToxVal, sql);
 
+			int count=0;
+			
+			Hashtable<String,String>dictCC=ParseToxValCancer.populateCancerCallToScoreValue();
+			
+			while (rs.next()) {						 
+				RecordToxValCancer r=createRecordToxValCancer(rs);
+				ParseToxValCancer.createScoreRecord(chemical, r, dictCC);
+				//System.out.println(r.risk_assessment_class);
+				count++;
+			}
+			
+			System.out.println("toxval count for "+chemical.CAS+" = "+count);
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+	}
+	
+	void getDataFromTable_genetox_summary(Chemical chemical) {
+		
+		try {
+			
+			String sql=createSQLQuery(chemical.CAS,"genetox_summary",RecordToxValGenetox.varlist);				
+			ResultSet rs=MySQL_DB.getRecords(statToxVal, sql);
+
+			int count=0;
+			
+			Hashtable<String,String>dictCC=ParseToxValGenetox.populateGenetoxCallToScoreValue();
+			
+			
+			while (rs.next()) {						 
+				RecordToxValGenetox r=createRecordToxValGenetox(rs);
+				ParseToxValGenetox.createScoreRecord(chemical, r,dictCC);
+				//System.out.println(r.risk_assessment_class);
+				count++;
+			}
+			
+			System.out.println("toxval count for "+chemical.CAS+" = "+count);
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+	}
+    
+    
+    
+
+	private static void createRecord(ResultSet rs, Object r) {
 		ResultSetMetaData rsmd;
 		try {
 			rsmd = rs.getMetaData();
@@ -195,13 +222,65 @@ public class ParseToxValDB {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
-		
+		}
+	}
 
-		 return r;
-		 
+	void goThroughRecordsMultipleChemicals(Vector<String>casList,String destfilepathJson, String destfilepathText) {
+			
+
+		try {
+
+			Chemicals chemicals = new Chemicals();
+
+			Chemical chemical = new Chemical();			
+
+			for (int i=0;i<casList.size();i++) {
+
+				String CAS=casList.get(i);
+
+				chemical = new Chemical();
+				chemical.CAS = CAS;				
+				chemicals.add(chemical);
+											
+				getDataFromTable_toxval(chemical);
+				getDataFromTable_cancer_summary(chemical);
+				getDataFromTable_genetox_summary(chemical);
+				
+
+			}
+
+			chemicals.writeToFile(destfilepathJson);
+			chemicals.toFlatFile(destfilepathText, "\t");
+			//			writeChemicalToFile(chemical, destfilepath);
+			
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
 	}
 	
+	private  static RecordToxVal createRecordToxVal(ResultSet rs) {
+		RecordToxVal r=new RecordToxVal();		
+		createRecord(rs,r);
+		return r;		 
+	}
+	
+	private static RecordToxValCancer createRecordToxValCancer(ResultSet rs) {
+		// TODO Auto-generated method stub
+		RecordToxValCancer r=new RecordToxValCancer();		
+		createRecord(rs, r);
+		return r;
+	}
+	
+	private static RecordToxValGenetox createRecordToxValGenetox(ResultSet rs) {
+		// TODO Auto-generated method stub
+		RecordToxValGenetox r=new RecordToxValGenetox();		
+		createRecord(rs, r);
+		return r;
+	}
+
+
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

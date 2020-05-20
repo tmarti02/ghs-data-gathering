@@ -128,7 +128,7 @@ public class ParseToxValCancer {
 	}
 	
 
-	private void createScoreRecord(Chemical chemical,RecordToxValCancer rc,Hashtable<String,String>dictCC) {
+	public static void createScoreRecord(Chemical chemical,RecordToxValCancer rc,Hashtable<String,String>dictCC) {
 //		System.out.println(rc.casrn+"\t"+rc.cancer_call);
 		
 		ScoreRecord sr = new ScoreRecord();

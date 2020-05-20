@@ -15,7 +15,7 @@ public class RecordToxValGenetox {
 	public String micronucleus;
 	public String genetox_call;
 	
-	transient static String[] varlist = { 
+	public transient static String[] varlist = { 
 			"casrn","name","dtxsid","reports_pos","reports_neg","reports_other","ames","micronucleus","genetox_call"};
 	
 	

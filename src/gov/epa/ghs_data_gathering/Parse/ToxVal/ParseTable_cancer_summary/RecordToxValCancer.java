@@ -12,7 +12,7 @@ public class RecordToxValCancer {
 	public String exposure_route;
 	public String url;
 	
-	transient static String[] varlist = { 
+	public transient static String[] varlist = { 
 			"casrn","name","dtxsid","source","cancer_call","exposure_route","url"};
 
 

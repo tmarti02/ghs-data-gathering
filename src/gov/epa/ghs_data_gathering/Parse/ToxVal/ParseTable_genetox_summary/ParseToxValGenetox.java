@@ -37,7 +37,7 @@ public class ParseToxValGenetox {
 		
 	}
 	
-	private void createScoreRecord(Chemical chemical,RecordToxValGenetox rc,Hashtable<String,String>dictCC) {
+	public static void createScoreRecord(Chemical chemical,RecordToxValGenetox rc,Hashtable<String,String>dictCC) {
 //		System.out.println(rc.casrn+"\t"+rc.cancer_call);
 		
 		ScoreRecord sr = new ScoreRecord();

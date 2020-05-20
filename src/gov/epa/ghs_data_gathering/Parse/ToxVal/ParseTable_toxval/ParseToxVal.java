@@ -170,34 +170,45 @@ public class ParseToxVal extends Parse {
 			chemical.CAS = r.casrn;
 			chemical.name = r.name;
 		}
-
-		if (r.risk_assessment_class.contentEquals("acute") && r.human_eco.contentEquals("human health")) {
+							
+		if (r.human_eco.contentEquals("human health")) {			
+			if (r.risk_assessment_class.contentEquals("acute")) {
+				
+				/*
+				 * Added: && r.human_eco.contentEquals("human health") because there is at least
+				 * one eco entry labeled "acute" I seem to remember it should be && instead of &
+				 * but need to check this. -Leora 4/23/20
+				 * 
+				 * 
+				 * I'm not quite sure whether things the inclusion criteria such as for
+				 * human_eco should go here or whether they should be located in the code for
+				 * the class.
+				 * 
+				 */
+				
+				CreateAcuteMammalianToxicityRecords.createAcuteMammalianToxicityRecords(chemical, r);	
+				
+			} else if (r.risk_assessment_class.contentEquals("repeat dose")
+					|| r.risk_assessment_class.contentEquals("short-term")
+					|| r.risk_assessment_class.contentEquals("subacute")
+					|| r.risk_assessment_class.contentEquals("subchronic")
+					|| r.risk_assessment_class.contentEquals("chronic")) {
+				CreateOrganOrSystemicToxRecords.createDurationRecord(chemical, r);
 			
+			} else if (r.risk_assessment_class.contentEquals("cancer")) {
 			
-			CreateAcuteMammalianToxicityRecords.createAcuteMammalianToxicityRecords(chemical, r);
+				CreateCancerRecords.createCancerRecords(chemical, r);
 
-			/*
-			 * Added: && r.human_eco.contentEquals("human health") because there is at least
-			 * one eco entry labeled "acute" I seem to remember it should be && instead of &
-			 * but need to check this. -Leora 4/23/20
-			 * 
-			 * 
-			 * I'm not quite sure whether things the inclusion criteria such as for
-			 * human_eco should go here or whether they should be located in the code for
-			 * the class.
-			 * 
-			 */
+			} else if (r.risk_assessment_class.contentEquals("developmental")
+					|| r.risk_assessment_class.contentEquals("developmental neurotoxicity")
+					|| r.risk_assessment_class.contentEquals("reproductive")){
+				CreateReproductiveDevelopmentalToxicityRecords.createReproductiveDevelopmentalRecords(chemical, r);
 
-		} else if (r.risk_assessment_class.contentEquals("cancer")) {
-			CreateCancerRecords.createCancerRecords(chemical, r);
-
-		} else if (r.risk_assessment_class.contentEquals("developmental")
-				|| r.risk_assessment_class.contentEquals("developmental neurotoxicity")
-				|| r.risk_assessment_class.contentEquals("reproductive")){
-			CreateReproductiveDevelopmentalToxicityRecords.createReproductiveDevelopmentalRecords(chemical, r);
-
-
-			/* Added the rest of the rac here but need to add methods. -Leora 4/24/20 */
+			} else if (r.risk_assessment_class.contentEquals("neurotoxicity")) {
+				createNeurotoxicityRecords(chemical, r);
+			}
+		
+		
 
 		} else if (r.human_eco.contentEquals("eco") &&
 				r.habitat.contentEquals("aquatic") && r.toxval_units.contentEquals("mg/L")) {
@@ -228,44 +239,10 @@ public class ParseToxVal extends Parse {
 				}
 			}
 
-
-
-		} else if (r.human_eco.contentEquals("human health")) {
-			
-
-			if (r.risk_assessment_class.contentEquals("repeat dose")
-					|| r.risk_assessment_class.contentEquals("short-term")
-					|| r.risk_assessment_class.contentEquals("subacute")
-					|| r.risk_assessment_class.contentEquals("subchronic")
-					|| r.risk_assessment_class.contentEquals("chronic")) {
-				CreateOrganOrSystemicToxRecords.createDurationRecord(chemical, r);
-			}
-
-			/* I hope that my use of {} and || is correct here. */
-
-
-			/*
-			 * } else if (r.risk_assessment_class.contentEquals("growth:acute")) {
-			 * createGrowthAcuteRecords(chemical, r);
-			 * 
-			 * } else if (r.risk_assessment_class.contentEquals("growth:chronic")) {
-			 * createGrowthChronicRecords(chemical, r);
-			 */
-
-			/*		} else if (r.risk_assessment_class.contentEquals("reproductive")) {
-							createReproductiveRecords(chemical, r);*/
-
-		} else if (r.risk_assessment_class.contentEquals("neurotoxicity")) {
-			createNeurotoxicityRecords(chemical, r);
-
 			/* Probably should rename as Acute or Chronic AquaticToxicity instead of Ecotoxicity.
-
 
 		} else if (r.risk_assessment_class.contentEquals("ecotoxicity invertebrate")) {
 			CreateEcotoxicityRecords.createEcotoxInvertebrateRecords(chemical, r);
-
-		} else if (r.risk_assessment_class.contentEquals("chronic")) {
-			createChronicRecords(chemical, r);
 
 		} else if (r.risk_assessment_class.contentEquals("subchronic")) {
 			 createSubchronicRecords(chemical,r);
@@ -277,7 +254,18 @@ public class ParseToxVal extends Parse {
 			 createSubacuteRecords(chemical,r);
 		 */
 	
-						
+
+//		} else if (r.risk_assessment_class.contentEquals("acute")) {
+//			//TODO
+//
+//		} else if (r.risk_assessment_class.contentEquals("chronic")) {
+//			//TODO
+//			
+//		} else if (r.risk_assessment_class.contentEquals("mortality:acute")) {
+//			//TODO
+//			
+//		} else if (r.risk_assessment_class.contentEquals("mortality:chronic")) {
+//			//TODO
 			
 		} else {
 			System.out.println("unknown rac="+r.risk_assessment_class);

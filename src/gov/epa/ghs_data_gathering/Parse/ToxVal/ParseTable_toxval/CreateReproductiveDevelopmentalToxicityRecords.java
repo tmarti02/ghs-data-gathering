@@ -94,9 +94,8 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
 							
-		System.out.println(chemical.CAS+"\t"+strDose);
-					
-		System.out.println("****"+strDose);			
+//		System.out.println(chemical.CAS+"\t"+strDose);					
+//		System.out.println("****"+strDose);			
 				
 		if (dose < 50) {
 			sr.score = ScoreRecord.scoreH;
