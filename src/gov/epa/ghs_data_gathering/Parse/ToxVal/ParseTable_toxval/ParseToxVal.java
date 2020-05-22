@@ -268,7 +268,7 @@ public class ParseToxVal extends Parse {
 //			//TODO
 			
 		} else {
-			System.out.println("unknown rac="+r.risk_assessment_class);
+//			System.out.println("unknown rac="+r.risk_assessment_class);
 		}
 
 	}

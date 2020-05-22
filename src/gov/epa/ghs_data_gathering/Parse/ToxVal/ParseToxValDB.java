@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -20,6 +21,8 @@ import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_cancer_summary.ParseTo
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_cancer_summary.RecordToxValCancer;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_genetox_summary.ParseToxValGenetox;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_genetox_summary.RecordToxValGenetox;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_models.ParseToxValModels;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_models.RecordToxValModels;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.ParseToxVal;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.RecordToxVal;
 
@@ -77,7 +80,7 @@ public class ParseToxValDB {
     	
     	SQL+="WHERE chemical.casrn=\""+CAS+"\";";		
     	
-    	System.out.println(SQL);
+    	System.out.println("\n"+SQL);
     	
     	return SQL;
     	    	    	
@@ -88,10 +91,7 @@ public class ParseToxValDB {
     
     private String createSQLQuery(String CAS,String table,String [] varlist) {
     	
-
-    	String SQL="SELECT ";
-    	
-    	    	    	
+    	String SQL="SELECT ";    	    	    	    	
     	for(String field : varlist) {    		
 
     		//Following comes from chemical_list table:
@@ -107,13 +107,45 @@ public class ParseToxValDB {
     	
     	SQL+="WHERE chemical.casrn=\""+CAS+"\";";		
     	
-    	System.out.println(SQL);
+    	System.out.println("\n"+SQL);
     	
     	return SQL;
     	    	
 
     }
 
+    private String createSQLQuery(String CAS,String table,String [] varlist,String [] fieldNames,String [] fieldValues) {
+    	
+    	String SQL="SELECT ";    	    	    	    	
+    	for(String field : varlist) {    		
+
+    		//Following comes from chemical_list table:
+    		if(field.contentEquals("casrn")) continue;
+    		if(field.contentEquals("name")) continue;
+    		    		
+    		SQL+=table+"."+field+", ";    		
+    	}
+    	
+    	SQL+="chemical.casrn, chemical.name\n";   	    	
+    	SQL+="FROM chemical\n";    	
+    	SQL+="LEFT JOIN "+table+" ON "+table+".dtxsid = chemical.dtxsid\n";
+    	
+    	SQL+="WHERE chemical.casrn=\""+CAS+"\" AND ";
+    	
+    	for (int i=0;i<fieldNames.length;i++) {
+    		SQL+=fieldNames[i]+" = \""+fieldValues[i]+"\"";
+    		if (i<fieldNames.length-1) SQL+=" AND ";
+    	}
+    	
+    	SQL+=";";
+    	    			        	
+//    	System.out.println("\n"+SQL);
+    	
+    	return SQL;
+    	    	
+
+    }
+    
 	
 	
 	void getDataFromTable_toxval(Chemical chemical) {
@@ -126,13 +158,15 @@ public class ParseToxValDB {
 			int count=0;
 			
 			while (rs.next()) {						 
-				RecordToxVal r=createRecordToxVal(rs);
+
+				RecordToxVal r=new RecordToxVal();				
+				createRecord(rs,r);
 				ParseToxVal.createScoreRecord(chemical, r);
 				//System.out.println(r.risk_assessment_class);
 				count++;
 			}
 			
-			System.out.println("toxval count for "+chemical.CAS+" = "+count);
+			System.out.println("Records in toxval table for "+chemical.CAS+" = "+count);
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -152,13 +186,15 @@ public class ParseToxValDB {
 			Hashtable<String,String>dictCC=ParseToxValCancer.populateCancerCallToScoreValue();
 			
 			while (rs.next()) {						 
-				RecordToxValCancer r=createRecordToxValCancer(rs);
+				RecordToxValCancer r=new RecordToxValCancer();			
+				createRecord(rs, r);
+				
 				ParseToxValCancer.createScoreRecord(chemical, r, dictCC);
 				//System.out.println(r.risk_assessment_class);
 				count++;
 			}
 			
-			System.out.println("toxval count for "+chemical.CAS+" = "+count);
+			System.out.println("Records in cancer_summary table for "+chemical.CAS+" = "+count);
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -179,21 +215,102 @@ public class ParseToxValDB {
 			
 			
 			while (rs.next()) {						 
-				RecordToxValGenetox r=createRecordToxValGenetox(rs);
+				RecordToxValGenetox r=new RecordToxValGenetox();						
+				createRecord(rs, r);						
 				ParseToxValGenetox.createScoreRecord(chemical, r,dictCC);
 				//System.out.println(r.risk_assessment_class);
 				count++;
 			}
 			
-			System.out.println("toxval count for "+chemical.CAS+" = "+count);
+			System.out.println("Records in genetox_summary table for "+chemical.CAS+" = "+count);
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		
 	}
+
+	void getDataFromTable_models(Chemical chemical) {
+		
+		try {
+						
+			createRecordBCF_OPERA(chemical);
+			createRecordBCF_EPISUITE(chemical);
+			
+			//TODO add method for biodegradation score and half life from EPISUITE and OPERA
+					
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+	}
+
+
+
+	private void createRecordBCF_OPERA(Chemical chemical) throws SQLException {
+		//Get OPERA BCF:
+		
+		String model="OPERA";
+		String [] fieldNames= {"model","metric"};
+
+		String [] fieldValuesBCF= {model,"BCF"};			
+		String queryBCF=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesBCF);			
+		ResultSet rsBCF=MySQL_DB.getRecords(statToxVal, queryBCF);			
+	
+		
+		RecordToxValModels rBCF=null;
+		RecordToxValModels rBCF_AD=null;
+		
+		if (rsBCF.next()) {
+			rBCF=new RecordToxValModels();						
+			createRecord(rsBCF, rBCF);				
+//			System.out.println("BCF value="+r.value);				
+		} else {
+			return;
+		}
+
+		String [] fieldValuesBCF_AD= {model,"BCF_AD"};						
+		String queryBCF_AD=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesBCF_AD);			
+		ResultSet rsBCF_AD=MySQL_DB.getRecords(statToxVal, queryBCF_AD);
+			
+		if (rsBCF_AD.next()) {
+			rBCF_AD=new RecordToxValModels();						
+			createRecord(rsBCF_AD, rBCF_AD);										
+//			System.out.println("BCF_AD value="+r.value);				
+		} else {
+//			System.out.println("No values for AD");
+			return;
+		}
+		
+		
+		ParseToxValModels.createScoreRecordBCF_Opera(chemical, rBCF,rBCF_AD);
+	}
     
-    
+	
+	private void createRecordBCF_EPISUITE(Chemical chemical) throws SQLException {
+		//Get OPERA BCF:
+
+		String model="EpiSuite";
+
+		String [] fieldNames= {"model","metric"};
+		String [] fieldValuesBCF= {model,"BCF"};			
+		String queryBCF=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesBCF);			
+		ResultSet rsBCF=MySQL_DB.getRecords(statToxVal, queryBCF);			
+		
+		RecordToxValModels rBCF=null;
+		
+		if (rsBCF.next()) {
+			rBCF=new RecordToxValModels();						
+			createRecord(rsBCF, rBCF);				
+//			System.out.println("BCF value="+r.value);				
+		} else {
+			return;
+		}
+		
+		
+		ParseToxValModels.createScoreRecordBCF_EPISUITE(chemical, rBCF);
+	}
     
 
 	private static void createRecord(ResultSet rs, Object r) {
@@ -245,7 +362,7 @@ public class ParseToxValDB {
 				getDataFromTable_toxval(chemical);
 				getDataFromTable_cancer_summary(chemical);
 				getDataFromTable_genetox_summary(chemical);
-				
+				getDataFromTable_models(chemical);
 
 			}
 
@@ -260,26 +377,6 @@ public class ParseToxValDB {
 
 	}
 	
-	private  static RecordToxVal createRecordToxVal(ResultSet rs) {
-		RecordToxVal r=new RecordToxVal();		
-		createRecord(rs,r);
-		return r;		 
-	}
-	
-	private static RecordToxValCancer createRecordToxValCancer(ResultSet rs) {
-		// TODO Auto-generated method stub
-		RecordToxValCancer r=new RecordToxValCancer();		
-		createRecord(rs, r);
-		return r;
-	}
-	
-	private static RecordToxValGenetox createRecordToxValGenetox(ResultSet rs) {
-		// TODO Auto-generated method stub
-		RecordToxValGenetox r=new RecordToxValGenetox();		
-		createRecord(rs, r);
-		return r;
-	}
-
 
 	
 	public static void main(String[] args) {
