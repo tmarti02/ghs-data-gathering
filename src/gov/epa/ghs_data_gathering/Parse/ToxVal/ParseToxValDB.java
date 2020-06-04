@@ -17,6 +17,8 @@ import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.Chemicals;
 
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf.ParseToxValBCFBAF;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf.RecordToxValBCFBAF;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_cancer_summary.ParseToxValCancer;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_cancer_summary.RecordToxValCancer;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_genetox_summary.ParseToxValGenetox;
@@ -233,12 +235,18 @@ public class ParseToxValDB {
 	void getDataFromTable_models(Chemical chemical) {
 		
 		try {
-						
+
+			//Create record based on opera BCF prediction:			
 			createRecordBCF_OPERA(chemical);
+			
+			//Create record based on episuite BCF prediction:
 			createRecordBCF_EPISUITE(chemical);
 			
-			//TODO add method for biodegradation score and half life from EPISUITE and OPERA
-					
+			//Create record based on opera biodegradation prediction:
+			createRecordPersistence_OPERA(chemical);
+			
+			//Create record based on episuite biodegradation prediction:
+			createRecordPersistence_EPISUITE(chemical);		
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -247,6 +255,61 @@ public class ParseToxValDB {
 	}
 
 
+
+
+	private void createRecordPersistence_OPERA(Chemical chemical) throws SQLException {
+		//Get OPERA BCF:
+		
+		String model="OPERA";
+		String [] fieldNames= {"model","metric"};
+
+		String [] fieldValuesBCF= {model,"Biodegredation Half-life"};			
+		String query=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesBCF);			
+		ResultSet rs=MySQL_DB.getRecords(statToxVal, query);			
+	
+		
+		RecordToxValModels r=null;
+//		RecordToxValModels rBCF_AD=null;
+		
+		if (rs.next()) {
+			r=new RecordToxValModels();						
+			createRecord(rs, r);				
+//			System.out.println("BCF value="+r.value);				
+		} else {
+			return;
+		}
+
+					
+		ParseToxValModels.createScoreRecordPersistence_Opera(chemical, r);
+	}
+	
+	
+	private void createRecordPersistence_EPISUITE(Chemical chemical) throws SQLException {
+		//Get OPERA BCF:
+		
+		String model="EpiSuite";
+		String [] fieldNames= {"model","metric"};
+
+		String [] fieldValuesBCF= {model,"Biodegradation Score"};			
+		String query=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesBCF);			
+		ResultSet rs=MySQL_DB.getRecords(statToxVal, query);			
+	
+		
+		RecordToxValModels r=null;
+//		RecordToxValModels rBCF_AD=null;
+		
+		if (rs.next()) {
+			r=new RecordToxValModels();						
+			createRecord(rs, r);				
+//			System.out.println("BCF value="+r.value);				
+		} else {
+			return;
+		}
+
+					
+		ParseToxValModels.createScoreRecordPersistence_EpiSuite(chemical, r);
+	}
+	
 
 	private void createRecordBCF_OPERA(Chemical chemical) throws SQLException {
 		//Get OPERA BCF:
@@ -363,7 +426,7 @@ public class ParseToxValDB {
 				getDataFromTable_cancer_summary(chemical);
 				getDataFromTable_genetox_summary(chemical);
 				getDataFromTable_models(chemical);
-
+				getDataFromTable_bcfbaf(chemical);//TODO
 			}
 
 			chemicals.writeToFile(destfilepathJson);
@@ -379,6 +442,40 @@ public class ParseToxValDB {
 	
 
 	
+	 void getDataFromTable_bcfbaf(Chemical chemical) {
+		 
+		 try {
+				
+				String sql=createSQLQuery(chemical.CAS,"bcfbaf",RecordToxValBCFBAF.varlist);				
+				
+//				System.out.println(sql);
+				
+				ResultSet rs=MySQL_DB.getRecords(statToxVal, sql);
+								
+
+				int count=0;
+				
+				Hashtable<String,String>dictCC=ParseToxValCancer.populateCancerCallToScoreValue();
+				
+				while (rs.next()) {						 
+					RecordToxValBCFBAF r=new RecordToxValBCFBAF();			
+					createRecord(rs, r);
+					
+					ParseToxValBCFBAF.createScoreRecord(chemical, r);
+					//System.out.println(r.risk_assessment_class);
+					count++;
+				}
+				
+				System.out.println("Records in cancer_summary table for "+chemical.CAS+" = "+count);
+
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+			
+	}
+
+
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 

@@ -7,14 +7,14 @@ import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 public class ParseToxValModels {
 
-	private static ScoreRecord createScoreRecord(RecordToxValModels rBCF) {
+	private static ScoreRecord createScoreRecord(RecordToxValModels r) {
 		
 		ScoreRecord sr = new ScoreRecord();		
 		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=rBCF.model;
+		sr.sourceOriginal=r.model;
 				
-		sr.valueMass=Double.parseDouble(rBCF.value);
-		sr.valueMassUnits=rBCF.units;				
+		sr.valueMass=Double.parseDouble(r.value);
+		sr.valueMassUnits=r.units;				
 		return sr;		
 	}
 	
@@ -64,4 +64,27 @@ public class ParseToxValModels {
 		}
 		
 	}
+
+	public static void createScoreRecordPersistence_Opera(Chemical chemical, RecordToxValModels r) {
+		ScoreRecord sr =createScoreRecord(r);				
+		setPersistenceScoreOpera(sr);					
+		chemical.scorePersistence.records.add(sr);		
+	}
+
+	private static void setPersistenceScoreOpera(ScoreRecord sr) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	public static void createScoreRecordPersistence_EpiSuite(Chemical chemical, RecordToxValModels r) {
+		ScoreRecord sr =createScoreRecord(r);				
+		setPersistenceScoreEpiSuite(sr);					
+		chemical.scorePersistence.records.add(sr);		
+	}
+
+	private static void setPersistenceScoreEpiSuite(ScoreRecord sr) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
