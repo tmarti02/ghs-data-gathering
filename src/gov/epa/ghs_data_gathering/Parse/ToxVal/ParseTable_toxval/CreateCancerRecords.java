@@ -1,6 +1,9 @@
 package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
+import java.util.ArrayList;
+
 import gov.epa.ghs_data_gathering.API.Chemical;
+import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 /**
  * This class is to create records based on the quantitative cancer data (rather than cancer calls)
@@ -11,6 +14,43 @@ public class CreateCancerRecords {
 
 	
 	public static void createCancerRecords(Chemical chemical, RecordToxVal r) {
+		if((r.toxval_type.contentEquals("cancer unit risk") || r.toxval_type.contentEquals("cancer slope factor")) &&
+			r.human_eco.contentEquals("human health")) {
+				//	&&r.toxval_units.contentEquals("ug/m3)-1")) {
+				createCancerRecord(chemical, r);
+			}
+	}
+	
+	/* Omitting NOAEL/LOAEL (animal) for now due to uncertainty.
+	 * if (r.toxval_type.contentEquals("NOAEL") &&
+	 * r.toxval_units.contentEquals("mg/kg-day")) {
+	 */
+		
+	private static void createCancerRecord(Chemical chemical, RecordToxVal tr) {
+
+		ScoreRecord sr = new ScoreRecord();
+		sr = new ScoreRecord();
+		sr.source = ScoreRecord.sourceToxVal;
+		sr.sourceOriginal=tr.source;
+		sr.valueMassOperator=tr.toxval_numeric_qualifier;
+		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
+		sr.valueMassUnits = tr.toxval_units;
+
+		
+		setCancerScore(sr, chemical);
+
+		sr.note=ParseToxVal.createNote(tr);
+
+		chemical.scoreCarcinogenicity.records.add(sr);
+
+	}
+	
+	private static void setCancerScore(ScoreRecord sr, Chemical chemical) {	
+			double dose = sr.valueMass;
+			if (dose >= 0) {
+			sr.score = ScoreRecord.scoreVH;
+			sr.rationale = "A cancer unit risk indicates carcinogenicity in humans.";
+			}
 		
 		/* if cancer_call is not missing then
 		 * [L,M,H,VH,N/A based on dictionary that I added for cancer_call]
@@ -39,17 +79,11 @@ public class CreateCancerRecords {
 		 * -Leora
 		 *  */
 
-		if (r.toxval_type.contentEquals("NOAEL") && r.toxval_units.contentEquals("mg/kg bw/day")) {
+	/*	if (r.toxval_type.contentEquals("NOAEL") && r.toxval_units.contentEquals("mg/kg-day")) {
 			//TODO
+			*/
 			
-			/*I added units above.  I want to say if the content contains "mg/kg bw/day" so that would include
-			 *cases where it says something additional such as "mg/kg bw/day (actual dose received)."
-			 *Need to figure out how to do that.
-			 * units for acrylamide:
-			 * mg/kg bw/day
-			 * mg/kg bw/day (actual dose received) 
-			 * 
-			 * NOAEL for acrylamide = 0.5 or 0.1
+			/*NOAEL for acrylamide = 0.5 or 0.1
 			 * 
 			 * Determining cutoffs based on ToxVals has a lot of uncertainty because typically, a weight of evidence
 			 * approach is used to qualitatively estimate risk for cancer.
@@ -82,7 +116,7 @@ public class CreateCancerRecords {
 			 * -Leora
 			 * */
 			
-		} else if (r.toxval_type.contentEquals("cancer unit risk")&& r.toxval_units.contentEquals("ug/m3)-1")) {
+		/*} else if (r.toxval_type.contentEquals("cancer unit risk")&& r.toxval_units.contentEquals("ug/m3)-1")) {*/
 			//TODO
 			
 			/* 
@@ -118,7 +152,7 @@ public class CreateCancerRecords {
 			 */
 			
 			
-		} else {//need code for all important toxval_types
+		/*} else {*///need code for all important toxval_types
 			
 			/* NOAEL and cancer unit risk are the only toxval_types for acrylamide. -Leora 4/23/20 */
 			
@@ -139,4 +173,4 @@ public class CreateCancerRecords {
 		
 	}
 
-}
+

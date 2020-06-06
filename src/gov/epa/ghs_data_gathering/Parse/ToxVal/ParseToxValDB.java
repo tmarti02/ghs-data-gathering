@@ -29,10 +29,10 @@ import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.ParseToxVal;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.RecordToxVal;
 
 public class ParseToxValDB {
-
 	
+	public static final String DB_Path_AA_Dashboard_Records = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal\\databases\\toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 	
-    public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
+	// public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 	
     public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
@@ -235,16 +235,16 @@ public class ParseToxValDB {
 	void getDataFromTable_models(Chemical chemical) {
 		
 		try {
-
-			//Create record based on opera BCF prediction:			
+						
+			
 			createRecordBCF_OPERA(chemical);
 			
-			//Create record based on episuite BCF prediction:
+			
 			createRecordBCF_EPISUITE(chemical);
 			
 			//Create record based on opera biodegradation prediction:
 			createRecordPersistence_OPERA(chemical);
-			
+
 			//Create record based on episuite biodegradation prediction:
 			createRecordPersistence_EPISUITE(chemical);		
 
@@ -255,21 +255,21 @@ public class ParseToxValDB {
 	}
 
 
-
-
+// Note different spellings: "Biodegredation Half-life" vs. "Biodegradation Score"  -Leora
+	
 	private void createRecordPersistence_OPERA(Chemical chemical) throws SQLException {
-		//Get OPERA BCF:
+		//Get OPERA Persistence (from Biodegredation Half-life).
+		// I think I changed this code correctly.  -Leora
 		
 		String model="OPERA";
 		String [] fieldNames= {"model","metric"};
 
-		String [] fieldValuesBCF= {model,"Biodegredation Half-life"};			
-		String query=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesBCF);			
+		String [] fieldValuesPersistence= {model,"Biodegredation Half-life"};			
+		String query=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesPersistence);			
 		ResultSet rs=MySQL_DB.getRecords(statToxVal, query);			
 	
 		
 		RecordToxValModels r=null;
-//		RecordToxValModels rBCF_AD=null;
 		
 		if (rs.next()) {
 			r=new RecordToxValModels();						
@@ -279,25 +279,25 @@ public class ParseToxValDB {
 			return;
 		}
 
-					
+		
 		ParseToxValModels.createScoreRecordPersistence_Opera(chemical, r);
 	}
-	
-	
+
+
 	private void createRecordPersistence_EPISUITE(Chemical chemical) throws SQLException {
-		//Get OPERA BCF:
-		
+		//Get EpiSuite Persistence:
+
 		String model="EpiSuite";
 		String [] fieldNames= {"model","metric"};
 
 		String [] fieldValuesBCF= {model,"Biodegradation Score"};			
 		String query=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesBCF);			
 		ResultSet rs=MySQL_DB.getRecords(statToxVal, query);			
-	
-		
+
+
 		RecordToxValModels r=null;
 //		RecordToxValModels rBCF_AD=null;
-		
+
 		if (rs.next()) {
 			r=new RecordToxValModels();						
 			createRecord(rs, r);				
@@ -306,22 +306,20 @@ public class ParseToxValDB {
 			return;
 		}
 
-					
+
 		ParseToxValModels.createScoreRecordPersistence_EpiSuite(chemical, r);
 	}
-	
-
+		
+		
 	private void createRecordBCF_OPERA(Chemical chemical) throws SQLException {
 		//Get OPERA BCF:
 		
 		String model="OPERA";
 		String [] fieldNames= {"model","metric"};
-
-		String [] fieldValuesBCF= {model,"BCF"};			
+		String [] fieldValuesBCF= {model,"BCF"};	
 		String queryBCF=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesBCF);			
-		ResultSet rsBCF=MySQL_DB.getRecords(statToxVal, queryBCF);			
+		ResultSet rsBCF=MySQL_DB.getRecords(statToxVal, queryBCF);	
 	
-		
 		RecordToxValModels rBCF=null;
 		RecordToxValModels rBCF_AD=null;
 		
@@ -332,8 +330,8 @@ public class ParseToxValDB {
 		} else {
 			return;
 		}
-
-		String [] fieldValuesBCF_AD= {model,"BCF_AD"};						
+		
+		String [] fieldValuesBCF_AD= {model,"BCF_AD"};		
 		String queryBCF_AD=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesBCF_AD);			
 		ResultSet rsBCF_AD=MySQL_DB.getRecords(statToxVal, queryBCF_AD);
 			
@@ -349,7 +347,9 @@ public class ParseToxValDB {
 		
 		ParseToxValModels.createScoreRecordBCF_Opera(chemical, rBCF,rBCF_AD);
 	}
-    
+
+	
+	
 	
 	private void createRecordBCF_EPISUITE(Chemical chemical) throws SQLException {
 		//Get OPERA BCF:
@@ -427,6 +427,7 @@ public class ParseToxValDB {
 				getDataFromTable_genetox_summary(chemical);
 				getDataFromTable_models(chemical);
 				getDataFromTable_bcfbaf(chemical);//TODO
+
 			}
 
 			chemicals.writeToFile(destfilepathJson);
@@ -441,52 +442,52 @@ public class ParseToxValDB {
 	}
 	
 
-	
 	 void getDataFromTable_bcfbaf(Chemical chemical) {
-		 
+
 		 try {
-				
+
 				String sql=createSQLQuery(chemical.CAS,"bcfbaf",RecordToxValBCFBAF.varlist);				
-				
+
 //				System.out.println(sql);
-				
+
 				ResultSet rs=MySQL_DB.getRecords(statToxVal, sql);
-								
+
 
 				int count=0;
-				
+
 				Hashtable<String,String>dictCC=ParseToxValCancer.populateCancerCallToScoreValue();
-				
+
 				while (rs.next()) {						 
 					RecordToxValBCFBAF r=new RecordToxValBCFBAF();			
 					createRecord(rs, r);
-					
+
 					ParseToxValBCFBAF.createScoreRecord(chemical, r);
 					//System.out.println(r.risk_assessment_class);
 					count++;
 				}
-				
+
 				System.out.println("Records in cancer_summary table for "+chemical.CAS+" = "+count);
 
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
-			
+
 	}
 
 
-
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
 		ParseToxValDB p = new ParseToxValDB();
 				
-		
-		String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
+		String folder = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
+		// String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
 
 		Vector<String>casList=new Vector<String>();
 		
 		String CAS="79-06-1";
+		// String CAS="123-91-1";
 		
 		casList.add(CAS);
 		

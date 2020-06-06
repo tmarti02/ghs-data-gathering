@@ -22,9 +22,9 @@ import gov.epa.ghs_data_gathering.API.ScoreRecord;
  Inhalation
    exposure_route: inhalation
    toxval_type: LC50
-   toxval_units: mg/L
+   toxval_units: mg/L or mg/m3
 -Leora
-*/
+ */
 
 public class CreateAcuteMammalianToxicityRecords {
 
@@ -39,14 +39,17 @@ public class CreateAcuteMammalianToxicityRecords {
 				r.toxval_units.contentEquals("mg/kg") &&
 				r.human_eco.contentEquals("human health")) {
 			createAcuteMammalianToxicityDermalRecord(chemical, r);
-		} else if(r.exposure_route.contentEquals("inhalation") &&
-				r.toxval_type.contentEquals("LC50") &&
-				r.toxval_units.contentEquals("mg/L") &&
-				r.human_eco.contentEquals("human health")){
-			createAcuteMammalianToxicityInhalationRecord(chemical, r);
+		} else if (r.toxval_units.contentEquals("mg/L") || r.toxval_units.contentEquals("mg/m3")) {
+			if (r.exposure_route.contentEquals("inhalation") &&
+					r.toxval_type.contentEquals("LC50") &&
+					r.toxval_units.contentEquals("mg/L") || r.toxval_units.contentEquals("mg/m3") &&
+					r.human_eco.contentEquals("human health")) {
+				createAcuteMammalianToxicityInhalationRecord(chemical, r);
+			}
 		}
 	}
-	
+
+
 	/* I added criteria here (in the code above).  Its easier to see the criteria here
 	 towards the top of the code. */
 
@@ -69,9 +72,9 @@ public class CreateAcuteMammalianToxicityRecords {
 		 */
 
 		if (!tr.toxval_type.contentEquals("LC50")) { 
-//			System.out.println("invalid inhalation toxval_type="+tr.toxval_type);
+			//			System.out.println("invalid inhalation toxval_type="+tr.toxval_type);
 			return;
-			
+
 			/* So this prints the toxval_type if it isn't LC50. But I think we need to add
 			 code to specify that the toxval_type needs to be LC50 and units need to be mg/L
 			 for inhalation, and for oral and dermal, need LD50 and mg/kg.
@@ -134,9 +137,9 @@ public class CreateAcuteMammalianToxicityRecords {
 
 	}
 
-	
 
-	
+
+
 
 
 	private static void setOralScore(ScoreRecord sr, Chemical chemical) {
@@ -159,23 +162,29 @@ public class CreateAcuteMammalianToxicityRecords {
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
-			System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
+			if (dose <=50) {
+				sr.score = ScoreRecord.scoreVH;
+				sr.rationale = "Oral LD50 ( < " + strDose + " mg/kg) < 50 mg/kg";
+			} else {
+				sr.score = ScoreRecord.scoreNA;
+				sr.rationale = "Oral LD50 ( < " + strDose
+						+ " mg/kg) does not provide enough information to assign a score";
 
-		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~")) {
-			/*	if (dose <= 50) {
-					sr.score = ScoreRecord.scoreVH;
-					sr.rationale = "Oral LD50" + "(" + strDose + " mg/kg) <= 50 mg/kg";*/
+				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
+			}
+
+		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
+
 			if (dose <= 50) {
 				sr.score = ScoreRecord.scoreVH;
 				sr.rationale = "Oral LD50" + " (" + strDose + " mg/kg) <= 50 mg/kg";
-				//		Added a space " ("  -Leora V
 			} else if (dose > 50 && dose <= 300) {
 				sr.score = ScoreRecord.scoreH;
 				sr.rationale = "50 mg/kg < Oral LD50 (" + strDose + " mg/kg) <=300 mg/kg";
 			} else if (dose > 300 && dose <= 2000) {
 				sr.score = ScoreRecord.scoreM;
 				sr.rationale = "300 mg/kg < Oral LD50 (" + strDose + " mg/kg) <=2000 mg/kg";
-			} else if (dose > 2000) {// >2000
+			} else if (dose > 2000) {
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Oral LD50" + "(" + strDose + " mg/kg) > 2000 mg/kg";
 			} else {
@@ -206,9 +215,17 @@ public class CreateAcuteMammalianToxicityRecords {
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
-			System.out.println(chemical.CAS + "\tless than operator detected for dermal\t" + dose);
+			if (dose <= 200) {
+				sr.score = ScoreRecord.scoreVH;
+				sr.rationale = "Dermal LD50 (" + strDose + " mg/kg) <= 200 mg/kg";
+			} else {
+				sr.score = ScoreRecord.scoreNA;
+				sr.rationale = "Dermal LD50 ( < " + strDose
+						+ " mg/kg) does not provide enough information to assign a score";	
+				System.out.println(chemical.CAS + "\tless than operator detected for dermal\t" + dose);
+			}
 
-		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~")) {
+		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
 			/*		if (dose <= 200) {
 				sr.score = ScoreRecord.scoreVH;
 				sr.rationale = "Dermal LD50 + (" + strDose + " mg/kg) <= 200 mg/kg";*/
@@ -242,9 +259,9 @@ public class CreateAcuteMammalianToxicityRecords {
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
 
-//		System.out.println(chemical.CAS+"\t"+strDose);
+		//		System.out.println(chemical.CAS+"\t"+strDose);
 
-//		System.out.println("****"+strDose);
+		//		System.out.println("****"+strDose);
 
 		// These statements aren't printing.
 
@@ -262,9 +279,25 @@ public class CreateAcuteMammalianToxicityRecords {
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
-			System.out.println(chemical.CAS + "\tless than operator detected for inhalation\t" + dose);
+			if (dose <= 2) {
+				sr.score = ScoreRecord.scoreVH;
+				sr.rationale = "Inhalation LC50 ( < " + strDose + " mg/L) < 2 mg/L";
+			} else {
+				sr.score = ScoreRecord.scoreNA;
+				sr.rationale = "Inhalation LC50 ( < " + strDose
+						+ " mg/L) does not provide enough information to assign a score";
+				System.out.println(chemical.CAS + "\tless than operator detected for inhalation\t" + dose);
+			}
+			/* Need to fix the code for these operators.
+   Need to add code for "<".
+   Also, need to add code for ">=" and "<=".
+   I think we should do:
+   If "<", if toxval_numeric is less than the cutoff for VH then VH
+ 		else N/A.
+   If ">=" or "<=" treat it as if it were "=".
+			 */
 
-		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~")) {
+		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
 			if (dose <= 2) {
 				sr.score = ScoreRecord.scoreVH;
 				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) <= 2  mg/L";
@@ -279,12 +312,14 @@ public class CreateAcuteMammalianToxicityRecords {
 				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) > 20 mg/L";
 			} else {
 				System.out.println(chemical.CAS + "\tinhalation\t" + dose);
-
 			}
+
+
 		} else {
 			System.out.println("Unknown operator: "+sr.valueMassOperator+" for acute inhalation");
 		}
 	}
+
 
 
 
@@ -296,7 +331,7 @@ public class CreateAcuteMammalianToxicityRecords {
 
 
 		if (!tr.toxval_type.contentEquals("LD50")) { 
-//			System.out.println("invalid oral toxval_type="+tr.toxval_type);
+			//			System.out.println("invalid oral toxval_type="+tr.toxval_type);
 			return;
 		}
 
@@ -339,7 +374,7 @@ public class CreateAcuteMammalianToxicityRecords {
 
 
 		if (!tr.toxval_type.contentEquals("LD50")) { 
-//			System.out.println("invalid dermal toxval_type="+tr.toxval_type);
+			//			System.out.println("invalid dermal toxval_type="+tr.toxval_type);
 			return;
 		}
 
