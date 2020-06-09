@@ -7,24 +7,26 @@ import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 public class ParseToxValBCFBAF {
 
-	public static ScoreRecord createScoreRecord(Chemical chemical, RecordToxValBCFBAF r) {
+	public static void createScoreRecord(Chemical chemical, RecordToxValBCFBAF r) {
 
 		ScoreRecord sr = new ScoreRecord();		
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=r.author+", "+r.year;
 
+		if (r.logbcf==null) return;//have BAF value instead probably
+		
+//		System.out.println("r.logbcf="+r.logbcf);
 		sr.valueMass=Double.parseDouble(r.logbcf);
 		//	sr.valueMassUnits="log10 ("+r.units+")";
 		sr.valueMassUnits=r.units;
 		setBioconcentrationScore(sr.valueMass, sr);
-
 
 		//TODO- add exclusion criteria so certain records arent added based on fields in RecordToxValBCFBAF
 		//TODO- should we use logBAF for something?
 
 		chemical.scoreBioaccumulation.records.add(sr);
 
-		return sr;		
+		
 	}
 
 

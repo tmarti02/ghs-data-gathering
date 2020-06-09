@@ -29,10 +29,10 @@ import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.ParseToxVal;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.RecordToxVal;
 
 public class ParseToxValDB {
+
 	
-	public static final String DB_Path_AA_Dashboard_Records = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal\\databases\\toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 	
-	// public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
+    public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 	
     public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
@@ -82,7 +82,7 @@ public class ParseToxValDB {
     	
     	SQL+="WHERE chemical.casrn=\""+CAS+"\";";		
     	
-    	System.out.println("\n"+SQL);
+//    	System.out.println("\n"+SQL);
     	
     	return SQL;
     	    	    	
@@ -107,9 +107,10 @@ public class ParseToxValDB {
     	SQL+="FROM chemical\n";    	
     	SQL+="LEFT JOIN "+table+" ON "+table+".dtxsid = chemical.dtxsid\n";
     	
-    	SQL+="WHERE chemical.casrn=\""+CAS+"\";";		
+    	SQL+="WHERE chemical.casrn=\""+CAS+"\" AND "+table+".dtxsid is not null;";		
+//    	SQL+="WHERE chemical.casrn=\""+CAS+"\";";
     	
-    	System.out.println("\n"+SQL);
+//    	System.out.println("\n"+SQL);
     	
     	return SQL;
     	    	
@@ -452,10 +453,8 @@ public class ParseToxValDB {
 
 				ResultSet rs=MySQL_DB.getRecords(statToxVal, sql);
 
-
 				int count=0;
 
-				Hashtable<String,String>dictCC=ParseToxValCancer.populateCancerCallToScoreValue();
 
 				while (rs.next()) {						 
 					RecordToxValBCFBAF r=new RecordToxValBCFBAF();			
@@ -466,7 +465,7 @@ public class ParseToxValDB {
 					count++;
 				}
 
-				System.out.println("Records in cancer_summary table for "+chemical.CAS+" = "+count);
+				System.out.println("Records in bcfbaf table for "+chemical.CAS+" = "+count);
 
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -481,23 +480,46 @@ public class ParseToxValDB {
 
 		ParseToxValDB p = new ParseToxValDB();
 				
-		String folder = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
-		// String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
+//		String folder = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
+		 String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
 
 		Vector<String>casList=new Vector<String>();
+
+		//**********************************************************************************
+//		String CAS="79-06-1";
+//		casList.add(CAS);
+//		String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json";		
+//		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
+//		p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json, filePathRecordsForCAS_txt);
+
+		//**********************************************************************************
+		casList.add("79-06-1");
+		casList.add("79-01-6"); 
+		casList.add("108-95-2"); 
+		casList.add("50-00-0"); 
+		casList.add("111-30-8");
+		casList.add("302-01-2"); 
+		casList.add("75-21-8"); 
+		casList.add("7803-57-8"); 
+		casList.add("101-77-9"); 
+		casList.add("10588-01-9"); 
 		
-		String CAS="79-06-1";
-		// String CAS="123-91-1";
+//		casList.add("107-13-1"); 
+//		casList.add("110-91-8"); 
+//		casList.add("106-93-4"); 
+//		casList.add("67-56-1"); 
+//		casList.add("7664-39-3"); 
+//		casList.add("556-52-5"); 
+//		casList.add("87-86-5"); 
+//		casList.add("62-53-3"); 
+//		casList.add("106-89-8"); 
+//		casList.add("7778-50-9");
+//		casList.add("123-45-6");
 		
-		casList.add(CAS);
 		
-		String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json";		
-		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
-		p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json, filePathRecordsForCAS_txt);
-		
-//		String filePathRecordsForCASList_json=folder+File.separator+"toxval_pod_summary_top 20.json";		
-//		String filePathRecordsForCASList_txt=folder+File.separator+"toxval_pod_summary_Top20.txt";
-//		p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCASList_json, filePathRecordsForCASList_txt);
+		String filePathRecordsForCASList_json=folder+File.separator+"toxval_pod_summary_top 10.json";		
+		String filePathRecordsForCASList_txt=folder+File.separator+"toxval_pod_summary_Top10.txt";
+		p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCASList_json, filePathRecordsForCASList_txt);
 		
 		
 	}

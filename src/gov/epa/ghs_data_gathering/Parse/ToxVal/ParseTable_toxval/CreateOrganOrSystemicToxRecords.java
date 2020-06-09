@@ -58,6 +58,8 @@ public class CreateOrganOrSystemicToxRecords {
 
 		sr.duration=study_dur_in_days;
 		sr.durationUnits="days";
+		
+//		System.out.println("duration="+sr.duration+" days");
 
 
 		if (tr.exposure_route.contentEquals("oral")) {
@@ -66,11 +68,9 @@ public class CreateOrganOrSystemicToxRecords {
 			   Also switching the order for more logical reading. */			
 			if (study_dur_in_days >= 85.0 && study_dur_in_days <= 95.0)	{
 				setNinetyOralScore(sr, chemical);
-				chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);								
 			} else if (study_dur_in_days >= 40.0 && study_dur_in_days <= 50.0) {
 				/*All three of these time categories now have a range of 10. */		
 				setFortyFiftyOralScore(sr, chemical);
-				chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);
 				/* } else if (study_dur_in_days <= 31.0 && study_dur_in_days >= 27.0) {
 			   Broadening the range to be more inclusive (28 + or - 5)*/
 			} else if (study_dur_in_days >= 23.0 && study_dur_in_days <= 33.0) {
@@ -85,10 +85,8 @@ public class CreateOrganOrSystemicToxRecords {
 			if (study_dur_in_days >= 85.0 && study_dur_in_days <= 95.0) {
 				/*Got error when tried to use "=". It said "<=" was expected.*/			
 				setNinetyDermalScore(sr, chemical);
-				chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);								
 			} else if (study_dur_in_days >= 40.0 && study_dur_in_days <= 50.0) {
 				setFortyFiftyDermalScore(sr, chemical);
-				chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);
 				/* } else if (study_dur_in_days <= 31.0 && study_dur_in_days >= 27.0) {
 			Broadening the range to be more inclusive (28 + or - 5)*/
 			} else if (study_dur_in_days >= 23.0 && study_dur_in_days <= 33.0) {
@@ -102,10 +100,8 @@ public class CreateOrganOrSystemicToxRecords {
 			if (study_dur_in_days >= 85.0 && study_dur_in_days <= 95.0) {
 				/*Got error when tried to use "=". It said "<=" was expected.*/			
 				setNinetyInhalationScore(sr, chemical);
-				chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);								
 			} else if (study_dur_in_days >= 40.0 && study_dur_in_days <= 50.0) {
 				setFortyFiftyInhalationScore(sr, chemical);
-				chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);
 				/* } else if (study_dur_in_days <= 31.0 && study_dur_in_days >= 27.0) {
 			Broadening the range to be more inclusive (28 + or - 5)*/
 			} else if (study_dur_in_days >= 23.0 && study_dur_in_days <= 33.0) {
@@ -137,13 +133,14 @@ public class CreateOrganOrSystemicToxRecords {
 
 		//		System.out.println(sr.scoreToInt());
 
+		
 
 		if (study_dur_in_days>1) {
 			chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);
 		} else {
+			//TODO- are there any records where this happends?
 			chemical.scoreSystemic_Toxicity_Single_Exposure.records.add(sr);
 		}
-
 
 	}
 
