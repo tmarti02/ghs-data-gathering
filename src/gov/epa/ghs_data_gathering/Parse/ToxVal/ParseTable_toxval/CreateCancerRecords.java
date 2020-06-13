@@ -35,9 +35,14 @@ public class CreateCancerRecords {
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
-
+		sr.note2 = tr.toxval_type;
 		
+		// I wanted a way to distinguish between toxval types below.
+		// I think storing toxval_type in note2 works.  -Leora
+
 		setCancerScore(sr, chemical);
+		
+		// setCancerScore(sr, chemical, tr.toxval_type);
 
 		sr.note=ParseToxVal.createNote(tr);
 
@@ -45,12 +50,33 @@ public class CreateCancerRecords {
 
 	}
 	
+	
 	private static void setCancerScore(ScoreRecord sr, Chemical chemical) {	
+		double dose = sr.valueMass;
+		if (dose >= 0 && sr.note2.contentEquals("cancer slope factor"))  {
+		sr.score = ScoreRecord.scoreVH;
+		sr.rationale = "A cancer slope factor is assessed if Hazard Identification provides evidence of human carcinogenicity.";
+		} else if (dose >= 0 && sr.note2.contentEquals("cancer unit risk"))  {
+		sr.score = ScoreRecord.scoreVH;
+		sr.rationale = "A cancer unit risk indicates carcinogenicity in humans.";
+		}
+		
+	
+/*	Other possible way:
+ 			(need to have:
+ 			setCancerScore(sr, chemical, tr.toxval_type);
+  			in createCancerRecord method above)
+  
+ 			private static void setCancerScore(ScoreRecord sr, Chemical chemical, String toxval_type) {	
 			double dose = sr.valueMass;
-			if (dose >= 0) {
+			if (dose >= 0 && toxval_type.contentEquals("cancer slope factor")) { // sr.note2.contentEquals("cancer slope factor"))  {
+			sr.score = ScoreRecord.scoreVH;
+			sr.rationale = "A cancer slope factor is assessed if Hazard Identification provides evidence of human carcinogenicity.";
+			} else if (dose >= 0 && toxval_type.contentEquals("cancer unit risk"))  {
 			sr.score = ScoreRecord.scoreVH;
 			sr.rationale = "A cancer unit risk indicates carcinogenicity in humans.";
-			}
+			}*/
+	}
 		
 		/* if cancer_call is not missing then
 		 * [L,M,H,VH,N/A based on dictionary that I added for cancer_call]
@@ -171,6 +197,6 @@ public class CreateCancerRecords {
 		}
 
 		
-	}
+
 
 

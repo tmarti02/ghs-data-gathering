@@ -477,8 +477,8 @@ public class ParseToxVal extends Parse {
 		String folder = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
 		// String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
 
-		String CAS = "79-06-1"; // acrylamide
-		// String CAS = "123-91-1"; // 1,4-Dioxane
+		// String CAS = "79-06-1"; // acrylamide
+		String CAS = "123-91-1"; // 1,4-Dioxane
 
 		String filePathDatabaseAsText = folder + File.separator + "toxval_pod_summary_with_references_2020-01-16.txt";
 

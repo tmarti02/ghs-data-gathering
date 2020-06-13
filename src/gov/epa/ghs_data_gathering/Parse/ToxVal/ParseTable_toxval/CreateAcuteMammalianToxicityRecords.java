@@ -39,112 +39,32 @@ public class CreateAcuteMammalianToxicityRecords {
 				r.toxval_units.contentEquals("mg/kg") &&
 				r.human_eco.contentEquals("human health")) {
 			createAcuteMammalianToxicityDermalRecord(chemical, r);
-		} else if (r.toxval_units.contentEquals("mg/L") || r.toxval_units.contentEquals("mg/m3")) {
-			if (r.exposure_route.contentEquals("inhalation") &&
-					r.toxval_type.contentEquals("LC50") &&
-					r.toxval_units.contentEquals("mg/L") || r.toxval_units.contentEquals("mg/m3") &&
-					r.human_eco.contentEquals("human health")) {
-				createAcuteMammalianToxicityInhalationRecord(chemical, r);
-			}
+		} else if(r.exposure_route.contentEquals("inhalation") &&
+				r.toxval_units.contentEquals("mg/L") &&
+				r.toxval_type.contentEquals("LC50") &&
+				r.human_eco.contentEquals("human health")){
+			createAcuteMammalianToxicityInhalationRecord(chemical, r);
 		}
+		/*} else if((r.toxval_units.contentEquals("mg/L") || r.toxval_units.contentEquals("mg/m3")) &&
+				r.exposure_route.contentEquals("inhalation") &&
+				r.toxval_type.contentEquals("LC50") &&
+				r.human_eco.contentEquals("human health")){
+			createAcuteMammalianToxicityInhalationRecord(chemical, r);
+			}*/
 	}
+
+
 
 
 	/* I added criteria here (in the code above).  Its easier to see the criteria here
 	 towards the top of the code. */
 
-	private static void createAcuteMammalianToxicityInhalationRecord(Chemical chemical, RecordToxVal tr) {
-		// System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
-
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-
-		sr.route = "Inhalation";
-
-		//TODO - do we only want to use LC50? I know richard might not restrict to LC50s
-
-		/*
-		 * The Tiger Team didn't use acute tox by itself, only HER/BER/TER. Richard's
-		 * code doesn't specify LC50.
-		 * -Leora 4/24/20
-		 */
-
-		if (!tr.toxval_type.contentEquals("LC50")) { 
-			//			System.out.println("invalid inhalation toxval_type="+tr.toxval_type);
-			return;
-
-			/* So this prints the toxval_type if it isn't LC50. But I think we need to add
-			 code to specify that the toxval_type needs to be LC50 and units need to be mg/L
-			 for inhalation, and for oral and dermal, need LD50 and mg/kg.
-			 */
-		}
-
-
-		/*
-		 * EPA Health Effects Test Guidelines OPPTS 870.1300 Acute Inhalation Toxicity:
-		 * "Although several mammalian test species may be used, the preferred species
-		 * is the rat. Commonly used laboratory strains should be employed. If another
-		 * mammalian species is used, the tester should provide justification and
-		 * reasoning for its selection."
-		 */
-
-		ArrayList<String> okSpecies = new ArrayList<String>();
-		okSpecies.add("rat");
-		okSpecies.add("mouse");// include?
-		okSpecies.add("rabbit");//
-		okSpecies.add("guinea pig");
-
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
-
-		/* Okay, I understand the code.  This basically renames what Richard called toxval_numeric
-		 * into valueMass and then valueMass is renamed score and then for acute toxicity,
-		 * so then for AcuteMammalianToxicity, the same code that we used for the
-		 * AA Dashboard/CHA Database is directly used.  -Leora 4/23/20  */
-
-
-
-		if (!okSpecies.contains(tr.species_common))//TODO- does richard use all species???
-			return;
-
-		/* It looks like Richard's code doesn't mention species for acute tox.
-		 * So presumably all mammalian species in the ToxVal database were included for the Tiger Team.
-		 * 
-		 * But other work specified species. For example,
-		 * In Grace's Science Webinar presentation on 4/22/20, she talked about using ToxVal data to develop TTC.
-		 * She filtered from ToxVal:
-		 * toxval type: NO(A)EL or NO(A)EC
-		 * species: rats, mice, rabbits
-		 * To derive representative values, she removed outliers that exceeded the IQR.
-		 * 
-		 * For acrylamide, the only mammals with data for acute toxicity are the same mammals that we included
-		 * (rat, mouse, rabbit, guinea pig).
-		 * Need to check whether this is the case for all chemicals.
-		 * 
-		 * I think the more important thing for the code is to specify that the species_supercategory is mammals.
-		 * Need to add code to do this.
-		 * 
-		 * -Leora 4/23/20 */
-
-		setInhalationScore(sr, chemical);
-
-		sr.note=ParseToxVal.createNote(tr);
-
-		chemical.scoreAcute_Mammalian_ToxicityInhalation.records.add(sr);
-
-	}
-
-
-
-
-
 
 	private static void setOralScore(ScoreRecord sr, Chemical chemical) {
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
+		
+		// System.out.println("setting oral score");
 
 		// System.out.println(chemical.CAS+"\t"+dose+"\t"+strDose);
 
@@ -254,14 +174,14 @@ public class CreateAcuteMammalianToxicityRecords {
 
 
 	private static void setInhalationScore(ScoreRecord sr, Chemical chemical) {
-
+		
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
 
-		//		System.out.println(chemical.CAS+"\t"+strDose);
+		System.out.println(chemical.CAS+"\t"+strDose);
 
-		//		System.out.println("****"+strDose);
+		System.out.println("****"+strDose);
 
 		// These statements aren't printing.
 
@@ -270,12 +190,12 @@ public class CreateAcuteMammalianToxicityRecords {
 			if (dose >= 20) {// >20
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Inhalation LC50 ( > " + strDose + " mg/L) > 20 mg/L";
-				// System.out.println(chemical.CAS+"\t"+sr.rationale);
+				System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
 				sr.rationale = "Inhalation LC50 ( > " + strDose
 						+ " mg/L) does not provide enough information to assign a score";
-				// System.out.println(chemical.CAS+"\t"+sr.rationale);
+				System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
@@ -301,15 +221,19 @@ public class CreateAcuteMammalianToxicityRecords {
 			if (dose <= 2) {
 				sr.score = ScoreRecord.scoreVH;
 				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) <= 2  mg/L";
+				System.out.println("inhalation VH");
 			} else if (dose > 2 && dose <= 10) {
 				sr.score = ScoreRecord.scoreH;
 				sr.rationale = "50 mg/L < Inhalation LC50 (" + strDose + " mg/L) <=10 mg/L";
+				System.out.println("inhalation H");
 			} else if (dose > 10 && dose <= 20) {
 				sr.score = ScoreRecord.scoreM;
 				sr.rationale = "300 mg/L < Inhalation LC50 (" + strDose + " mg/L) <=20 mg/L";
+				System.out.println("inhalation M");
 			} else if (dose > 20) {// >20
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) > 20 mg/L";
+				System.out.println("inhalation L");
 			} else {
 				System.out.println(chemical.CAS + "\tinhalation\t" + dose);
 			}
@@ -418,4 +342,92 @@ public class CreateAcuteMammalianToxicityRecords {
 		chemical.scoreAcute_Mammalian_ToxicityDermal.records.add(sr);
 
 	}
+
+	private static void createAcuteMammalianToxicityInhalationRecord(Chemical chemical, RecordToxVal tr) {
+		System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
+
+		ScoreRecord sr = new ScoreRecord();
+		sr = new ScoreRecord();
+		sr.source = ScoreRecord.sourceToxVal;
+		sr.sourceOriginal=tr.source;
+
+		sr.route = "Inhalation";
+
+		//TODO - do we only want to use LC50? I know richard might not restrict to LC50s
+
+		/*
+		 * The Tiger Team didn't use acute tox by itself, only HER/BER/TER. Richard's
+		 * code doesn't specify LC50.
+		 * -Leora 4/24/20
+		 */
+
+		// if (!tr.toxval_type.contentEquals("LC50")) { 
+		//			System.out.println("invalid inhalation toxval_type="+tr.toxval_type);
+		//	return;
+
+		/* So this prints the toxval_type if it isn't LC50. But I think we need to add
+			 code to specify that the toxval_type needs to be LC50 and units need to be mg/L
+			 for inhalation, and for oral and dermal, need LD50 and mg/kg.
+		 */
+
+
+
+		/*
+		 * EPA Health Effects Test Guidelines OPPTS 870.1300 Acute Inhalation Toxicity:
+		 * "Although several mammalian test species may be used, the preferred species
+		 * is the rat. Commonly used laboratory strains should be employed. If another
+		 * mammalian species is used, the tester should provide justification and
+		 * reasoning for its selection."
+		 */
+
+		ArrayList<String> okSpecies = new ArrayList<String>();
+		okSpecies.add("rat");
+		okSpecies.add("mouse");// include?
+		okSpecies.add("house mouse");
+		okSpecies.add("rabbit");//
+		okSpecies.add("guinea pig");
+
+		sr.valueMassOperator=tr.toxval_numeric_qualifier;
+		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
+		sr.valueMassUnits = tr.toxval_units;
+
+		/* Okay, I understand the code.  This basically renames what Richard called toxval_numeric
+		 * into valueMass and then valueMass is renamed score and then for acute toxicity,
+		 * so then for AcuteMammalianToxicity, the same code that we used for the
+		 * AA Dashboard/CHA Database is directly used.  -Leora 4/23/20  */
+
+
+
+		if (!okSpecies.contains(tr.species_common))//TODO- does richard use all species???
+			return;
+
+		/* It looks like Richard's code doesn't mention species for acute tox.
+		 * So presumably all mammalian species in the ToxVal database were included for the Tiger Team.
+		 * 
+		 * But other work specified species. For example,
+		 * In Grace's Science Webinar presentation on 4/22/20, she talked about using ToxVal data to develop TTC.
+		 * She filtered from ToxVal:
+		 * toxval type: NO(A)EL or NO(A)EC
+		 * species: rats, mice, rabbits
+		 * To derive representative values, she removed outliers that exceeded the IQR.
+		 * 
+		 * For acrylamide, the only mammals with data for acute toxicity are the same mammals that we included
+		 * (rat, mouse, rabbit, guinea pig).
+		 * Need to check whether this is the case for all chemicals.
+		 * 
+		 * I think the more important thing for the code is to specify that the species_supercategory is mammals.
+		 * Need to add code to do this.
+		 * 
+		 * -Leora 4/23/20 */
+
+		setInhalationScore(sr, chemical);
+
+		sr.note=ParseToxVal.createNote(tr);
+
+		chemical.scoreAcute_Mammalian_ToxicityInhalation.records.add(sr);
+
+	}
+
+
+
 }

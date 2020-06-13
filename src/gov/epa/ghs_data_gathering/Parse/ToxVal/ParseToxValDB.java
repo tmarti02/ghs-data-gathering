@@ -31,8 +31,9 @@ import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.RecordToxVal;
 public class ParseToxValDB {
 
 	
+	public static final String DB_Path_AA_Dashboard_Records = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal\\databases\\toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 	
-    public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
+    // public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 	
     public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
@@ -244,7 +245,7 @@ public class ParseToxValDB {
 			createRecordBCF_EPISUITE(chemical);
 			
 			//Create record based on opera biodegradation prediction:
-			createRecordPersistence_OPERA(chemical);
+//			createRecordPersistence_OPERA(chemical);
 
 			//Create record based on episuite biodegradation prediction:
 			createRecordPersistence_EPISUITE(chemical);		
@@ -255,34 +256,36 @@ public class ParseToxValDB {
 		
 	}
 
-
-// Note different spellings: "Biodegredation Half-life" vs. "Biodegradation Score"  -Leora
+//	I'm commenting this out since we're not including the OPERA persistence model data from ToxVal,
+//	as discussed.  -Leora
 	
-	private void createRecordPersistence_OPERA(Chemical chemical) throws SQLException {
-		//Get OPERA Persistence (from Biodegredation Half-life).
-		// I think I changed this code correctly.  -Leora
-		
-		String model="OPERA";
-		String [] fieldNames= {"model","metric"};
-
-		String [] fieldValuesPersistence= {model,"Biodegredation Half-life"};			
-		String query=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesPersistence);			
-		ResultSet rs=MySQL_DB.getRecords(statToxVal, query);			
-	
-		
-		RecordToxValModels r=null;
-		
-		if (rs.next()) {
-			r=new RecordToxValModels();						
-			createRecord(rs, r);				
-//			System.out.println("BCF value="+r.value);				
-		} else {
-			return;
-		}
-
-		
-		ParseToxValModels.createScoreRecordPersistence_Opera(chemical, r);
-	}
+//	// Note different spellings: "Biodegredation Half-life" vs. "Biodegradation Score"  -Leora
+//	
+//	private void createRecordPersistence_OPERA(Chemical chemical) throws SQLException {
+//		//Get OPERA Persistence (from Biodegredation Half-life).
+//		// I think I changed this code correctly.  -Leora
+//		
+//		String model="OPERA";
+//		String [] fieldNames= {"model","metric"};
+//
+//		String [] fieldValuesPersistence= {model,"Biodegredation Half-life"};			
+//		String query=createSQLQuery(chemical.CAS, "models", RecordToxValModels.varlist, fieldNames, fieldValuesPersistence);			
+//		ResultSet rs=MySQL_DB.getRecords(statToxVal, query);			
+//	
+//		
+//		RecordToxValModels r=null;
+//		
+//		if (rs.next()) {
+//			r=new RecordToxValModels();						
+//			createRecord(rs, r);				
+////			System.out.println("BCF value="+r.value);				
+//		} else {
+//			return;
+//		}
+//
+//		
+//		ParseToxValModels.createScoreRecordPersistence_Opera(chemical, r);
+//	}
 
 
 	private void createRecordPersistence_EPISUITE(Chemical chemical) throws SQLException {
@@ -480,47 +483,48 @@ public class ParseToxValDB {
 
 		ParseToxValDB p = new ParseToxValDB();
 				
-//		String folder = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
-		 String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
+		String folder = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
+	//	 String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
 
 		Vector<String>casList=new Vector<String>();
+		casList.add("123-91-1");
 
-		//**********************************************************************************
-//		String CAS="79-06-1";
-//		casList.add(CAS);
-//		String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json";		
-//		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
-//		p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json, filePathRecordsForCAS_txt);
-
-		//**********************************************************************************
-		casList.add("79-06-1");
-		casList.add("79-01-6"); 
-		casList.add("108-95-2"); 
-		casList.add("50-00-0"); 
-		casList.add("111-30-8");
-		casList.add("302-01-2"); 
-		casList.add("75-21-8"); 
-		casList.add("7803-57-8"); 
-		casList.add("101-77-9"); 
-		casList.add("10588-01-9"); 
 		
-//		casList.add("107-13-1"); 
-//		casList.add("110-91-8"); 
-//		casList.add("106-93-4"); 
-//		casList.add("67-56-1"); 
-//		casList.add("7664-39-3"); 
-//		casList.add("556-52-5"); 
-//		casList.add("87-86-5"); 
-//		casList.add("62-53-3"); 
-//		casList.add("106-89-8"); 
-//		casList.add("7778-50-9");
-//		casList.add("123-45-6");
+		  //***************************************************************************// 
+		  
+		  String CAS="123-91-1"; // casList.add(CAS); 
+		  String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json"; //
+		  String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
+		  p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json,filePathRecordsForCAS_txt);
+		  
+		  //***************************************************************************
+		
+		 
 		
 		
-		String filePathRecordsForCASList_json=folder+File.separator+"toxval_pod_summary_top 10.json";		
-		String filePathRecordsForCASList_txt=folder+File.separator+"toxval_pod_summary_Top10.txt";
-		p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCASList_json, filePathRecordsForCASList_txt);
-		
+		/*
+		 * casList.add("79-06-1"); casList.add("79-01-6"); casList.add("108-95-2");
+		 * casList.add("50-00-0"); casList.add("111-30-8"); casList.add("302-01-2");
+		 * casList.add("75-21-8"); casList.add("7803-57-8"); casList.add("101-77-9");
+		 * casList.add("10588-01-9");
+		 * 
+		 * 
+		 * 
+		 * 
+		 * // casList.add("107-13-1"); // casList.add("110-91-8"); //
+		 * casList.add("106-93-4"); // casList.add("67-56-1"); //
+		 * casList.add("7664-39-3"); // casList.add("556-52-5"); //
+		 * casList.add("87-86-5"); // casList.add("62-53-3"); //
+		 * casList.add("106-89-8"); // casList.add("7778-50-9"); //
+		 * casList.add("123-45-6");
+		 * 
+		 * 
+		 * String filePathRecordsForCASList_json=folder+File.
+		 * separator+"toxval_pod_summary_top 10.json"; String
+		 * filePathRecordsForCASList_txt=folder+File.separator+
+		 * "toxval_pod_summary_Top10.txt"; p.goThroughRecordsMultipleChemicals(casList,
+		 * filePathRecordsForCASList_json, filePathRecordsForCASList_txt);
+		 */
 		
 	}
 

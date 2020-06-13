@@ -63,34 +63,36 @@ public class ParseToxValModels {
 
 	}
 
-	public static void createScoreRecordPersistence_Opera(Chemical chemical, RecordToxValModels r) {
-		ScoreRecord sr = createScoreRecord(r);
-		setPersistenceScoreOpera(sr);
-		chemical.scorePersistence.records.add(sr);
-	}
-
-	private static void setPersistenceScoreOpera(ScoreRecord sr) {
-		// TODO Auto-generated method stub
-
-		DecimalFormat df = new DecimalFormat("0.00");
-
-		double halflife = sr.valueMass;
-
-		if (halflife > 180) {
-			sr.score = ScoreRecord.scoreVH;
-			sr.rationale = "half-life (" + df.format(halflife) + ") > 180 days";
-		} else if (halflife >= 60) {
-			sr.score = ScoreRecord.scoreH;
-			sr.rationale = "60 days <= half-life (" + df.format(halflife) + ") <= 180 days";
-		} else if (halflife >= 16) {
-			sr.score = ScoreRecord.scoreM;
-			sr.rationale = "16 days <= half-life (" + df.format(halflife) + ") < 60 days";
-		} else { // if (halflife < 16) {
-			sr.score = ScoreRecord.scoreL;
-			sr.rationale = "half-life (" + df.format(halflife) + ") < 16 days";
-
-		}
-	}
+//  I commented out the code for the OPERA persistence model because of the applicability domain
+//  (only hydrocarbons) issue that you discussed with Kamel.  -Leora
+//	
+//	public static void createScoreRecordPersistence_Opera(Chemical chemical, RecordToxValModels r) {
+//		ScoreRecord sr = createScoreRecord(r);
+//		setPersistenceScoreOpera(sr);
+//		chemical.scorePersistence.records.add(sr);
+//	}
+//
+//	private static void setPersistenceScoreOpera(ScoreRecord sr) {
+//
+//		DecimalFormat df = new DecimalFormat("0.00");
+//
+//		double halflife = sr.valueMass;
+//
+//		if (halflife > 180) {
+//			sr.score = ScoreRecord.scoreVH;
+//			sr.rationale = "half-life (" + df.format(halflife) + ") > 180 days";
+//		} else if (halflife >= 60) {
+//			sr.score = ScoreRecord.scoreH;
+//			sr.rationale = "60 days <= half-life (" + df.format(halflife) + ") <= 180 days";
+//		} else if (halflife >= 16) {
+//			sr.score = ScoreRecord.scoreM;
+//			sr.rationale = "16 days <= half-life (" + df.format(halflife) + ") < 60 days";
+//		} else { // if (halflife < 16) {
+//			sr.score = ScoreRecord.scoreL;
+//			sr.rationale = "half-life (" + df.format(halflife) + ") < 16 days";
+//
+//		}
+//	}
 
 
 	public static void createScoreRecordPersistence_EpiSuite(Chemical chemical, RecordToxValModels r) {
@@ -100,7 +102,6 @@ public class ParseToxValModels {
 	}
 
 	private static void setPersistenceScoreEpiSuite(ScoreRecord sr) {
-		// TODO Auto-generated method stub
 
 		/*	EpiSuite data is in the from of Biodegredation Score (Biowin Score)
  Conversion to days based on Scheringer citing Aronson et al 2006.  Can't access full Aronsen text.
