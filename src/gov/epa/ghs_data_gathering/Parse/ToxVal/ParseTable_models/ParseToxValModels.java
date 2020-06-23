@@ -23,6 +23,9 @@ public class ParseToxValModels {
 		// System.out.println(rc.casrn+"\t"+rc.cancer_call);
 
 		ScoreRecord sr = createScoreRecord(rBCF);
+		
+		sr.url="https://doi.org/10.13140/RG.2.2.17974.70722/1";
+		
 		double BCF_AD = Double.parseDouble(rBCF_AD.value);
 		if (BCF_AD == 1.0)
 			setBioconcentrationScore(sr);
@@ -37,6 +40,7 @@ public class ParseToxValModels {
 	public static void createScoreRecordBCF_EPISUITE(Chemical chemical, RecordToxValModels rBCF) {
 		// System.out.println(rc.casrn+"\t"+rc.cancer_call);
 		ScoreRecord sr = createScoreRecord(rBCF);
+		sr.url="https://www.epa.gov/tsca-screening-tools/download-epi-suitetm-estimation-program-interface-v411";
 		setBioconcentrationScore(sr);
 		chemical.scoreBioaccumulation.records.add(sr);
 	}
@@ -96,13 +100,15 @@ public class ParseToxValModels {
 
 
 	public static void createScoreRecordPersistence_EpiSuite(Chemical chemical, RecordToxValModels r) {
-		ScoreRecord sr =createScoreRecord(r);				
+		ScoreRecord sr =createScoreRecord(r);		
+		sr.url="https://www.epa.gov/tsca-screening-tools/download-epi-suitetm-estimation-program-interface-v411";
 		setPersistenceScoreEpiSuite(sr);					
 		chemical.scorePersistence.records.add(sr);		
 	}
 
 	private static void setPersistenceScoreEpiSuite(ScoreRecord sr) {
-
+		//TODO add which biowin model it is- Biowin 3?
+		
 		/*	EpiSuite data is in the from of Biodegredation Score (Biowin Score)
  Conversion to days based on Scheringer citing Aronson et al 2006.  Can't access full Aronsen text.
 I tried to paste the conversion here but it wouldn't save due to unrecognized characters. 

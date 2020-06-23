@@ -42,10 +42,12 @@ public class FlatFileRecord {
 	public String valueMassUnits;
 	public String valueMassOperator;// "<",">", or ""
 
+	public String url;
+	public String long_ref;
 
 
 	public static String[] fieldNames = { "CAS","name","hazard_name","source", "sourceOriginal","score", "route", "category", "hazard_code",
-			"hazard_statement", "rationale", "note","note2","valueMassOperator","valueMass","valueMassUnits"};
+			"hazard_statement", "rationale", "note","note2","valueMassOperator","valueMass","valueMassUnits","url","long_ref"};
 
 	
 	

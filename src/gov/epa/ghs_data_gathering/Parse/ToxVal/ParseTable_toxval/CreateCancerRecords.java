@@ -37,6 +37,10 @@ public class CreateCancerRecords {
 		sr.valueMassUnits = tr.toxval_units;
 		sr.note2 = tr.toxval_type;
 		
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
+
+		
 		// I wanted a way to distinguish between toxval types below.
 		// I think storing toxval_type in note2 works.  -Leora
 

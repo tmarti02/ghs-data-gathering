@@ -12,6 +12,15 @@ public class ParseToxValBCFBAF {
 		ScoreRecord sr = new ScoreRecord();		
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=r.author+", "+r.year;
+		
+		if (r.journal.contains("http")) {
+			sr.url=r.journal;
+		}
+		
+		sr.long_ref=r.author+" ("+r.year+") "+r.title+". "+r.journal;
+		
+		
+		
 
 		if (r.logbcf==null) return;//have BAF value instead probably
 		

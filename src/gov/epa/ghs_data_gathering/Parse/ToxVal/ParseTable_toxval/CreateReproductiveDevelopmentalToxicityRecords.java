@@ -69,6 +69,9 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
 		
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
+
 		sr.route = "Oral";
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
@@ -152,6 +155,11 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
 
+		
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
+
+		
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
@@ -224,6 +232,10 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		sr = new ScoreRecord();
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
+		
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
+
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);

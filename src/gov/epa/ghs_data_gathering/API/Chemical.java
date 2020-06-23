@@ -1026,6 +1026,9 @@ public class Chemical {
 				
 				f.valueMassUnits=sr.valueMassUnits;
 				
+				f.url=sr.url;
+				f.long_ref=sr.long_ref;
+				
 //				System.out.println(f.toString("|"));
 				a.add(f.toString(d));
 				

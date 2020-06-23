@@ -36,6 +36,9 @@ public class ScoreRecord {
 	
 	public Double duration;
 	public String durationUnits;
+	
+	public String url;
+	public String long_ref;
 
 	// public static String [] displayFieldNames=
 	// {"Source","Score","Route","Classification","Hazard

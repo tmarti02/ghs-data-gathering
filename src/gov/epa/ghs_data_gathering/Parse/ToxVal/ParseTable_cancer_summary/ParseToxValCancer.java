@@ -137,6 +137,7 @@ public class ParseToxValCancer {
 		
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=rc.source;
+		sr.url=rc.url;
 		
 		if (dictCC.get(rc.cancer_call)==null) {
 			System.out.println("Need dictionary entry for " +rc.cancer_call);

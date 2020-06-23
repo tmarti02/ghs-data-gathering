@@ -160,6 +160,9 @@ public class CreateOrganOrSystemicToxRecords {
 		sr.valueMassUnits = tr.toxval_units;
 		sr.note=ParseToxVal.createNote(tr);
 
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
+
 
 
 		return sr;

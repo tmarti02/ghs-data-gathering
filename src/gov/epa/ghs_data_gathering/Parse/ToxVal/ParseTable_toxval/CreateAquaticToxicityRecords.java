@@ -32,6 +32,9 @@ public class CreateAquaticToxicityRecords {
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
 
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
+
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
@@ -55,6 +58,9 @@ public class CreateAquaticToxicityRecords {
 		sr = new ScoreRecord();
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
+
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
 
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;

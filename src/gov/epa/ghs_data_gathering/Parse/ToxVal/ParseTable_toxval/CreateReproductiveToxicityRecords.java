@@ -68,6 +68,10 @@ private static void createReproductiveOralRecord(Chemical chemical, RecordToxVal
 	sr.source = ScoreRecord.sourceToxVal;
 	sr.sourceOriginal=tr.source;
 	
+	sr.url=tr.url;
+	sr.long_ref=tr.long_ref;
+
+	
 	sr.route = "Oral";
 
 	sr.valueMassOperator=tr.toxval_numeric_qualifier;
@@ -113,6 +117,10 @@ private static void createReproductiveDermalRecord(Chemical chemical, RecordToxV
 	sr = new ScoreRecord();
 	sr.source = ScoreRecord.sourceToxVal;
 	sr.sourceOriginal=tr.source;
+	
+	sr.url=tr.url;
+	sr.long_ref=tr.long_ref;
+
 
 	sr.valueMassOperator=tr.toxval_numeric_qualifier;
 	sr.valueMass = Double.parseDouble(tr.toxval_numeric);
@@ -156,6 +164,9 @@ private static void createReproductiveInhalationRecord(Chemical chemical, Record
 	sr = new ScoreRecord();
 	sr.source = ScoreRecord.sourceToxVal;
 	sr.sourceOriginal=tr.source;
+
+	sr.url=tr.url;
+	sr.long_ref=tr.long_ref;
 
 	sr.valueMassOperator=tr.toxval_numeric_qualifier;
 	sr.valueMass = Double.parseDouble(tr.toxval_numeric);

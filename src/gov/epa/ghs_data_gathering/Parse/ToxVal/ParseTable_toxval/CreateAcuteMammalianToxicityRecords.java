@@ -249,6 +249,7 @@ public class CreateAcuteMammalianToxicityRecords {
 
 
 
+	
 
 	private static void createAcuteMammalianToxicityOralRecord(Chemical chemical, RecordToxVal tr) {
 		// System.out.println("Creating AcuteMammalianToxicityOralRecord");
@@ -260,8 +261,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		}
 
 		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-
+		
 
 		//		System.out.println(tr.toxval_type);
 
@@ -269,7 +269,11 @@ public class CreateAcuteMammalianToxicityRecords {
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
 		sr.route = "Oral";
-
+		
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
+		
+		
 		ArrayList<String> okSpecies = new ArrayList<String>();
 		okSpecies.add("mouse");// 27796
 		okSpecies.add("rat");// 13124
@@ -304,6 +308,10 @@ public class CreateAcuteMammalianToxicityRecords {
 
 		ScoreRecord sr = new ScoreRecord();
 		sr = new ScoreRecord();
+		
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
+
 
 		sr.route = "Dermal";
 		sr.source = ScoreRecord.sourceToxVal;
@@ -352,6 +360,10 @@ public class CreateAcuteMammalianToxicityRecords {
 		sr.sourceOriginal=tr.source;
 
 		sr.route = "Inhalation";
+		
+		sr.url=tr.url;
+		sr.long_ref=tr.long_ref;
+
 
 		//TODO - do we only want to use LC50? I know richard might not restrict to LC50s
 
