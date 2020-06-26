@@ -1,5 +1,7 @@
 package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
+import java.util.ArrayList;
+
 import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
@@ -73,6 +75,16 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		sr.long_ref=tr.long_ref;
 
 		sr.route = "Oral";
+		
+		ArrayList<String> okSpecies = new ArrayList<String>();
+		okSpecies.add("mouse");// 27796
+		okSpecies.add("rat");// 13124
+		okSpecies.add("rabbit");// 1089
+		okSpecies.add("guinea pig");// 970
+		okSpecies.add("house mouse");
+
+		if (!okSpecies.contains(tr.species_common))
+			return;
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
@@ -158,8 +170,18 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		
 		sr.url=tr.url;
 		sr.long_ref=tr.long_ref;
-
 		
+		
+		ArrayList<String> okSpecies = new ArrayList<String>();
+		okSpecies.add("mouse");// 27796
+		okSpecies.add("rat");// 13124
+		okSpecies.add("rabbit");// 1089
+		okSpecies.add("guinea pig");// 970
+		okSpecies.add("house mouse");
+
+		if (!okSpecies.contains(tr.species_common))
+			return;
+
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
@@ -236,6 +258,15 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		sr.url=tr.url;
 		sr.long_ref=tr.long_ref;
 
+		ArrayList<String> okSpecies = new ArrayList<String>();
+		okSpecies.add("mouse");// 27796
+		okSpecies.add("rat");// 13124
+		okSpecies.add("rabbit");// 1089
+		okSpecies.add("guinea pig");// 970
+		okSpecies.add("house mouse");
+
+		if (!okSpecies.contains(tr.species_common))
+			return;
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);

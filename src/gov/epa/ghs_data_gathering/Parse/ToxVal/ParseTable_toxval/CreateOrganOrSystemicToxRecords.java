@@ -49,6 +49,15 @@ public class CreateOrganOrSystemicToxRecords {
 			return;
 		}
 
+		ArrayList<String> okSpecies = new ArrayList<String>();
+		okSpecies.add("mouse");// 27796
+		okSpecies.add("rat");// 13124
+		okSpecies.add("rabbit");// 1089
+		okSpecies.add("guinea pig");// 970
+		okSpecies.add("house mouse");
+
+		if (!okSpecies.contains(tr.species_common))
+			return;
 
 		if (!tr.toxval_type.contentEquals("NOAEL") && !tr.toxval_type.contentEquals("LOAEL")) {
 			return;//not a valid record for systemic tox
@@ -62,7 +71,7 @@ public class CreateOrganOrSystemicToxRecords {
 //		System.out.println("duration="+sr.duration+" days");
 
 
-		if (tr.exposure_route.contentEquals("oral")) {
+		if (tr.exposure_route.contentEquals("oral") && tr.toxval_units.contentEquals("mg/kg-day")) {
 			/* if (study_dur_in_days <= 91.0 && study_dur_in_days >= 89.0) { 
 			   Broadening the range to be more inclusive (90 + or - 5).
 			   Also switching the order for more logical reading. */			
@@ -78,7 +87,7 @@ public class CreateOrganOrSystemicToxRecords {
 			}
 
 
-		} else if (tr.exposure_route.contentEquals("dermal")) {
+		} else if (tr.exposure_route.contentEquals("dermal")  && tr.toxval_units.contentEquals("mg/kg-day")) {
 			/* if (study_dur_in_days <= 91.0 && study_dur_in_days >= 89.0) {
 				Broadening the range to be more inclusive (90 + or - 5).
 				Also switching the order for more logical reading. */
@@ -93,7 +102,7 @@ public class CreateOrganOrSystemicToxRecords {
 				setTwentyEightDermalScore(sr,chemical);
 			}
 
-		} else if (tr.exposure_route.contentEquals("inhalation")) {
+		} else if (tr.exposure_route.contentEquals("inhalation")  && tr.toxval_units.contentEquals("mg/L-day")) {
 			/* if (study_dur_in_days <= 91.0 && study_dur_in_days >= 89.0) {
 			Broadening the range to be more inclusive (90 + or - 5).
 			Also switching the order for more logical reading. */
@@ -154,6 +163,7 @@ public class CreateOrganOrSystemicToxRecords {
 		sr.sourceOriginal=tr.source;
 
 		sr.route=tr.exposure_route;
+		
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);

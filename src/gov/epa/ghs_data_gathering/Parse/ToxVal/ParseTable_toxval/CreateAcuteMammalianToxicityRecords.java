@@ -45,6 +45,11 @@ public class CreateAcuteMammalianToxicityRecords {
 				r.human_eco.contentEquals("human health")){
 			createAcuteMammalianToxicityInhalationRecord(chemical, r);
 		}
+		
+		/* 1 mg/L = 1000 mg/m3
+		 * need to add code for mg/m3
+		 */
+		
 		/*} else if((r.toxval_units.contentEquals("mg/L") || r.toxval_units.contentEquals("mg/m3")) &&
 				r.exposure_route.contentEquals("inhalation") &&
 				r.toxval_type.contentEquals("LC50") &&
@@ -279,6 +284,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		okSpecies.add("rat");// 13124
 		okSpecies.add("rabbit");// 1089
 		okSpecies.add("guinea pig");// 970
+		okSpecies.add("house mouse");
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
@@ -333,6 +339,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		okSpecies.add("rat");
 		okSpecies.add("guinea pig");
 		okSpecies.add("mouse");// include?
+		okSpecies.add("house mouse");
 
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
@@ -398,6 +405,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		okSpecies.add("house mouse");
 		okSpecies.add("rabbit");//
 		okSpecies.add("guinea pig");
+		okSpecies.add("house mouse");
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
