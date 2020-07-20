@@ -41,6 +41,7 @@ public class ParseToxValDB {
 	public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
 
+	@Deprecated	
 	private String createSQLQuery_toxval(String CAS) {
 
 		String SQL="SELECT ";
@@ -87,6 +88,50 @@ public class ParseToxValDB {
 		SQL+="WHERE chemical.casrn=\""+CAS+"\";";		
 
 //		System.out.println("\n"+SQL);
+
+		return SQL;
+
+
+
+	}
+	
+	/**
+	 * Richard Judson used this query to create spreadsheet from toxval table (toxval db v8) 
+	 * 
+	 * Note: did not filter on human_eco field (since we need some eco data for aquatic tox)
+	 * 
+	 * @param CAS
+	 * @return
+	 */
+	private String createSQLQuery_toxval2(String CAS) {
+		
+		String SQL="SELECT\r\na.dtxsid, a.casrn,a.name,\r\n" + 
+				"b.toxval_id, b.source,b.subsource,b.toxval_type,b.toxval_type_original,b.toxval_subtype,b.toxval_subtype_original,e.toxval_type_supercategory,\r\n" + 
+				"b.toxval_numeric_qualifier,b.toxval_numeric_qualifier_original,b.toxval_numeric,b.toxval_numeric_original,\r\n" + 
+				"b.toxval_numeric_converted, b.toxval_units,b.toxval_units_original,b.toxval_units_converted, b.risk_assessment_class,\r\n" + 
+				"b.study_type,b.study_type_original,b.study_duration_class,b.study_duration_class_original, b.study_duration_value,\r\n" + 
+				"b.study_duration_value_original,b.study_duration_units,b.study_duration_units_original,b.human_eco,\r\n" + 
+				"b.strain,b.strain_original,b.sex,b.sex_original,b.generation,\r\n" + 
+				"d.species_id,b.species_original,\r\n" + 
+				"d.species_common,d.species_supercategory,d.habitat,\r\n" + 
+				"b.lifestage,b.exposure_route,b.exposure_route_original,b.exposure_method,b.exposure_method_original,\r\n" + 
+				"b.exposure_form,b.exposure_form_original, b.media,b.media_original,b.critical_effect,b.year,b.quality_id,b.priority_id,\r\n" + 
+				"b.source_source_id,b.details_text,b.toxval_uuid,b.toxval_hash,b.datestamp,\r\n" + 
+				"c.long_ref, c.title, c.author, c.journal, c.volume, c.issue, c.url, c.document_name, c.record_source_type, c.record_source_hash\r\n" + 
+				"\r\n" + 
+				
+				"FROM toxval b\r\n" + 
+				"INNER JOIN chemical a on a.dtxsid=b.dtxsid\r\n" + 
+				"LEFT JOIN species d on b.species_id=d.species_id\r\n" + 
+				"INNER JOIN toxval_type_dictionary e on b.toxval_type=e.toxval_type\r\n" + 
+				"LEFT JOIN record_source c ON b.toxval_id=c.toxval_id\r\n" +				
+				"WHERE\r\n"+
+				"b.toxval_units in ('mg/kg-day','mg/kg','(mg/kg-day)-1','mg/L','mg/m3','(mg/m3)-1','mg/L','(ug/m3)-1','(g/m3)-1','(mg/L)-1')\r\n" + 				
+				"AND e.toxval_type_supercategory in ('Point of Departure','Toxicity Value','Lethality Effect Level')\r\n" + 
+				"AND b.toxval_numeric>0\r\n" + 									
+				"AND a.casrn=\""+CAS+"\";";		
+
+		System.out.println("\n"+SQL);
 
 		return SQL;
 
@@ -159,7 +204,9 @@ public class ParseToxValDB {
 
 		try {
 
-			String sql=createSQLQuery_toxval(chemical.CAS);				
+//			String sql=createSQLQuery_toxval(chemical.CAS);				
+			String sql=createSQLQuery_toxval2(chemical.CAS);
+			
 			ResultSet rs=MySQL_DB.getRecords(statToxVal, sql);
 
 //			int count=0;
@@ -199,9 +246,13 @@ public class ParseToxValDB {
 				RecordToxVal r0=recs.get(0);//use first one				
 				getDOI(r0);
 				
+//				System.out.println("0"+"\t"+r0.toxval_id);
+				
 				for (int i=1;i<recs.size();i++) {					
 					RecordToxVal ri=recs.get(i);
 					getDOI(ri);
+					
+//					System.out.println(i+"\t"+ri.toxval_id);
 															
 					if (!ri.long_ref.isEmpty()) r0.long_ref+="<br>"+ri.long_ref;									
 					if (!ri.url.isEmpty()) r0.url+="<br>"+ri.url;					
@@ -228,8 +279,10 @@ public class ParseToxValDB {
 			});
 														
 			
-			System.out.println("CAS="+chemical.CAS);
-			System.out.println("records.size()="+records.size());
+			System.out.println("Records in toxval table for "+chemical.CAS+" = "+records.size());
+			
+//			System.out.println("CAS="+chemical.CAS);
+//			System.out.println("records.size()="+records.size());
 //			System.out.println("Records in toxval table for "+chemical.CAS+" = "+count);
 
 		} catch (Exception ex) {
@@ -558,38 +611,41 @@ public class ParseToxValDB {
 		String folder="AA dashboard/toxval";//use relative path so dont have to keep changing this- i.e. it is relative to java installation:  "D:\Users\TMARTI02\OneDrive - Environmental Protection Agency (EPA)\0 java\ghs-data-gathering\AA Dashboard\toxval"
 
 
-
 		//***************************************************************************// 
 
 		String CAS="123-91-1"; // casList.add(CAS);
+//		CAS="75-73-0";
 
 		Vector<String>casList=new Vector<String>();
 		casList.add(CAS);
+//		casList.add("76-16-4");
 
-		//		String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json"; //
-		//		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
-		//		p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json,filePathRecordsForCAS_txt);
+		String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json"; //
+		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
+		p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json,filePathRecordsForCAS_txt);
 
+				
 		//***************************************************************************
 
 
-		casList.add("79-06-1"); casList.add("79-01-6"); casList.add("108-95-2");
-		casList.add("50-00-0"); casList.add("111-30-8"); casList.add("302-01-2");
-		casList.add("75-21-8"); casList.add("7803-57-8"); casList.add("101-77-9");
-		casList.add("10588-01-9");
-
-
-		casList.add("107-13-1");  casList.add("110-91-8"); //
-		casList.add("106-93-4");  casList.add("67-56-1"); //
-		casList.add("7664-39-3");  casList.add("556-52-5"); //
-		casList.add("87-86-5");  casList.add("62-53-3"); //
-		casList.add("106-89-8");  casList.add("7778-50-9"); //
-		casList.add("123-45-6");
-
-
-		String filePathRecordsForCASList_json=folder+File.separator+"toxval_pod_summary_top 10.json"; String
-		filePathRecordsForCASList_txt=folder+File.separator+"toxval_pod_summary_Top10.txt"; 
-		p.goThroughRecordsMultipleChemicals(casList,filePathRecordsForCASList_json, filePathRecordsForCASList_txt);
+		
+//		casList.add("79-06-1"); casList.add("79-01-6"); casList.add("108-95-2");
+//		casList.add("50-00-0"); casList.add("111-30-8"); casList.add("302-01-2");
+//		casList.add("75-21-8"); casList.add("7803-57-8"); casList.add("101-77-9");
+//		casList.add("10588-01-9");
+//
+//
+//		casList.add("107-13-1");  casList.add("110-91-8"); //
+//		casList.add("106-93-4");  casList.add("67-56-1"); //
+//		casList.add("7664-39-3");  casList.add("556-52-5"); //
+//		casList.add("87-86-5");  casList.add("62-53-3"); //
+//		casList.add("106-89-8");  casList.add("7778-50-9"); //
+//		casList.add("123-45-6");
+//
+//
+//		String filePathRecordsForCASList_json=folder+File.separator+"toxval_pod_summary_top 10.json"; String
+//		filePathRecordsForCASList_txt=folder+File.separator+"toxval_pod_summary_Top10.txt"; 
+//		p.goThroughRecordsMultipleChemicals(casList,filePathRecordsForCASList_json, filePathRecordsForCASList_txt);
 
 
 	}
