@@ -191,8 +191,7 @@ public class ParseToxVal extends Parse {
 			} else if (r.risk_assessment_class.contentEquals("repeat dose")
 					|| r.risk_assessment_class.contentEquals("short-term")
 					|| r.risk_assessment_class.contentEquals("subacute")
-					|| r.risk_assessment_class.contentEquals("subchronic")
-					|| r.risk_assessment_class.contentEquals("chronic")) {
+					|| r.risk_assessment_class.contentEquals("subchronic")) {
 				CreateOrganOrSystemicToxRecords.createDurationRecord(chemical, r);
 
 			} else if (r.risk_assessment_class.contentEquals("cancer")) {
