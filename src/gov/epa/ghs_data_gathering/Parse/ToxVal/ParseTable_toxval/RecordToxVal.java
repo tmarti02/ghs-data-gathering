@@ -36,6 +36,7 @@ public class RecordToxVal {
 		public String toxval_units_original;
 		public String toxval_units_converted;
 		public String risk_assessment_class;
+		public String risk_assessment_class_calc;
 		public String study_type;
 		public String study_type_original;
 		public String study_duration_class;
@@ -90,7 +91,7 @@ public class RecordToxVal {
 				"toxval_type_original", "toxval_subtype", "toxval_subtype_original", "toxval_type_supercategory",
 				"toxval_numeric_qualifier", "toxval_numeric_qualifier_original", "toxval_numeric",
 				"toxval_numeric_original", "toxval_numeric_converted", "toxval_units", "toxval_units_original",
-				"toxval_units_converted", "risk_assessment_class", "study_type", "study_type_original",
+				"toxval_units_converted", "risk_assessment_class","risk_assessment_class_calc", "study_type", "study_type_original",
 				"study_duration_class", "study_duration_class_original", "study_duration_value",
 				"study_duration_value_original", "study_duration_units", "study_duration_units_original", "species_id",
 				"species_original", "species_common", "species_supercategory", "habitat", "human_eco", "strain",

@@ -131,7 +131,7 @@ public class ParseToxValDB {
 				"AND b.toxval_numeric>0\r\n" + 									
 				"AND a.casrn=\""+CAS+"\";";		
 
-		System.out.println("\n"+SQL);
+//		System.out.println("\n"+SQL);
 
 		return SQL;
 

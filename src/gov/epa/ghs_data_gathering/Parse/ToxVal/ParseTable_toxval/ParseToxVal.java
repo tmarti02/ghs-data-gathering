@@ -164,7 +164,11 @@ public class ParseToxVal extends Parse {
 
 	public static void createScoreRecord(Chemical chemical, RecordToxVal r) {
 
-
+		CalculateRiskAssessmentClass.assignRAC(r);
+		
+		if ( r.risk_assessment_class_calc==null || !r.risk_assessment_class.contentEquals(r.risk_assessment_class_calc))
+			System.out.println(r.risk_assessment_class+"\t"+r.risk_assessment_class_calc);
+		
 
 		if (chemical.CAS == null) {
 			chemical.CAS = r.casrn;
