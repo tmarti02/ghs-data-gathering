@@ -37,10 +37,8 @@ public class CalculateRiskAssessmentClass {
 				String fieldValue=(String)field.get(r);
 				
 				if(fieldValue.contentEquals(dr.term)) {
-//					System.out.println(dr.field+"\t"+fieldValue);
-					
-					r.risk_assessment_class_calc=dr.risk_assessment_class;
-					
+//					System.out.println(dr.field+"\t"+fieldValue);					
+					r.risk_assessment_class_calc=dr.risk_assessment_class;					
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();

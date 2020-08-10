@@ -232,6 +232,8 @@ public class ParseToxValDB {
 				//System.out.println(r.risk_assessment_class);
 //				count++;
 			}
+			
+			System.out.println("size="+records.size());
 
 			//**************************************************************************************************************
 			//The following only creates one record for each toxval_id and merges the references (separated by <br>)
@@ -616,6 +618,9 @@ public class ParseToxValDB {
 		String CAS="123-91-1"; // casList.add(CAS);
 //		CAS="75-73-0";
 
+//		String CAS="75-73-0";
+		
+		
 		Vector<String>casList=new Vector<String>();
 		casList.add(CAS);
 //		casList.add("76-16-4");
@@ -628,6 +633,9 @@ public class ParseToxValDB {
 		//***************************************************************************
 
 
+//		casList.add("76-16-4");
+//		casList.add("7664-39-3");
+		
 		
 //		casList.add("79-06-1"); casList.add("79-01-6"); casList.add("108-95-2");
 //		casList.add("50-00-0"); casList.add("111-30-8"); casList.add("302-01-2");
