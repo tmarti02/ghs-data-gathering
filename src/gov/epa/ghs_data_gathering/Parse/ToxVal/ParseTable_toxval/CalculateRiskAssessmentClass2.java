@@ -30,7 +30,32 @@ public class CalculateRiskAssessmentClass2 {
 		
 		//TODO add more keywords...
 		
-		if (ce.contains("neuro")) {
+		if (ce.contains("ataxia") || 
+			ce.contains("brain") ||
+			ce.contains("cholinesterase") ||
+			ce.contains("CNS") ||
+			ce.contains("COMA") ||
+			ce.contains("convulsions") ||
+			ce.contains("decreased retention (memory)") ||
+			ce.contains("demyelination") ||
+			ce.contains("HALLUCINATIONS") ||
+			ce.contains("headache, dizziness, weakness") ||
+			ce.contains("impaired reflex") ||
+			ce.contains("jerking movements") ||
+			ce.contains("motor and sensory function") ||
+			ce.contains("nerve") ||
+			ce.contains("NERVOUS SYSTEM") ||
+			ce.contains("paralysis") ||
+			ce.contains("Psychomotor") ||
+			ce.contains("seizure") ||
+			ce.contains("SENSE ORGANS") ||
+			ce.contains("Spinal cord") ||
+			ce.contains("TOXIC PSYCHOSIS") ||
+			ce.contains("tremor") )
+			
+		
+		
+{
 			return "Neurotoxicity";
 		} else {
 			return "Other";
@@ -399,6 +424,9 @@ public class CalculateRiskAssessmentClass2 {
 	
 	class RACS {
 		
+		String human_eco;
+		String habitat;
+		
 		String study_type;
 		String racStudyType;
 		
@@ -426,6 +454,9 @@ public class CalculateRiskAssessmentClass2 {
 		String rac="Other";
 		
 		RACS racs=new RACS();
+		
+		racs.human_eco=r.human_eco;
+		racs.habitat=r.habitat;
 		
 		
 		racs.racStudyType=getRAC_StudyType(r);
@@ -459,6 +490,8 @@ public class CalculateRiskAssessmentClass2 {
 		String json=gson.toJson(racs);
 
 		//Print out so can look at the values:
+		
+		
 		System.out.println(json);
 		
 		

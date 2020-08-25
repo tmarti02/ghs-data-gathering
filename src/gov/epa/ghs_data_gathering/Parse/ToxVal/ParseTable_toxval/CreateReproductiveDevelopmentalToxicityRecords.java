@@ -24,10 +24,10 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 	   exposure_route: inhalation
 	   toxval_units: mg/L-day
 	-Leora
-	*/	
-	
-	
-	
+	 */	
+
+
+
 	/* toxval_type should be NOAEL or LOAEL
 	 * 
 	 * DfE criteria for Reproductive and Developmental Toxicity:
@@ -48,40 +48,44 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 	 * -Leora
 	 * */						
 
-		
+
 	static void createReproductiveDevelopmentalRecords(Chemical chemical, RecordToxVal r) {
-		if (r.toxval_type.contentEquals("NOAEL") || r.toxval_type.contentEquals("LOAEL")) {
+		// System.out.println("Creating records");
+		// This prints.  It works up to here.
+		if (r.toxval_type.contains("NOAEL") || r.toxval_type.contains("LOAEL")) {
+		//	System.out.println("NOAEL or LOAEL");
 			if (r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("oral")) {
 				createOralRecord(chemical, r);	
+		//		System.out.println("creating RepDev oral record");
 			} else if(r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("dermal")) {
 				createDermalRecord(chemical, r);
 			} else if(r.toxval_units.contentEquals("mg/L-day") && r.exposure_route.contentEquals("inhalation")) {
 				createInhalationRecord(chemical, r);
 			}
 		}
-	}	
+	}
 
-	
+
 	private static void createOralRecord(Chemical chemical, RecordToxVal tr) {
-//		System.out.println("Creating Oral Record");
-		//This is not printing.
+//		System.out.println("*Creating Oral Record");
 
 		ScoreRecord sr = new ScoreRecord();
 		sr = new ScoreRecord();
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
-		
+
 		sr.url=tr.url;
 		sr.long_ref=tr.long_ref;
 
 		sr.route = "Oral";
-		
+
 		ArrayList<String> okSpecies = new ArrayList<String>();
 		okSpecies.add("mouse");// 27796
 		okSpecies.add("rat");// 13124
 		okSpecies.add("rabbit");// 1089
 		okSpecies.add("guinea pig");// 970
 		okSpecies.add("house mouse");
+		okSpecies.add("mouse / rat");
 
 		if (!okSpecies.contains(tr.species_common))
 			return;
@@ -93,39 +97,66 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		setOralScore(sr, chemical);
 
 		sr.note=ParseToxVal.createNote(tr);
-			
-		if (tr.risk_assessment_class.contentEquals("developmental") ||
-			tr.risk_assessment_class.contentEquals("developmental neurotoxicity")) {
-			chemical.scoreDevelopmental.records.add(sr);
-		} else if (tr.risk_assessment_class.contentEquals("reproductive")) {
+
+		//		if (tr.risk_assessment_class.contentEquals("developmental") ||
+		//			tr.risk_assessment_class.contentEquals("developmental neurotoxicity")) {
+		//			chemical.scoreDevelopmental.records.add(sr);
+		//		} else if (tr.risk_assessment_class.contentEquals("reproductive")) {
+		//			chemical.scoreReproductive.records.add(sr);
+		//		}
+		//			
+		//	}
+
+		if (tr.study_duration_class.toLowerCase().contains("reproduct") ||
+				tr.study_duration_class.toLowerCase().contains("multigeneration") ||
+				tr.toxval_subtype.toLowerCase().contains("reproduct") ||
+				tr.toxval_subtype.toLowerCase().contains("multigeneration") ||
+				tr.study_type.toLowerCase().contains("reproduct") ||
+				tr.study_type.toLowerCase().contains("multigeneration") ||
+				tr.critical_effect.toLowerCase().contains("reproduct") ||
+				tr.critical_effect.toLowerCase().contains("multigeneration")) {
 			chemical.scoreReproductive.records.add(sr);
+			//			System.out.println("add reproductive sr");
+		} else if (tr.study_duration_class.toLowerCase().contains("developmental") ||
+				tr.toxval_subtype.toLowerCase().contains("developmental") ||
+				tr.study_type.toLowerCase().contains("developmental") ||
+				tr.critical_effect.toLowerCase().contains("developmental")) {
+//			System.out.println("Adding Developmental Score");
+			chemical.scoreDevelopmental.records.add(sr);
 		}
-			
+
 	}
-	
+
+
+
+
+
+
 	private static void setOralScore(ScoreRecord sr, Chemical chemical) {
+
+//		System.out.println("setting oral score");
 		
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
-							
-//		System.out.println(chemical.CAS+"\t"+strDose);					
-//		System.out.println("****"+strDose);	
-		
-		
+
+				System.out.println(chemical.CAS+"\t"+strDose);					
+		//		System.out.println("****"+strDose);	
+
+
 		if (sr.valueMassOperator.equals(">")) {
 
 			if (dose >= 250) {
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Oral POD ( > " + strDose + " mg/kg) > 250 mg/kg";
-				// System.out.println(chemical.CAS+"\t"+sr.rationale);
+				System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
 				sr.rationale = "Oral POD ( > " + strDose
 						+ " mg/kg) does not provide enough information to assign a score";
-				// System.out.println(chemical.CAS+"\t"+sr.rationale);
+				System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
-			
+
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <=50) {
@@ -135,27 +166,27 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 				sr.score = ScoreRecord.scoreNA;
 				sr.rationale = "Oral POD ( < " + strDose
 						+ " mg/kg) does not provide enough information to assign a score";
-			
-			System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
+
+				System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
 
 		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~")
-			|| sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")){
-			
-		
-		
-				
-		if (dose < 50) {
-			sr.score = ScoreRecord.scoreH;
-			sr.rationale = "Oral POD" + " (" + strDose + " mg/kg) < 50 mg/kg";
-		} else if (dose >= 50 && dose <= 250) {
-			sr.score = ScoreRecord.scoreM;
-			sr.rationale = "50 mg/kg <= Oral POD (" + strDose + " mg/kg) <=250 mg/kg";
-		} else if (dose > 250) {
-			sr.score = ScoreRecord.scoreL;
-			sr.rationale = "Oral POD" + "(" + strDose + " mg/kg) > 250 mg/kg";
-		} else { System.out.println(chemical.CAS + "\toral\t" + strDose);			 
-		}		
+				|| sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")){
+
+//				System.out.println("Operator ok");
+
+
+			if (dose < 50) {
+				sr.score = ScoreRecord.scoreH;
+				sr.rationale = "Oral POD" + " (" + strDose + " mg/kg) < 50 mg/kg";
+			} else if (dose >= 50 && dose <= 250) {
+				sr.score = ScoreRecord.scoreM;
+				sr.rationale = "50 mg/kg <= Oral POD (" + strDose + " mg/kg) <=250 mg/kg";
+			} else if (dose > 250) {
+				sr.score = ScoreRecord.scoreL;
+				sr.rationale = "Oral POD" + "(" + strDose + " mg/kg) > 250 mg/kg";
+			} else { System.out.println(chemical.CAS + "\toral\t" + strDose);			 
+			}		
 		}
 	}
 
@@ -167,17 +198,18 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
 
-		
+
 		sr.url=tr.url;
 		sr.long_ref=tr.long_ref;
-		
-		
+
+
 		ArrayList<String> okSpecies = new ArrayList<String>();
 		okSpecies.add("mouse");// 27796
 		okSpecies.add("rat");// 13124
 		okSpecies.add("rabbit");// 1089
 		okSpecies.add("guinea pig");// 970
 		okSpecies.add("house mouse");
+		okSpecies.add("mouse / rat");
 
 		if (!okSpecies.contains(tr.species_common))
 			return;
@@ -202,7 +234,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
 
-		
+
 		if (sr.valueMassOperator.equals(">")) {
 
 			if (dose >= 500) {
@@ -215,7 +247,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 						+ " mg/kg) does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
-			
+
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <=100) {
@@ -225,24 +257,24 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 				sr.score = ScoreRecord.scoreNA;
 				sr.rationale = "Dermal POD ( < " + strDose
 						+ " mg/kg) does not provide enough information to assign a score";
-			
-			System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
+
+				System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
 
 		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~")
 				|| sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")){	
-		
-		if (dose < 100) {
-			sr.score = ScoreRecord.scoreH;
-			sr.rationale = "Dermal POD" + " (" + strDose + " mg/kg) < 100 mg/kg";
-		} else if (dose >= 100 && dose <= 500) {
-			sr.score = ScoreRecord.scoreM;
-			sr.rationale = "100 mg/kg <= Dermal POD (" + strDose + " mg/kg) <=500 mg/kg";
-		} else if (dose > 500) {
-			sr.score = ScoreRecord.scoreL;
-			sr.rationale = "Dermal POD" + "(" + strDose + " mg/kg) > 500 mg/kg";
+
+			if (dose < 100) {
+				sr.score = ScoreRecord.scoreH;
+				sr.rationale = "Dermal POD" + " (" + strDose + " mg/kg) < 100 mg/kg";
+			} else if (dose >= 100 && dose <= 500) {
+				sr.score = ScoreRecord.scoreM;
+				sr.rationale = "100 mg/kg <= Dermal POD (" + strDose + " mg/kg) <=500 mg/kg";
+			} else if (dose > 500) {
+				sr.score = ScoreRecord.scoreL;
+				sr.rationale = "Dermal POD" + "(" + strDose + " mg/kg) > 500 mg/kg";
+			}
 		}
-	}
 	}
 
 
@@ -250,11 +282,12 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 	private static void createInhalationRecord(Chemical chemical, RecordToxVal tr){
 		// System.out.println("Creating Inhalation Record");
 
+
 		ScoreRecord sr = new ScoreRecord();
 		sr = new ScoreRecord();
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
-		
+
 		sr.url=tr.url;
 		sr.long_ref=tr.long_ref;
 
@@ -264,6 +297,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		okSpecies.add("rabbit");// 1089
 		okSpecies.add("guinea pig");// 970
 		okSpecies.add("house mouse");
+		okSpecies.add("mouse / rat");
 
 		if (!okSpecies.contains(tr.species_common))
 			return;
@@ -275,7 +309,10 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		setInhalationScore(sr, chemical);
 
 		sr.note=ParseToxVal.createNote(tr);
-		
+
+		if (sr.score==null)
+			return;
+
 		chemical.scoreReproductive.records.add(sr);
 		chemical.scoreDevelopmental.records.add(sr);
 
@@ -291,7 +328,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 
 		//					System.out.println("****"+strDose);					
 
-		
+
 		if (sr.valueMassOperator.equals(">")) {
 
 			if (dose >= 2.5) {
@@ -304,7 +341,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 						+ " mg/kg) does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
-			
+
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <=1) {
@@ -314,29 +351,29 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 				sr.score = ScoreRecord.scoreNA;
 				sr.rationale = "Inhalation POD ( < " + strDose
 						+ " mg/kg) does not provide enough information to assign a score";
-			
-			System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
+
+				System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
 
 		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
-			
-		
-		
-		
-		
-		if (dose < 1) {
-			sr.score = ScoreRecord.scoreH;
-			sr.rationale = "Inhalation POD" + " (" + strDose + " mg/L) < 1 mg/L";
-		} else if (dose >= 1 && dose <= 2.5) {
-			sr.score = ScoreRecord.scoreM;
-			sr.rationale = "1 mg/L <= Inhalation POD (" + strDose + " mg/L) <=2.5 mg/L";
-		} else if (dose > 2.5) {
-			sr.score = ScoreRecord.scoreL;
-			sr.rationale = "Inhalation POD" + "(" + strDose + " mg/L) > 2.5 mg/L";
-			/*
-			 * } else { System.out.println(chemical.CAS + "\toral\t" + strDose);
-			 */
-		}
-	}		
-}
+
+
+
+
+
+			if (dose < 1) {
+				sr.score = ScoreRecord.scoreH;
+				sr.rationale = "Inhalation POD" + " (" + strDose + " mg/L) < 1 mg/L";
+			} else if (dose >= 1 && dose <= 2.5) {
+				sr.score = ScoreRecord.scoreM;
+				sr.rationale = "1 mg/L <= Inhalation POD (" + strDose + " mg/L) <=2.5 mg/L";
+			} else if (dose > 2.5) {
+				sr.score = ScoreRecord.scoreL;
+				sr.rationale = "Inhalation POD" + "(" + strDose + " mg/L) > 2.5 mg/L";
+				/*
+				 * } else { System.out.println(chemical.CAS + "\toral\t" + strDose);
+				 */
+			}
+		}		
+	}
 }

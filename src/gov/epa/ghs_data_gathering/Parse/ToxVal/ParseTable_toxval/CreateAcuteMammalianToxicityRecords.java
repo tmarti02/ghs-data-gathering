@@ -29,17 +29,20 @@ import gov.epa.ghs_data_gathering.API.ScoreRecord;
 public class CreateAcuteMammalianToxicityRecords {
 
 	static void createAcuteMammalianToxicityRecords(Chemical chemical, RecordToxVal r) {
-		if(r.exposure_route.contentEquals("oral") &&
+		if((r.exposure_route.contentEquals("oral") ||
+				r.toxval_subtype.toLowerCase().contains("oral")) &&
 				r.toxval_type.contentEquals("LD50") &&
 				r.toxval_units.contentEquals("mg/kg") &&
 				r.human_eco.contentEquals("human health")) {
 			createAcuteMammalianToxicityOralRecord(chemical, r);						
-		} else if(r.exposure_route.contentEquals("dermal") &&
+		} else if((r.exposure_route.contentEquals("dermal") ||
+				r.toxval_subtype.toLowerCase().contains("dermal")) &&
 				r.toxval_type.contentEquals("LD50") &&
 				r.toxval_units.contentEquals("mg/kg") &&
 				r.human_eco.contentEquals("human health")) {
 			createAcuteMammalianToxicityDermalRecord(chemical, r);
-		} else if(r.exposure_route.contentEquals("inhalation") &&
+		} else if((r.exposure_route.contentEquals("inhalation") ||
+				r.toxval_subtype.toLowerCase().contains("inhalation")) &&
 				r.toxval_units.contentEquals("mg/L") &&
 				r.toxval_type.contentEquals("LC50") &&
 				r.human_eco.contentEquals("human health")){
@@ -285,6 +288,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		okSpecies.add("rabbit");// 1089
 		okSpecies.add("guinea pig");// 970
 		okSpecies.add("house mouse");
+		okSpecies.add("mouse / rat");
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
@@ -340,6 +344,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		okSpecies.add("guinea pig");
 		okSpecies.add("mouse");// include?
 		okSpecies.add("house mouse");
+		okSpecies.add("mouse / rat");
 
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
@@ -402,10 +407,10 @@ public class CreateAcuteMammalianToxicityRecords {
 		ArrayList<String> okSpecies = new ArrayList<String>();
 		okSpecies.add("rat");
 		okSpecies.add("mouse");// include?
-		okSpecies.add("house mouse");
 		okSpecies.add("rabbit");//
 		okSpecies.add("guinea pig");
 		okSpecies.add("house mouse");
+		okSpecies.add("mouse / rat");
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);

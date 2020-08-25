@@ -17,7 +17,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class ParseToxVal extends Parse {
-	
+
 	static CalculateRiskAssessmentClass2  crac2=new CalculateRiskAssessmentClass2();
 
 	void getRecordsForCAS(String CAS, String filePathDatabaseAsText, String filePathRecordsForCAS) {
@@ -164,89 +164,159 @@ public class ParseToxVal extends Parse {
 
 	}
 
-	public static void createScoreRecord(Chemical chemical, RecordToxVal r) {
 
-//		CalculateRiskAssessmentClass.assignRAC(r);
-//			
-//		if ( r.risk_assessment_class_calc==null || !r.risk_assessment_class.contentEquals(r.risk_assessment_class_calc))
-//			System.out.println(r.risk_assessment_class+"\t"+r.risk_assessment_class_calc);
+	//	public static boolean isNeuroCriticalEffect(RecordToxVal r) {
+	//
+	//		String ce=r.critical_effect;
+	//
+	//		//more keywords added
+	//
+	//		if (ce.contains("ataxia") || 
+	//				ce.contains("brain") ||
+	//				ce.contains("cholinesterase") ||
+	//				ce.contains("CNS") ||
+	//				ce.contains("COMA") ||
+	//				ce.contains("convulsions") ||
+	//				ce.contains("decreased retention (memory)") ||
+	//				ce.contains("demyelination") ||
+	//				ce.contains("HALLUCINATIONS") ||
+	//				ce.contains("headache, dizziness, weakness") ||
+	//				ce.contains("impaired reflex") ||
+	//				ce.contains("jerking movements") ||
+	//				ce.contains("motor and sensory function") ||
+	//				ce.contains("nerve") ||
+	//				ce.contains("NERVOUS SYSTEM") ||
+	//				ce.contains("paralysis") ||
+	//				ce.contains("Psychomotor") ||
+	//				ce.contains("seizure") ||
+	//				ce.contains("SENSE ORGANS") ||
+	//				ce.contains("Spinal cord") ||
+	//				ce.contains("TOXIC PSYCHOSIS") ||
+	//				ce.contains("tremor") ) {
+	//			return true;
+	//		} else {
+	//			return false;
+	//		}
+	//	}
+
+
+
+
+
+	public static void createScoreRecord(Chemical chemical, RecordToxVal r) {
+		//		if (!r.toxval_id.contentEquals("47813"))
+		//			return;
+
+		//		CalculateRiskAssessmentClass.assignRAC(r);
+		//			
+		//		if ( r.risk_assessment_class_calc==null || !r.risk_assessment_class.contentEquals(r.risk_assessment_class_calc))
+		//			System.out.println(r.risk_assessment_class+"\t"+r.risk_assessment_class_calc);
 		crac2.getRAC(r);
-		
-		
 
 		if (chemical.CAS == null) {
 			chemical.CAS = r.casrn;
 			chemical.name = r.name;
 		}
-
+		//		System.out.println("before human eco");
 		if (r.human_eco.contentEquals("human health")) {			
-			if (r.risk_assessment_class.contentEquals("acute")) {
-
-				/*
-				 * Added: && r.human_eco.contentEquals("human health") because there is at least
-				 * one eco entry labeled "acute" I seem to remember it should be && instead of &
-				 * but need to check this. -Leora 4/23/20
-				 * 
-				 * 
-				 * I'm not quite sure whether things the inclusion criteria such as for
-				 * human_eco should go here or whether they should be located in the code for
-				 * the class.
-				 * 
-				 */
-
-				CreateAcuteMammalianToxicityRecords.createAcuteMammalianToxicityRecords(chemical, r);	
-
-			} else if (r.risk_assessment_class.contentEquals("repeat dose")
-					|| r.risk_assessment_class.contentEquals("short-term")
-					|| r.risk_assessment_class.contentEquals("subacute")
-					|| r.risk_assessment_class.contentEquals("subchronic")) {
-				CreateOrganOrSystemicToxRecords.createDurationRecord(chemical, r);
-
-			} else if (r.risk_assessment_class.contentEquals("cancer")) {
-
-				CreateCancerRecords.createCancerRecords(chemical, r);
-
-			} else if (r.risk_assessment_class.contentEquals("developmental")
-					|| r.risk_assessment_class.contentEquals("developmental neurotoxicity")
-					|| r.risk_assessment_class.contentEquals("reproductive")){
-				CreateReproductiveDevelopmentalToxicityRecords.createReproductiveDevelopmentalRecords(chemical, r);
-
-			} else if (r.risk_assessment_class.contentEquals("neurotoxicity")) {
-				createNeurotoxicityRecords(chemical, r);
-			}
-
-
-
+			//	if (r.risk_assessment_class.contentEquals("acute")) {
+			handleHuman(chemical, r);
 		} else if (r.human_eco.contentEquals("eco") &&
 				r.habitat.contentEquals("aquatic") && r.toxval_units.contentEquals("mg/L")) {
+			handleEco(chemical, r);
+		}	
+
+	}
+
+	private static void handleEco(Chemical chemical, RecordToxVal r) {
+		if((r.toxval_type.contentEquals("LC50") ||
+				r.toxval_type.contentEquals("EC50")) &&
+				(r.study_type.toLowerCase().contains("acute") ||
+						r.study_duration_class.toLowerCase().contains("acute"))) {
+
+			// if (r.risk_assessment_class.contentEquals("acute")) {
+			//	|| r.risk_assessment_class.contentEquals("mortality:acute")
+			//	|| r.risk_assessment_class.contentEquals("growth:acute")
+			//	|| r.risk_assessment_class.contentEquals("reproduction:acute")
+			//	|| r.risk_assessment_class.contentEquals("ecotoxicity invertebrate")
+			//	|| r.risk_assessment_class.contentEquals("ecotoxicity plants")) {
+			CreateAquaticToxicityRecords.createAquaticToxAcuteRecords(chemical, r);
 
 
-			if(r.toxval_type.contentEquals("LC50") || r.toxval_type.contentEquals("EC50")){
 
-				if (r.risk_assessment_class.contentEquals("acute")
-						|| r.risk_assessment_class.contentEquals("mortality:acute")
-						|| r.risk_assessment_class.contentEquals("growth:acute")
-						|| r.risk_assessment_class.contentEquals("reproduction:acute")
-						|| r.risk_assessment_class.contentEquals("ecotoxicity invertebrate")
-						|| r.risk_assessment_class.contentEquals("ecotoxicity plants")) {
-					CreateAquaticToxicityRecords.createAquaticToxAcuteRecords(chemical, r);
-				}
+		} else if((r.toxval_type.contentEquals("NOEC") ||
+				r.toxval_type.contentEquals("LOEC")) &&
+				(r.study_type.toLowerCase().contains("chronic") ||
+						r.study_duration_class.toLowerCase().contains("chronic"))) {
+
+			//				if (r.risk_assessment_class.contentEquals("chronic")
+			//						|| r.risk_assessment_class.contentEquals("mortality:chronic")
+			//						|| r.risk_assessment_class.contentEquals("growth:chronic")
+			//						|| r.risk_assessment_class.contentEquals("reproduction:chronic")
+			//						|| r.risk_assessment_class.contentEquals("ecotoxicity invertebrate")
+			//						|| r.risk_assessment_class.contentEquals("ecotoxicity plants")) {
+			CreateAquaticToxicityRecords.createAquaticToxChronicRecords(chemical, r);
 
 
-			} else if(r.toxval_type.contentEquals("NOEC") || r.toxval_type.contentEquals("LOEC")){
+		}
+	}
 
-				if (r.risk_assessment_class.contentEquals("chronic")
-						|| r.risk_assessment_class.contentEquals("mortality:chronic")
-						|| r.risk_assessment_class.contentEquals("growth:chronic")
-						|| r.risk_assessment_class.contentEquals("reproduction:chronic")
-						|| r.risk_assessment_class.contentEquals("ecotoxicity invertebrate")
-						|| r.risk_assessment_class.contentEquals("ecotoxicity plants")) {
-					CreateAquaticToxicityRecords.createAquaticToxChronicRecords(chemical, r);
+	/*
+	 * Added: && r.human_eco.contentEquals("human health") because there is at least
+	 * one eco entry labeled "acute" I seem to remember it should be && instead of &
+	 * but need to check this. -Leora 4/23/20
+	 * 
+	 * 
+	 * I'm not quite sure whether things the inclusion criteria such as for
+	 * human_eco should go here or whether they should be located in the code for
+	 * the class.
+	 * 
+	 */
 
-				}
-			}
+	//
+	//			} else if (r.risk_assessment_class.contentEquals("repeat dose")
+	//					|| r.risk_assessment_class.contentEquals("short-term")
+	//					|| r.risk_assessment_class.contentEquals("subacute")
+	//					|| r.risk_assessment_class.contentEquals("subchronic")) {
+	//				CreateOrganOrSystemicToxRecords.createDurationRecord(chemical, r);
 
-			/* Probably should rename as Acute or Chronic AquaticToxicity instead of Ecotoxicity.
+	//} else if (r.risk_assessment_class.contentEquals("cancer")) {
+
+	private static void handleHuman(Chemical chemical, RecordToxVal r) {
+		if (r.toxval_type.contentEquals("LD50") || r.toxval_type.contentEquals("LC50")) {
+			CreateAcuteMammalianToxicityRecords.createAcuteMammalianToxicityRecords(chemical, r);
+		} else if (r.toxval_type.contentEquals("cancer slope factor") ||
+				r.toxval_type.contentEquals("cancer unit risk")) {
+			CreateCancerRecords.createCancerRecords(chemical, r);
+		} else if (r.study_duration_class.toLowerCase().contains("reproduct") ||
+				r.study_duration_class.toLowerCase().contains("multigeneration") ||
+				r.toxval_subtype.toLowerCase().contains("reproduct") ||
+				r.toxval_subtype.toLowerCase().contains("multigeneration") ||
+				r.study_type.toLowerCase().contains("reproduct") ||
+				r.study_type.toLowerCase().contains("multigeneration") ||
+				r.critical_effect.toLowerCase().contains("reproduct") ||
+				r.critical_effect.toLowerCase().contains("multigeneration") ||
+				r.study_duration_class.toLowerCase().contains("developmental") ||
+				r.toxval_subtype.toLowerCase().contains("developmental") ||
+				r.study_type.toLowerCase().contains("developmental") ||
+				r.critical_effect.toLowerCase().contains("developmental")) {
+			//System.out.println("here repro");
+			// } else if (r.risk_assessment_class.contentEquals("developmental")
+			//		|| r.risk_assessment_class.contentEquals("developmental neurotoxicity")
+			//		|| r.risk_assessment_class.contentEquals("reproductive")){
+			CreateReproductiveDevelopmentalToxicityRecords.createReproductiveDevelopmentalRecords(chemical, r);
+			//	} else if (r.risk_assessment_class.contentEquals("neurotoxicity")) {
+			//		} else if(r.study_type.toLowerCase().contains("neuro") ||
+			//				isNeuroCriticalEffect(r)) {
+			//			CreateNeurotoxicityRecords2.createDurationRecord(chemical, r);
+			//		I'm moving the creation of neurotoxicity records
+			//			into the CreateOrganOrSystemicToxRecords class
+			//			because they have the same scoring criteria.  -Leora
+		} else {
+			CreateOrganOrSystemicToxRecords.createDurationRecord(chemical, r);	
+		}
+	}
+	/* Probably should rename as Acute or Chronic AquaticToxicity instead of Ecotoxicity.
 
 		} else if (r.risk_assessment_class.contentEquals("ecotoxicity invertebrate")) {
 			CreateEcotoxicityRecords.createEcotoxInvertebrateRecords(chemical, r);
@@ -259,26 +329,28 @@ public class ParseToxVal extends Parse {
 
 		} else if (r.risk_assessment_class.contentEquals("subacute")) {
 			 createSubacuteRecords(chemical,r);
-			 */
+	 */
 
 
-			//		} else if (r.risk_assessment_class.contentEquals("acute")) {
-			//			//TODO
-			//
-			//		} else if (r.risk_assessment_class.contentEquals("chronic")) {
-			//			//TODO
-			//			
-			//		} else if (r.risk_assessment_class.contentEquals("mortality:acute")) {
-			//			//TODO
-			//			
-			//		} else if (r.risk_assessment_class.contentEquals("mortality:chronic")) {
-			//			//TODO
+	//		} else if (r.risk_assessment_class.contentEquals("acute")) {
+	//			//TODO
+	//
+	//		} else if (r.risk_assessment_class.contentEquals("chronic")) {
+	//			//TODO
+	//			
+	//		} else if (r.risk_assessment_class.contentEquals("mortality:acute")) {
+	//			//TODO
+	//			
+	//		} else if (r.risk_assessment_class.contentEquals("mortality:chronic")) {
+	//			//TODO
 
-		} else {
-			//			System.out.println("unknown rac="+r.risk_assessment_class);
-		}
 
-	}
+
+
+	//			System.out.println("unknown rac="+r.risk_assessment_class);
+
+
+
 
 
 
@@ -360,7 +432,8 @@ public class ParseToxVal extends Parse {
 
 	static String createNote(RecordToxVal tr) {
 		// Organism Test Type Route Reported Dose (Normalized Dose) Effect Source
-		String note = "Test organism: " + tr.species_common + "<br>\r\n";
+		String note = "    ****    toxval_id: " + tr.toxval_id + "    ****    " + "<br>\r\n";
+		note += "Test organism: " + tr.species_common + "<br>\r\n";
 		note += "Reported Dose: " + tr.toxval_numeric_original+" "+tr.toxval_units_original + "<br>\r\n";
 		note += "Normalized Dose: " + tr.toxval_numeric +" "+tr.toxval_units+"<br>\r\n";
 
@@ -436,21 +509,21 @@ public class ParseToxVal extends Parse {
 
 	}
 
-	private static void createNeurotoxicityRecords(Chemical chemical, RecordToxVal r) {
+	private static void createNeurotoxicityRecords2(Chemical chemical, RecordToxVal r) {
 
 		// study_duration_value and study_duration_units
 		// DfE criteria
 
 	}
 
-	private void createDevelopmentalNeurotoxicityRecords(Chemical chemical, RecordToxVal r) {
+	// private void createDevelopmentalNeurotoxicityRecords(Chemical chemical, RecordToxVal r) {
+	//  Including deveopmental neurotoxicity in neurotoxicity.
+	/*
+	 * DevelopmentalNeurotoxicity will have the same code as Developmental (same DfE
+	 * criteria), which is detailed above. -Leora
+	 */
 
-		/*
-		 * DevelopmentalNeurotoxicity will have the same code as Developmental (same DfE
-		 * criteria), which is detailed above. -Leora
-		 */
 
-	}
 
 	/*
 	 * So this class is just for creating the individual scores. Do we also want to
@@ -509,6 +582,7 @@ public class ParseToxVal extends Parse {
 		//		vecCAS.add("7803-57-8"); 
 		//		vecCAS.add("101-77-9"); 
 		//		vecCAS.add("10588-01-9"); 
+
 		//		vecCAS.add("107-13-1"); 
 		//		vecCAS.add("110-91-8"); 
 		//		vecCAS.add("106-93-4"); 

@@ -552,10 +552,12 @@ public class ParseToxValDB {
 				chemicals.add(chemical);
 
 				getDataFromTable_toxval(chemical);
-				getDataFromTable_cancer_summary(chemical);
-				getDataFromTable_genetox_summary(chemical);
-				getDataFromTable_models(chemical);
-				getDataFromTable_bcfbaf(chemical);//TODO
+				
+// ***Uncomment these later.***
+//				getDataFromTable_cancer_summary(chemical);
+//				getDataFromTable_genetox_summary(chemical);
+//				getDataFromTable_models(chemical);
+//				getDataFromTable_bcfbaf(chemical);//TODO
 
 			}
 
@@ -615,7 +617,9 @@ public class ParseToxValDB {
 
 		//***************************************************************************// 
 
-		String CAS="123-91-1"; // casList.add(CAS);
+		
+		String CAS="79-06-1";
+//		String CAS="123-91-1"; // casList.add(CAS);
 //		CAS="75-73-0";
 
 //		String CAS="75-73-0";
@@ -623,7 +627,9 @@ public class ParseToxValDB {
 		
 		Vector<String>casList=new Vector<String>();
 		casList.add(CAS);
-//		casList.add("76-16-4");
+//		casList.add("79-06-1");
+		
+	//	casList.add("76-16-4");
 
 		String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json"; //
 		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";

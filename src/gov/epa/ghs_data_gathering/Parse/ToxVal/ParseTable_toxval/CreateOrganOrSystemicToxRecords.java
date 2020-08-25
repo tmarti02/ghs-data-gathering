@@ -55,6 +55,7 @@ public class CreateOrganOrSystemicToxRecords {
 		okSpecies.add("rabbit");// 1089
 		okSpecies.add("guinea pig");// 970
 		okSpecies.add("house mouse");
+		okSpecies.add("mouse / rat");
 
 		if (!okSpecies.contains(tr.species_common))
 			return;
@@ -67,8 +68,8 @@ public class CreateOrganOrSystemicToxRecords {
 
 		sr.duration=study_dur_in_days;
 		sr.durationUnits="days";
-		
-//		System.out.println("duration="+sr.duration+" days");
+
+		//		System.out.println("duration="+sr.duration+" days");
 
 
 		if (tr.exposure_route.contentEquals("oral") && tr.toxval_units.contentEquals("mg/kg-day")) {
@@ -120,38 +121,96 @@ public class CreateOrganOrSystemicToxRecords {
 		}
 
 
-		if (tr.toxval_type.contentEquals("NOAEL") || tr.toxval_type.contentEquals("LOAEL")) {
+		if (tr.study_type.contentEquals("single limit dose") ||
+				tr.study_duration_class.contentEquals("single dose")) {
 			if (tr.toxval_units.contentEquals("mg/kg") &&
-					tr.exposure_route.contentEquals("oral") &&
-					study_dur_in_days >= 0.0 && study_dur_in_days <= 1.0) {		
+					tr.exposure_route.contentEquals("oral")) {
+				//	study_dur_in_days >= 0.0 && study_dur_in_days <= 1.0) {		
 				setSingleDoseOralScore(sr,chemical);	
-			} else if(tr.toxval_units.contentEquals("mg/kg") &&
-					tr.exposure_route.contentEquals("dermal") &&
-					study_dur_in_days >= 0.0 && study_dur_in_days <= 1.0) {	
+			} else if (tr.toxval_units.contentEquals("mg/kg") &&
+					tr.exposure_route.contentEquals("dermal")) {	
 				setSingleDoseDermalScore(sr,chemical);
-			} else if(tr.toxval_units.contentEquals("mg/L") || tr.toxval_units.contentEquals("mg/m3")) {
-				if (tr.exposure_route.contentEquals("inhalation") &&
-						study_dur_in_days >= 0.0 && study_dur_in_days <= 1.0) {			
-					setSingleDoseInhalationScore(sr,chemical);
-				}
+			} else if ((tr.toxval_units.contentEquals("mg/L") ||
+					tr.toxval_units.contentEquals("mg/m3")) &&
+					tr.exposure_route.contentEquals("inhalation")) {
+				setSingleDoseInhalationScore(sr,chemical);
 			}
-		}	
+		}
 
 
 		if (sr.score==null) return;
 
 		//		System.out.println(sr.scoreToInt());
 
-		
 
-		if (study_dur_in_days>1) {
-			chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);
-		} else {
-			//TODO- are there any records where this happends?
-			chemical.scoreSystemic_Toxicity_Single_Exposure.records.add(sr);
-		}
-
+		if(tr.study_type.toLowerCase().contains("neuro") ||
+				isNeuroCriticalEffect(tr)) {
+			handleNeuro(chemical, tr, sr);
+		} else
+			handleOther(chemical, tr, sr);
 	}
+
+	private static void handleNeuro(Chemical chemical, RecordToxVal tr, ScoreRecord sr) {
+		if (tr.study_type.contentEquals("single limit dose") ||
+				tr.study_duration_class.contentEquals("single dose")) {	
+			chemical.scoreNeurotoxicity_Single_Exposure.records.add(sr);
+		} else; {
+			chemical.scoreNeurotoxicity_Repeat_Exposure.records.add(sr);
+		}
+	}
+
+	private static void handleOther(Chemical chemical, RecordToxVal tr, ScoreRecord sr) {
+		if (tr.study_type.contentEquals("single limit dose") ||
+				tr.study_duration_class.contentEquals("single dose")) {	
+			chemical.scoreSystemic_Toxicity_Single_Exposure.records.add(sr);
+		} else; {
+			chemical.scoreSystemic_Toxicity_Repeat_Exposure.records.add(sr);
+		}
+	}
+
+
+
+
+
+	//		} else {
+	//			//TODO- are there any records where this happends?
+	//			chemical.scoreSystemic_Toxicity_Single_Exposure.records.add(sr);
+	//		}
+
+
+	public static boolean isNeuroCriticalEffect(RecordToxVal tr) {
+		String ce=tr.critical_effect;
+		//more keywords added
+		if (ce.contains("ataxia") || 
+				ce.contains("brain") ||
+				ce.contains("cholinesterase") ||
+				ce.contains("CNS") ||
+				ce.contains("COMA") ||
+				ce.contains("convulsions") ||
+				ce.contains("decreased retention (memory)") ||
+				ce.contains("demyelination") ||
+				ce.contains("HALLUCINATIONS") ||
+				ce.contains("headache, dizziness, weakness") ||
+				ce.contains("impaired reflex") ||
+				ce.contains("jerking movements") ||
+				ce.contains("motor and sensory function") ||
+				ce.contains("nerve") ||
+				ce.contains("NERVOUS SYSTEM") ||
+				ce.contains("paralysis") ||
+				ce.contains("Psychomotor") ||
+				ce.contains("seizure") ||
+				ce.contains("SENSE ORGANS") ||
+				ce.contains("Spinal cord") ||
+				ce.contains("TOXIC PSYCHOSIS") ||
+				ce.contains("tremor") ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+
+
 
 
 
@@ -163,7 +222,7 @@ public class CreateOrganOrSystemicToxRecords {
 		sr.sourceOriginal=tr.source;
 
 		sr.route=tr.exposure_route;
-		
+
 
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
@@ -180,7 +239,7 @@ public class CreateOrganOrSystemicToxRecords {
 
 
 
-// 90 day oral seems to be creating duplicates.
+	// 90 day oral seems to be creating duplicates.
 
 	private static void setNinetyOralScore(ScoreRecord sr, Chemical chemical) {
 
