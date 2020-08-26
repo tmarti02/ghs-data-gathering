@@ -36,6 +36,9 @@ public class FlatFileRecord {
 	public String note;// extra clarification that doesn't fit into above fields
 	public String note2;// extra clarification that doesn't fit into above fields
 	
+	public String toxval_id;
+	public String test_organism;
+
 	
 	// **************************************************************************************
 	public Double valueMass;// quantitative value in mass units such as mg/L
@@ -47,7 +50,7 @@ public class FlatFileRecord {
 
 
 	public static String[] fieldNames = { "CAS","name","hazard_name","source", "sourceOriginal","score", "route", "category", "hazard_code",
-			"hazard_statement", "rationale", "note","note2","valueMassOperator","valueMass","valueMassUnits","url","long_ref"};
+			"hazard_statement", "rationale", "note","note2","toxval_id","test_organism","valueMassOperator","valueMass","valueMassUnits","url","long_ref"};
 
 	
 	

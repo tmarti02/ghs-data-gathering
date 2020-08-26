@@ -1,8 +1,8 @@
 package gov.epa.ghs_data_gathering.Parse.ToxVal;
 
-import java.io.BufferedReader;
+
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -14,10 +14,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.Chemicals;
-
+import gov.epa.ghs_data_gathering.API.FlatFileRecord;
+import gov.epa.ghs_data_gathering.API.FlatFileRecord2;
+import gov.epa.ghs_data_gathering.API.Score;
+import gov.epa.ghs_data_gathering.API.ScoreRecord;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf.ParseToxValBCFBAF;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf.RecordToxValBCFBAF;
@@ -534,7 +541,7 @@ public class ParseToxValDB {
 		}
 	}
 
-	void goThroughRecordsMultipleChemicals(Vector<String>casList,String destfilepathJson, String destfilepathText) {
+	Chemicals goThroughRecordsMultipleChemicals(Vector<String>casList,String destfilepathJson, String destfilepathText) {
 
 
 		try {
@@ -563,11 +570,13 @@ public class ParseToxValDB {
 
 			chemicals.writeToFile(destfilepathJson);
 			chemicals.toFlatFile(destfilepathText, "\t");
+			return chemicals;
 			//			writeChemicalToFile(chemical, destfilepath);
 
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
+			return null;
 		}
 
 	}
@@ -633,7 +642,10 @@ public class ParseToxValDB {
 
 		String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json"; //
 		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
-		p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json,filePathRecordsForCAS_txt);
+		Chemicals chemicals=p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json,filePathRecordsForCAS_txt);
+		
+		String filePathExcelManual=folder+"/manual 79-06-1.xlsx";
+		compareWithManual(chemicals,filePathExcelManual);
 
 				
 		//***************************************************************************
@@ -662,6 +674,175 @@ public class ParseToxValDB {
 //		p.goThroughRecordsMultipleChemicals(casList,filePathRecordsForCASList_json, filePathRecordsForCASList_txt);
 
 
+	}
+
+	static Vector<FlatFileRecord> getManualResults(String excelFilePath) {
+		
+		Vector<FlatFileRecord>recs=new Vector<>();
+		
+		try
+		{
+											
+			FileInputStream file = new FileInputStream(new File(excelFilePath));
+
+			//Create Workbook instance holding reference to .xlsx file
+			XSSFWorkbook workbook = new XSSFWorkbook(file);
+
+			
+			for (int i=0;i<workbook.getNumberOfSheets();i++) {
+				//Get first/desired sheet from the workbook
+				XSSFSheet sheet = workbook.getSheetAt(i);
+
+				getRecordsFromSheet(recs, sheet);
+			}
+			System.out.println("here size="+recs.size());
+			
+		
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return recs;
+		
+	}
+
+	private static void getRecordsFromSheet(Vector<FlatFileRecord> recs, XSSFSheet sheet) {
+		try {
+			Row row=sheet.getRow(0);
+
+			Hashtable<String,Integer>htColNums=new Hashtable<>();
+
+			for (int i=0;i<row.getLastCellNum();i++) {
+				Cell cell=row.getCell(i);
+				String colName=cell.getStringCellValue();
+				htColNums.put(colName,new Integer(i));
+			}
+
+			for (int i=1;i<sheet.getLastRowNum();i++) {
+				FlatFileRecord f=new FlatFileRecord();
+
+				Row rowi=sheet.getRow(i);
+				f.toxval_id=(int)(rowi.getCell(htColNums.get("toxval_id")).getNumericCellValue())+"";
+				f.hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
+				f.score=rowi.getCell(htColNums.get("ManualScore")).getStringCellValue();
+
+
+				if (htColNums.get("Note")!=null) {
+					Cell cell=rowi.getCell(htColNums.get("Note"),Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+									
+//					System.out.println("cell value="+cell.getStringCellValue());
+					
+					f.note=cell.getStringCellValue();//store leora's note
+				}
+
+				if (!hasRecord(recs, f.toxval_id))
+					recs.add(f);
+
+				//				System.out.println(f.toxval_id+"\t"+f.hazard_name+"\t"+f.score);
+
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	static boolean hasRecord(Vector<FlatFileRecord> recs,String toxval_id) {
+		for (int i=0;i<recs.size();i++) {
+			if (recs.get(i).toxval_id.contentEquals(toxval_id)) return true;
+		}
+		return false;
+	}
+	
+	static Hashtable<String,FlatFileRecord>getHashtable(Vector<FlatFileRecord>records) {
+		Hashtable<String,FlatFileRecord> ht=new Hashtable<>();
+		
+		for (int i=0;i<records.size();i++) {
+			FlatFileRecord rec=records.get(i);
+			ht.put(rec.toxval_id, rec);
+		}
+		return ht;
+	}
+	
+	
+	private static void compareWithManual(Chemicals chemicals,String excelFilePath) {
+		
+		Vector<FlatFileRecord>recordsManual=getManualResults(excelFilePath);
+		Vector<FlatFileRecord>recordsJava=getJavaRecords(chemicals);
+		
+		
+//		for (int i=0;i<recordsJava.size();i++) {
+//			FlatFileRecord recJava=recordsJava.get(i);
+//			System.out.println("recJava: "+i+"\t"+recJava.toxval_id);
+//		}
+		
+		Hashtable<String,FlatFileRecord>htManual=getHashtable(recordsManual);
+		Hashtable<String,FlatFileRecord>htJava=getHashtable(recordsJava);
+		
+		System.out.println("\nLooping through manual records:");
+		//First loop through manual records to find records present in manual but not in java:
+		for (int i=0;i<recordsManual.size();i++) {
+			FlatFileRecord recManual=recordsManual.get(i);
+			
+			if (recManual.hazard_name.contentEquals("Exclude")) continue;
+			
+			if (htJava.get(recManual.toxval_id)==null) {
+			
+				System.out.println(recManual.toxval_id+" present in manual, not in Java");
+			
+			} else {
+				FlatFileRecord recJava=htJava.get(recManual.toxval_id);
+				
+				if (!recManual.hazard_name.contentEquals(recJava.hazard_name)) {						
+					System.out.println(recJava.toxval_id+"\t"+recJava.hazard_name+"\t"+recManual.hazard_name+"\tmismatch hazard name\t"+recManual.note);						
+				}
+				
+				if (!recManual.score.contentEquals(recJava.score)) {						
+					System.out.println(recJava.toxval_id+"\t"+recJava.score+"\t"+recManual.score+"\tmismatch score\t"+recManual.note);						
+				} 
+				
+			}
+		}
+		
+					
+		//Second loop through java records to find records in java but not in manual:
+		
+		System.out.println("\nLooping through java records:");
+		
+		for (int i=0;i<recordsJava.size();i++) {
+			FlatFileRecord recJava=recordsJava.get(i);
+									
+			if (htManual.get(recJava.toxval_id)==null) {			
+				System.out.println(recJava.toxval_id+" present in Java, not in manual");			
+			} 
+		}
+				
+	}
+
+	private static Vector<FlatFileRecord> getJavaRecords(Chemicals chemicals) {
+		Vector<FlatFileRecord>recordsJava=new Vector<>();
+		
+		//Go through the all the records
+		for (int i=0;i<chemicals.size();i++) {
+			Chemical chemical=chemicals.get(i);
+									
+			for (int j=0;j<chemical.scores.size();j++) {
+				
+				Score score=chemical.scores.get(j);
+				
+				for (int k=0;k<score.records.size();k++) {
+					
+					ScoreRecord sr=score.records.get(k);
+					
+					FlatFileRecord recJava=new FlatFileRecord();
+					recJava.toxval_id=sr.toxval_id;
+					recJava.hazard_name=score.hazard_name;
+					recJava.score=sr.score;					
+					
+					recordsJava.add(recJava);					
+				}				
+			}
+		}
+//		System.out.println(recordsJava.size());
+		return recordsJava;
 	}
 
 }

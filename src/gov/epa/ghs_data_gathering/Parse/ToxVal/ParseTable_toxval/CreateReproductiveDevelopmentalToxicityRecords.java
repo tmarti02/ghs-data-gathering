@@ -69,16 +69,6 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 	private static void createOralRecord(Chemical chemical, RecordToxVal tr) {
 //		System.out.println("*Creating Oral Record");
 
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
-
-		sr.route = "Oral";
-
 		ArrayList<String> okSpecies = new ArrayList<String>();
 		okSpecies.add("mouse");// 27796
 		okSpecies.add("rat");// 13124
@@ -90,13 +80,10 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		if (!okSpecies.contains(tr.species_common))
 			return;
 
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
-
+		ScoreRecord sr=ParseToxVal.saveToxValInfo(tr);
 		setOralScore(sr, chemical);
 
-		sr.note=ParseToxVal.createNote(tr);
+
 
 		//		if (tr.risk_assessment_class.contentEquals("developmental") ||
 		//			tr.risk_assessment_class.contentEquals("developmental neurotoxicity")) {
@@ -140,7 +127,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
 
-				System.out.println(chemical.CAS+"\t"+strDose);					
+//				System.out.println(chemical.CAS+"\t"+strDose);					
 		//		System.out.println("****"+strDose);	
 
 
@@ -149,12 +136,12 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 			if (dose >= 250) {
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Oral POD ( > " + strDose + " mg/kg) > 250 mg/kg";
-				System.out.println(chemical.CAS+"\t"+sr.rationale);
+//				System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
 				sr.rationale = "Oral POD ( > " + strDose
 						+ " mg/kg) does not provide enough information to assign a score";
-				System.out.println(chemical.CAS+"\t"+sr.rationale);
+//				System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 
@@ -167,7 +154,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 				sr.rationale = "Oral POD ( < " + strDose
 						+ " mg/kg) does not provide enough information to assign a score";
 
-				System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
+//				System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
 
 		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~")
@@ -185,23 +172,14 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 			} else if (dose > 250) {
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Oral POD" + "(" + strDose + " mg/kg) > 250 mg/kg";
-			} else { System.out.println(chemical.CAS + "\toral\t" + strDose);			 
+			} else { 
+//				System.out.println(chemical.CAS + "\toral\t" + strDose);			 
 			}		
 		}
 	}
 
 	private static void createDermalRecord(Chemical chemical, RecordToxVal tr) {
-		System.out.println("Creating Dermal Record");
-
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-
-
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
-
+//		System.out.println("Creating Dermal Record");
 
 		ArrayList<String> okSpecies = new ArrayList<String>();
 		okSpecies.add("mouse");// 27796
@@ -214,13 +192,8 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		if (!okSpecies.contains(tr.species_common))
 			return;
 
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
-
+		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
 		setDermalScore(sr, chemical);
-
-		sr.note=ParseToxVal.createNote(tr);
 
 		chemical.scoreReproductive.records.add(sr);
 		chemical.scoreDevelopmental.records.add(sr);
@@ -283,14 +256,6 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		// System.out.println("Creating Inhalation Record");
 
 
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
-
 		ArrayList<String> okSpecies = new ArrayList<String>();
 		okSpecies.add("mouse");// 27796
 		okSpecies.add("rat");// 13124
@@ -302,14 +267,10 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		if (!okSpecies.contains(tr.species_common))
 			return;
 
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
-
+		
+		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);		
 		setInhalationScore(sr, chemical);
-
-		sr.note=ParseToxVal.createNote(tr);
-
+		
 		if (sr.score==null)
 			return;
 

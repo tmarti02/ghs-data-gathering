@@ -27,7 +27,12 @@ public class ScoreRecord {
 	
 //	public String listType;//right now dont need this because getListType gets it from the source name
 	
+	public String toxval_id;
+	public String test_organism;
+//	public String reported_dose;
+//	public String normalized_dose;
 
+		
 	// **************************************************************************************
 	public Double valueMass;// quantitative value in mass units such as mg/L
 	// Should this be concentration instead of mass?

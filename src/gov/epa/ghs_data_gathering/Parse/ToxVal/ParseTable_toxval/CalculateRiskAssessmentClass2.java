@@ -492,7 +492,7 @@ public class CalculateRiskAssessmentClass2 {
 		//Print out so can look at the values:
 		
 		
-		System.out.println(json);
+//		System.out.println("RACS="+json);
 		
 		
 		return rac;

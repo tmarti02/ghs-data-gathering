@@ -63,27 +63,10 @@ static void createReproductiveRecords(Chemical chemical, RecordToxVal r) {
 
 private static void createReproductiveOralRecord(Chemical chemical, RecordToxVal tr) {
 
-	ScoreRecord sr = new ScoreRecord();
-	sr = new ScoreRecord();
-	sr.source = ScoreRecord.sourceToxVal;
-	sr.sourceOriginal=tr.source;
-	
-	sr.url=tr.url;
-	sr.long_ref=tr.long_ref;
-
-	
+	ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
 	sr.route = "Oral";
-
-	sr.valueMassOperator=tr.toxval_numeric_qualifier;
-	sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-	sr.valueMassUnits = tr.toxval_units;
-
-	setReproductiveOralScore(sr, chemical);
-
-	sr.note=ParseToxVal.createNote(tr);
-		
-	chemical.scoreReproductive.records.add(sr);
-		
+	setReproductiveOralScore(sr, chemical);	
+	chemical.scoreReproductive.records.add(sr);		
 }
 
 private static void setReproductiveOralScore(ScoreRecord sr, Chemical chemical) {
@@ -112,26 +95,9 @@ private static void setReproductiveOralScore(ScoreRecord sr, Chemical chemical) 
 	}
 
 private static void createReproductiveDermalRecord(Chemical chemical, RecordToxVal tr) {
-
-	ScoreRecord sr = new ScoreRecord();
-	sr = new ScoreRecord();
-	sr.source = ScoreRecord.sourceToxVal;
-	sr.sourceOriginal=tr.source;
-	
-	sr.url=tr.url;
-	sr.long_ref=tr.long_ref;
-
-
-	sr.valueMassOperator=tr.toxval_numeric_qualifier;
-	sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-	sr.valueMassUnits = tr.toxval_units;
-
-	setReproductiveDermalScore(sr, chemical);
-
-	sr.note=ParseToxVal.createNote(tr);
-
+	ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
+	setReproductiveDermalScore(sr, chemical);	
 	chemical.scoreReproductive.records.add(sr);
-
 }
 
 
@@ -160,22 +126,8 @@ private static void setReproductiveDermalScore(ScoreRecord sr, Chemical chemical
 
 private static void createReproductiveInhalationRecord(Chemical chemical, RecordToxVal tr){
 
-	ScoreRecord sr = new ScoreRecord();
-	sr = new ScoreRecord();
-	sr.source = ScoreRecord.sourceToxVal;
-	sr.sourceOriginal=tr.source;
-
-	sr.url=tr.url;
-	sr.long_ref=tr.long_ref;
-
-	sr.valueMassOperator=tr.toxval_numeric_qualifier;
-	sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-	sr.valueMassUnits = tr.toxval_units;
-
-	setReproductiveDermalScore(sr, chemical);
-
-	sr.note=ParseToxVal.createNote(tr);
-
+	ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);	
+	setReproductiveDermalScore(sr, chemical);	
 	chemical.scoreReproductive.records.add(sr);
 
 }

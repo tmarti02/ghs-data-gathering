@@ -26,55 +26,17 @@ public class CreateAquaticToxicityRecords {
 
 
 	static void createAquaticToxAcuteRecords(Chemical chemical, RecordToxVal tr) {
-
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
-
-
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
-
+		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
 		setAquaticToxAcuteScore(sr, chemical);
-
-		sr.note=ParseToxVal.createNote(tr);
-
 		chemical.scoreAcute_Aquatic_Toxicity.records.add(sr);
-
-
-
 	}
 
 
 
 	static void createAquaticToxChronicRecords(Chemical chemical, RecordToxVal tr) {
-
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
-
-
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
-
-		setAquaticToxChronicScore(sr, chemical);
-
-		sr.note=ParseToxVal.createNote(tr);
-
+		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
+		setAquaticToxChronicScore(sr, chemical);		
 		chemical.scoreChronic_Aquatic_Toxicity.records.add(sr);
-
-
-
 	}
 
 

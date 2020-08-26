@@ -268,18 +268,7 @@ public class CreateAcuteMammalianToxicityRecords {
 			return;
 		}
 
-		ScoreRecord sr = new ScoreRecord();
 		
-
-		//		System.out.println(tr.toxval_type);
-
-
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-		sr.route = "Oral";
-		
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
 		
 		
 		ArrayList<String> okSpecies = new ArrayList<String>();
@@ -290,19 +279,14 @@ public class CreateAcuteMammalianToxicityRecords {
 		okSpecies.add("house mouse");
 		okSpecies.add("mouse / rat");
 
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
-
 
 		if (!okSpecies.contains(tr.species_common))//TODO- does richard use all species???
 			return;
 
 		// System.out.println(chemical.CAS+"\t"+tr.ReportedDose+"\t"+tr.NormalizedDose);
 
+		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
 		setOralScore(sr, chemical);
-
-		sr.note=ParseToxVal.createNote(tr);
 		chemical.scoreAcute_Mammalian_ToxicityOral.records.add(sr);
 
 	}
@@ -316,18 +300,8 @@ public class CreateAcuteMammalianToxicityRecords {
 			return;
 		}
 
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
 		
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
-
-
-		sr.route = "Dermal";
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-		sr.sourceOriginal=tr.source;
-
+		
 
 		/*
 		 * EPA Health Effects Test Guidelines OPPTS 870.1200 Acute Dermal Toxicity: "The
@@ -347,36 +321,19 @@ public class CreateAcuteMammalianToxicityRecords {
 		okSpecies.add("mouse / rat");
 
 
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
-
-
 		if (!okSpecies.contains(tr.species_common))//TODO- does richard use all species???
 			return;
 
-
+		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
 		setDermalScore(sr, chemical);
-
-		sr.note=ParseToxVal.createNote(tr);
 		chemical.scoreAcute_Mammalian_ToxicityDermal.records.add(sr);
 
 	}
 
 	private static void createAcuteMammalianToxicityInhalationRecord(Chemical chemical, RecordToxVal tr) {
-		System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
+//		System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
 
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-
-		sr.route = "Inhalation";
 		
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
-
-
 		//TODO - do we only want to use LC50? I know richard might not restrict to LC50s
 
 		/*
@@ -395,7 +352,6 @@ public class CreateAcuteMammalianToxicityRecords {
 		 */
 
 
-
 		/*
 		 * EPA Health Effects Test Guidelines OPPTS 870.1300 Acute Inhalation Toxicity:
 		 * "Although several mammalian test species may be used, the preferred species
@@ -412,9 +368,6 @@ public class CreateAcuteMammalianToxicityRecords {
 		okSpecies.add("house mouse");
 		okSpecies.add("mouse / rat");
 
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
 
 		/* Okay, I understand the code.  This basically renames what Richard called toxval_numeric
 		 * into valueMass and then valueMass is renamed score and then for acute toxicity,
@@ -445,10 +398,9 @@ public class CreateAcuteMammalianToxicityRecords {
 		 * 
 		 * -Leora 4/23/20 */
 
+
+		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
 		setInhalationScore(sr, chemical);
-
-		sr.note=ParseToxVal.createNote(tr);
-
 		chemical.scoreAcute_Mammalian_ToxicityInhalation.records.add(sr);
 
 	}

@@ -430,19 +430,35 @@ public class ParseToxVal extends Parse {
 	 * genetox_call = "inconclusive" OR "not clastogen" then score= N/A -Leora
 	 */
 
-	static String createNote(RecordToxVal tr) {
+	static ScoreRecord saveToxValInfo(RecordToxVal tr) {
 		// Organism Test Type Route Reported Dose (Normalized Dose) Effect Source
-		String note = "    ****    toxval_id: " + tr.toxval_id + "    ****    " + "<br>\r\n";
-		note += "Test organism: " + tr.species_common + "<br>\r\n";
-		note += "Reported Dose: " + tr.toxval_numeric_original+" "+tr.toxval_units_original + "<br>\r\n";
-		note += "Normalized Dose: " + tr.toxval_numeric +" "+tr.toxval_units+"<br>\r\n";
 
-		// if (tr.Effect==null || tr.Effect.equals("")) {
-		// tr.Effect="N/A";
-		// }
-		note += "Source: " + tr.source;
-		return note;
+		ScoreRecord sr=new ScoreRecord();
+		sr.route=tr.exposure_route;
+		
+		sr.url=tr.url;		
+		sr.long_ref=tr.long_ref;
 
+		sr.source = ScoreRecord.sourceToxVal;
+		sr.sourceOriginal=tr.source;
+
+		sr.valueMassOperator=tr.toxval_numeric_qualifier;
+		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
+		sr.valueMassUnits = tr.toxval_units;
+		
+		sr.toxval_id=tr.toxval_id;
+		sr.test_organism=tr.species_common;
+		
+//		sr.reported_dose=tr.toxval_numeric_original+" "+tr.toxval_units_original;//now separate variable
+//		sr.normalized_dose=tr.toxval_numeric +" "+tr.toxval_units;
+//		String note = "Reported Dose: " + tr.toxval_numeric_original+" "+tr.toxval_units_original + "<br>\r\n";
+//		note += "Normalized Dose: " + tr.toxval_numeric +" "+tr.toxval_units+"<br>\r\n";
+//		// if (tr.Effect==null || tr.Effect.equals("")) {
+//		// tr.Effect="N/A";
+//		// }
+//		
+//		return note;
+		return sr;
 	}
 
 	static String formatDose(double dose) {

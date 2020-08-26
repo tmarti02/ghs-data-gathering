@@ -1021,6 +1021,10 @@ public class Chemical {
 				f.note=sr.note;
 				f.note2=sr.note2;
 				f.valueMassOperator=sr.valueMassOperator;
+
+				f.toxval_id=sr.toxval_id;				
+				f.test_organism=sr.test_organism;
+				
 				
 				if (sr.valueMass!=null)	f.valueMass=sr.valueMass;
 				

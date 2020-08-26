@@ -28,28 +28,14 @@ public class CreateCancerRecords {
 		
 	private static void createCancerRecord(Chemical chemical, RecordToxVal tr) {
 
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
+		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
 		sr.note2 = tr.toxval_type;
-		
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
-
 		
 		// I wanted a way to distinguish between toxval types below.
 		// I think storing toxval_type in note2 works.  -Leora
 
-		setCancerScore(sr, chemical);
-		
+		setCancerScore(sr, chemical);		
 		// setCancerScore(sr, chemical, tr.toxval_type);
-
-		sr.note=ParseToxVal.createNote(tr);
-
 		chemical.scoreCarcinogenicity.records.add(sr);
 
 	}

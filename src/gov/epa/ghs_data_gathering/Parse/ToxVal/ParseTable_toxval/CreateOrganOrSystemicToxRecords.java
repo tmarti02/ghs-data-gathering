@@ -215,25 +215,7 @@ public class CreateOrganOrSystemicToxRecords {
 
 
 	private static ScoreRecord createScoreRecord(Chemical chemical, RecordToxVal tr) {
-
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal=tr.source;
-
-		sr.route=tr.exposure_route;
-
-
-		sr.valueMassOperator=tr.toxval_numeric_qualifier;
-		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
-		sr.valueMassUnits = tr.toxval_units;
-		sr.note=ParseToxVal.createNote(tr);
-
-		sr.url=tr.url;
-		sr.long_ref=tr.long_ref;
-
-
-
+		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
 		return sr;
 	}
 
