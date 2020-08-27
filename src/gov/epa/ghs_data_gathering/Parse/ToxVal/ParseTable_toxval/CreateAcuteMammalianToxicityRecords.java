@@ -43,7 +43,8 @@ public class CreateAcuteMammalianToxicityRecords {
 			createAcuteMammalianToxicityDermalRecord(chemical, r);
 		} else if((r.exposure_route.contentEquals("inhalation") ||
 				r.toxval_subtype.toLowerCase().contains("inhalation")) &&
-				r.toxval_units.contentEquals("mg/L") &&
+				(r.toxval_units.contentEquals("mg/L") ||
+				r.toxval_units.contentEquals("mg/m3")) &&
 				r.toxval_type.contentEquals("LC50") &&
 				r.human_eco.contentEquals("human health")){
 			createAcuteMammalianToxicityInhalationRecord(chemical, r);
@@ -333,6 +334,18 @@ public class CreateAcuteMammalianToxicityRecords {
 	private static void createAcuteMammalianToxicityInhalationRecord(Chemical chemical, RecordToxVal tr) {
 //		System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
 
+		if (tr.toxval_units.contentEquals("mg/m3")){
+			
+			// change value and units
+			/* 1 mg/L = 1000 mg/m3
+			 * need to add code for mg/m3
+			 */
+			
+			double toxval_numeric2 = Double.parseDouble(tr.toxval_numeric)/1000.0;
+			tr.toxval_numeric = toxval_numeric2 + "";
+			tr.toxval_units = "mg/L (converted from mg/m3)";
+			
+		}
 		
 		//TODO - do we only want to use LC50? I know richard might not restrict to LC50s
 

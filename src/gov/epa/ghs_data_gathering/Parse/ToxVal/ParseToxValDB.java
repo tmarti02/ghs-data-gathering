@@ -636,6 +636,11 @@ public class ParseToxValDB {
 		
 		Vector<String>casList=new Vector<String>();
 		casList.add(CAS);
+		casList.add("101-77-9");
+		casList.add("7803-57-8");
+		casList.add("75-21-8");
+		casList.add("302-01-2");
+	
 //		casList.add("79-06-1");
 		
 	//	casList.add("76-16-4");
@@ -644,7 +649,7 @@ public class ParseToxValDB {
 		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
 		Chemicals chemicals=p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json,filePathRecordsForCAS_txt);
 		
-		String filePathExcelManual=folder+"/manual 79-06-1.xlsx";
+		String filePathExcelManual=folder+"/manual.xlsx";
 		compareWithManual(chemicals,filePathExcelManual);
 
 				
