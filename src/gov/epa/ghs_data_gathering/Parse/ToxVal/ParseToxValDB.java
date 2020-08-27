@@ -722,13 +722,16 @@ public class ParseToxValDB {
 				htColNums.put(colName,new Integer(i));
 			}
 
-			for (int i=1;i<sheet.getLastRowNum();i++) {
+			for (int i=1;i<=sheet.getLastRowNum();i++) {
 				FlatFileRecord f=new FlatFileRecord();
 
 				Row rowi=sheet.getRow(i);
 				f.toxval_id=(int)(rowi.getCell(htColNums.get("toxval_id")).getNumericCellValue())+"";
 				f.hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
 				f.score=rowi.getCell(htColNums.get("ManualScore")).getStringCellValue();
+				
+					
+//				System.out.println(sheet.getSheetName()+"\t"+f.toxval_id);
 
 
 				if (htColNums.get("Note")!=null) {
