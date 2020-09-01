@@ -204,8 +204,8 @@ public class ParseToxVal extends Parse {
 
 
 	public static void createScoreRecord(Chemical chemical, RecordToxVal r) {
-		//		if (!r.toxval_id.contentEquals("47813"))
-		//			return;
+//				if (!r.toxval_id.contentEquals("644884"))
+//					return;
 
 		//		CalculateRiskAssessmentClass.assignRAC(r);
 		//			
@@ -285,8 +285,9 @@ public class ParseToxVal extends Parse {
 	private static void handleHuman(Chemical chemical, RecordToxVal r) {
 		if (r.toxval_type.contentEquals("LD50") || r.toxval_type.contentEquals("LC50")) {
 			CreateAcuteMammalianToxicityRecords.createAcuteMammalianToxicityRecords(chemical, r);
-		} else if (r.toxval_type.contentEquals("cancer slope factor") ||
-				r.toxval_type.contentEquals("cancer unit risk")) {
+		} else if (r.toxval_type.toLowerCase().contains("cancer slope factor") ||
+				r.toxval_type.toLowerCase().contains("cancer unit risk")) {
+			System.out.println("creating cancer record");
 			CreateCancerRecords.createCancerRecords(chemical, r);
 		} else if (r.study_duration_class.toLowerCase().contains("reproduct") ||
 				r.study_duration_class.toLowerCase().contains("multigeneration") ||

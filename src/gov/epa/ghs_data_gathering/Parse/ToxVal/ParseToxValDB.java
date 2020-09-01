@@ -640,6 +640,9 @@ public class ParseToxValDB {
 		casList.add("7803-57-8");
 		casList.add("75-21-8");
 		casList.add("302-01-2");
+		casList.add("111-30-8");
+		casList.add("79-01-6");
+		
 	
 //		casList.add("79-06-1");
 		
