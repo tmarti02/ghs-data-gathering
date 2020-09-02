@@ -3,6 +3,7 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -18,6 +19,9 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import gov.epa.ghs_data_gathering.API.Chemical;
 import gov.epa.ghs_data_gathering.API.Chemicals;
@@ -144,6 +148,79 @@ public class ParseToxValDB {
 
 
 	}
+	
+	/**
+	 * Modified version 2 to not retrieve data from record_source table so that have 1 record per toxval_id 
+	 * 
+	 * Note: did not filter on human_eco field (since we need some eco data for aquatic tox)
+	 * 
+	 * @param CAS
+	 * @return
+	 */
+	private String createSQLQuery_toxval3(String CAS) {
+		
+		String SQL="SELECT\r\na.dtxsid, a.casrn,a.name,\r\n" + 
+				"b.toxval_id, b.source,b.subsource,b.toxval_type,b.toxval_type_original,b.toxval_subtype,b.toxval_subtype_original,e.toxval_type_supercategory,\r\n" + 
+				"b.toxval_numeric_qualifier,b.toxval_numeric_qualifier_original,b.toxval_numeric,b.toxval_numeric_original,\r\n" + 
+				"b.toxval_numeric_converted, b.toxval_units,b.toxval_units_original,b.toxval_units_converted, b.risk_assessment_class,\r\n" + 
+				"b.study_type,b.study_type_original,b.study_duration_class,b.study_duration_class_original, b.study_duration_value,\r\n" + 
+				"b.study_duration_value_original,b.study_duration_units,b.study_duration_units_original,b.human_eco,\r\n" + 
+				"b.strain,b.strain_original,b.sex,b.sex_original,b.generation,\r\n" + 
+				"d.species_id,b.species_original,\r\n" + 
+				"d.species_common,d.species_supercategory,d.habitat,\r\n" + 
+				"b.lifestage,b.exposure_route,b.exposure_route_original,b.exposure_method,b.exposure_method_original,\r\n" + 
+				"b.exposure_form,b.exposure_form_original, b.media,b.media_original,b.critical_effect,b.year,b.quality_id,b.priority_id,\r\n" + 
+				"b.source_source_id,b.details_text,b.toxval_uuid,b.toxval_hash,b.datestamp\r\n" + 
+//				"c.long_ref, c.title, c.author, c.journal, c.volume, c.issue, c.url, c.document_name, c.record_source_type, c.record_source_hash\r\n" + 
+				"\r\n" + 
+				
+				"FROM toxval b\r\n" + 
+				"INNER JOIN chemical a on a.dtxsid=b.dtxsid\r\n" + 
+				"LEFT JOIN species d on b.species_id=d.species_id\r\n" + 
+				"INNER JOIN toxval_type_dictionary e on b.toxval_type=e.toxval_type\r\n" + 
+//				"LEFT JOIN record_source c ON b.toxval_id=c.toxval_id\r\n" +				
+				"WHERE\r\n"+
+				"b.toxval_units in ('mg/kg-day','mg/kg','(mg/kg-day)-1','mg/L','mg/m3','(mg/m3)-1','mg/L','(ug/m3)-1','(g/m3)-1','(mg/L)-1')\r\n" + 				
+				"AND e.toxval_type_supercategory in ('Point of Departure','Toxicity Value','Lethality Effect Level')\r\n" + 
+				"AND b.toxval_numeric>0\r\n" + 									
+				"AND a.casrn=\""+CAS+"\";";		
+
+//		System.out.println("\n"+SQL);
+
+		return SQL;
+
+
+	}
+	
+	
+	/**
+	 * Getting the reference info
+	 * 
+	 * @param CAS
+	 * @return
+	 */
+	private String createReferenceQuery(String CAS) {
+		
+		String SQL="SELECT\r\na.dtxsid, a.casrn,a.name,\r\n" + 
+				"b.toxval_id, b.toxval_units, b.toxval_numeric, e.toxval_type_supercategory,"+
+				"c.long_ref, c.title, c.author, c.journal, c.volume, c.issue, c.url, c.document_name, c.record_source_type, c.record_source_hash\r\n" + 
+				"\r\n" + 				
+				"FROM toxval b\r\n" + 
+				"INNER JOIN chemical a on a.dtxsid=b.dtxsid\r\n" + 
+				"LEFT JOIN record_source c ON b.toxval_id=c.toxval_id\r\n" +	
+				"INNER JOIN toxval_type_dictionary e on b.toxval_type=e.toxval_type\r\n" + 
+				"WHERE\r\n"+
+				"b.toxval_units in ('mg/kg-day','mg/kg','(mg/kg-day)-1','mg/L','mg/m3','(mg/m3)-1','mg/L','(ug/m3)-1','(g/m3)-1','(mg/L)-1')\r\n" + 				
+				"AND e.toxval_type_supercategory in ('Point of Departure','Toxicity Value','Lethality Effect Level')\r\n" + 
+				"AND b.toxval_numeric>0\r\n" + 									
+				"AND a.casrn=\""+CAS+"\";";		
+
+//		System.out.println("\n"+SQL);
+
+		return SQL;
+
+
+	}
 
 
 
@@ -212,83 +289,77 @@ public class ParseToxValDB {
 		try {
 
 //			String sql=createSQLQuery_toxval(chemical.CAS);				
-			String sql=createSQLQuery_toxval2(chemical.CAS);
-			
+			String sql=createSQLQuery_toxval3(chemical.CAS);
+						
 			ResultSet rs=MySQL_DB.getRecords(statToxVal, sql);
 
-//			int count=0;
-
-			Hashtable<String,Vector<RecordToxVal>>records=new Hashtable<>();
+			Vector<RecordToxVal>records=new Vector();
 									
 			while (rs.next()) {						 
-
 				RecordToxVal r=new RecordToxVal();							
 				createRecord(rs,r);
+				records.add(r);						
+			}
 								
-				if (records.get(r.toxval_id)==null) {										
+			//***************************************************************************************************************************************
+			//create second query to get reference info: (there is potentially more than 1 reference record for each toxval_id)
+			String sqlRef=createReferenceQuery(chemical.CAS);
+			ResultSet rsRef=MySQL_DB.getRecords(statToxVal, sqlRef);
+			
+			Hashtable<String,Vector<RecordToxVal>>recordsRef=new Hashtable<>();
+			
+			int numRefs=0;
+			
+			while (rsRef.next()) {
+				numRefs++;
+			
+				RecordToxVal r=new RecordToxVal();							
+				createRecord(rsRef,r);		
+
+				//store reference info by toxval_id for easy retrieval when looping through tox data
+				if (recordsRef.get(r.toxval_id)==null) {										
 					Vector<RecordToxVal>recs=new Vector<>();
 					recs.add(r);
-					records.put(r.toxval_id,recs);								
+					recordsRef.put(r.toxval_id,recs);								
 				} else {
-					Vector<RecordToxVal>recs=records.get(r.toxval_id);
+					Vector<RecordToxVal>recs=recordsRef.get(r.toxval_id);
 					recs.add(r);
 				}
-				
-				
-//				ParseToxVal.createScoreRecord(chemical, r);
-				//System.out.println(r.risk_assessment_class);
-//				count++;
 			}
-			
-			System.out.println("size="+records.size());
 
+		
+	
 			//**************************************************************************************************************
-			//The following only creates one record for each toxval_id and merges the references (separated by <br>)
+			//Add the reference info to the records:
+
+//			GsonBuilder builder = new GsonBuilder();
+//			builder.setPrettyPrinting();
+//			Gson gson = builder.create();
+
 			
-			//get the entry set using the entrySet method
-			Set<Map.Entry<String,Vector<RecordToxVal>>> entries = records.entrySet();
-			 
-			//iterate using the forEach
-			entries.forEach( entry ->{				
-				String toxval_id=entry.getKey();				
-				Vector<RecordToxVal>recs=entry.getValue();			
-				RecordToxVal r0=recs.get(0);//use first one				
-				getDOI(r0);
+			for (int i=0;i<records.size();i++) {
+				RecordToxVal ri=records.get(i);
+				addReferenceInfo(recordsRef, ri);				
 				
-//				System.out.println("0"+"\t"+r0.toxval_id);
-				
-				for (int i=1;i<recs.size();i++) {					
-					RecordToxVal ri=recs.get(i);
-					getDOI(ri);
-					
-//					System.out.println(i+"\t"+ri.toxval_id);
-															
-					if (!ri.long_ref.isEmpty()) r0.long_ref+="<br>"+ri.long_ref;									
-					if (!ri.url.isEmpty()) r0.url+="<br>"+ri.url;					
-				}
-				
-				r0.long_ref=r0.long_ref.trim();
-				r0.url=r0.url.trim();
-				
-				if (r0.long_ref.indexOf("<br>")==0) {
-					r0.long_ref=r0.long_ref.substring(5,r0.long_ref.length());
-				}
-				
-				if (r0.url.indexOf("<br>")==0) {
-					r0.url=r0.url.substring(5,r0.url.length());
-				}
-						
+				//Create score records:
+				ParseToxVal.createScoreRecord(chemical, ri);
+							
+//				String json=gson.toJson(ri);				
+//				System.out.println(json);
+			
 //				if (recs.size()>1) {
 //					System.out.println("**"+r0.long_ref+"**");
 //					System.out.println("@@"+r0.url+"@@\n");
 //				}
 
-				//Store the record for the first record in chemical class:
-				ParseToxVal.createScoreRecord(chemical, r0);
-			});
-														
 			
+					
+			}
+
 			System.out.println("Records in toxval table for "+chemical.CAS+" = "+records.size());
+			System.out.println("# refs="+numRefs);
+
+
 			
 //			System.out.println("CAS="+chemical.CAS);
 //			System.out.println("records.size()="+records.size());
@@ -297,6 +368,60 @@ public class ParseToxValDB {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+
+	}
+	
+
+	/**
+	 * Flattens reference info and stores inside ri record
+	 * 
+	 * @param recordsRef
+	 * @param ri
+	 */
+	private void addReferenceInfo(Hashtable<String, Vector<RecordToxVal>> recordsRef, RecordToxVal ri) {
+		Vector<RecordToxVal>recs=recordsRef.get(ri.toxval_id);			
+		
+													
+//				System.out.println("0"+"\t"+r0.toxval_id);
+						
+//		System.out.println("toxvalid="+ri.toxval_id);
+		
+		ri.long_ref="";
+		ri.url="";
+		
+		
+		for (int j=0;j<recs.size();j++) {								
+			RecordToxVal recRef=recs.get(j);
+																
+			if (ri.long_ref.isEmpty()) ri.long_ref=recRef.long_ref; 
+			else ri.long_ref+="<br>"+ri.long_ref;
+			
+						
+			if (ri.url.isEmpty())  ri.url=recRef.url;
+			else ri.url+="<br>"+ri.url;
+			
+			if (recRef.long_ref.contains("doi:")) {				
+				String DOI=recRef.long_ref.substring(recRef.long_ref.indexOf("doi: ")+5,recRef.long_ref.length());
+
+				if (ri.url.isEmpty())  ri.url=DOI;
+				else ri.url+="<br>"+DOI;		
+				
+//				System.out.println(DOI);
+			}									
+		}
+		
+		ri.long_ref=ri.long_ref.trim();
+		ri.url=ri.url.trim();
+		
+		if (ri.long_ref.indexOf("<br>")==0) {
+			ri.long_ref=ri.long_ref.substring(5,ri.long_ref.length());
+		}
+		
+		if (ri.url.indexOf("<br>")==0) {
+			ri.url=ri.url.substring(5,ri.url.length());
+		}
+//		System.out.println(ri.toxval_id+"\t"+ri.url);
+		
 
 	}
 	
@@ -640,8 +765,9 @@ public class ParseToxValDB {
 		casList.add("7803-57-8");
 		casList.add("75-21-8");
 		casList.add("302-01-2");
-		casList.add("111-30-8");
-		casList.add("79-01-6");
+		
+//		casList.add("111-30-8");
+//		casList.add("79-01-6");
 		
 	
 //		casList.add("79-06-1");
@@ -700,10 +826,10 @@ public class ParseToxValDB {
 			for (int i=0;i<workbook.getNumberOfSheets();i++) {
 				//Get first/desired sheet from the workbook
 				XSSFSheet sheet = workbook.getSheetAt(i);
-
+				
 				getRecordsFromSheet(recs, sheet);
 			}
-			System.out.println("here size="+recs.size());
+//			System.out.println("here size="+recs.size());
 			
 		
 		} catch (Exception ex) {

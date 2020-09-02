@@ -211,7 +211,7 @@ public class ParseToxVal extends Parse {
 		//			
 		//		if ( r.risk_assessment_class_calc==null || !r.risk_assessment_class.contentEquals(r.risk_assessment_class_calc))
 		//			System.out.println(r.risk_assessment_class+"\t"+r.risk_assessment_class_calc);
-		crac2.getRAC(r);
+//		crac2.getRAC(r);
 
 		if (chemical.CAS == null) {
 			chemical.CAS = r.casrn;
@@ -287,7 +287,7 @@ public class ParseToxVal extends Parse {
 			CreateAcuteMammalianToxicityRecords.createAcuteMammalianToxicityRecords(chemical, r);
 		} else if (r.toxval_type.toLowerCase().contains("cancer slope factor") ||
 				r.toxval_type.toLowerCase().contains("cancer unit risk")) {
-			System.out.println("creating cancer record");
+//			System.out.println("creating cancer record");
 			CreateCancerRecords.createCancerRecords(chemical, r);
 		} else if (r.study_duration_class.toLowerCase().contains("reproduct") ||
 				r.study_duration_class.toLowerCase().contains("multigeneration") ||
