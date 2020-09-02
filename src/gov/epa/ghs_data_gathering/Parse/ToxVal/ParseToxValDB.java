@@ -394,11 +394,11 @@ public class ParseToxValDB {
 			RecordToxVal recRef=recs.get(j);
 																
 			if (ri.long_ref.isEmpty()) ri.long_ref=recRef.long_ref; 
-			else ri.long_ref+="<br>"+ri.long_ref;
+			else ri.long_ref+="<br>"+recRef.long_ref;
 			
 						
 			if (ri.url.isEmpty())  ri.url=recRef.url;
-			else ri.url+="<br>"+ri.url;
+			else ri.url+="<br>"+recRef.url;
 			
 			if (recRef.long_ref.contains("doi:")) {				
 				String DOI=recRef.long_ref.substring(recRef.long_ref.indexOf("doi: ")+5,recRef.long_ref.length());
