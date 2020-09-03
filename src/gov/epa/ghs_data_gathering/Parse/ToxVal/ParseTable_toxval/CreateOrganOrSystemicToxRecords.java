@@ -56,6 +56,8 @@ public class CreateOrganOrSystemicToxRecords {
 		okSpecies.add("guinea pig");// 970
 		okSpecies.add("house mouse");
 		okSpecies.add("mouse / rat");
+		okSpecies.add("cottontail rabbit");
+		okSpecies.add("white-footed mouse");
 
 		if (!okSpecies.contains(tr.species_common))
 			return;

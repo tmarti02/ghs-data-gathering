@@ -751,7 +751,6 @@ public class ParseToxValDB {
 
 		//***************************************************************************// 
 
-		
 		String CAS="79-06-1";
 //		String CAS="123-91-1"; // casList.add(CAS);
 //		CAS="75-73-0";
@@ -761,23 +760,22 @@ public class ParseToxValDB {
 		
 		Vector<String>casList=new Vector<String>();
 		casList.add(CAS);
-		casList.add("101-77-9");
-		casList.add("7803-57-8");
-		casList.add("75-21-8");
+		casList.add("79-01-6");
+		casList.add("111-30-8");
 		casList.add("302-01-2");
-		
-//		casList.add("111-30-8");
-//		casList.add("79-01-6");
-		
+		casList.add("75-21-8");
+		casList.add("7803-57-8");
+		casList.add("101-77-9");
+		casList.add("50-00-0");
 	
-//		casList.add("79-06-1");
-		
+	
 	//	casList.add("76-16-4");
 
 		String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json"; //
 		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
 		Chemicals chemicals=p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json,filePathRecordsForCAS_txt);
 		
+//		String filePathExcelManual=folder+"/fromDBQuery.xlsx";
 		String filePathExcelManual=folder+"/manual.xlsx";
 		compareWithManual(chemicals,filePathExcelManual);
 
@@ -854,10 +852,15 @@ public class ParseToxValDB {
 			for (int i=1;i<=sheet.getLastRowNum();i++) {
 				FlatFileRecord f=new FlatFileRecord();
 
+				
+				
+				System.out.println((i+1)+"\t"+sheet.getSheetName());
 				Row rowi=sheet.getRow(i);
 				f.toxval_id=(int)(rowi.getCell(htColNums.get("toxval_id")).getNumericCellValue())+"";
 				f.hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
 				f.score=rowi.getCell(htColNums.get("ManualScore")).getStringCellValue();
+				
+			
 				
 					
 //				System.out.println(sheet.getSheetName()+"\t"+f.toxval_id);

@@ -222,44 +222,54 @@ public class ParseToxVal extends Parse {
 			//	if (r.risk_assessment_class.contentEquals("acute")) {
 			handleHuman(chemical, r);
 		} else if (r.human_eco.contentEquals("eco") &&
-				r.habitat.contentEquals("aquatic") && r.toxval_units.contentEquals("mg/L")) {
+				r.habitat.contentEquals("aquatic") &&
+				r.toxval_units.contentEquals("mg/L") &&
+				!r.lifestage.toLowerCase().contains("egg")) {
 			handleEco(chemical, r);
 		}	
 
 	}
 
 	private static void handleEco(Chemical chemical, RecordToxVal r) {
-		if((r.toxval_type.contentEquals("LC50") ||
-				r.toxval_type.contentEquals("EC50")) &&
-				(r.study_type.toLowerCase().contains("acute") ||
-						r.study_duration_class.toLowerCase().contains("acute"))) {
-
+		CreateAquaticToxicityRecords.createDurationRecord(chemical, r);			
+	}
+	
+	/*
+	 * if((r.toxval_type.contentEquals("LC50") ||
+	 * r.toxval_type.contentEquals("EC50")) &&
+	 * (r.study_type.toLowerCase().contains("acute") ||
+	 * r.study_duration_class.toLowerCase().contains("acute"))) {
+	 */
 			// if (r.risk_assessment_class.contentEquals("acute")) {
 			//	|| r.risk_assessment_class.contentEquals("mortality:acute")
 			//	|| r.risk_assessment_class.contentEquals("growth:acute")
 			//	|| r.risk_assessment_class.contentEquals("reproduction:acute")
 			//	|| r.risk_assessment_class.contentEquals("ecotoxicity invertebrate")
 			//	|| r.risk_assessment_class.contentEquals("ecotoxicity plants")) {
-			CreateAquaticToxicityRecords.createAquaticToxAcuteRecords(chemical, r);
-
-
-
-		} else if((r.toxval_type.contentEquals("NOEC") ||
-				r.toxval_type.contentEquals("LOEC")) &&
-				(r.study_type.toLowerCase().contains("chronic") ||
-						r.study_duration_class.toLowerCase().contains("chronic"))) {
-
+			
+	/*
+	 * CreateAquaticToxicityRecords.createAquaticToxAcuteRecords(chemical, r);
+	 * 
+	 * 
+	 * } else if((r.toxval_type.contentEquals("NOEC") ||
+	 * r.toxval_type.contentEquals("LOEC")) &&
+	 * (r.study_type.toLowerCase().contains("chronic") ||
+	 * r.study_duration_class.toLowerCase().contains("chronic"))) {
+	 */
 			//				if (r.risk_assessment_class.contentEquals("chronic")
 			//						|| r.risk_assessment_class.contentEquals("mortality:chronic")
 			//						|| r.risk_assessment_class.contentEquals("growth:chronic")
 			//						|| r.risk_assessment_class.contentEquals("reproduction:chronic")
 			//						|| r.risk_assessment_class.contentEquals("ecotoxicity invertebrate")
 			//						|| r.risk_assessment_class.contentEquals("ecotoxicity plants")) {
-			CreateAquaticToxicityRecords.createAquaticToxChronicRecords(chemical, r);
-
-
+	/*
+	 * CreateAquaticToxicityRecords.createAquaticToxChronicRecords(chemical, r);
+	 * 
+	
 		}
 	}
+	
+	*/
 
 	/*
 	 * Added: && r.human_eco.contentEquals("human health") because there is at least
@@ -282,6 +292,7 @@ public class ParseToxVal extends Parse {
 
 	//} else if (r.risk_assessment_class.contentEquals("cancer")) {
 
+	
 	private static void handleHuman(Chemical chemical, RecordToxVal r) {
 		if (r.toxval_type.contentEquals("LD50") || r.toxval_type.contentEquals("LC50")) {
 			CreateAcuteMammalianToxicityRecords.createAcuteMammalianToxicityRecords(chemical, r);

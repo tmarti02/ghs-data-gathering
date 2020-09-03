@@ -320,6 +320,8 @@ public class CreateAcuteMammalianToxicityRecords {
 		okSpecies.add("mouse");// include?
 		okSpecies.add("house mouse");
 		okSpecies.add("mouse / rat");
+		okSpecies.add("cottontail rabbit");
+		okSpecies.add("white-footed mouse");
 
 
 		if (!okSpecies.contains(tr.species_common))//TODO- does richard use all species???
