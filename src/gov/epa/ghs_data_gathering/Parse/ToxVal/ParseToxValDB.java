@@ -843,6 +843,8 @@ public class ParseToxValDB {
 
 			Hashtable<String,Integer>htColNums=new Hashtable<>();
 
+//			System.out.println(sheet.getSheetName());
+			
 			for (int i=0;i<row.getLastCellNum();i++) {
 				Cell cell=row.getCell(i);
 				String colName=cell.getStringCellValue();
@@ -851,10 +853,8 @@ public class ParseToxValDB {
 
 			for (int i=1;i<=sheet.getLastRowNum();i++) {
 				FlatFileRecord f=new FlatFileRecord();
-
 				
-				
-				System.out.println((i+1)+"\t"+sheet.getSheetName());
+//				System.out.println((i+1)+"\t"+sheet.getSheetName());
 				Row rowi=sheet.getRow(i);
 				f.toxval_id=(int)(rowi.getCell(htColNums.get("toxval_id")).getNumericCellValue())+"";
 				f.hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
