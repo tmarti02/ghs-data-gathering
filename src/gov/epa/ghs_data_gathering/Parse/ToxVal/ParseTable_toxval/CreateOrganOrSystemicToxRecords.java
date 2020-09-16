@@ -49,18 +49,8 @@ public class CreateOrganOrSystemicToxRecords {
 			return;
 		}
 
-		ArrayList<String> okSpecies = new ArrayList<String>();
-		okSpecies.add("mouse");// 27796
-		okSpecies.add("rat");// 13124
-		okSpecies.add("rabbit");// 1089
-		okSpecies.add("guinea pig");// 970
-		okSpecies.add("house mouse");
-		okSpecies.add("mouse / rat");
-		okSpecies.add("cottontail rabbit");
-		okSpecies.add("white-footed mouse");
-
-		if (!okSpecies.contains(tr.species_common))
-			return;
+		
+		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(tr)) return;
 
 		if (!tr.toxval_type.contentEquals("NOAEL") && !tr.toxval_type.contentEquals("LOAEL")) {
 			return;//not a valid record for systemic tox
@@ -198,6 +188,8 @@ public class CreateOrganOrSystemicToxRecords {
 				ce.contains("motor and sensory function") ||
 				ce.contains("nerve") ||
 				ce.contains("NERVOUS SYSTEM") ||
+				ce.contains("neuritis")||
+				ce.contains("neuro")||
 				ce.contains("paralysis") ||
 				ce.contains("Psychomotor") ||
 				ce.contains("seizure") ||

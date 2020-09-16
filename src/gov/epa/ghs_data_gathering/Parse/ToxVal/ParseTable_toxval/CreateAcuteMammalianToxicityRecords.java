@@ -44,16 +44,16 @@ public class CreateAcuteMammalianToxicityRecords {
 		} else if((r.exposure_route.contentEquals("inhalation") ||
 				r.toxval_subtype.toLowerCase().contains("inhalation")) &&
 				(r.toxval_units.contentEquals("mg/L") ||
-				r.toxval_units.contentEquals("mg/m3")) &&
+						r.toxval_units.contentEquals("mg/m3")) &&
 				r.toxval_type.contentEquals("LC50") &&
 				r.human_eco.contentEquals("human health")){
 			createAcuteMammalianToxicityInhalationRecord(chemical, r);
 		}
-		
+
 		/* 1 mg/L = 1000 mg/m3
 		 * need to add code for mg/m3
 		 */
-		
+
 		/*} else if((r.toxval_units.contentEquals("mg/L") || r.toxval_units.contentEquals("mg/m3")) &&
 				r.exposure_route.contentEquals("inhalation") &&
 				r.toxval_type.contentEquals("LC50") &&
@@ -72,7 +72,7 @@ public class CreateAcuteMammalianToxicityRecords {
 	private static void setOralScore(ScoreRecord sr, Chemical chemical) {
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
-		
+
 		// System.out.println("setting oral score");
 
 		// System.out.println(chemical.CAS+"\t"+dose+"\t"+strDose);
@@ -183,28 +183,26 @@ public class CreateAcuteMammalianToxicityRecords {
 
 
 	private static void setInhalationScore(ScoreRecord sr, Chemical chemical) {
-		
+
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
 
-		System.out.println(chemical.CAS+"\t"+strDose);
+		// System.out.println(chemical.CAS+"\t"+strDose);
 
-		System.out.println("****"+strDose);
-
-		// These statements aren't printing.
+		// System.out.println("****"+strDose);
 
 		if (sr.valueMassOperator.equals(">")) {
 
 			if (dose >= 20) {// >20
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Inhalation LC50 ( > " + strDose + " mg/L) > 20 mg/L";
-				System.out.println(chemical.CAS+"\t"+sr.rationale);
+			//	System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
 				sr.rationale = "Inhalation LC50 ( > " + strDose
 						+ " mg/L) does not provide enough information to assign a score";
-				System.out.println(chemical.CAS+"\t"+sr.rationale);
+			//	System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
@@ -230,19 +228,19 @@ public class CreateAcuteMammalianToxicityRecords {
 			if (dose <= 2) {
 				sr.score = ScoreRecord.scoreVH;
 				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) <= 2  mg/L";
-				System.out.println("inhalation VH");
+			//	System.out.println("inhalation VH");
 			} else if (dose > 2 && dose <= 10) {
 				sr.score = ScoreRecord.scoreH;
 				sr.rationale = "50 mg/L < Inhalation LC50 (" + strDose + " mg/L) <=10 mg/L";
-				System.out.println("inhalation H");
+			//	System.out.println("inhalation H");
 			} else if (dose > 10 && dose <= 20) {
 				sr.score = ScoreRecord.scoreM;
 				sr.rationale = "300 mg/L < Inhalation LC50 (" + strDose + " mg/L) <=20 mg/L";
-				System.out.println("inhalation M");
+			//	System.out.println("inhalation M");
 			} else if (dose > 20) {// >20
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) > 20 mg/L";
-				System.out.println("inhalation L");
+			//	System.out.println("inhalation L");
 			} else {
 				System.out.println(chemical.CAS + "\tinhalation\t" + dose);
 			}
@@ -258,7 +256,7 @@ public class CreateAcuteMammalianToxicityRecords {
 
 
 
-	
+
 
 	private static void createAcuteMammalianToxicityOralRecord(Chemical chemical, RecordToxVal tr) {
 		// System.out.println("Creating AcuteMammalianToxicityOralRecord");
@@ -269,20 +267,9 @@ public class CreateAcuteMammalianToxicityRecords {
 			return;
 		}
 
-		
-		
-		
-		ArrayList<String> okSpecies = new ArrayList<String>();
-		okSpecies.add("mouse");// 27796
-		okSpecies.add("rat");// 13124
-		okSpecies.add("rabbit");// 1089
-		okSpecies.add("guinea pig");// 970
-		okSpecies.add("house mouse");
-		okSpecies.add("mouse / rat");
 
+		if(!isOkMammalianSpecies(tr)) return;
 
-		if (!okSpecies.contains(tr.species_common))//TODO- does richard use all species???
-			return;
 
 		// System.out.println(chemical.CAS+"\t"+tr.ReportedDose+"\t"+tr.NormalizedDose);
 
@@ -301,8 +288,8 @@ public class CreateAcuteMammalianToxicityRecords {
 			return;
 		}
 
-		
-		
+
+
 
 		/*
 		 * EPA Health Effects Test Guidelines OPPTS 870.1200 Acute Dermal Toxicity: "The
@@ -313,42 +300,43 @@ public class CreateAcuteMammalianToxicityRecords {
 		 * justification and reasoning for its selection.
 		 */
 
-		ArrayList<String> okSpecies = new ArrayList<String>();
-		okSpecies.add("rabbit");
-		okSpecies.add("rat");
-		okSpecies.add("guinea pig");
-		okSpecies.add("mouse");// include?
-		okSpecies.add("house mouse");
-		okSpecies.add("mouse / rat");
-		okSpecies.add("cottontail rabbit");
-		okSpecies.add("white-footed mouse");
 
 
-		if (!okSpecies.contains(tr.species_common))//TODO- does richard use all species???
-			return;
 
+		if(!isOkMammalianSpecies(tr)) return;
+		
+		
 		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
 		setDermalScore(sr, chemical);
 		chemical.scoreAcute_Mammalian_ToxicityDermal.records.add(sr);
 
 	}
 
+
+	public static boolean isOkMammalianSpecies (RecordToxVal tr) {
+		if (tr.species_common.toLowerCase().contains("rabbit")) return true;
+		if (tr.species_common.toLowerCase().contains("rat")) return true;
+		if (tr.species_common.toLowerCase().contains("mouse")) return true;
+		if (tr.species_common.toLowerCase().contains("guinea pig")) return true;
+		return false;
+	}
+
 	private static void createAcuteMammalianToxicityInhalationRecord(Chemical chemical, RecordToxVal tr) {
-//		System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
+		//		System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
 
 		if (tr.toxval_units.contentEquals("mg/m3")){
-			
+
 			// change value and units
 			/* 1 mg/L = 1000 mg/m3
 			 * need to add code for mg/m3
 			 */
-			
+
 			double toxval_numeric2 = Double.parseDouble(tr.toxval_numeric)/1000.0;
 			tr.toxval_numeric = toxval_numeric2 + "";
 			tr.toxval_units = "mg/L (converted from mg/m3)";
-			
+
 		}
-		
+
 		//TODO - do we only want to use LC50? I know richard might not restrict to LC50s
 
 		/*
@@ -375,13 +363,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		 * reasoning for its selection."
 		 */
 
-		ArrayList<String> okSpecies = new ArrayList<String>();
-		okSpecies.add("rat");
-		okSpecies.add("mouse");// include?
-		okSpecies.add("rabbit");//
-		okSpecies.add("guinea pig");
-		okSpecies.add("house mouse");
-		okSpecies.add("mouse / rat");
+
 
 
 		/* Okay, I understand the code.  This basically renames what Richard called toxval_numeric
@@ -391,8 +373,7 @@ public class CreateAcuteMammalianToxicityRecords {
 
 
 
-		if (!okSpecies.contains(tr.species_common))//TODO- does richard use all species???
-			return;
+	
 
 		/* It looks like Richard's code doesn't mention species for acute tox.
 		 * So presumably all mammalian species in the ToxVal database were included for the Tiger Team.
@@ -413,6 +394,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		 * 
 		 * -Leora 4/23/20 */
 
+		if(!isOkMammalianSpecies(tr)) return;
 
 		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
 		setInhalationScore(sr, chemical);

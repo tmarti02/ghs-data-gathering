@@ -58,7 +58,12 @@ public class CreateAquaticToxicityRecords {
 		sr.durationUnits="days";
 		
 		
-	// I added duration-based criteria based on GHS criteria
+	// I added duration-based criteria based on GHS criteria,
+	// which are based on OECD test guidelines:
+	// Test Guideline 210, Page 13 
+	// https://www.oecd-ilibrary.org/docserver/9789264203785-en.pdf?expires=1599094196&id=id&accname=guest&checksum=3DD962D873D642CBF90D56FED10E8D6E
+	// 	
+		
 	// 96 hours = 4 days so < 5 days = acute
 	// 14 days = 2 weeks so > 13 days = chronic
 	// It seems a bit silly to have to create a duration record just to

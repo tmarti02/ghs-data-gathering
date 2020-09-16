@@ -49,41 +49,52 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 	 * */						
 
 
-	static void createReproductiveDevelopmentalRecords(Chemical chemical, RecordToxVal r) {
+	void createReproductiveDevelopmentalRecords(Chemical chemical, RecordToxVal r) {
 		// System.out.println("Creating records");
 		// This prints.  It works up to here.
 		if (r.toxval_type.contains("NOAEL") || r.toxval_type.contains("LOAEL")) {
-		//	System.out.println("NOAEL or LOAEL");
+			//	System.out.println("NOAEL or LOAEL");
 			if (r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("oral")) {
 				createOralRecord(chemical, r);	
-		//		System.out.println("creating RepDev oral record");
+				//		System.out.println("creating RepDev oral record");
 			} else if(r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("dermal")) {
 				createDermalRecord(chemical, r);
-			} else if(r.toxval_units.contentEquals("mg/L-day") && r.exposure_route.contentEquals("inhalation")) {
+			} else if(r.toxval_units.contentEquals("mg/L") && r.exposure_route.contentEquals("inhalation")) {
 				createInhalationRecord(chemical, r);
+//				System.out.println("creating rep/dev inhalation record");
 			}
 		}
 	}
 
 
-	private static void createOralRecord(Chemical chemical, RecordToxVal tr) {
-//		System.out.println("*Creating Oral Record");
+	private void createOralRecord(Chemical chemical, RecordToxVal tr) {
+		//		System.out.println("*Creating Oral Record");
 
-		ArrayList<String> okSpecies = new ArrayList<String>();
-		okSpecies.add("mouse");// 27796
-		okSpecies.add("rat");// 13124
-		okSpecies.add("rabbit");// 1089
-		okSpecies.add("guinea pig");// 970
-		okSpecies.add("house mouse");
-		okSpecies.add("mouse / rat");
-
-		if (!okSpecies.contains(tr.species_common))
-			return;
+		
+		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(tr)) return;
+		
+//		Create an instance of a class to call a non-static method:
+//		CreateAcuteMammalianToxicityRecords bob=new CreateAcuteMammalianToxicityRecords();
+//		bob.[Method Name]
+		
+//		ArrayList<String> okSpecies = new ArrayList<String>();
+//		okSpecies.add("mouse");// 27796
+//		okSpecies.add("rat");// 13124
+//		okSpecies.add("rabbit");// 1089
+//		okSpecies.add("guinea pig");// 970
+//		okSpecies.add("house mouse");
+//		okSpecies.add("mouse / rat");
+//		okSpecies.add("cottontail rabbit");
+//		okSpecies.add("white-footed mouse");
+//		okSpecies.add("norway rat");
+//
+//		if (!okSpecies.contains(tr.species_common))
+//			return;
 
 		ScoreRecord sr=ParseToxVal.saveToxValInfo(tr);
 		setOralScore(sr, chemical);
 
-
+		addRecord(chemical, tr, sr);
 
 		//		if (tr.risk_assessment_class.contentEquals("developmental") ||
 		//			tr.risk_assessment_class.contentEquals("developmental neurotoxicity")) {
@@ -94,6 +105,12 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		//			
 		//	}
 
+
+	}
+
+
+
+ void addRecord (Chemical chemical, RecordToxVal tr, ScoreRecord sr) {
 		if (tr.study_duration_class.toLowerCase().contains("reproduct") ||
 				tr.study_duration_class.toLowerCase().contains("multigeneration") ||
 				tr.toxval_subtype.toLowerCase().contains("reproduct") ||
@@ -103,31 +120,27 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 				tr.critical_effect.toLowerCase().contains("reproduct") ||
 				tr.critical_effect.toLowerCase().contains("multigeneration")) {
 			chemical.scoreReproductive.records.add(sr);
-			//			System.out.println("add reproductive sr");
+		//	System.out.println("add reproductive sr");
 		} else if (tr.study_duration_class.toLowerCase().contains("developmental") ||
 				tr.toxval_subtype.toLowerCase().contains("developmental") ||
 				tr.study_type.toLowerCase().contains("developmental") ||
 				tr.critical_effect.toLowerCase().contains("developmental")) {
-//			System.out.println("Adding Developmental Score");
+		//	System.out.println("Adding Developmental Score");
 			chemical.scoreDevelopmental.records.add(sr);
 		}
-
 	}
-
-
-
 
 
 
 	private static void setOralScore(ScoreRecord sr, Chemical chemical) {
 
-//		System.out.println("setting oral score");
-		
+		//		System.out.println("setting oral score");
+
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
 
-//				System.out.println(chemical.CAS+"\t"+strDose);					
+		//				System.out.println(chemical.CAS+"\t"+strDose);					
 		//		System.out.println("****"+strDose);	
 
 
@@ -136,12 +149,12 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 			if (dose >= 250) {
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Oral POD ( > " + strDose + " mg/kg) > 250 mg/kg";
-//				System.out.println(chemical.CAS+"\t"+sr.rationale);
+				//				System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
 				sr.rationale = "Oral POD ( > " + strDose
 						+ " mg/kg) does not provide enough information to assign a score";
-//				System.out.println(chemical.CAS+"\t"+sr.rationale);
+				//				System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 
@@ -154,13 +167,13 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 				sr.rationale = "Oral POD ( < " + strDose
 						+ " mg/kg) does not provide enough information to assign a score";
 
-//				System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
+				//				System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
 
 		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~")
 				|| sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")){
 
-//				System.out.println("Operator ok");
+			//				System.out.println("Operator ok");
 
 
 			if (dose < 50) {
@@ -173,30 +186,20 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 				sr.score = ScoreRecord.scoreL;
 				sr.rationale = "Oral POD" + "(" + strDose + " mg/kg) > 250 mg/kg";
 			} else { 
-//				System.out.println(chemical.CAS + "\toral\t" + strDose);			 
+				//				System.out.println(chemical.CAS + "\toral\t" + strDose);			 
 			}		
 		}
 	}
 
-	private static void createDermalRecord(Chemical chemical, RecordToxVal tr) {
-//		System.out.println("Creating Dermal Record");
+	private void createDermalRecord(Chemical chemical, RecordToxVal tr) {
+		//		System.out.println("Creating Dermal Record");
 
-		ArrayList<String> okSpecies = new ArrayList<String>();
-		okSpecies.add("mouse");// 27796
-		okSpecies.add("rat");// 13124
-		okSpecies.add("rabbit");// 1089
-		okSpecies.add("guinea pig");// 970
-		okSpecies.add("house mouse");
-		okSpecies.add("mouse / rat");
-
-		if (!okSpecies.contains(tr.species_common))
-			return;
-
+		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(tr)) return;
 		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
 		setDermalScore(sr, chemical);
+		
+		addRecord(chemical, tr, sr);
 
-		chemical.scoreReproductive.records.add(sr);
-		chemical.scoreDevelopmental.records.add(sr);
 
 	}
 
@@ -252,30 +255,20 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 
 
 
-	private static void createInhalationRecord(Chemical chemical, RecordToxVal tr){
+	private void createInhalationRecord(Chemical chemical, RecordToxVal tr){
 		// System.out.println("Creating Inhalation Record");
 
 
-		ArrayList<String> okSpecies = new ArrayList<String>();
-		okSpecies.add("mouse");// 27796
-		okSpecies.add("rat");// 13124
-		okSpecies.add("rabbit");// 1089
-		okSpecies.add("guinea pig");// 970
-		okSpecies.add("house mouse");
-		okSpecies.add("mouse / rat");
+		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(tr)) return;
 
-		if (!okSpecies.contains(tr.species_common))
-			return;
 
-		
 		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);		
 		setInhalationScore(sr, chemical);
-		
+
 		if (sr.score==null)
 			return;
 
-		chemical.scoreReproductive.records.add(sr);
-		chemical.scoreDevelopmental.records.add(sr);
+		addRecord(chemical, tr, sr);
 
 	}
 

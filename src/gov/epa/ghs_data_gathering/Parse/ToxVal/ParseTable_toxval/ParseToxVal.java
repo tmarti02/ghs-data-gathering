@@ -204,8 +204,8 @@ public class ParseToxVal extends Parse {
 
 
 	public static void createScoreRecord(Chemical chemical, RecordToxVal r) {
-//				if (!r.toxval_id.contentEquals("644884"))
-//					return;
+//			if (!r.toxval_id.contentEquals("136024"))
+//				return;
 
 		//		CalculateRiskAssessmentClass.assignRAC(r);
 		//			
@@ -316,7 +316,8 @@ public class ParseToxVal extends Parse {
 			// } else if (r.risk_assessment_class.contentEquals("developmental")
 			//		|| r.risk_assessment_class.contentEquals("developmental neurotoxicity")
 			//		|| r.risk_assessment_class.contentEquals("reproductive")){
-			CreateReproductiveDevelopmentalToxicityRecords.createReproductiveDevelopmentalRecords(chemical, r);
+			CreateReproductiveDevelopmentalToxicityRecords crd = new CreateReproductiveDevelopmentalToxicityRecords();
+			crd.createReproductiveDevelopmentalRecords(chemical, r);
 			//	} else if (r.risk_assessment_class.contentEquals("neurotoxicity")) {
 			//		} else if(r.study_type.toLowerCase().contains("neuro") ||
 			//				isNeuroCriticalEffect(r)) {

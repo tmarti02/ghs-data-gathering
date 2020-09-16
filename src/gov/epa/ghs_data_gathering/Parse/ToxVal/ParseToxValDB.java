@@ -752,6 +752,7 @@ public class ParseToxValDB {
 		//***************************************************************************// 
 
 		String CAS="79-06-1";
+//		String CAS="50-00-0";
 //		String CAS="123-91-1"; // casList.add(CAS);
 //		CAS="75-73-0";
 
@@ -762,11 +763,12 @@ public class ParseToxValDB {
 		casList.add(CAS);
 		casList.add("79-01-6");
 		casList.add("111-30-8");
-		casList.add("302-01-2");
 		casList.add("75-21-8");
 		casList.add("7803-57-8");
 		casList.add("101-77-9");
 		casList.add("50-00-0");
+		casList.add("10588-01-9");
+		casList.add("302-01-2");
 	
 	
 	//	casList.add("76-16-4");
@@ -921,7 +923,9 @@ public class ParseToxValDB {
 		//First loop through manual records to find records present in manual but not in java:
 		for (int i=0;i<recordsManual.size();i++) {
 			FlatFileRecord recManual=recordsManual.get(i);
-			
+			 
+//			if (!recManual.toxval_id.contentEquals("136024"))
+//				return;
 			if (recManual.hazard_name.contentEquals("Exclude")) continue;
 			
 			if (htJava.get(recManual.toxval_id)==null) {
