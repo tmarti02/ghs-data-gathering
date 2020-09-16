@@ -22,9 +22,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
-import gov.epa.ghs_data_gathering.API.FlatFileRecord;
-import gov.epa.ghs_data_gathering.API.FlatFileRecord2;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.FlatFileRecord;
+import gov.epa.api.FlatFileRecord2;
+import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.GetData.SkinSensitization.RecordChembench;
 
 import org.jsoup.nodes.Document;

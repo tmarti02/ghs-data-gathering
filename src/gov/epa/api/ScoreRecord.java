@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.API;
+package gov.epa.api;
 
 public class ScoreRecord {
 
@@ -44,6 +44,8 @@ public class ScoreRecord {
 	
 	public String url;
 	public String long_ref;
+	public String toxval_type;
+	public String authority;
 
 	// public static String [] displayFieldNames=
 	// {"Source","Score","Route","Classification","Hazard

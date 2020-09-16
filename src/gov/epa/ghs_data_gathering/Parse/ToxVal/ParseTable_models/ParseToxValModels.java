@@ -2,19 +2,19 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_models;
 
 import java.text.DecimalFormat;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.ScoreRecord;
 
 public class ParseToxValModels {
 
 	private static ScoreRecord createScoreRecord(RecordToxValModels r) {
-
 		ScoreRecord sr = new ScoreRecord();
+		sr.name=r.name;
+		
 		sr.source = ScoreRecord.sourceToxVal;
-		sr.sourceOriginal = r.model;
-
-		sr.valueMass = Double.parseDouble(r.value);
-		sr.valueMassUnits = r.units;
+		sr.sourceOriginal = r.model;		
+		sr.authority=ScoreRecord.typePredicted;
+				
 		return sr;
 	}
 
@@ -23,6 +23,8 @@ public class ParseToxValModels {
 		// System.out.println(rc.casrn+"\t"+rc.cancer_call);
 
 		ScoreRecord sr = createScoreRecord(rBCF);
+		
+		sr.valueMass = Math.log10(Double.parseDouble(rBCF.value));
 		
 		sr.url="https://doi.org/10.13140/RG.2.2.17974.70722/1";
 		
@@ -33,6 +35,9 @@ public class ParseToxValModels {
 			sr.score = ScoreRecord.scoreNA;
 			sr.rationale = "Applicability domain of " + rBCF.model + " model for BCF violated";
 		}
+		
+		sr.valueMassUnits="log10 (BCF "+rBCF.units+")";
+		
 		chemical.scoreBioaccumulation.records.add(sr);
 
 	}
@@ -40,9 +45,14 @@ public class ParseToxValModels {
 	public static void createScoreRecordBCF_EPISUITE(Chemical chemical, RecordToxValModels rBCF) {
 		// System.out.println(rc.casrn+"\t"+rc.cancer_call);
 		ScoreRecord sr = createScoreRecord(rBCF);
+		
+		sr.valueMass = Math.log10(Double.parseDouble(rBCF.value));
+	
 		sr.url="https://www.epa.gov/tsca-screening-tools/download-epi-suitetm-estimation-program-interface-v411";
 		setBioconcentrationScore(sr);
+		sr.valueMassUnits="log10 (BCF "+rBCF.units+")";
 		chemical.scoreBioaccumulation.records.add(sr);
+		
 	}
 
 	private static void setBioconcentrationScore(ScoreRecord sr) {
@@ -53,16 +63,16 @@ public class ParseToxValModels {
 
 		if (logBCF > 3.7) {// >3.7
 			sr.score = ScoreRecord.scoreVH;
-			sr.rationale = "logBCF (" + df.format(logBCF) + ") > 3.7";
+			sr.rationale = "logBCF > 3.7";
 		} else if (logBCF >= 3) {
 			sr.score = ScoreRecord.scoreH;
-			sr.rationale = "3 <= logBCF (" + df.format(logBCF) + ") <= 3.7";
+			sr.rationale = "3 <= logBCF <= 3.7";
 		} else if (logBCF >= 2) {
 			sr.score = ScoreRecord.scoreM;
-			sr.rationale = "2 <= logBCF (" + df.format(logBCF) + ") < 3";
+			sr.rationale = "2 <= logBCF < 3";
 		} else {
 			sr.score = ScoreRecord.scoreL;
-			sr.rationale = "logBCF (" + df.format(logBCF) + ") < 2";
+			sr.rationale = "logBCF < 2";
 		}
 
 	}
@@ -100,7 +110,10 @@ public class ParseToxValModels {
 
 
 	public static void createScoreRecordPersistence_EpiSuite(Chemical chemical, RecordToxValModels r) {
-		ScoreRecord sr =createScoreRecord(r);		
+		ScoreRecord sr =createScoreRecord(r);	
+
+		sr.valueMass = Double.parseDouble(r.value);
+		sr.valueMassUnits=r.units;
 		sr.url="https://www.epa.gov/tsca-screening-tools/download-epi-suitetm-estimation-program-interface-v411";
 		setPersistenceScoreEpiSuite(sr);					
 		chemical.scorePersistence.records.add(sr);		
@@ -132,16 +145,16 @@ Biowin Score	Aerobic biodegredation half-life (days)		Score
 
 		if (biowin < 1.75) {
 			sr.score = ScoreRecord.scoreVH;
-			sr.rationale = "Biowin Score (" + df.format(biowin) + ") < 1.75";
+			sr.rationale = "Biowin 3 Score (" + df.format(biowin) + ") < 1.75";
 		} else if (biowin <= 2.25) {
 			sr.score = ScoreRecord.scoreH;
-			sr.rationale = "1.75 <= Biowin Score (" + df.format(biowin) + ") <= 2.25 days";
+			sr.rationale = "1.75 <= Biowin 3 Score <= 2.25 days";
 		} else if (biowin <= 2.75) {
 			sr.score = ScoreRecord.scoreM;
-			sr.rationale = "2.25 <= Biowin Score (" + df.format(biowin) + ") <= 2.75";
+			sr.rationale = "2.25 <= Biowin Score 3 <= 2.75";
 		} else { // if (biowin > 2.75) {
 			sr.score = ScoreRecord.scoreL;
-			sr.rationale = "Biowin Score (" + df.format(biowin) + ") > 2.75";
+			sr.rationale = "Biowin 3 Score > 2.75";
 		} 
 	}
 

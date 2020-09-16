@@ -2,8 +2,8 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
 import java.util.ArrayList;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.ScoreRecord;
 
 /* Inclusion criteria for Acute Mammalian Toxicity:
  All routes
@@ -81,23 +81,21 @@ public class CreateAcuteMammalianToxicityRecords {
 
 			if (dose >= 2000) {// >2000
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Oral LD50 ( > " + strDose + " mg/kg) > 2000 mg/kg";
+				sr.rationale = "Oral LD50 > 2000 mg/kg";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Oral LD50 ( > " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";
+				sr.rationale = "Oral LD50 does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <=50) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Oral LD50 ( < " + strDose + " mg/kg) < 50 mg/kg";
+				sr.rationale = "Oral LD50 < 50 mg/kg";
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Oral LD50 ( < " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";
+				sr.rationale = "Oral LD50 does not provide enough information to assign a score";
 
 				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
@@ -106,16 +104,16 @@ public class CreateAcuteMammalianToxicityRecords {
 
 			if (dose <= 50) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Oral LD50" + " (" + strDose + " mg/kg) <= 50 mg/kg";
+				sr.rationale = "Oral LD50 <= 50 mg/kg";
 			} else if (dose > 50 && dose <= 300) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = "50 mg/kg < Oral LD50 (" + strDose + " mg/kg) <=300 mg/kg";
+				sr.rationale = "50 mg/kg < Oral LD50 <=300 mg/kg";
 			} else if (dose > 300 && dose <= 2000) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = "300 mg/kg < Oral LD50 (" + strDose + " mg/kg) <=2000 mg/kg";
+				sr.rationale = "300 mg/kg < Oral LD50 <=2000 mg/kg";
 			} else if (dose > 2000) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Oral LD50" + "(" + strDose + " mg/kg) > 2000 mg/kg";
+				sr.rationale = "Oral LD50 > 2000 mg/kg";
 			} else {
 				System.out.println(chemical.CAS + "\toral\t" + strDose);
 			}
@@ -134,23 +132,21 @@ public class CreateAcuteMammalianToxicityRecords {
 
 			if (dose >= 2000) {// >2000
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Dermal LD50 ( > " + strDose + " mg/kg) > 2000 mg/kg";
+				sr.rationale = "Dermal LD50 > 2000 mg/kg";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Dermal LD50 ( > " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";
+				sr.rationale = "Dermal LD50 does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <= 200) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Dermal LD50 (" + strDose + " mg/kg) <= 200 mg/kg";
+				sr.rationale = "Dermal LD50 <= 200 mg/kg";
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Dermal LD50 ( < " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";	
+				sr.rationale = "Dermal LD50 does not provide enough information to assign a score";	
 				System.out.println(chemical.CAS + "\tless than operator detected for dermal\t" + dose);
 			}
 
@@ -160,17 +156,17 @@ public class CreateAcuteMammalianToxicityRecords {
 				sr.rationale = "Dermal LD50 + (" + strDose + " mg/kg) <= 200 mg/kg";*/
 			if (dose <= 200) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Dermal LD50 (" + strDose + " mg/kg) <= 200 mg/kg";
+				sr.rationale = "Dermal LD50 <= 200 mg/kg";
 				//		I deleted the plus sign after "Dermal LD50".  -Leora V
 			} else if (dose > 200 && dose <= 1000) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = "200 mg/kg < Dermal LD50 (" + strDose + " mg/kg) <=1000 mg/kg";
+				sr.rationale = "200 mg/kg < Dermal LD50 <=1000 mg/kg";
 			} else if (dose > 1000 && dose <= 2000) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = "1000 mg/kg < Dermal LD50 (" + strDose + " mg/kg) <=2000 mg/kg";
+				sr.rationale = "1000 mg/kg < Dermal LD50 <=2000 mg/kg";
 			} else if (dose > 2000) {// >2000
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Dermal LD50 (" + strDose + " mg/kg) > 2000 mg/kg";
+				sr.rationale = "Dermal LD50 > 2000 mg/kg";
 			} else {
 				System.out.println(chemical.CAS + "\tDermal\t" + strDose);
 			}
@@ -196,23 +192,21 @@ public class CreateAcuteMammalianToxicityRecords {
 
 			if (dose >= 20) {// >20
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Inhalation LC50 ( > " + strDose + " mg/L) > 20 mg/L";
+				sr.rationale = "Inhalation LC50 > 20 mg/L";
 			//	System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Inhalation LC50 ( > " + strDose
-						+ " mg/L) does not provide enough information to assign a score";
+				sr.rationale = "Inhalation LC50 does not provide enough information to assign a score";
 			//	System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <= 2) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Inhalation LC50 ( < " + strDose + " mg/L) < 2 mg/L";
+				sr.rationale = "Inhalation LC50 < 2 mg/L";
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Inhalation LC50 ( < " + strDose
-						+ " mg/L) does not provide enough information to assign a score";
+				sr.rationale = "Inhalation LC50 does not provide enough information to assign a score";
 				System.out.println(chemical.CAS + "\tless than operator detected for inhalation\t" + dose);
 			}
 			/* Need to fix the code for these operators.
@@ -227,19 +221,19 @@ public class CreateAcuteMammalianToxicityRecords {
 		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
 			if (dose <= 2) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) <= 2  mg/L";
+				sr.rationale = "Inhalation LC50 <= 2  mg/L";
 			//	System.out.println("inhalation VH");
 			} else if (dose > 2 && dose <= 10) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = "50 mg/L < Inhalation LC50 (" + strDose + " mg/L) <=10 mg/L";
+				sr.rationale = "50 mg/L < Inhalation LC50 <=10 mg/L";
 			//	System.out.println("inhalation H");
 			} else if (dose > 10 && dose <= 20) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = "300 mg/L < Inhalation LC50 (" + strDose + " mg/L) <=20 mg/L";
+				sr.rationale = "300 mg/L < Inhalation LC50 <=20 mg/L";
 			//	System.out.println("inhalation M");
 			} else if (dose > 20) {// >20
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) > 20 mg/L";
+				sr.rationale = "Inhalation LC50 > 20 mg/L";
 			//	System.out.println("inhalation L");
 			} else {
 				System.out.println(chemical.CAS + "\tinhalation\t" + dose);

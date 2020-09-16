@@ -17,14 +17,14 @@ import org.apache.poi.ss.usermodel.Workbook;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.api.AADashboard;
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.ParseHealth_Canada_Priority_Substances_Carcinogenicity_2006.CarcinogenicityRecords;
 import gov.epa.ghs_data_gathering.Utilities.DoubleTypeAdapter;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
-import gov.epa.ghs_data_gathering.API.AADashboard;
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.Score;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 public class ParseGermany extends Parse {
 

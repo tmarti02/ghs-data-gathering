@@ -3,8 +3,8 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
 import java.util.ArrayList;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.ScoreRecord;
 
 public class CreateNeurotoxicityRecords2 {
 }

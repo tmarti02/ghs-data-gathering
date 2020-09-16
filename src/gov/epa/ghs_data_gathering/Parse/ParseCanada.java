@@ -17,11 +17,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
 
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.CanadaRecord.Record2015;
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.Score;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 /* 
  * add comments fields from Hazard field only

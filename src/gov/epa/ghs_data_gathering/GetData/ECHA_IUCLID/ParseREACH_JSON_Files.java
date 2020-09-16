@@ -15,8 +15,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import gov.epa.ghs_data_gathering.API.AADashboard;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.AADashboard;
+import gov.epa.api.ScoreRecord;
 
 //import org.json.simple.JSONObject;
 //import org.json.simple.parser.JSONParser;

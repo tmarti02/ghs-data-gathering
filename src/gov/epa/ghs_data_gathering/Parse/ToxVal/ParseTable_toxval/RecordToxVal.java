@@ -103,6 +103,35 @@ public class RecordToxVal {
 				"record_source_type", "record_source_hash" };
 
 		
+		
+		public static String getHeader(String [] varlist) {
+			String str="";
+			for (int i=0;i<varlist.length;i++) {
+				str+=varlist[i];
+				if (i<varlist.length-1) str+="\t";
+			}
+			return str;
+		}
+		
+		public static String getHeader() {
+			return getHeader(varlist);
+		}
+		
+		public String toString(String[] varlist) {
+			String str="";
+			for (int i=0;i<varlist.length;i++) {
+				try {
+					Field myField =this.getClass().getField(varlist[i]);				
+					str+=myField.get(this);
+					if (i<varlist.length-1) str+="\t";
+				} catch (Exception ex){
+					ex.printStackTrace();
+				}
+			}
+
+			return str;
+		}
+		
 		/**
 		 * Create record based on header list and data list in csv using reflection to assign by header name
 		 * 

@@ -9,11 +9,11 @@ import java.util.Vector;
 
 import com.google.common.collect.Multimap;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.HazardRecord;
-import gov.epa.ghs_data_gathering.API.Score;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.HazardRecord;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
 
 /**
  * This class takes data from NITE webpages and creates chemical objects

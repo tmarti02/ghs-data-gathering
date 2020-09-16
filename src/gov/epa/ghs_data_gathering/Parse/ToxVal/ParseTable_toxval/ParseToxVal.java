@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Vector;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.Score;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.Parse;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
@@ -447,6 +447,8 @@ public class ParseToxVal extends Parse {
 		// Organism Test Type Route Reported Dose (Normalized Dose) Effect Source
 
 		ScoreRecord sr=new ScoreRecord();
+		
+		sr.name=tr.name;
 		sr.route=tr.exposure_route;
 		
 		sr.url=tr.url;		
@@ -454,13 +456,19 @@ public class ParseToxVal extends Parse {
 
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
-
+		
+		setAuthority(sr);
+		
 		sr.valueMassOperator=tr.toxval_numeric_qualifier;
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
 		
 		sr.toxval_id=tr.toxval_id;
 		sr.test_organism=tr.species_common;
+		sr.toxval_type=tr.toxval_type;
+		
+		
+
 		
 //		sr.reported_dose=tr.toxval_numeric_original+" "+tr.toxval_units_original;//now separate variable
 //		sr.normalized_dose=tr.toxval_numeric +" "+tr.toxval_units;
@@ -472,6 +480,63 @@ public class ParseToxVal extends Parse {
 //		
 //		return note;
 		return sr;
+	}
+	
+	public static void setAuthority(ScoreRecord sr) {
+
+
+		Vector<String>authoritativeSources=new Vector<>();
+//		authSources.add("ECHA");
+		authoritativeSources.add("ATSDR");
+		authoritativeSources.add("PPRTV (NCEA)");
+		authoritativeSources.add("PPRTV (ORNL)");				
+		authoritativeSources.add("EPA AEGL");
+		authoritativeSources.add("HEAST");		
+		authoritativeSources.add("EPA OPP");
+		authoritativeSources.add("EPA OPPT");
+		authoritativeSources.add("Cal OEHHA");
+		authoritativeSources.add("Cal EPA");//added by TMM
+		authoritativeSources.add("RSL");
+		authoritativeSources.add("IRIS");
+		authoritativeSources.add("ECOTOX");
+		authoritativeSources.add("CalEPA");
+		authoritativeSources.add("Cal EPA");
+		authoritativeSources.add("IARC");
+
+		authoritativeSources.add("NIOSH");//Leora check
+		authoritativeSources.add("NTP ROC");//Leora check
+		
+		
+		
+		
+		Vector<String>screeningSources=new Vector<>();
+		screeningSources.add("ToxRefDB");
+		screeningSources.add("ECHA");
+		screeningSources.add("EFSA");
+		screeningSources.add("ECHA IUCLID");
+		screeningSources.add("ToxRefDB");
+		screeningSources.add("Pennsylvania DEP ToxValues");
+		screeningSources.add("Chiu");
+		screeningSources.add("Wignall");
+		screeningSources.add("Health Canada");
+		screeningSources.add("HPVIS");
+		screeningSources.add("EPA OW Drinking Water Standards");
+		screeningSources.add("WHO IPCS");
+		screeningSources.add("Alaska DEC");
+		screeningSources.add("COSMOS");
+		screeningSources.add("DOD");
+		screeningSources.add("DOE Wildlife Benchmarks");
+		screeningSources.add("HAWC");
+		screeningSources.add("HESS");
+		
+		if (authoritativeSources.contains(sr.sourceOriginal)) {
+			sr.authority=ScoreRecord.typeAuthoritative;
+		} else if (screeningSources.contains(sr.sourceOriginal)) {
+			sr.authority=ScoreRecord.typeScreening;				
+		} else {
+			System.out.println(sr.sourceOriginal+"\tunknown original source");
+		}
+		
 	}
 
 	static String formatDose(double dose) {

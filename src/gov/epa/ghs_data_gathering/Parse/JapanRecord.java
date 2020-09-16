@@ -27,9 +27,9 @@ import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.api.AADashboard;
+import gov.epa.api.HazardRecord;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
-import gov.epa.ghs_data_gathering.API.AADashboard;
-import gov.epa.ghs_data_gathering.API.HazardRecord;
 
 import java.util.ArrayList;
 

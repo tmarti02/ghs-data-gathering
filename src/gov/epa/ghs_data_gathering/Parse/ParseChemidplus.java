@@ -20,12 +20,12 @@ import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.ParseChemidplusHTML.ChemidplusRecord;
 import gov.epa.ghs_data_gathering.Parse.ParseChemidplusHTML.ToxicityRecord;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 public class ParseChemidplus extends Parse {
 

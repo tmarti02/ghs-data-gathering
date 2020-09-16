@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.API;
+package gov.epa.api;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -8,7 +8,8 @@ public class AADashboard {
 	public static final String dictionaryFolder = dataFolder+File.separator+"dictionary";
 	public static ArrayList<String> sources = new ArrayList<String>();
 		
-	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/AA dashboard.db";
+//	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/AA dashboard.db";
+	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
 	//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 	
 	

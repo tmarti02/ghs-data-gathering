@@ -2,8 +2,8 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf;
 
 import java.text.DecimalFormat;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.ScoreRecord;
 
 public class ParseToxValBCFBAF {
 
@@ -19,7 +19,19 @@ public class ParseToxValBCFBAF {
 		
 		sr.long_ref=r.author+" ("+r.year+") "+r.title+". "+r.journal;
 		
+		sr.authority=ScoreRecord.typeScreening;//journal article
 		
+		sr.toxval_type="logBCF";
+
+		try {
+			sr.duration=Double.parseDouble(r.exposure_duration);
+			sr.durationUnits="days";
+		} catch (Exception ex) {
+			//leave them blank
+		}
+
+	
+		sr.test_organism=r.species_common;
 		
 
 		if (r.logbcf==null) return;//have BAF value instead probably
@@ -27,7 +39,7 @@ public class ParseToxValBCFBAF {
 //		System.out.println("r.logbcf="+r.logbcf);
 		sr.valueMass=Double.parseDouble(r.logbcf);
 		//	sr.valueMassUnits="log10 ("+r.units+")";
-		sr.valueMassUnits=r.units;
+		sr.valueMassUnits="log10 (BCF "+r.units+")";
 		setBioconcentrationScore(sr.valueMass, sr);
 
 		//TODO- add exclusion criteria so certain records arent added based on fields in RecordToxValBCFBAF
@@ -45,16 +57,16 @@ public class ParseToxValBCFBAF {
 
 		if (logBCF>3.7)  {// >3.7
 			sr.score = "VH";
-			sr.rationale = "logBCF (" + df.format(logBCF) + ") > 3.7";
+			sr.rationale = "logBCF > 3.7";
 		} else if (logBCF>=3) {
 			sr.score = "H";
-			sr.rationale = "3 <= logBCF (" + df.format(logBCF) + ") <= 3.7";
+			sr.rationale = "3 <= logBCF <= 3.7";
 		}else if (logBCF>=2) {
 			sr.score = "M";
-			sr.rationale = "2 <= logBCF (" + df.format(logBCF) + ") < 3";
+			sr.rationale = "2 <= logBCF < 3";
 		} else {
 			sr.score = "L";
-			sr.rationale = "logBCF (" + df.format(logBCF) + ") < 2";
+			sr.rationale = "logBCF < 2";
 		}
 
 	}

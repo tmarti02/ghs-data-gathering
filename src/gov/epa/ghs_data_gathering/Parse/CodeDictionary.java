@@ -5,9 +5,9 @@ import java.util.Hashtable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Score;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
 
 public class CodeDictionary {
 	

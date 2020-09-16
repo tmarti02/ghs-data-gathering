@@ -26,9 +26,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import gov.epa.api.AADashboard;
+import gov.epa.api.FlatFileRecord;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
-import gov.epa.ghs_data_gathering.API.AADashboard;
-import gov.epa.ghs_data_gathering.API.FlatFileRecord;
 
 public class CreateExcelDictionary {
 	XSSFWorkbook workbook = new XSSFWorkbook();

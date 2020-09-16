@@ -16,11 +16,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.HazardRecord;
-import gov.epa.ghs_data_gathering.API.Score;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.HazardRecord;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
 
 import com.google.gson.JsonElement;
 

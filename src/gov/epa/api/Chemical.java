@@ -1,4 +1,4 @@
-package gov.epa.ghs_data_gathering.API;
+package gov.epa.api;
 
 import java.io.BufferedReader;
 import java.io.File;

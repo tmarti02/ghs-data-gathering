@@ -6,9 +6,10 @@ import java.io.FileReader;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.ScoreRecord;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.ParseToxVal;
 
 public class ParseToxValCancer {
 		
@@ -91,6 +92,8 @@ public class ParseToxValCancer {
 		dictCC.put("Known/likely human carcinogen (Inhalation route)", ScoreRecord.scoreVH);
 		dictCC.put("Known/likely human carcinogen (Oral route)", ScoreRecord.scoreVH);
 		dictCC.put("Likely Human Carcinogen", ScoreRecord.scoreVH);
+		dictCC.put("Carcinogenic to Humans", ScoreRecord.scoreVH);
+		
 		dictCC.put("Likely to be Carcinogenic in Humans at High Doses; Not Likely to be Carcinogenic to Humans at Low Doses", ScoreRecord.scoreH);
 		dictCC.put("Likely to be carcinogenic to humans", ScoreRecord.scoreVH);
 		dictCC.put("Likely to be carcinogenic to humans (Combined route)", ScoreRecord.scoreVH);
@@ -134,9 +137,13 @@ public class ParseToxValCancer {
 		ScoreRecord sr = new ScoreRecord();
 		sr = new ScoreRecord();
 		
+		sr.name=rc.name;
 		
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=rc.source;
+		
+		ParseToxVal.setAuthority(sr);
+		
 		sr.url=rc.url;
 		
 		if (dictCC.get(rc.cancer_call)==null) {

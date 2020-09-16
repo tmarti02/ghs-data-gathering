@@ -16,11 +16,11 @@ import org.apache.poi.ss.usermodel.Workbook;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.Parse;
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.Score;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 public class ParseAcute_Toxicity_Data_from_EPA_HPVIS extends Parse {
 

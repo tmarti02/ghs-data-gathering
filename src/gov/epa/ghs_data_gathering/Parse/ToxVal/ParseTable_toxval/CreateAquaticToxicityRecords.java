@@ -1,7 +1,7 @@
 package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.ScoreRecord;
 
 public class CreateAquaticToxicityRecords {
 
@@ -127,44 +127,39 @@ public class CreateAquaticToxicityRecords {
 
 			if (dose >= 10) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "NOEC or LOEC ( > " + strDose + " mg/L) > 10 mg/L";
+				sr.rationale = sr.toxval_type+" > 10 mg/L";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "NOEC or LOEC ( > " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";
+				sr.rationale = sr.toxval_type+" does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <=0.1) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "NOEC or LOEC ( < " + strDose + " mg/L) < 0.1 mg/L";
+				sr.rationale = sr.toxval_type+" < 0.1 mg/L";
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "NOEC or LOEC ( < " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";
+				sr.rationale = sr.toxval_type+" does not provide enough information to assign a score";
 
 				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
 
 		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
 
-
-
-
 			if (dose < 0.1) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "NOEC or LOEC" + " (" + strDose + " mg/L) < 1 mg/L";
+				sr.rationale = sr.toxval_type+" < 1 mg/L";
 			} else if (dose >= 0.1 && dose <= 1) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = "0.1 mg/L <= NOEC or LOEC (" + strDose + " mg/L) <=1 mg/L";
+				sr.rationale = "0.1 mg/L <= "+sr.toxval_type+" <=1 mg/L";
 			} else if (dose > 1 && dose <= 10) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = "1 mg/L < NOEC or LOEC (" + strDose + " mg/L) <=10 mg/L";
+				sr.rationale = "1 mg/L < "+sr.toxval_type+" <=10 mg/L";
 			} else if (dose > 10) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "NOEC or LOEC" + "(" + strDose + " mg/L) > 10 mg/L";
+				sr.rationale = sr.toxval_type+ " > 10 mg/L";
 			} else { 
 				System.out.println(chemical.CAS + "\tEcoToxChronic\t" + strDose);
 			}
@@ -192,23 +187,21 @@ public class CreateAquaticToxicityRecords {
 
 			if (dose >= 100) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "LC50 or EC50 ( > " + strDose + " mg/L) > 100 mg/L";
+				sr.rationale = sr.toxval_type+" > 100 mg/L";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "LC50 or EC50 ( > " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";
+				sr.rationale = sr.toxval_type+" does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <=1) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "LC50 or EC50 ( < " + strDose + " mg/L) < 1 mg/L";
+				sr.rationale = sr.toxval_type+" < 1 mg/L";
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "LC50 or EC50 ( < " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";
+				sr.rationale = sr.toxval_type+" does not provide enough information to assign a score";
 
 				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
@@ -219,16 +212,16 @@ public class CreateAquaticToxicityRecords {
 
 			if (dose < 1) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "LC50 or EC50" + " (" + strDose + " mg/L) < 1 mg/L";
+				sr.rationale = sr.toxval_type + " < 1 mg/L";
 			} else if (dose >= 1 && dose <= 10) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = "1 mg/kg <= LC50 or EC50 (" + strDose + " mg/L) <=10 mg/L";
+				sr.rationale = "1 mg/kg <= "+sr.toxval_type+" <=10 mg/L";
 			} else if (dose > 10 && dose <= 100) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = "10 mg/kg < LC50 or EC50 (" + strDose + " mg/L) <=100 mg/L";
+				sr.rationale = "10 mg/kg < "+sr.toxval_type+" <=100 mg/L";
 			} else if (dose > 100) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "LC50 or EC50" + "(" + strDose + " mg/L) > 100 mg/L";
+				sr.rationale = sr.toxval_type+" > 100 mg/L";
 			} else { System.out.println(chemical.CAS + "\tEcoToxAcute\t" + strDose);
 
 			}

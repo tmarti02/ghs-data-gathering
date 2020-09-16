@@ -12,7 +12,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 
-import gov.epa.ghs_data_gathering.API.*;
+import gov.epa.api.AADashboard;
+import gov.epa.api.Chemical;
+import gov.epa.api.FlatFileRecord;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
+
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 /**

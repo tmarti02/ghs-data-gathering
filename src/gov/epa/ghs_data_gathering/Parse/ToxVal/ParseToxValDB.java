@@ -23,12 +23,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.FlatFileRecord;
-import gov.epa.ghs_data_gathering.API.FlatFileRecord2;
-import gov.epa.ghs_data_gathering.API.Score;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.FlatFileRecord;
+import gov.epa.api.FlatFileRecord2;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf.ParseToxValBCFBAF;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf.RecordToxValBCFBAF;
@@ -47,7 +47,8 @@ public class ParseToxValDB {
 	//	public static final String DB_Path_AA_Dashboard_Records = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal\\databases\\toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 
 	//use relative path so dont have to keep changing this- i.e. it is relative to java installation:  "D:\Users\TMARTI02\OneDrive - Environmental Protection Agency (EPA)\0 java\ghs-data-gathering\AA Dashboard\databases\toxval_v8.db"
-	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
+//	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
+	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
 
 	public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
@@ -637,7 +638,7 @@ public class ParseToxValDB {
 	}
 
 
-	private static void createRecord(ResultSet rs, Object r) {
+	static void createRecord(ResultSet rs, Object r) {
 		ResultSetMetaData rsmd;
 		try {
 			rsmd = rs.getMetaData();
@@ -987,6 +988,15 @@ public class ParseToxValDB {
 		}
 //		System.out.println(recordsJava.size());
 		return recordsJava;
+	}
+
+	public void getDataFromToxValDB(Chemical chemical) {
+		getDataFromTable_toxval(chemical);		
+		getDataFromTable_cancer_summary(chemical);
+		getDataFromTable_genetox_summary(chemical);
+		getDataFromTable_models(chemical);
+		getDataFromTable_bcfbaf(chemical);//TODO
+		
 	}
 
 }

@@ -14,11 +14,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.api.AADashboard;
+import gov.epa.api.Chemical;
+import gov.epa.api.Score;
+import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.Parse;
-import gov.epa.ghs_data_gathering.API.AADashboard;
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Score;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
 
 public class ParseBoyes extends Parse {
 

@@ -6,9 +6,9 @@ import java.io.FileReader;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.Chemicals;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.Chemicals;
+import gov.epa.api.ScoreRecord;
 
 public class ParseToxValGenetox {
 
@@ -44,7 +44,16 @@ public class ParseToxValGenetox {
 		sr = new ScoreRecord();
 				
 		sr.source = ScoreRecord.sourceToxVal;
+		sr.name=rc.name;
 		
+		//TODO determine what model predicted values come from (ask Richard!)- assign to sourceOriginal
+		
+		if (rc.genetox_call.contains("pred")) {
+			sr.authority=ScoreRecord.typePredicted;	
+		} else {
+			sr.authority=ScoreRecord.typeScreening;//Leora check this!
+		}
+						
 		
 		if (dictCC.get(rc.genetox_call)==null) {
 			System.out.println("Need dictionary entry for \"" +rc.genetox_call+"\"");

@@ -2,8 +2,8 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 
 import java.util.ArrayList;
 
-import gov.epa.ghs_data_gathering.API.Chemical;
-import gov.epa.ghs_data_gathering.API.ScoreRecord;
+import gov.epa.api.Chemical;
+import gov.epa.api.ScoreRecord;
 
 /**
  * This class is to create records based on the quantitative cancer data (rather than cancer calls)
