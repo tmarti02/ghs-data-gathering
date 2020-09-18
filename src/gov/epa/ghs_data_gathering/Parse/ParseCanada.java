@@ -168,7 +168,12 @@ public class ParseCanada extends Parse {
 				
 				
 				String strScore = dictCodeToScoreValue.get(r.hazardCode);
-				this.createRecord(score, classification, r.hazardCode, r.hazardStatement,toxRoute, strScore, cr.WHMIS_2015_Classification_Note);
+				this.createRecord(chemical,score, classification, r.hazardCode, r.hazardStatement,toxRoute, strScore, cr.WHMIS_2015_Classification_Note);
+				
+				
+				ScoreRecord sr = score.records.get(score.records.size()-1);
+				
+
 				
 			}
 			

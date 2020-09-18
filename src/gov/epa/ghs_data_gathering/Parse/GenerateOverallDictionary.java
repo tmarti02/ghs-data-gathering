@@ -19,7 +19,7 @@ import com.google.gson.Gson;
 
 import gov.epa.api.AADashboard;
 import gov.epa.api.Chemical;
-import gov.epa.api.FlatFileRecord;
+
 import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Utilities.TESTConstants;
@@ -81,7 +81,7 @@ public class GenerateOverallDictionary {
 		String header=lines.remove(0);
 		
 		for (String line:lines) {
-			FlatFileRecord f=FlatFileRecord.createFlatFileRecord(line);
+			ScoreRecord f=ScoreRecord.createScoreRecord(line);
 			this.getScoreData2(source, f, vec, vecWithCAS);
 			
 		}
@@ -101,8 +101,8 @@ public class GenerateOverallDictionary {
 		return vecWithCAS;	
 	}
 	
-	FlatFileRecord convertLineToFlatFileRecord(String line) {
-		FlatFileRecord f=new FlatFileRecord();
+	ScoreRecord convertLineToFlatFileRecord(String line) {
+		ScoreRecord f=new ScoreRecord();
 		
 		String [] vals=line.split("\t");
 		f.hazard_name=vals[0];
@@ -125,8 +125,8 @@ public class GenerateOverallDictionary {
 	            String str1 = (String)o1;
 	            String str2 = (String)o2;
 	            
-	            FlatFileRecord f1=convertLineToFlatFileRecord(str1);
-	            FlatFileRecord f2=convertLineToFlatFileRecord(str2);
+	            ScoreRecord f1=convertLineToFlatFileRecord(str1);
+	            ScoreRecord f2=convertLineToFlatFileRecord(str2);
 	            
 	            int sComp = f1.hazard_name.compareTo(f2.hazard_name);
 
@@ -351,7 +351,7 @@ public class GenerateOverallDictionary {
 //	}
 	
 	
-	private void getScoreData2(String source,FlatFileRecord f,Vector<String> vec, Vector<String> vecWithCAS) {
+	private void getScoreData2(String source,ScoreRecord f,Vector<String> vec, Vector<String> vecWithCAS) {
 		
 		if (f.category != null) {
 			f.category = f.category.replace("category", "Category");
@@ -593,7 +593,7 @@ public class GenerateOverallDictionary {
 			
 			for (int i=0;i<lines.size();i++) {
 				String line=lines.get(i);
-				FlatFileRecord f=FlatFileRecord.createFlatFileRecord(line);
+				ScoreRecord f=ScoreRecord.createScoreRecord(line);
 				
 				if (f.score.equals(ScoreRecord.scoreNA)) continue;
 				
@@ -694,7 +694,7 @@ public class GenerateOverallDictionary {
 			
 			for (int i=0;i<lines.size();i++) {
 				String line=lines.get(i);
-				FlatFileRecord f=FlatFileRecord.createFlatFileRecord(line);
+				ScoreRecord f=ScoreRecord.createScoreRecord(line);
 				
 				if (f.score.equals(ScoreRecord.scoreNA)) continue;
 				

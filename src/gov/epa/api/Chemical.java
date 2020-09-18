@@ -1002,40 +1002,9 @@ public class Chemical {
 //		System.out.println(FlatFileRecord.getHeader("|"));
 		
 		for (Score score: scores) {
-			for (ScoreRecord sr: score.records) {
-
-				FlatFileRecord f=new FlatFileRecord();
-				f.CAS=CAS;
-				f.name=name;
-
-				f.hazard_name=score.hazard_name;
-				
-				f.source=sr.source;
-				f.sourceOriginal=sr.sourceOriginal;
-				f.score=sr.score;
-				f.category=sr.category;
-				f.hazard_code=sr.hazard_code;
-				f.hazard_statement=sr.hazard_statement;
-				f.rationale=sr.rationale;
-				f.route=sr.route;
-				f.note=sr.note;
-				f.note2=sr.note2;
-				f.valueMassOperator=sr.valueMassOperator;
-
-				f.toxval_id=sr.toxval_id;				
-				f.test_organism=sr.test_organism;
-				
-				
-				if (sr.valueMass!=null)	f.valueMass=sr.valueMass;
-				
-				f.valueMassUnits=sr.valueMassUnits;
-				
-				f.url=sr.url;
-				f.long_ref=sr.long_ref;
-				
+			for (ScoreRecord sr: score.records) {				
 //				System.out.println(f.toString("|"));
-				a.add(f.toString(d));
-				
+				a.add(sr.toString(d));
 			}
 			
 		}
@@ -1453,7 +1422,7 @@ public class Chemical {
 			
 			FileWriter fw=new FileWriter(filepath);
 
-			fw.write(FlatFileRecord.getHeader(delimiter)+"\r\n");
+			fw.write(ScoreRecord.getHeader(delimiter)+"\r\n");
 
 			ArrayList<String>uniqueCAS=new ArrayList<>();
 

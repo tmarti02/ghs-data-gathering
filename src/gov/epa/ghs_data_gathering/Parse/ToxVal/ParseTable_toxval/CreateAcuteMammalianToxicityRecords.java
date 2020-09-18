@@ -3,6 +3,7 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 import java.util.ArrayList;
 
 import gov.epa.api.Chemical;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 
 /* Inclusion criteria for Acute Mammalian Toxicity:
@@ -267,23 +268,22 @@ public class CreateAcuteMammalianToxicityRecords {
 
 		// System.out.println(chemical.CAS+"\t"+tr.ReportedDose+"\t"+tr.NormalizedDose);
 
+		Score score=chemical.scoreAcute_Mammalian_ToxicityOral;
+		
 		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
+		sr.hazard_name=score.hazard_name;
+		
 		setOralScore(sr, chemical);
-		chemical.scoreAcute_Mammalian_ToxicityOral.records.add(sr);
+		score.records.add(sr);
 
 	}
 
 	private static void createAcuteMammalianToxicityDermalRecord(Chemical chemical, RecordToxVal tr) {
 		// System.out.println("Creating AcuteMammalianToxicityDermalRecord");
-
-
 		if (!tr.toxval_type.contentEquals("LD50")) { 
 			//			System.out.println("invalid dermal toxval_type="+tr.toxval_type);
 			return;
 		}
-
-
-
 
 		/*
 		 * EPA Health Effects Test Guidelines OPPTS 870.1200 Acute Dermal Toxicity: "The
@@ -294,15 +294,13 @@ public class CreateAcuteMammalianToxicityRecords {
 		 * justification and reasoning for its selection.
 		 */
 
-
-
-
 		if(!isOkMammalianSpecies(tr)) return;
-		
-		
-		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
+			
+		Score score=chemical.scoreAcute_Mammalian_ToxicityDermal;
+		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
+		sr.hazard_name=score.hazard_name;
 		setDermalScore(sr, chemical);
-		chemical.scoreAcute_Mammalian_ToxicityDermal.records.add(sr);
+		score.records.add(sr);
 
 	}
 
@@ -390,9 +388,12 @@ public class CreateAcuteMammalianToxicityRecords {
 
 		if(!isOkMammalianSpecies(tr)) return;
 
+		Score score=chemical.scoreAcute_Mammalian_ToxicityInhalation;
 		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
+		sr.hazard_name=score.hazard_name;
 		setInhalationScore(sr, chemical);
-		chemical.scoreAcute_Mammalian_ToxicityInhalation.records.add(sr);
+		score.records.add(sr);
+	
 
 	}
 

@@ -3,6 +3,7 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 import java.util.ArrayList;
 
 import gov.epa.api.Chemical;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 
 /**
@@ -28,7 +29,9 @@ public class CreateCancerRecords {
 
 	private static void createCancerRecord(Chemical chemical, RecordToxVal tr) {
 
+		Score score=chemical.scoreCarcinogenicity;
 		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
+		sr.hazard_name=score.hazard_name;
 		sr.note2 = tr.toxval_type;
 
 		// I wanted a way to distinguish between toxval types below.
@@ -36,7 +39,7 @@ public class CreateCancerRecords {
 
 		setCancerScore(sr, chemical);		
 		// setCancerScore(sr, chemical, tr.toxval_type);
-		chemical.scoreCarcinogenicity.records.add(sr);
+		score.records.add(sr);
 
 	}
 

@@ -9,10 +9,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -20,13 +17,11 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
-import gov.epa.api.FlatFileRecord;
-import gov.epa.api.FlatFileRecord2;
+//import gov.epa.api.FlatFileRecord;
+//import gov.epa.api.FlatFileRecord2;
 import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
@@ -358,7 +353,7 @@ public class ParseToxValDB {
 			}
 
 			System.out.println("Records in toxval table for "+chemical.CAS+" = "+records.size());
-			System.out.println("# refs="+numRefs);
+//			System.out.println("# refs="+numRefs);
 
 
 			
@@ -762,9 +757,11 @@ public class ParseToxValDB {
 		
 		Vector<String>casList=new Vector<String>();
 		casList.add(CAS);
+
 		casList.add("79-01-6");
 		casList.add("111-30-8");
 		casList.add("75-21-8");
+		
 		casList.add("7803-57-8");
 		casList.add("101-77-9");
 		casList.add("50-00-0");
@@ -780,7 +777,7 @@ public class ParseToxValDB {
 		
 //		String filePathExcelManual=folder+"/fromDBQuery.xlsx";
 		String filePathExcelManual=folder+"/manual.xlsx";
-		compareWithManual(chemicals,filePathExcelManual);
+		compareWithManual(chemicals,filePathExcelManual,casList);
 
 				
 		//***************************************************************************
@@ -811,9 +808,9 @@ public class ParseToxValDB {
 
 	}
 
-	static Vector<FlatFileRecord> getManualResults(String excelFilePath) {
+	static Vector<ScoreRecord> getManualResults(String excelFilePath) {
 		
-		Vector<FlatFileRecord>recs=new Vector<>();
+		Vector<ScoreRecord>recs=new Vector<>();
 		
 		try
 		{
@@ -840,7 +837,7 @@ public class ParseToxValDB {
 		
 	}
 
-	private static void getRecordsFromSheet(Vector<FlatFileRecord> recs, XSSFSheet sheet) {
+	private static void getRecordsFromSheet(Vector<ScoreRecord> recs, XSSFSheet sheet) {
 		try {
 			Row row=sheet.getRow(0);
 
@@ -855,7 +852,7 @@ public class ParseToxValDB {
 			}
 
 			for (int i=1;i<=sheet.getLastRowNum();i++) {
-				FlatFileRecord f=new FlatFileRecord();
+				ScoreRecord f=new ScoreRecord();
 				
 //				System.out.println((i+1)+"\t"+sheet.getSheetName());
 				Row rowi=sheet.getRow(i);
@@ -888,28 +885,28 @@ public class ParseToxValDB {
 		}
 	}
 	
-	static boolean hasRecord(Vector<FlatFileRecord> recs,String toxval_id) {
+	static boolean hasRecord(Vector<ScoreRecord> recs,String toxval_id) {
 		for (int i=0;i<recs.size();i++) {
 			if (recs.get(i).toxval_id.contentEquals(toxval_id)) return true;
 		}
 		return false;
 	}
 	
-	static Hashtable<String,FlatFileRecord>getHashtable(Vector<FlatFileRecord>records) {
-		Hashtable<String,FlatFileRecord> ht=new Hashtable<>();
+	static Hashtable<String,ScoreRecord>getHashtable(Vector<ScoreRecord>records) {
+		Hashtable<String,ScoreRecord> ht=new Hashtable<>();
 		
 		for (int i=0;i<records.size();i++) {
-			FlatFileRecord rec=records.get(i);
+			ScoreRecord rec=records.get(i);
 			ht.put(rec.toxval_id, rec);
 		}
 		return ht;
 	}
 	
 	
-	private static void compareWithManual(Chemicals chemicals,String excelFilePath) {
+	private static void compareWithManual(Chemicals chemicals,String excelFilePath,Vector<String>casList) {
 		
-		Vector<FlatFileRecord>recordsManual=getManualResults(excelFilePath);
-		Vector<FlatFileRecord>recordsJava=getJavaRecords(chemicals);
+		Vector<ScoreRecord>recordsManual=getManualResults(excelFilePath);
+		Vector<ScoreRecord>recordsJava=getJavaRecords(chemicals);
 		
 		
 //		for (int i=0;i<recordsJava.size();i++) {
@@ -917,13 +914,15 @@ public class ParseToxValDB {
 //			System.out.println("recJava: "+i+"\t"+recJava.toxval_id);
 //		}
 		
-		Hashtable<String,FlatFileRecord>htManual=getHashtable(recordsManual);
-		Hashtable<String,FlatFileRecord>htJava=getHashtable(recordsJava);
+		Hashtable<String,ScoreRecord>htManual=getHashtable(recordsManual);
+		Hashtable<String,ScoreRecord>htJava=getHashtable(recordsJava);
 		
 		System.out.println("\nLooping through manual records:");
 		//First loop through manual records to find records present in manual but not in java:
 		for (int i=0;i<recordsManual.size();i++) {
-			FlatFileRecord recManual=recordsManual.get(i);
+			ScoreRecord recManual=recordsManual.get(i);
+			
+			if (!casList.contains(recManual.CAS)) continue;//skip record if we hadnt run it in java
 			 
 //			if (!recManual.toxval_id.contentEquals("136024"))
 //				return;
@@ -934,7 +933,7 @@ public class ParseToxValDB {
 				System.out.println(recManual.toxval_id+" present in manual, not in Java");
 			
 			} else {
-				FlatFileRecord recJava=htJava.get(recManual.toxval_id);
+				ScoreRecord recJava=htJava.get(recManual.toxval_id);
 				
 				if (!recManual.hazard_name.contentEquals(recJava.hazard_name)) {						
 					System.out.println(recJava.toxval_id+"\t"+recJava.hazard_name+"\t"+recManual.hazard_name+"\tmismatch hazard name\t"+recManual.note);						
@@ -953,7 +952,7 @@ public class ParseToxValDB {
 		System.out.println("\nLooping through java records:");
 		
 		for (int i=0;i<recordsJava.size();i++) {
-			FlatFileRecord recJava=recordsJava.get(i);
+			ScoreRecord recJava=recordsJava.get(i);
 									
 			if (htManual.get(recJava.toxval_id)==null) {			
 				System.out.println(recJava.toxval_id+" present in Java, not in manual");			
@@ -962,8 +961,8 @@ public class ParseToxValDB {
 				
 	}
 
-	private static Vector<FlatFileRecord> getJavaRecords(Chemicals chemicals) {
-		Vector<FlatFileRecord>recordsJava=new Vector<>();
+	private static Vector<ScoreRecord> getJavaRecords(Chemicals chemicals) {
+		Vector<ScoreRecord>recordsJava=new Vector<>();
 		
 		//Go through the all the records
 		for (int i=0;i<chemicals.size();i++) {
@@ -977,7 +976,7 @@ public class ParseToxValDB {
 					
 					ScoreRecord sr=score.records.get(k);
 					
-					FlatFileRecord recJava=new FlatFileRecord();
+					ScoreRecord recJava=new ScoreRecord();
 					recJava.toxval_id=sr.toxval_id;
 					recJava.hazard_name=score.hazard_name;
 					recJava.score=sr.score;					

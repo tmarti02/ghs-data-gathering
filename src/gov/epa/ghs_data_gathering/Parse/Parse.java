@@ -122,7 +122,7 @@ public class Parse {
 				}
 
 				String strScore = dictCodeToScoreValue.get(hazardCode);
-				createRecord(score, hazardClass, hazardCode, "",route, strScore, note);
+				createRecord(chemical,score, hazardClass, hazardCode, "",route, strScore, note);
 				count++;
 
 			}//end loop over score names
@@ -151,11 +151,11 @@ public class Parse {
 			if (toxCode.indexOf("F") > -1) {
 				String strScore = ScoreRecord.scoreH;
 				Score score = chemical.scoreReproductive;
-				createRecord(score, hazardClassification, toxCode, hazardStatement,"", strScore, "");
+				createRecord(chemical,score, hazardClassification, toxCode, hazardStatement,"", strScore, "");
 			} else if (toxCode.indexOf("f") > -1) {
 				String strScore = ScoreRecord.scoreM;
 				Score score = chemical.scoreReproductive;
-				createRecord(score, hazardClassification, toxCode, hazardStatement,"", strScore, "");
+				createRecord(chemical,score, hazardClassification, toxCode, hazardStatement,"", strScore, "");
 			}
 			
 		} else if (scoreName.equals(Chemical.strDevelopmental)) {
@@ -163,11 +163,11 @@ public class Parse {
 			if (toxCode.indexOf("D") > -1) {
 				String strScore = ScoreRecord.scoreH;
 				Score score = chemical.scoreDevelopmental;
-				createRecord(score, hazardClassification, toxCode, hazardStatement,"", strScore, "");
+				createRecord(chemical,score, hazardClassification, toxCode, hazardStatement,"", strScore, "");
 			} else if (toxCode.indexOf("d") > -1) {
 				String strScore = ScoreRecord.scoreM;
 				Score score = chemical.scoreDevelopmental;
-				createRecord(score, hazardClassification, toxCode, hazardStatement,"", strScore, "");
+				createRecord(chemical,score, hazardClassification, toxCode, hazardStatement,"", strScore, "");
 			}
 		}
 	}
@@ -258,14 +258,18 @@ public class Parse {
 		}
 	}
 	
-	public void createRecord(Score score, String hazardClassification, String toxCode, String hazardStatement,
+	public void createRecord(Chemical chemical,Score score, String hazardClassification, String toxCode, String hazardStatement,
 			String toxRoute, String strScore, String strNote) {
 		ScoreRecord sr = new ScoreRecord();
 		score.records.add(sr);
 
+		sr.CAS=chemical.CAS;
+		sr.name=chemical.name;		
+		sr.hazard_name=score.hazard_name;
+		
 		sr.source = sourceName;
 		sr.category = hazardClassification;// TODO or assign to classification?
-		
+
 		
 //		String bob=hazardClassification+toxCode+hazardStatement+toxRoute+strScore+strNote;
 ////		if (bob.contains("<br>")) 

@@ -145,11 +145,10 @@ public class Chemicals extends ArrayList<Chemical> {
 		
 		try {
 			
-			
-			
+						
 			FileWriter fw=new FileWriter(filepath);
 			
-			fw.write(FlatFileRecord.getHeader(del)+"\r\n");
+			fw.write(ScoreRecord.getHeader(del)+"\r\n");
 			
 			ArrayList<String>uniqueCAS=new ArrayList<>();
 			

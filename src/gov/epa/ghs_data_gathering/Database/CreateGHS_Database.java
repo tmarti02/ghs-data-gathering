@@ -14,7 +14,6 @@ import java.util.LinkedList;
 
 import gov.epa.api.AADashboard;
 import gov.epa.api.Chemical;
-import gov.epa.api.FlatFileRecord;
 import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 
@@ -34,17 +33,16 @@ public class CreateGHS_Database  {
 		
 		Chemical chemical=new Chemical();
 		
-		ArrayList<FlatFileRecord>array=getRecords(stat,CAS,"HazardRecords");
+		ArrayList<ScoreRecord>array=getRecords(stat,CAS,"HazardRecords");
 		if (array.size()==0) return null;
 		
-		FlatFileRecord r0=array.get(0);
+		ScoreRecord r0=array.get(0);
 		
 		chemical.CAS=r0.CAS;
 		chemical.name=r0.name;
 		
-		for (FlatFileRecord f:array) {
-			Score score=chemical.getScore(f.hazard_name);
-			ScoreRecord sr=f.getScoreRecord();
+		for (ScoreRecord sr:array) {
+			Score score=chemical.getScore(sr.hazard_name);
 			score.records.add(sr);
 		}
 		return chemical;
@@ -55,17 +53,16 @@ public class CreateGHS_Database  {
 		
 		Chemical chemical=new Chemical();
 		
-		ArrayList<FlatFileRecord>array=getRecordsUsingPrimaryKey(stat,CAS,"HazardRecords");
+		ArrayList<ScoreRecord>array=getRecordsUsingPrimaryKey(stat,CAS,"HazardRecords");
 		if (array.size()==0) return null;
 		
-		FlatFileRecord r0=array.get(0);
+		ScoreRecord r0=array.get(0);
 		
 		chemical.CAS=r0.CAS;
 		chemical.name=r0.name;
 		
-		for (FlatFileRecord f:array) {
-			Score score=chemical.getScore(f.hazard_name);
-			ScoreRecord sr=f.getScoreRecord();
+		for (ScoreRecord sr:array) {
+			Score score=chemical.getScore(sr.hazard_name);
 			score.records.add(sr);
 		}
 		return chemical;
@@ -104,9 +101,9 @@ public class CreateGHS_Database  {
 	 * @param tableName
 	 * @return
 	 */
-	public static ArrayList<FlatFileRecord> getRecordsUsingPrimaryKey(Statement stat,String CAS,String tableName) {
+	public static ArrayList<ScoreRecord> getRecordsUsingPrimaryKey(Statement stat,String CAS,String tableName) {
 
-		ArrayList<FlatFileRecord>array=new ArrayList<>();
+		ArrayList<ScoreRecord>array=new ArrayList<>();
 
 		long t1=System.currentTimeMillis();
 		ResultSet rs=MySQL_DB.getRecords(stat, tableName, "CAS", CAS);
@@ -121,7 +118,7 @@ public class CreateGHS_Database  {
 				String [] records=lines.split("\r\n");
 				
 				for (String record:records) {
-					FlatFileRecord f=FlatFileRecord.createFlatFileRecord(record);
+					ScoreRecord f=ScoreRecord.createScoreRecord(record);
 					//				 System.out.println(f.toString());
 					array.add(f);
 				}
@@ -137,9 +134,9 @@ public class CreateGHS_Database  {
 	}
 	
 	
-	public static ArrayList<FlatFileRecord> getRecords(Statement stat,String CAS,String tableName) {
+	public static ArrayList<ScoreRecord> getRecords(Statement stat,String CAS,String tableName) {
 		
-		ArrayList<FlatFileRecord>array=new ArrayList<>();
+		ArrayList<ScoreRecord>array=new ArrayList<>();
 		
 		long t1=System.currentTimeMillis();
     	ResultSet rs=MySQL_DB.getRecords(stat, tableName, "CAS", CAS);
@@ -150,7 +147,7 @@ public class CreateGHS_Database  {
     	 
 		 try {
 			 while (rs.next()) {
-				 FlatFileRecord f=createFlatFileRecord(rs);
+				 ScoreRecord f=createScoreRecord(rs);
 //				 System.out.println(f.toString());
 				 array.add(f);
 			 }
@@ -499,15 +496,15 @@ public class CreateGHS_Database  {
 //
 //	}
 	
-	private  static FlatFileRecord createFlatFileRecord(ResultSet rs) {
-		FlatFileRecord f=new FlatFileRecord();
+	private  static ScoreRecord createScoreRecord(ResultSet rs) {
+		ScoreRecord f=new ScoreRecord();
 		
-		 for (int i = 0; i < f.fieldNames.length; i++) {
+		 for (int i = 0; i < f.allFieldNames.length; i++) {
 				try {
 				
-					Field myField = f.getClass().getDeclaredField(f.fieldNames[i]);
+					Field myField = f.getClass().getDeclaredField(f.allFieldNames[i]);
 					
-					if (f.fieldNames[i].equals("valueMass")) {
+					if (f.allFieldNames[i].equals("valueMass")) {
 						double val=rs.getDouble(i+1);
 //						System.out.println("*"+val);
 						
@@ -567,14 +564,14 @@ public class CreateGHS_Database  {
 //		FlatFileRecord.createFlatFileFromAllSources(textFilePath);
 
 		//Create flat file for all data:
-		FlatFileRecord.createFlatFileFromAllSourcesSortedByCAS(textFilePath);
+		ScoreRecord.createFlatFileFromAllSourcesSortedByCAS(textFilePath);
 		
 		//Get counts for each source:
 //		FlatFileRecord.analyzeRecords(textFilePath,folder+"/counts.txt");
 		
 		String del="|";		
 		//Create Sqlite database from flat file:
-		CreateGHS_Database.createDatabase(textFilePath,del,"HazardRecords",FlatFileRecord.fieldNames);
+		CreateGHS_Database.createDatabase(textFilePath,del,"HazardRecords",ScoreRecord.allFieldNames);
 //		CreateGHS_Database.createDatabaseIntegerKey(textFilePath,del,"HazardRecords",FlatFileRecord.fieldNames,"databases/db_integer_key.db");
 		
 		String  []fields= {"CAS","Records"};

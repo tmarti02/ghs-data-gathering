@@ -80,6 +80,7 @@ public class ParseAustralia extends Parse {
 
 		String Notes;
 		String Sources;
+		String url;
 
 		ArrayList<HistoryRecord> ChemicalHistory = new ArrayList<>();
 
@@ -339,9 +340,17 @@ public class ParseAustralia extends Parse {
 //                System.out.println(theString);
                 
                 
-                Document doc = Jsoup.parse(zipFile.getInputStream(zipEntry),"utf-8","https://chem.nlm.nih.gov/chemidplus/rn");
+                Document doc = Jsoup.parse(zipFile.getInputStream(zipEntry),"utf-8","http://hcis.safeworkaustralia.gov.au/HazardousChemical/Details?chemicalID=");
 
 				AustraliaRecord2 ar = createAustraliaRecord(doc);
+				
+				
+				String ID=zipEntry.getName();
+				ID=ID.substring(ID.indexOf("/")+1,ID.indexOf("."));
+				
+				ar.url="http://hcis.safeworkaustralia.gov.au/HazardousChemical/Details?chemicalID="+ID;
+				
+//				System.out.println(ar.CasNumber+"\t"+ar.url);
 
 //				System.out.println(inputFile.getName() + "\t" + ar.CasNumber);
 
@@ -773,7 +782,7 @@ public class ParseAustralia extends Parse {
 //					System.out.println(chemical.CAS + "\t" + hazardCategory);
 //				}
 
-				this.createScoreRecord(score, hazardCategory, hazardCode, hazardStatement, toxRoute, strScore, strNote);
+				this.createScoreRecord(score, ar.CasNumber,ar.ChemicalName,hazardCategory, hazardCode, hazardStatement, toxRoute, strScore, strNote,ar.url);
 
 			}
 
@@ -1027,7 +1036,7 @@ public class ParseAustralia extends Parse {
 			
 			hazardStatement = ((List<String>) dictCodeToStatement.get(hazardCode)).get(0);
 			strScore = this.dictCodeToScoreValue.get(hazardCode);
-			ScoreRecord sr=this.createScoreRecord(score, hazardCategory, hazardCode, hazardStatement, toxRoute, strScore, strNote);
+			ScoreRecord sr=this.createScoreRecord(score, ar.CasNumber,ar.ChemicalName,hazardCategory, hazardCode, hazardStatement, toxRoute, strScore, strNote,ar.url);
 
 //			System.out.println("handleExtraCategories:"+score.hazard_name+"\t"+sr.score+"\t"+sr.hazard_code+"\t"+sr.rationale+"\t"+sr.hazard_statement);
 			
@@ -1214,11 +1223,14 @@ public class ParseAustralia extends Parse {
 	// }
 	// }
 
-	private ScoreRecord createScoreRecord(Score score, String hazardCategory, String hazardCode, String hazardStatement,
-			String toxRoute, String strScore, String strNote) {
+	private ScoreRecord createScoreRecord(Score score, String CAS,String name,String hazardCategory, String hazardCode, String hazardStatement,
+			String toxRoute, String strScore, String strNote,String url) {
 		ScoreRecord sr = new ScoreRecord();
 		score.records.add(sr);
 
+		sr.CAS=CAS;
+		sr.name=name;
+		sr.hazard_name=score.hazard_name;
 		sr.source = ScoreRecord.sourceAustralia;
 		sr.category = hazardCategory;// TODO or assign to classification?
 		sr.hazard_code = hazardCode;
@@ -1227,6 +1239,7 @@ public class ParseAustralia extends Parse {
 		sr.note = strNote;
 		sr.score = strScore;
 		sr.rationale = "Score of " + strScore + " was assigned based on a hazard code of " + hazardCode;
+		sr.url=url;
 		return sr;
 
 	}

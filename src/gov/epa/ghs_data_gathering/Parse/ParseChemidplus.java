@@ -113,6 +113,9 @@ public class ParseChemidplus extends Parse {
 	@Override
 	protected void createRecords() {
 //		ArrayList<ChemidplusRecord> cr = p.parseHTML(mainFolder + "/"+folderNameWebpages);
+
+//		if (true) return;
+		
 		ParseChemidplusHTML p=new ParseChemidplusHTML();
 		
 		Vector<ChemidplusRecord> records = p.parseHTML_Files_in_Zip(mainFolder + "/"+fileNameHtmlZip);
@@ -143,6 +146,8 @@ public class ParseChemidplus extends Parse {
 
 			for (int i = 0; i < records.length; i++) {
 
+//				if (i==10) break;
+				
 				// System.out.println(i);
 				 if (i % 100 == 0) System.out.println(i);
 				ChemidplusRecord chemidplusRecord = records[i];
@@ -201,6 +206,26 @@ public class ParseChemidplus extends Parse {
 		}
 	}
 
+	
+	ScoreRecord createScoreRecord(Chemical chemical,ToxicityRecord tr) {
+		ScoreRecord sr = new ScoreRecord();
+		sr = new ScoreRecord();
+		sr.source = ScoreRecord.sourceChemIDplus;
+		
+		sr.CAS=chemical.CAS;
+		sr.name=chemical.name;
+		
+		sr.route=tr.Route;
+		sr.long_ref=tr.Source;
+		sr.effect=tr.Effect;
+		sr.test_organism=tr.Organism;
+		sr.test_type=tr.TestType;
+		
+		sr.url="https://chem.nlm.nih.gov/chemidplus/rn/"+sr.CAS;
+
+		return sr;
+	}
+	
 	/**
 	 * 
 	 * @param chemical
@@ -215,16 +240,8 @@ public class ParseChemidplus extends Parse {
 			UniqueSpecies un) {
 		// System.out.println("Creating AcuteMammalianToxicityOralRecord");
 
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceChemIDplus;
-
-		// sr.category = "";
-		// sr.classification = "";
-		// sr.hazard_statement = "";
-		// sr.hazard_code = "";
-
-		sr.route = "Oral";
+		ScoreRecord sr = createScoreRecord(chemical,tr);
+		sr.hazard_name=Chemical.strAcute_Mammalian_ToxicityOral;
 
 		/*
 		 * 
@@ -319,16 +336,8 @@ public class ParseChemidplus extends Parse {
 			UniqueSpecies un) {
 		// System.out.println("Creating AcuteMammalianToxicityDermalRecord");
 
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceChemIDplus;
-
-		// sr.category = "";
-		// sr.classification = "";
-		// sr.hazard_statement = "";
-		// sr.hazard_code = "";
-
-		sr.route = "Dermal";
+		ScoreRecord sr = createScoreRecord(chemical,tr);
+		sr.hazard_name=Chemical.strAcute_Mammalian_ToxicityDermal;
 
 		/*
 		 * EPA Health Effects Test Guidelines OPPTS 870.1200 Acute Dermal Toxicity: "The
@@ -391,16 +400,10 @@ public class ParseChemidplus extends Parse {
 			UniqueSpecies un) {
 		// System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
 
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceChemIDplus;
-		// sr.category = "";
-		// sr.classification = "";
-		// sr.hazard_statement = "";
-		// sr.hazard_code = "";
+		ScoreRecord sr = createScoreRecord(chemical,tr);
+		sr.hazard_name=Chemical.strAcute_Mammalian_ToxicityInhalation;
 
-		sr.route = "Inhalation";
-
+		
 		/*
 		 * EPA Health Effects Test Guidelines OPPTS 870.1300 Acute Inhalation Toxicity:
 		 * "Although several mammalian test species may be used, the preferred species
@@ -471,15 +474,16 @@ public class ParseChemidplus extends Parse {
 
 	private String createNote(ToxicityRecord tr) {
 //		Organism 	Test Type 	Route 	Reported Dose (Normalized Dose) 	Effect 	Source
-		String note="Test organism: " + tr.Organism+"<br>\r\n";
-		note+="Reported Dose: "+tr.ReportedDose+"<br>\r\n";
-		note+="Normalized Dose: "+tr.NormalizedDose+"<br>\r\n";
-		
-		if (tr.Effect==null || tr.Effect.equals("")) {
-			tr.Effect="N/A";
-		}
-		note+="Source: "+tr.Source;
-		return note; 
+//		String note="Test organism: " + tr.Organism+"<br>\r\n";
+//		note+="Reported Dose: "+tr.ReportedDose+"<br>\r\n";
+//		note+="Normalized Dose: "+tr.NormalizedDose+"<br>\r\n";
+//		
+//		if (tr.Effect==null || tr.Effect.equals("")) {
+//			tr.Effect="N/A";
+//		}
+//		note+="Source: "+tr.Source;
+
+		return ""; 
 		
 	}
 	
@@ -683,12 +687,11 @@ public class ParseChemidplus extends Parse {
 
 			if (dose >= 2000) {// >2000
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Oral LD50 ( > " + strDose + " mg/kg) > 2000 mg/kg";
+				sr.rationale = "Oral LD50 > 2000 mg/kg";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Oral LD50 ( > " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";
+				sr.rationale = "Oral LD50 does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
@@ -701,17 +704,17 @@ public class ParseChemidplus extends Parse {
 				sr.rationale = "Oral LD50" + "(" + strDose + " mg/kg) <= 50 mg/kg";*/
 			if (dose <= 50) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Oral LD50" + " (" + strDose + " mg/kg) <= 50 mg/kg";
+				sr.rationale = "Oral LD50 <= 50 mg/kg";
 //		Added a space " ("  -Leora V
 			} else if (dose > 50 && dose <= 300) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = "50 mg/kg < Oral LD50 (" + strDose + " mg/kg) <=300 mg/kg";
+				sr.rationale = "50 mg/kg < Oral LD50 <=300 mg/kg";
 			} else if (dose > 300 && dose <= 2000) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = "300 mg/kg < Oral LD50 (" + strDose + " mg/kg) <=2000 mg/kg";
+				sr.rationale = "300 mg/kg < Oral LD50 <=2000 mg/kg";
 			} else if (dose > 2000) {// >2000
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Oral LD50" + "(" + strDose + " mg/kg) > 2000 mg/kg";
+				sr.rationale = "Oral LD50 > 2000 mg/kg";
 			} else {
 				System.out.println(chemical.CAS + "\toral\t" + strDose);
 			}
@@ -748,12 +751,11 @@ public class ParseChemidplus extends Parse {
 
 			if (dose >= 2000) {// >2000
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Dermal LD50 ( > " + strDose + " mg/kg) > 2000 mg/kg";
+				sr.rationale = "Dermal LD50 > 2000 mg/kg";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Dermal LD50 ( > " + strDose
-						+ " mg/kg) does not provide enough information to assign a score";
+				sr.rationale = "Dermal LD50 does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
@@ -766,17 +768,17 @@ public class ParseChemidplus extends Parse {
 				sr.rationale = "Dermal LD50 + (" + strDose + " mg/kg) <= 200 mg/kg";*/
 			if (dose <= 200) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Dermal LD50 (" + strDose + " mg/kg) <= 200 mg/kg";
+				sr.rationale = "Dermal LD50 <= 200 mg/kg";
 //		I deleted the plus sign after "Dermal LD50".  -Leora V
 			} else if (dose > 200 && dose <= 1000) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = "200 mg/kg < Dermal LD50 (" + strDose + " mg/kg) <=1000 mg/kg";
+				sr.rationale = "200 mg/kg < Dermal LD50 <=1000 mg/kg";
 			} else if (dose > 1000 && dose <= 2000) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = "1000 mg/kg < Dermal LD50 (" + strDose + " mg/kg) <=2000 mg/kg";
+				sr.rationale = "1000 mg/kg < Dermal LD50 <=2000 mg/kg";
 			} else if (dose > 2000) {// >2000
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Dermal LD50 (" + strDose + " mg/kg) > 2000 mg/kg";
+				sr.rationale = "Dermal LD50 > 2000 mg/kg";
 			} else {
 				System.out.println(chemical.CAS + "\tDermal\t" + strDose);
 			}
@@ -803,12 +805,11 @@ public class ParseChemidplus extends Parse {
 
 			if (dose >= 20) {// >20
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Inhalation LC50 ( > " + strDose + " mg/L) > 20 mg/L";
+				sr.rationale = "Inhalation LC50 > 20 mg/L";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Inhalation LC50 ( > " + strDose
-						+ " mg/L) does not provide enough information to assign a score";
+				sr.rationale = "Inhalation LC50 does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
@@ -818,16 +819,16 @@ public class ParseChemidplus extends Parse {
 		} else if (sr.valueMassOperator.equals("")) {
 			if (dose <= 2) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) <= 2  mg/L";
+				sr.rationale = "Inhalation LC50 <= 2  mg/L";
 			} else if (dose > 2 && dose <= 10) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = "50 mg/L < Inhalation LC50 (" + strDose + " mg/L) <=10 mg/L";
+				sr.rationale = "50 mg/L < Inhalation LC50 <=10 mg/L";
 			} else if (dose > 10 && dose <= 20) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = "300 mg/L < Inhalation LC50 (" + strDose + " mg/L) <=20 mg/L";
+				sr.rationale = "300 mg/L < Inhalation LC50 <=20 mg/L";
 			} else if (dose > 20) {// >20
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Inhalation LC50 (" + strDose + " mg/L) > 20 mg/L";
+				sr.rationale = "Inhalation LC50 > 20 mg/L";
 			} else {
 				System.out.println(chemical.CAS + "\toral\t" + dose);
 			}

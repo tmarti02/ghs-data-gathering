@@ -26,7 +26,7 @@ import com.google.gson.Gson;
 
 import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
-import gov.epa.api.FlatFileRecord;
+//import gov.epa.api.FlatFileRecord;
 import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;

@@ -3,6 +3,7 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 import java.util.ArrayList;
 
 import gov.epa.api.Chemical;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 
 public class CreateReproductiveDevelopmentalToxicityRecords {
@@ -61,7 +62,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 				createDermalRecord(chemical, r);
 			} else if(r.toxval_units.contentEquals("mg/L") && r.exposure_route.contentEquals("inhalation")) {
 				createInhalationRecord(chemical, r);
-//				System.out.println("creating rep/dev inhalation record");
+				//				System.out.println("creating rep/dev inhalation record");
 			}
 		}
 	}
@@ -70,26 +71,26 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 	private void createOralRecord(Chemical chemical, RecordToxVal tr) {
 		//		System.out.println("*Creating Oral Record");
 
-		
+
 		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(tr)) return;
-		
-//		Create an instance of a class to call a non-static method:
-//		CreateAcuteMammalianToxicityRecords bob=new CreateAcuteMammalianToxicityRecords();
-//		bob.[Method Name]
-		
-//		ArrayList<String> okSpecies = new ArrayList<String>();
-//		okSpecies.add("mouse");// 27796
-//		okSpecies.add("rat");// 13124
-//		okSpecies.add("rabbit");// 1089
-//		okSpecies.add("guinea pig");// 970
-//		okSpecies.add("house mouse");
-//		okSpecies.add("mouse / rat");
-//		okSpecies.add("cottontail rabbit");
-//		okSpecies.add("white-footed mouse");
-//		okSpecies.add("norway rat");
-//
-//		if (!okSpecies.contains(tr.species_common))
-//			return;
+
+		//		Create an instance of a class to call a non-static method:
+		//		CreateAcuteMammalianToxicityRecords bob=new CreateAcuteMammalianToxicityRecords();
+		//		bob.[Method Name]
+
+		//		ArrayList<String> okSpecies = new ArrayList<String>();
+		//		okSpecies.add("mouse");// 27796
+		//		okSpecies.add("rat");// 13124
+		//		okSpecies.add("rabbit");// 1089
+		//		okSpecies.add("guinea pig");// 970
+		//		okSpecies.add("house mouse");
+		//		okSpecies.add("mouse / rat");
+		//		okSpecies.add("cottontail rabbit");
+		//		okSpecies.add("white-footed mouse");
+		//		okSpecies.add("norway rat");
+		//
+		//		if (!okSpecies.contains(tr.species_common))
+		//			return;
 
 		ScoreRecord sr=ParseToxVal.saveToxValInfo(tr);
 		setOralScore(sr, chemical);
@@ -110,7 +111,10 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 
 
 
- void addRecord (Chemical chemical, RecordToxVal tr, ScoreRecord sr) {
+	void addRecord (Chemical chemical, RecordToxVal tr, ScoreRecord sr) {
+
+		Score score=null;
+		
 		if (tr.study_duration_class.toLowerCase().contains("reproduct") ||
 				tr.study_duration_class.toLowerCase().contains("multigeneration") ||
 				tr.toxval_subtype.toLowerCase().contains("reproduct") ||
@@ -119,14 +123,19 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 				tr.study_type.toLowerCase().contains("multigeneration") ||
 				tr.critical_effect.toLowerCase().contains("reproduct") ||
 				tr.critical_effect.toLowerCase().contains("multigeneration")) {
-			chemical.scoreReproductive.records.add(sr);
-		//	System.out.println("add reproductive sr");
+			score=chemical.scoreReproductive;
+			//	System.out.println("add reproductive sr");
 		} else if (tr.study_duration_class.toLowerCase().contains("developmental") ||
 				tr.toxval_subtype.toLowerCase().contains("developmental") ||
 				tr.study_type.toLowerCase().contains("developmental") ||
 				tr.critical_effect.toLowerCase().contains("developmental")) {
-		//	System.out.println("Adding Developmental Score");
-			chemical.scoreDevelopmental.records.add(sr);
+			//	System.out.println("Adding Developmental Score");
+			score=chemical.scoreDevelopmental;
+		}
+		
+		if (score!=null) {
+			sr.hazard_name=score.hazard_name;
+			score.records.add(sr);			
 		}
 	}
 
@@ -197,7 +206,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(tr)) return;
 		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
 		setDermalScore(sr, chemical);
-		
+
 		addRecord(chemical, tr, sr);
 
 

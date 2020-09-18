@@ -3,13 +3,18 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf;
 import java.text.DecimalFormat;
 
 import gov.epa.api.Chemical;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 
 public class ParseToxValBCFBAF {
 
 	public static void createScoreRecord(Chemical chemical, RecordToxValBCFBAF r) {
-
-		ScoreRecord sr = new ScoreRecord();		
+		
+		Score score=chemical.scoreBioaccumulation;
+		
+		ScoreRecord sr = new ScoreRecord();	
+		sr.hazard_name=score.hazard_name;
+		
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=r.author+", "+r.year;
 		
@@ -21,7 +26,7 @@ public class ParseToxValBCFBAF {
 		
 		sr.authority=ScoreRecord.typeScreening;//journal article
 		
-		sr.toxval_type="logBCF";
+		sr.test_type="logBCF";
 
 		try {
 			sr.duration=Double.parseDouble(r.exposure_duration);
@@ -45,7 +50,7 @@ public class ParseToxValBCFBAF {
 		//TODO- add exclusion criteria so certain records arent added based on fields in RecordToxValBCFBAF
 		//TODO- should we use logBAF for something?
 
-		chemical.scoreBioaccumulation.records.add(sr);
+		score.records.add(sr);
 
 		
 	}

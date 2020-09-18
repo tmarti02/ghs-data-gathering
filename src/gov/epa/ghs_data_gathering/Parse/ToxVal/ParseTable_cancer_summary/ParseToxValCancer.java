@@ -8,6 +8,7 @@ import java.util.Vector;
 
 import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.ParseToxVal;
 
@@ -134,8 +135,11 @@ public class ParseToxValCancer {
 	public static void createScoreRecord(Chemical chemical,RecordToxValCancer rc,Hashtable<String,String>dictCC) {
 //		System.out.println(rc.casrn+"\t"+rc.cancer_call);
 		
+		Score score=chemical.scoreCarcinogenicity;
+		
 		ScoreRecord sr = new ScoreRecord();
 		sr = new ScoreRecord();
+		sr.hazard_name=score.hazard_name;
 		
 		sr.name=rc.name;
 		
@@ -156,7 +160,7 @@ public class ParseToxValCancer {
 		
 		sr.rationale = "Score of "+sr.score+" was assigned based on a cancer call of "+"\""+rc.cancer_call+"\"";
 		
-		chemical.scoreCarcinogenicity.records.add(sr);
+		score.records.add(sr);
 
 	}
 	

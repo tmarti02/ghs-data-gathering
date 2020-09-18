@@ -213,10 +213,10 @@ public class ParseToxVal extends Parse {
 		//			System.out.println(r.risk_assessment_class+"\t"+r.risk_assessment_class_calc);
 //		crac2.getRAC(r);
 
-		if (chemical.CAS == null) {
+//		if (chemical.CAS == null) {
 			chemical.CAS = r.casrn;
 			chemical.name = r.name;
-		}
+//		}
 		//		System.out.println("before human eco");
 		if (r.human_eco.contentEquals("human health")) {			
 			//	if (r.risk_assessment_class.contentEquals("acute")) {
@@ -447,7 +447,7 @@ public class ParseToxVal extends Parse {
 		// Organism Test Type Route Reported Dose (Normalized Dose) Effect Source
 
 		ScoreRecord sr=new ScoreRecord();
-		
+		sr.CAS=tr.casrn;
 		sr.name=tr.name;
 		sr.route=tr.exposure_route;
 		
@@ -465,7 +465,7 @@ public class ParseToxVal extends Parse {
 		
 		sr.toxval_id=tr.toxval_id;
 		sr.test_organism=tr.species_common;
-		sr.toxval_type=tr.toxval_type;
+		sr.test_type=tr.toxval_type;
 		
 		
 
@@ -506,13 +506,12 @@ public class ParseToxVal extends Parse {
 		authoritativeSources.add("NIOSH");//Leora check
 		authoritativeSources.add("NTP ROC");//Leora check
 		
-		
-		
-		
+				
 		Vector<String>screeningSources=new Vector<>();
 		screeningSources.add("ToxRefDB");
 		screeningSources.add("ECHA");
 		screeningSources.add("EFSA");
+		screeningSources.add("EFSA2");
 		screeningSources.add("ECHA IUCLID");
 		screeningSources.add("ToxRefDB");
 		screeningSources.add("Pennsylvania DEP ToxValues");
@@ -528,6 +527,7 @@ public class ParseToxVal extends Parse {
 		screeningSources.add("DOE Wildlife Benchmarks");
 		screeningSources.add("HAWC");
 		screeningSources.add("HESS");
+		screeningSources.add("TEST");
 		
 		if (authoritativeSources.contains(sr.sourceOriginal)) {
 			sr.authority=ScoreRecord.typeAuthoritative;

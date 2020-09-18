@@ -259,7 +259,7 @@ public class ParseDenmark extends Parse {
 			if (this.dictScore.get(className) != null) {
 				String scoreName = dictScore.get(className);
 				Score score = chemical.getScore(scoreName);
-				this.createRecord(score, CLP);
+				this.createRecord(chemical,score, CLP);
 			} else {
 				System.out.println(className + "\tmissing");
 			}
@@ -268,10 +268,15 @@ public class ParseDenmark extends Parse {
 		return chemical;
 	}
 
-	private void createRecord(Score score, String hazardClassification) {
+	private void createRecord(Chemical chemical,Score score, String hazardClassification) {
 		ScoreRecord sr = new ScoreRecord();
 		score.records.add(sr);
 
+		
+		sr.CAS=chemical.CAS;
+		sr.name=chemical.name;
+		sr.hazard_name=score.hazard_name;
+		
 		sr.source = ScoreRecord.sourceDenmark;
 		sr.category = hazardClassification;// TODO or assign to classification?
 		// sr.hazard_code=toxCode;

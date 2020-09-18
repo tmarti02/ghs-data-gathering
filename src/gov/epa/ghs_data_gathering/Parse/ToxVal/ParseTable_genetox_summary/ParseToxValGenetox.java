@@ -8,6 +8,7 @@ import java.util.Vector;
 
 import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 
 public class ParseToxValGenetox {
@@ -40,8 +41,10 @@ public class ParseToxValGenetox {
 	public static void createScoreRecord(Chemical chemical,RecordToxValGenetox rc,Hashtable<String,String>dictCC) {
 //		System.out.println(rc.casrn+"\t"+rc.cancer_call);
 		
+		Score score=chemical.scoreGenotoxicity_Mutagenicity;
+		
 		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
+		sr.hazard_name=score.hazard_name;
 				
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.name=rc.name;
@@ -65,7 +68,7 @@ public class ParseToxValGenetox {
 		
 		sr.rationale = "Score of "+sr.score+" was assigned based on a genetox call of "+"\""+rc.genetox_call+"\"";
 		
-		chemical.scoreGenotoxicity_Mutagenicity.records.add(sr);
+		score.records.add(sr);
 
 	}
 	

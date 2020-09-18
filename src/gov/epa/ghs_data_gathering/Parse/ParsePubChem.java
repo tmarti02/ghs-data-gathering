@@ -22,7 +22,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
-import gov.epa.api.FlatFileRecord;
+//import gov.epa.api.FlatFileRecord;
 import gov.epa.api.FlatFileRecord2;
 import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.GetData.SkinSensitization.RecordChembench;
@@ -811,12 +811,12 @@ public class ParsePubChem {
 			Vector<FlatFileRecord2>recordsPubchem=FlatFileRecord2.loadRecordsFromFile(filePathPubchemSource, "CAS", "|");
 			System.out.println("pubchem loaded");
 			
-			Vector<FlatFileRecord>recordsMine=FlatFileRecord.loadRecordsFromFile(filePathMine, "CAS", "|");
+			Vector<ScoreRecord>recordsMine=ScoreRecord.loadRecordsFromFile(filePathMine, "CAS", "|");
 			System.out.println("Mine loaded");
 			
 			
 			Vector<String>uniqueCAS=new Vector<>();
-			for (FlatFileRecord record:recordsMine) {
+			for (ScoreRecord record:recordsMine) {
 				if (!uniqueCAS.contains(record.CAS)) uniqueCAS.add(record.CAS);
 			}
 			System.out.println(mySource+"\t"+uniqueCAS.size()+"\t"+recordsMine.size());
@@ -848,7 +848,7 @@ public class ParsePubChem {
 			htHazardName.put("Neurotoxicity Single Exposure","Not implemented");
 			
 			
-			for (FlatFileRecord recordMine:recordsMine) {
+			for (ScoreRecord recordMine:recordsMine) {
 				if (!recordMine.hazard_code.contains("H")) continue;
 				if (recordMine.CAS.isEmpty()) continue;
 				

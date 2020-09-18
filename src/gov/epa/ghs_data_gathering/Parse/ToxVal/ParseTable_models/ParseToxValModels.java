@@ -3,6 +3,7 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_models;
 import java.text.DecimalFormat;
 
 import gov.epa.api.Chemical;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 
 public class ParseToxValModels {
@@ -22,7 +23,10 @@ public class ParseToxValModels {
 			RecordToxValModels rBCF_AD) {
 		// System.out.println(rc.casrn+"\t"+rc.cancer_call);
 
+		Score score=chemical.scoreBioaccumulation;
+		
 		ScoreRecord sr = createScoreRecord(rBCF);
+		sr.hazard_name=score.hazard_name;
 		
 		sr.valueMass = Math.log10(Double.parseDouble(rBCF.value));
 		
@@ -38,20 +42,24 @@ public class ParseToxValModels {
 		
 		sr.valueMassUnits="log10 (BCF "+rBCF.units+")";
 		
-		chemical.scoreBioaccumulation.records.add(sr);
+		score.records.add(sr);
 
 	}
 
 	public static void createScoreRecordBCF_EPISUITE(Chemical chemical, RecordToxValModels rBCF) {
 		// System.out.println(rc.casrn+"\t"+rc.cancer_call);
+		
+		Score score=chemical.scoreBioaccumulation;
+		
 		ScoreRecord sr = createScoreRecord(rBCF);
+		sr.hazard_name=score.hazard_name;
 		
 		sr.valueMass = Math.log10(Double.parseDouble(rBCF.value));
 	
 		sr.url="https://www.epa.gov/tsca-screening-tools/download-epi-suitetm-estimation-program-interface-v411";
 		setBioconcentrationScore(sr);
 		sr.valueMassUnits="log10 (BCF "+rBCF.units+")";
-		chemical.scoreBioaccumulation.records.add(sr);
+		score.records.add(sr);
 		
 	}
 
@@ -110,13 +118,15 @@ public class ParseToxValModels {
 
 
 	public static void createScoreRecordPersistence_EpiSuite(Chemical chemical, RecordToxValModels r) {
+		Score score=chemical.scorePersistence;
+		
 		ScoreRecord sr =createScoreRecord(r);	
-
+		sr.hazard_name=score.hazard_name;
 		sr.valueMass = Double.parseDouble(r.value);
 		sr.valueMassUnits=r.units;
 		sr.url="https://www.epa.gov/tsca-screening-tools/download-epi-suitetm-estimation-program-interface-v411";
 		setPersistenceScoreEpiSuite(sr);					
-		chemical.scorePersistence.records.add(sr);		
+		score.records.add(sr);		
 	}
 
 	private static void setPersistenceScoreEpiSuite(ScoreRecord sr) {

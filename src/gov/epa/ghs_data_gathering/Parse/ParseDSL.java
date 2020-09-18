@@ -204,10 +204,14 @@ public class ParseDSL extends Parse {
 		
 	}
 
-	private void createRecord(Score score, String endpoint, String var) {
+	private void createRecord(Chemical chemical,Score score, String endpoint, String var) {
 
 		ScoreRecord sr = new ScoreRecord();
 		score.records.add(sr);
+		
+		sr.name=chemical.name;
+		sr.CAS=chemical.CAS;
+		sr.hazard_name=score.hazard_name;
 
 		sr.source = ScoreRecord.sourceDSL;
 
@@ -234,9 +238,9 @@ public class ParseDSL extends Parse {
 		chemical.CAS = dr.CAS;
 		chemical.name = dr.Chemical_Name;
 
-		this.createRecord(chemical.scoreAcute_Aquatic_Toxicity, "Inherently_Toxic_to_Aquatic_Organisms", dr.Inherently_Toxic_to_Aquatic_Organisms);
-		this.createRecord(chemical.scorePersistence, "Persistent", dr.Persistent);
-		this.createRecord(chemical.scoreBioaccumulation, "Bioaccumulative", dr.Bioaccumulative);
+		this.createRecord(chemical,chemical.scoreAcute_Aquatic_Toxicity, "Inherently_Toxic_to_Aquatic_Organisms", dr.Inherently_Toxic_to_Aquatic_Organisms);
+		this.createRecord(chemical,chemical.scorePersistence, "Persistent", dr.Persistent);
+		this.createRecord(chemical,chemical.scoreBioaccumulation, "Bioaccumulative", dr.Bioaccumulative);
 		
 		//TODO add aquatic tox record
 
