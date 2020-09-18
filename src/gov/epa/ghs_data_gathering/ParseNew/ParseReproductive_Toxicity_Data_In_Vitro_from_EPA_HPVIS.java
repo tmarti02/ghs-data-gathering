@@ -211,9 +211,8 @@ public class ParseReproductive_Toxicity_Data_In_Vitro_from_EPA_HPVIS extends Par
 
 	
 
-	private void createScoreRecord(Score score, String hazardCategory, String hazardCode, String hazardStatement,
-			String toxRoute, String strScore, String strNote) {
-		ScoreRecord sr = new ScoreRecord();
+	private void createScoreRecord(Score score,ToxicityRecords tr) {
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,tr.casrn,tr.name);
 		score.records.add(sr);
 	}
 

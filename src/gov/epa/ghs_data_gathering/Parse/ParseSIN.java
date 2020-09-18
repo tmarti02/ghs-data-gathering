@@ -20,6 +20,7 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.AADashboard;
 import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.ParseUMD.UMDRecord;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
@@ -184,13 +185,14 @@ public class ParseSIN extends Parse {
 							count++;
 
 							System.out.println(chemical.CAS);
+							Score score=chemical.scoreEndocrine_Disruption;
 
-							ScoreRecord sr = new ScoreRecord();
+							ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 							sr.score = ScoreRecord.scoreH;
 							sr.source = ScoreRecord.sourceSIN;
 							sr.rationale = "Chemical appears in SIN (Substitute It Now) List:<br><br>";
 							sr.rationale += reason;
-							chemical.scoreEndocrine_Disruption.records.add(sr);
+							score.records.add(sr);
 
 							chemical.writeToFile(jsonFolder);
 
@@ -269,13 +271,13 @@ public class ParseSIN extends Parse {
 //							count++;
 
 //					System.out.println(chemical.CAS);
-
-					ScoreRecord sr = new ScoreRecord();
+					Score score=chemical.scoreEndocrine_Disruption;
+					ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 					sr.score = ScoreRecord.scoreH;
 					sr.source = ScoreRecord.sourceSIN;
 					sr.rationale = "Chemical appears in SIN (Substitute It Now) List:<br><br>";
 					sr.rationale += reason;
-					chemical.scoreEndocrine_Disruption.records.add(sr);
+					score.records.add(sr);
 
 					return chemical;
 //					chemical.writeToFile(jsonFolder);

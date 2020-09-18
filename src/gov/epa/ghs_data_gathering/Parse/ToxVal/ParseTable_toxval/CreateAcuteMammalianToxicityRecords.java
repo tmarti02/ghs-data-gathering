@@ -270,7 +270,7 @@ public class CreateAcuteMammalianToxicityRecords {
 
 		Score score=chemical.scoreAcute_Mammalian_ToxicityOral;
 		
-		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
+		ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr);
 		sr.hazard_name=score.hazard_name;
 		
 		setOralScore(sr, chemical);
@@ -297,7 +297,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		if(!isOkMammalianSpecies(tr)) return;
 			
 		Score score=chemical.scoreAcute_Mammalian_ToxicityDermal;
-		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
+		ScoreRecord sr =ParseToxVal.saveToxValInfo(score,tr);
 		sr.hazard_name=score.hazard_name;
 		setDermalScore(sr, chemical);
 		score.records.add(sr);
@@ -389,7 +389,7 @@ public class CreateAcuteMammalianToxicityRecords {
 		if(!isOkMammalianSpecies(tr)) return;
 
 		Score score=chemical.scoreAcute_Mammalian_ToxicityInhalation;
-		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
+		ScoreRecord sr =ParseToxVal.saveToxValInfo(score,tr);
 		sr.hazard_name=score.hazard_name;
 		setInhalationScore(sr, chemical);
 		score.records.add(sr);

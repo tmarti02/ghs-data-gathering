@@ -22,6 +22,7 @@ import com.google.gson.Gson;
 
 import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.ParseChemidplusHTML.ChemidplusRecord;
 import gov.epa.ghs_data_gathering.Parse.ParseChemidplusHTML.ToxicityRecord;
@@ -207,14 +208,11 @@ public class ParseChemidplus extends Parse {
 	}
 
 	
-	ScoreRecord createScoreRecord(Chemical chemical,ToxicityRecord tr) {
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
+	ScoreRecord createScoreRecord(Score score,Chemical chemical,ToxicityRecord tr) {
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
+		
 		sr.source = ScoreRecord.sourceChemIDplus;
-		
-		sr.CAS=chemical.CAS;
-		sr.name=chemical.name;
-		
+				
 		sr.route=tr.Route;
 		sr.long_ref=tr.Source;
 		sr.effect=tr.Effect;
@@ -240,7 +238,9 @@ public class ParseChemidplus extends Parse {
 			UniqueSpecies un) {
 		// System.out.println("Creating AcuteMammalianToxicityOralRecord");
 
-		ScoreRecord sr = createScoreRecord(chemical,tr);
+		Score score=chemical.scoreAcute_Mammalian_ToxicityOral;
+		
+		ScoreRecord sr = createScoreRecord(score,chemical,tr);
 		sr.hazard_name=Chemical.strAcute_Mammalian_ToxicityOral;
 
 		/*
@@ -328,7 +328,7 @@ public class ParseChemidplus extends Parse {
 		setOralScore(sr, chemical);
 
 		sr.note=this.createNote(tr);
-		chemical.scoreAcute_Mammalian_ToxicityOral.records.add(sr);
+		score.records.add(sr);
 
 	}
 
@@ -336,7 +336,8 @@ public class ParseChemidplus extends Parse {
 			UniqueSpecies un) {
 		// System.out.println("Creating AcuteMammalianToxicityDermalRecord");
 
-		ScoreRecord sr = createScoreRecord(chemical,tr);
+		Score score=chemical.scoreAcute_Mammalian_ToxicityDermal;
+		ScoreRecord sr = createScoreRecord(score,chemical,tr);
 		sr.hazard_name=Chemical.strAcute_Mammalian_ToxicityDermal;
 
 		/*
@@ -392,7 +393,7 @@ public class ParseChemidplus extends Parse {
 		setDermalScore(sr, chemical);
 
 		sr.note=this.createNote(tr);
-		chemical.scoreAcute_Mammalian_ToxicityDermal.records.add(sr);
+		score.records.add(sr);
 
 	}
 
@@ -400,7 +401,8 @@ public class ParseChemidplus extends Parse {
 			UniqueSpecies un) {
 		// System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
 
-		ScoreRecord sr = createScoreRecord(chemical,tr);
+		Score score=chemical.scoreAcute_Mammalian_ToxicityInhalation;
+		ScoreRecord sr = createScoreRecord(score,chemical,tr);
 		sr.hazard_name=Chemical.strAcute_Mammalian_ToxicityInhalation;
 
 		
@@ -468,7 +470,7 @@ public class ParseChemidplus extends Parse {
 
 		sr.note=this.createNote(tr);
 		
-		chemical.scoreAcute_Mammalian_ToxicityInhalation.records.add(sr);
+		score.records.add(sr);
 
 	}
 

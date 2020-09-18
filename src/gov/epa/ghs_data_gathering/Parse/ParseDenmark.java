@@ -269,13 +269,8 @@ public class ParseDenmark extends Parse {
 	}
 
 	private void createRecord(Chemical chemical,Score score, String hazardClassification) {
-		ScoreRecord sr = new ScoreRecord();
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
-
-		
-		sr.CAS=chemical.CAS;
-		sr.name=chemical.name;
-		sr.hazard_name=score.hazard_name;
 		
 		sr.source = ScoreRecord.sourceDenmark;
 		sr.category = hazardClassification;// TODO or assign to classification?

@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
 
+import com.google.gson.Gson;
+
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 //Revised version of this class removed need to have FlatFileRecord class
@@ -349,8 +351,10 @@ public class ScoreRecord {
 		
 	}
 	
-	public ScoreRecord() {
-		
+	public ScoreRecord(String hazard_name,String CAS,String name) {
+		this.hazard_name=hazard_name;
+		this.CAS=CAS;
+		this.name=name;
 	}
 
 	
@@ -368,14 +372,14 @@ public class ScoreRecord {
 	 * @return
 	 */
 	public static ScoreRecord createRecord(List<String> hlist, List<String> list) {
-		ScoreRecord r=new ScoreRecord();
+		ScoreRecord r=new ScoreRecord(null,null,null);
 		//convert to record:
 		try {
 			for (int i=0;i<list.size();i++) {
 				Field myField =r.getClass().getField(hlist.get(i));
 				
 				
-				if (hlist.get(i).contentEquals("valueMass")) {
+				if (myField.getType().getName().contains("Double")) {
 					if (!list.get(i).isEmpty())
 						myField.setDouble(r, Double.parseDouble(list.get(i)));					
 				} else {
@@ -704,26 +708,11 @@ public class ScoreRecord {
 		}
 	}
 	
-	public ScoreRecord clone() {
-		ScoreRecord clone=new ScoreRecord();
-		
-		clone.source=source;
-		clone.score=score;
-		clone.category=category;
-		clone.hazard_code=hazard_code;
-		clone.hazard_statement=hazard_statement;
-		clone.rationale=rationale;
-		clone.route=route;
-		clone.note=note;
-		clone.note2=note2;
-		clone.valueMass=valueMass;
-		clone.valueMassUnits=valueMassUnits;
-		clone.valueMassOperator=valueMassOperator;
-		clone.duration=duration;
-		clone.durationUnits=durationUnits;
-		
-		return clone;
-		
+	public ScoreRecord clone() {		
+		Gson gson= new Gson();
+		String tmp = gson.toJson(this);
+		ScoreRecord sr = gson.fromJson(tmp, ScoreRecord.class);		
+		return sr;		
 	}
 	
 	public String getListType() {
@@ -963,7 +952,7 @@ public class ScoreRecord {
 	
 	
 	public static ScoreRecord createScoreRecord(String line) {
-		ScoreRecord f = new ScoreRecord();
+		ScoreRecord f = new ScoreRecord(null,null,null);
 		LinkedList<String> list = Utilities.Parse(line, "|");
 //		if (list.getFirst().isEmpty()) System.out.println(line);
 		

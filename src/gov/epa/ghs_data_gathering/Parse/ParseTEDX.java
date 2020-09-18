@@ -15,6 +15,7 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.AADashboard;
 import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 import gov.epa.ghs_data_gathering.Parse.ParseUMD.UMDRecord;
 
@@ -482,7 +483,9 @@ public class ParseTEDX extends Parse {
 		chemical.CAS = CAS;
 		chemical.name = tr.name;
 
-		ScoreRecord sr = new ScoreRecord();
+		Score score=chemical.scoreEndocrine_Disruption;
+		
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		sr.score = ScoreRecord.scoreH;
 		sr.source = ScoreRecord.sourceTEDX;
 
@@ -496,7 +499,7 @@ public class ParseTEDX extends Parse {
 			}
 			sr.rationale += "</ul>";
 		}
-		chemical.scoreEndocrine_Disruption.records.add(sr);
+		score.records.add(sr);
 		return chemical;
 	}
 

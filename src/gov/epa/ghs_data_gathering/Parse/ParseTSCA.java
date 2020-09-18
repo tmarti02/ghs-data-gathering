@@ -226,8 +226,9 @@ public class ParseTSCA extends Parse {
 
 	private void processPersistenceBioaccumulation(String p, Chemical chemical) {
 
-		ScoreRecord sr = new ScoreRecord();
-		chemical.scorePersistence.records.add(sr);
+		Score score=chemical.scorePersistence;
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
+		score.records.add(sr);
 		sr.source = ScoreRecord.sourceTSCA_Work_Plan;
 
 		if (p.indexOf("Low environmental persistence") > -1) {
@@ -245,8 +246,10 @@ public class ParseTSCA extends Parse {
 		sr.rationale = "Score of " + sr.score + " was assigned based on a category of " + sr.category;
 
 		// **********************************************************************************************************
-		sr = new ScoreRecord();
-		chemical.scoreBioaccumulation.records.add(sr);
+		
+		score=chemical.scoreBioaccumulation;		
+		sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);		
+		score.records.add(sr);		
 		sr.source = ScoreRecord.sourceTSCA_Work_Plan;
 
 		if (p.indexOf("Low bioaccumulation potential") > -1) {
@@ -268,12 +271,12 @@ public class ParseTSCA extends Parse {
 	private String processRest(String t, Chemical chemical) {
 		if (t.indexOf("Mutagenicity") > -1) {
 			t = t.replace("Mutagenicity", "");
-			createScoreRecord(chemical.scoreGenotoxicity_Mutagenicity, "Mutagenicity", ScoreRecord.scoreVH);
+			createScoreRecord(chemical.scoreGenotoxicity_Mutagenicity, chemical,"Mutagenicity", ScoreRecord.scoreVH);
 		}
 
 		if (t.indexOf("Neurotoxicity") > -1) {
 			t = t.replace("Neurotoxicity", "");
-			createScoreRecord(chemical.scoreNeurotoxicity_Repeat_Exposure, "Neurotoxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreNeurotoxicity_Repeat_Exposure, chemical,"Neurotoxicity", strDefaultScore);
 		}
 
 		if (t.indexOf("Respiratory") > -1) {
@@ -305,8 +308,8 @@ public class ParseTSCA extends Parse {
 		return t;
 	}
 
-	private void createScoreRecord(Score score, String category, String strScore) {
-		ScoreRecord sr = new ScoreRecord();
+	private void createScoreRecord(Score score, Chemical chemical,String category, String strScore) {
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 		sr.source = ScoreRecord.sourceTSCA_Work_Plan;
 		sr.score = strScore;
@@ -321,21 +324,21 @@ public class ParseTSCA extends Parse {
 			// TODO
 			t = t.replace("Developmental and reproductive toxicity", "");
 
-			createScoreRecord(chemical.scoreDevelopmental, "Developmental toxicity", strDefaultScore);
-			createScoreRecord(chemical.scoreReproductive, "Reproductive toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreDevelopmental, chemical,"Developmental toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreReproductive, chemical,"Reproductive toxicity", strDefaultScore);
 
 		}
 		if (t.indexOf("Reproductive toxicity") > -1) {
 			// TODO
 			t = t.replace("Reproductive toxicity", "");
-			createScoreRecord(chemical.scoreReproductive, "Reproductive toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreReproductive, chemical,"Reproductive toxicity", strDefaultScore);
 
 		}
 
 		if (t.indexOf("Developmental toxicity") > -1) {
 			// TODO
 			t = t.replace("Developmental toxicity", "");
-			createScoreRecord(chemical.scoreDevelopmental, "Developmental toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreDevelopmental, chemical, "Developmental toxicity", strDefaultScore);
 		}
 		return t;
 	}
@@ -348,18 +351,18 @@ public class ParseTSCA extends Parse {
 
 		if (t.indexOf("Acute and chronic aquatic toxicity") > -1) {
 			t = t.replace("Acute and chronic aquatic toxicity", "");
-			createScoreRecord(chemical.scoreAcute_Aquatic_Toxicity, "Acute aquatic toxicity", strDefaultScore);
-			createScoreRecord(chemical.scoreChronic_Aquatic_Toxicity, "Chronic aquatic toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreAcute_Aquatic_Toxicity, chemical,"Acute aquatic toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreChronic_Aquatic_Toxicity, chemical,"Chronic aquatic toxicity", strDefaultScore);
 		}
 
 		if (t.indexOf("Chronic aquatic toxicity") > -1) {
 			t = t.replace("Chronic aquatic toxicity", "");
-			createScoreRecord(chemical.scoreChronic_Aquatic_Toxicity, "Chronic aquatic toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreChronic_Aquatic_Toxicity, chemical,"Chronic aquatic toxicity", strDefaultScore);
 		}
 
 		if (t.indexOf("Acute aquatic toxicity") > -1) {// only 2 compounds
 			t = t.replace("Acute aquatic toxicity", "");
-			createScoreRecord(chemical.scoreAcute_Aquatic_Toxicity, "Acute aquatic toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreAcute_Aquatic_Toxicity, chemical,"Acute aquatic toxicity", strDefaultScore);
 		}
 
 		if (t.indexOf("Aquatic toxicity") > -1) {
@@ -376,7 +379,8 @@ public class ParseTSCA extends Parse {
 		if (t.indexOf("carcinogen") == -1)
 			return t;
 
-		ScoreRecord sr = new ScoreRecord();
+		Score score=chemical.scoreCarcinogenicity;
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		chemical.scoreCarcinogenicity.records.add(sr);
 		sr.source = ScoreRecord.sourceTSCA_Work_Plan;
 
@@ -422,32 +426,32 @@ public class ParseTSCA extends Parse {
 		if (t.indexOf("Acute and chronic toxicity from inhalation exposures") > -1) {
 			// TODO- add to Systemic_Toxicity_Repeat_Exposure?
 			t = t.replace("Acute and chronic toxicity from inhalation exposures", "");
-			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityInhalation,
+			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityInhalation,chemical,
 					"Acute and chronic toxicity from inhalation exposures", strDefaultScore);
 		}
 
 		if (t.indexOf("Acute toxicity from inhalation exposures") > -1) {
 			t = t.replace("Acute toxicity from inhalation exposures", "");
-			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityInhalation,
+			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityInhalation,chemical,
 					"Acute and chronic toxicity from inhalation exposures", strDefaultScore);
 		}
 
 		if (t.indexOf("Chronic toxicity to target organs including the liver, kidneys and thyroid") > -1) {
 			t = t.replace("Chronic toxicity to target organs including the liver, kidneys and thyroid", "");
-			createScoreRecord(chemical.scoreSystemic_Toxicity_Repeat_Exposure,
+			createScoreRecord(chemical.scoreSystemic_Toxicity_Repeat_Exposure,chemical,
 					"Chronic toxicity to target organs including the liver, kidneys and thyroid", strDefaultScore);
 		}
 
 		if (t.indexOf("Chronic toxicity and liver effects") > -1) {
 			t = t.replace("Chronic toxicity and liver effects", "");
-			createScoreRecord(chemical.scoreSystemic_Toxicity_Repeat_Exposure,
+			createScoreRecord(chemical.scoreSystemic_Toxicity_Repeat_Exposure,chemical,
 					"Chronic toxicity to target organs including the liver, kidneys and thyroid", strDefaultScore);
 		}
 
 		if (t.indexOf("Acute and chronic toxicity") > -1) {
 			// TODO- add to Systemic_Toxicity_Repeat_Exposure?
 			t = t.replace("Acute and chronic toxicity", "");
-			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityOral, "Acute mammalian toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityOral, chemical,"Acute mammalian toxicity", strDefaultScore);
 		}
 
 		if (t.indexOf("Chronic toxicity") > -1) {
@@ -457,12 +461,12 @@ public class ParseTSCA extends Parse {
 
 		if (t.indexOf("Acute mammalian toxicity") > -1) {// only 1 compound
 			t = t.replace("Acute mammalian toxicity", "");
-			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityOral, "Acute mammalian toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityOral,chemical, "Acute mammalian toxicity", strDefaultScore);
 		}
 
 		if (t.indexOf("Acute toxicity") > -1) {// assume same as one above
 			t = t.replace("Acute toxicity", "");
-			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityOral, "Acute mammalian toxicity", strDefaultScore);
+			createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityOral, chemical,"Acute mammalian toxicity", strDefaultScore);
 		}
 
 		return t;

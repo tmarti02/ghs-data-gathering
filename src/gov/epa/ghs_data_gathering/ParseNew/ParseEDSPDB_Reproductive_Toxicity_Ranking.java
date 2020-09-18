@@ -108,12 +108,6 @@ public class ParseEDSPDB_Reproductive_Toxicity_Ranking extends Parse {
 		
 	/*	Create a new object called "sr" that is an instance of the class "ScoreRecord". */
 		
-		ScoreRecord sr=new ScoreRecord();
-		
-	/* For the object "sr", the variable "source" has the value of "sourceEDSPDB_Reproductive_Toxicity_Ranking"
-	   of the object "ScoreRecord". */
-		
-		sr.source=ScoreRecord.sourceEDSPDB_Reproductive_Toxicity_Ranking;
 		
 		
 	/*	Within the class Score, start with the value of score set to null. */
@@ -135,6 +129,15 @@ public class ParseEDSPDB_Reproductive_Toxicity_Ranking extends Parse {
 			System.out.println(tr.CASRN+"\t"+tr.RepDev_Compartment+"\tmissing compartment!");
 			return chemical;
 		}
+
+		
+		ScoreRecord sr=new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
+		
+	/* For the object "sr", the variable "source" has the value of "sourceEDSPDB_Reproductive_Toxicity_Ranking"
+	   of the object "ScoreRecord". */
+		
+		sr.source=ScoreRecord.sourceEDSPDB_Reproductive_Toxicity_Ranking;
+
 		
 
 	/* Create a string variable called outcome that equals RepDev_Outcome converted to lowercase.
@@ -714,9 +717,8 @@ public class ParseEDSPDB_Reproductive_Toxicity_Ranking extends Parse {
 		}
 	}
 
-	private void createScoreRecord(Score score, String hazardCategory, String hazardCode, String hazardStatement,
-			String toxRoute, String strScore, String strNote) {
-		ScoreRecord sr = new ScoreRecord();
+	private void createScoreRecord(Score score, ToxicityRecord tr) {
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,tr.CASRN,tr.Name);
 		score.records.add(sr);
 	}
 

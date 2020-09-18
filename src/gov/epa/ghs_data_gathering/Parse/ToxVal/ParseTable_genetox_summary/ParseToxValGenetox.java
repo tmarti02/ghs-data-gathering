@@ -43,9 +43,8 @@ public class ParseToxValGenetox {
 		
 		Score score=chemical.scoreGenotoxicity_Mutagenicity;
 		
-		ScoreRecord sr = new ScoreRecord();
-		sr.hazard_name=score.hazard_name;
-				
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
+						
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.name=rc.name;
 		

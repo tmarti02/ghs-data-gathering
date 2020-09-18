@@ -140,7 +140,7 @@ public class ParseHealth_Canada_Priority_Substances_Carcinogenicity_2006 extends
 		if (!ir.Carcinogenicity.equals("")) {
 
 			Score score = chemical.scoreCarcinogenicity;
-			ScoreRecord sr = new ScoreRecord();
+			ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 			score.records.add(sr);
 			sr.source = ScoreRecord.sourceHealth_Canada_Priority_Substance_Lists_Carcinogenicity;
 			sr.category = "Carcinogen";

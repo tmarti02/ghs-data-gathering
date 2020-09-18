@@ -15,12 +15,12 @@ public class AADashboard {
 	
 	private void addSources() {
 		sources.add(ScoreRecord.sourceAustralia);//OK
-		sources.add(ScoreRecord.sourceCanada);//ok
+		sources.add(ScoreRecord.sourceCanada);//OK
 		sources.add(ScoreRecord.sourceChemIDplus);//OK
-		sources.add(ScoreRecord.sourceDenmark);//ok
-		sources.add(ScoreRecord.sourceDSL);//ok
-		sources.add(ScoreRecord.sourceECHA_CLP);//ok
-		sources.add(ScoreRecord.sourceEPAMidAtlanticHumanHealth);
+		sources.add(ScoreRecord.sourceDenmark);//OK
+		sources.add(ScoreRecord.sourceDSL);//OK
+		sources.add(ScoreRecord.sourceECHA_CLP);//OK
+		sources.add(ScoreRecord.sourceEPAMidAtlanticHumanHealth);//OK
 		sources.add(ScoreRecord.sourceGermany);
 		sources.add(ScoreRecord.sourceHealth_Canada_Priority_Substance_Lists_Carcinogenicity);
 		sources.add(ScoreRecord.sourceHealth_Canada_Priority_Substance_Lists_Reproductive);

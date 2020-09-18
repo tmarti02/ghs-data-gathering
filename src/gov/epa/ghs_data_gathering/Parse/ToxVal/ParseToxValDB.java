@@ -852,12 +852,19 @@ public class ParseToxValDB {
 			}
 
 			for (int i=1;i<=sheet.getLastRowNum();i++) {
-				ScoreRecord f=new ScoreRecord();
+				Row rowi=sheet.getRow(i);
+				
+				String hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
+				
+				String name=rowi.getCell(htColNums.get("name")).getStringCellValue();
+				String CAS=rowi.getCell(htColNums.get("casrn")).getStringCellValue();
+				
+				ScoreRecord f=new ScoreRecord(hazard_name,CAS,name);
 				
 //				System.out.println((i+1)+"\t"+sheet.getSheetName());
-				Row rowi=sheet.getRow(i);
+				
 				f.toxval_id=(int)(rowi.getCell(htColNums.get("toxval_id")).getNumericCellValue())+"";
-				f.hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
+//				f.hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
 				f.score=rowi.getCell(htColNums.get("ManualScore")).getStringCellValue();
 				
 			
@@ -976,9 +983,8 @@ public class ParseToxValDB {
 					
 					ScoreRecord sr=score.records.get(k);
 					
-					ScoreRecord recJava=new ScoreRecord();
-					recJava.toxval_id=sr.toxval_id;
-					recJava.hazard_name=score.hazard_name;
+					ScoreRecord recJava=new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
+					recJava.toxval_id=sr.toxval_id;					
 					recJava.score=sr.score;					
 					
 					recordsJava.add(recJava);					

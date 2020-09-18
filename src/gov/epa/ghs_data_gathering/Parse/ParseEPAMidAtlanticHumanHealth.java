@@ -165,7 +165,7 @@ public class ParseEPAMidAtlanticHumanHealth extends Parse {
 
 		if (ir.Mutagen.equals("M")) {
 			Score score = chemical.scoreGenotoxicity_Mutagenicity;
-			ScoreRecord sr = new ScoreRecord();
+			ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 			score.records.add(sr);
 			sr.source = ScoreRecord.sourceEPAMidAtlanticHumanHealth;
 			sr.category = "Mutagen";
@@ -179,14 +179,19 @@ public class ParseEPAMidAtlanticHumanHealth extends Parse {
 		if (!ir.SFO.equals("")) {
 
 			Score score = chemical.scoreCarcinogenicity;
-			ScoreRecord sr = new ScoreRecord();
+			ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 			score.records.add(sr);
 			sr.source = ScoreRecord.sourceEPAMidAtlanticHumanHealth;
 			sr.category = "Carcinogen";
 			// Assign score based on toxCode:
 			sr.score = ScoreRecord.scoreVH;
-			sr.rationale = "Score of " + sr.score + " was assigned on having a value (" + ir.SFO
-					+ ") for the cancer slope factor (SFO)";
+			
+			sr.test_type="Cancer slope factor (SFO)";
+			sr.valueMass=Double.parseDouble(ir.SFO);
+//			sr.valueMassUnits=ir.
+			
+			
+			sr.rationale = "Score of " + sr.score + " was assigned on having a value for the cancer slope factor (SFO)";
 			sr.note = "Source: " + ir.SFONote;
 
 //			System.out.println(chemical.CAS + "\t" + ir.SFO);

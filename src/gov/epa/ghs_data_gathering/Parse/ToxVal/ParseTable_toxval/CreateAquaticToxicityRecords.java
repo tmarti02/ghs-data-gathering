@@ -53,10 +53,6 @@ public class CreateAquaticToxicityRecords {
 		}
 
 
-		ScoreRecord sr=createScoreRecord(chemical, tr);//create generic score record
-
-		sr.duration=study_dur_in_days;
-		sr.durationUnits="days";
 
 
 		// I added duration-based criteria based on GHS criteria,
@@ -73,11 +69,23 @@ public class CreateAquaticToxicityRecords {
 
 		//TODO- does it need to be lethality as effect??? or is growth ok?
 		
+
+		
+//		if (tr.toxval_id.contentEquals("146599")) {
+//			System.out.println("here1123"+"\t"+tr.toxval_type+"\t"+study_dur_in_days);
+//		}
+
+		
 		if ((study_dur_in_days<5) &&
 				(tr.toxval_type.contentEquals("LC50") ||
 						tr.toxval_type.contentEquals("EC50"))) {
 			Score score=chemical.scoreAcute_Aquatic_Toxicity;
-			sr.hazard_name=score.hazard_name;
+			
+			ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr);
+			
+			sr.duration=study_dur_in_days;
+			sr.durationUnits="days";
+			
 			setAquaticToxAcuteScore(sr, chemical);
 			score.records.add(sr);
 
@@ -85,8 +93,15 @@ public class CreateAquaticToxicityRecords {
 				(tr.toxval_type.contentEquals("NOEC") ||
 						tr.toxval_type.contentEquals("LOEC"))) {
 			
+			
+
+			
 			Score score=chemical.scoreChronic_Aquatic_Toxicity;
-			sr.hazard_name=score.hazard_name;
+			
+			ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr);
+			
+			sr.duration=study_dur_in_days;
+			sr.durationUnits="days";
 			setAquaticToxChronicScore(sr, chemical);
 			score.records.add(sr);
 
@@ -110,10 +125,6 @@ public class CreateAquaticToxicityRecords {
 	//	}
 	//	
 
-	private static ScoreRecord createScoreRecord(Chemical chemical, RecordToxVal tr) {
-		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
-		return sr;
-	}
 
 
 	private static void setAquaticToxChronicScore(ScoreRecord sr, Chemical chemical) {

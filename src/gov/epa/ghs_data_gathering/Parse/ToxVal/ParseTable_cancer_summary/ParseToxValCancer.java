@@ -137,10 +137,8 @@ public class ParseToxValCancer {
 		
 		Score score=chemical.scoreCarcinogenicity;
 		
-		ScoreRecord sr = new ScoreRecord();
-		sr = new ScoreRecord();
-		sr.hazard_name=score.hazard_name;
-		
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
+						
 		sr.name=rc.name;
 		
 		sr.source = ScoreRecord.sourceToxVal;

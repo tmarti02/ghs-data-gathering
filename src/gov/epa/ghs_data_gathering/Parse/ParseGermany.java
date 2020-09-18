@@ -188,13 +188,16 @@ public class ParseGermany extends Parse {
 		}
 
 		if (strScore != null) {
-			ScoreRecord sr = new ScoreRecord();
+			
+			Score score = chemical.scoreCarcinogenicity;
+			
+			ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 			sr.score = strScore;
 			sr.category = "Category " + cancer;
 			sr.source = this.sourceName;
 			sr.rationale = "Score of " + sr.score + " was assigned based on a carcinogenicity category of "
 					+ sr.category;
-			Score score = chemical.scoreCarcinogenicity;
+			
 			score.records.add(sr);
 		}
 
@@ -250,12 +253,14 @@ public class ParseGermany extends Parse {
 
 
 			if (strScore != null) {
-				ScoreRecord sr = new ScoreRecord();
+				Score score = chemical.scoreSkin_Sensitization;
+				
+				ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 				sr.score = strScore;
 				sr.category = vali;
 				sr.source = this.sourceName;
 				sr.rationale = "Score of " + sr.score + " was assigned based on a category of " + sr.category;
-				Score score = chemical.scoreSkin_Sensitization;
+
 				score.records.add(sr);
 			}
 
@@ -331,13 +336,14 @@ public class ParseGermany extends Parse {
 
 
 		if (strScore != null) {
-			ScoreRecord sr = new ScoreRecord();
+			Score score = chemical.scoreGenotoxicity_Mutagenicity;
+			
+			ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 			sr.score = strScore;
 			sr.category = "Category " + mutagenicity;
 			sr.source = this.sourceName;
 			sr.rationale = "Score of " + sr.score + " was assigned based on a germ cell mutagenicity category of "
 					+ sr.category;
-			Score score = chemical.scoreGenotoxicity_Mutagenicity;
 			score.records.add(sr);
 		}
 
@@ -409,12 +415,12 @@ public class ParseGermany extends Parse {
 
 		
 		if (strScore != null) {
-			ScoreRecord sr = new ScoreRecord();
+			Score score = chemical.scoreDevelopmental;
+			ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 			sr.score = strScore;
 			sr.category = "Pregancy risk group " + preg;
 			sr.source = this.sourceName;
 			sr.rationale = "Score of " + sr.score + " was assigned based on a pregnancy risk group of " + sr.category;
-			Score score = chemical.scoreDevelopmental;
 			score.records.add(sr);
 		}
 

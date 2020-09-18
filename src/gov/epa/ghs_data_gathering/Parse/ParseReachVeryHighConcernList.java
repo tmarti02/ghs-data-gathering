@@ -155,8 +155,8 @@ public class ParseReachVeryHighConcernList extends Parse {
 		return chemicals;
 	}
 
-	private void createScoreRecord(Score score, String category, String strScore) {
-		ScoreRecord sr = new ScoreRecord();
+	private void createScoreRecord(Score score, Chemical chemical,String category, String strScore) {
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 		sr.source = ScoreRecord.sourceReachVeryHighConcernList;
 		sr.score = strScore;
@@ -221,29 +221,29 @@ public class ParseReachVeryHighConcernList extends Parse {
 			String toxField = list.get(i).trim();
 
 			if (toxField.equals("Toxic for reproduction (Article 57c)")) {
-				createScoreRecord(chemical.scoreReproductive, "Toxic for reproduction (Article 57c)", strDefaultScore);
+				createScoreRecord(chemical.scoreReproductive, chemical,"Toxic for reproduction (Article 57c)", strDefaultScore);
 			} else if (toxField.equals("Carcinogenic (Article 57a)")) {
-				createScoreRecord(chemical.scoreCarcinogenicity, "Carcinogenic (Article 57a)", ScoreRecord.scoreVH);
+				createScoreRecord(chemical.scoreCarcinogenicity, chemical,"Carcinogenic (Article 57a)", ScoreRecord.scoreVH);
 			} else if (toxField.equals("Mutagenic (Article 57b)")) {
-				createScoreRecord(chemical.scoreGenotoxicity_Mutagenicity, "Mutagenic (Article 57b)", ScoreRecord.scoreVH);
+				createScoreRecord(chemical.scoreGenotoxicity_Mutagenicity, chemical,"Mutagenic (Article 57b)", ScoreRecord.scoreVH);
 			} else if (toxField.equals("Endocrine disrupting properties (Article 57(f) - environment)")) {
 				// TODO
 			} else if (toxField.equals("Endocrine disrupting properties (Article 57(f) - human health)")) {
-				createScoreRecord(chemical.scoreEndocrine_Disruption,
+				createScoreRecord(chemical.scoreEndocrine_Disruption,chemical,
 						"Endocrine disrupting properties (Article 57(f) - environment)", strDefaultScore);
 			} else if (toxField.equals("Respiratory sensitising properties (Article 57(f) - human health)")) {
 				// TODO
 			} else if (toxField
 					.equals("Specific target organ toxicity after repeated exposure (Article 57(f) - human health)")) {
-				createScoreRecord(chemical.scoreSystemic_Toxicity_Repeat_Exposure,
+				createScoreRecord(chemical.scoreSystemic_Toxicity_Repeat_Exposure,chemical,
 						"Specific target organ toxicity after repeated exposure (Article 57(f) - human health)",
 						strDefaultScore);
 			} else if (toxField.equals("vPvB (Article 57 e)")) {
-				createScoreRecord(chemical.scorePersistence, "vPvB (Article 57 e)", ScoreRecord.scoreVH);
-				createScoreRecord(chemical.scoreBioaccumulation, "vPvB (Article 57 e)", ScoreRecord.scoreVH);
+				createScoreRecord(chemical.scorePersistence,chemical, "vPvB (Article 57 e)", ScoreRecord.scoreVH);
+				createScoreRecord(chemical.scoreBioaccumulation, chemical,"vPvB (Article 57 e)", ScoreRecord.scoreVH);
 			} else if (toxField.equals("PBT (Article 57 d)") && !list.contains("vPvB (Article 57 e)")) {
-				createScoreRecord(chemical.scorePersistence, "PBT (Article 57 d)", ScoreRecord.scoreH);
-				createScoreRecord(chemical.scoreBioaccumulation, "PBT (Article 57 d)", ScoreRecord.scoreH);
+				createScoreRecord(chemical.scorePersistence, chemical,"PBT (Article 57 d)", ScoreRecord.scoreH);
+				createScoreRecord(chemical.scoreBioaccumulation,chemical, "PBT (Article 57 d)", ScoreRecord.scoreH);
 			} else if (toxField.equals("")) {
 				// do nothing
 			} else {

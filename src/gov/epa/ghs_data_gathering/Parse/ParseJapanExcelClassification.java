@@ -341,7 +341,7 @@ public class ParseJapanExcelClassification extends Parse {
 
 				// Create ScoreRecord
 				Score score = chemical.getScore(key);
-				ScoreRecord sr = new ScoreRecord();
+				ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 				sr.score = getScoreFromTranslatedData(maxRating);
 				
 				String filename=jo.get("file_path").getAsString();

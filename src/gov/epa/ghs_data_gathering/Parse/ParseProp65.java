@@ -185,8 +185,7 @@ public class ParseProp65 extends Parse {
 
 	private void createScoreRecord(Prop65Records ir, Chemical chemical) {
 		// Create carcinogenicity score record:
-		ScoreRecord sr = new ScoreRecord();
-		sr.source = ScoreRecord.sourceProp65;
+		ScoreRecord sr = null;
 
 		Score score = null;
 
@@ -195,25 +194,31 @@ public class ParseProp65 extends Parse {
 		// }
 
 		if (ir.Type_of_Toxicity.indexOf("cancer") > -1) {
-			score = chemical.scoreCarcinogenicity;
+			score = chemical.scoreCarcinogenicity;			
+			sr = new ScoreRecord(score.hazard_name,chemical.name,chemical.CAS);
 			sr.category = "Carcinogen";
 			sr.score = ScoreRecord.scoreVH;
 		} else if (ir.Type_of_Toxicity.indexOf("developmental") > -1) {
 			score = chemical.scoreDevelopmental;
+			sr = new ScoreRecord(score.hazard_name,chemical.name,chemical.CAS);
 			sr.category = ir.Type_of_Toxicity;
 			sr.score = ScoreRecord.scoreH;
 			// System.out.println(sr.category);
 
 		} else if (ir.Type_of_Toxicity.indexOf("male") > -1 || ir.Type_of_Toxicity.indexOf("female") > -1) {
 			score = chemical.scoreReproductive;
+			sr = new ScoreRecord(score.hazard_name,chemical.name,chemical.CAS);
 			// System.out.println("*"+chemical.CAS+"\t"+ir.Type_of_Toxicity+"\t"+ir.Listing_Mechanism);
-
 			sr.category = ir.Type_of_Toxicity.trim() + " reproductive toxicity";
 			sr.score = ScoreRecord.scoreH;
 			// System.out.println(sr.category);
 		} else {
 			System.out.println("*" + chemical.CAS + "\t" + ir.Type_of_Toxicity + "\t" + ir.Listing_Mechanism);
 		}
+				
+		
+		sr.source = ScoreRecord.sourceProp65;
+
 
 		// if (sr.category.equals("Carcinogen")) {
 		// sr.score=ScoreRecord.scoreVH;

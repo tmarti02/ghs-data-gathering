@@ -737,7 +737,7 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 					} else {
 						// System.out.println(chemical.CAS+"\t"+toxCode+"\t"+dictCode.get(toxCode));
 						 
-						this.createScoreRecord(score, toxCode, tr.route, tr.hazardClassification, tr.classificationData, strScore);
+						this.createScoreRecord(score, chemical,toxCode, tr.route, tr.hazardClassification, tr.classificationData, strScore);
 					}
 
 				} else {
@@ -808,9 +808,9 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 
 	
 
-	private void createScoreRecord(Score score, String toxCode, String toxRoute, String toxClassification,
+	private void createScoreRecord(Score score, Chemical chemical,String toxCode, String toxRoute, String toxClassification,
 			String toxJustification, String strScore) {
-		ScoreRecord sr = new ScoreRecord();
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 		sr.source = ScoreRecord.sourceNewZealand;
 		sr.category = "Category " + toxCode;

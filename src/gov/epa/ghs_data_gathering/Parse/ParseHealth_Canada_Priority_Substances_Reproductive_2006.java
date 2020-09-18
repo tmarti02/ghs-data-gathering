@@ -139,7 +139,7 @@ public class ParseHealth_Canada_Priority_Substances_Reproductive_2006 extends Pa
 		Score score = chemical.scoreReproductive;
 
 		// Create reproductive score record:
-		ScoreRecord sr = new ScoreRecord();
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 
 		sr.source = ScoreRecord.sourceReproductiveCanada;

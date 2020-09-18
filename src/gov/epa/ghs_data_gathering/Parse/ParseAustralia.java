@@ -339,9 +339,11 @@ public class ParseAustralia extends Parse {
                 
 //                System.out.println(theString);
                 
+
+                
                 
                 Document doc = Jsoup.parse(zipFile.getInputStream(zipEntry),"utf-8","http://hcis.safeworkaustralia.gov.au/HazardousChemical/Details?chemicalID=");
-
+                
 				AustraliaRecord2 ar = createAustraliaRecord(doc);
 				
 				
@@ -435,6 +437,11 @@ public class ParseAustralia extends Parse {
 				for (String hazardCategory : hazardCategoryList) {
 					hazardCategory = hazardCategory.replaceAll("<td>", "").replaceAll("</td>", "");
 					hazardCategory = hazardCategory.trim();
+					hazardCategory=hazardCategory.replace("–","-");
+					
+//					System.out.println(hazardCategory);
+					
+					
 					if (!hazardCategory.equals(""))
 						ar.HazardCategories.add(hazardCategory);
 				}
@@ -1088,17 +1095,17 @@ public class ParseAustralia extends Parse {
 		String Note = "";
 		if (ar.Note.equals("A")) {
 			Note = "The name of the substance should appear on the label in the form of one of the designations given in this spreadsheet. "
-					+ "<br><br>Use is sometimes made of a general description such as ‘... compounds’ or ‘... salts’. In this case, the supplier is should state the correct name on the label.";
+					+ "<br><br>Use is sometimes made of a general description such as â... compoundsâ or â... saltsâ. In this case, the supplier is should state the correct name on the label.";
 		} else if (ar.Note.equals("B")) {
 			Note = "Some substances (acids, bases, etc.) are placed on the market in aqueous solutions at various concentrations and, therefore, these solutions require different classification and labelling since the hazards vary at different concentrations. "
-					+ "<br><br>Entries with Note B have a general designation of the following type: ‘nitric acid … %’. "
+					+ "<br><br>Entries with Note B have a general designation of the following type: ânitric acid â¦ %â. "
 					+ "<br><br>In this case the supplier should state the percentage concentration of the solution on the label. Unless otherwise stated, it is assumed that the percentage concentration is calculated on a weight/weight basis.";
 		} else if (ar.Note.equals("C")) {
 			Note = "\"Some organic substances may be marketed either in a specific isomeric form or as a mixture of several isomers."
 					+ "<br><br>In this case the supplier should state on the label whether the substance is a specific isomer or a mixture of isomers.";
 		} else if (ar.Note.equals("D")) {
 			Note = "Certain substances which are susceptible to spontaneous polymerisation or decomposition are generally placed on the market in a stabilised form. It is in this form that they are listed in this spreadsheet."
-					+ "<br><br>However, such substances are sometimes placed on the market in a non-stabilised form. In this case, the supplier should state on the label the name of the substance followed by the words ‘non-stabilised’.";
+					+ "<br><br>However, such substances are sometimes placed on the market in a non-stabilised form. In this case, the supplier should state on the label the name of the substance followed by the words ânon-stabilisedâ.";
 		} else if (ar.Note.equals("F")) {
 			Note = "This substance may contain a stabiliser. If the stabiliser changes the hazardous properties of the substance, as indicated by the classification in this spreadsheet, classification and labelling should be provided in accordance with the rules for classification and labelling of hazardous mixtures, as set out in the GHS 3rd revised edition.";
 		} else if (ar.Note.equals("G")) {
@@ -1111,7 +1118,7 @@ public class ParseAustralia extends Parse {
 		} else if (ar.Note.equals("K")) {
 			Note = "The classification as a carcinogen or mutagen need not apply if it can be shown that the substance contains less than 0.1 % w/w 1,3-butadiene (CAS No 106-99-0). This note applies only to certain complex oil-derived substances in this spreadsheet.";
 		} else if (ar.Note.equals("L")) {
-			Note = "The classification as a carcinogen need not apply if it can be shown that the substance contains less than 3 % DMSO extract as measured by IP 346 ‘Determination of polycyclic aromatics in unused lubricating base oils and asphaltene free petroleum fractions — Dimethyl sulphoxide extraction refractive index method’, Institute of Petroleum, London. This note applies only to certain complex oil-derived substances in this spreadsheet.";
+			Note = "The classification as a carcinogen need not apply if it can be shown that the substance contains less than 3 % DMSO extract as measured by IP 346 âDetermination of polycyclic aromatics in unused lubricating base oils and asphaltene free petroleum fractions â Dimethyl sulphoxide extraction refractive index methodâ, Institute of Petroleum, London. This note applies only to certain complex oil-derived substances in this spreadsheet.";
 		} else if (ar.Note.equals("M")) {
 			Note = "The classification as a carcinogen need not apply if it can be shown that the substance contains less than 0.005 % w/w benzo[a]-pyrene (CAS No 50-32-8). This note applies only to certain complex coal-derived substances in this spreadsheet.";
 		} else if (ar.Note.equals("N")) {
@@ -1120,19 +1127,19 @@ public class ParseAustralia extends Parse {
 			Note = "The classification as a carcinogen or mutagen need not apply if it can be shown that the substance contains less than 0.1 % w/w benzene (CAS No 71-43-2).";
 		} else if (ar.Note.equals("Q")) {
 			Note = "The classification as a carcinogen need not apply if it can be shown that the substance fulfils one of the following conditions:"
-					+ "<br><br>- a short term biopersistence test by inhalation has shown that the fibres longer than 20 μm have a weighted half-life less than 10 days; or"
-					+ "<br><br>- a short term biopersistence test by intratracheal instillation has shown that the fibres longer than 20 μm have a weighted half-life less than 40 days; or"
+					+ "<br><br>- a short term biopersistence test by inhalation has shown that the fibres longer than 20 Î¼m have a weighted half-life less than 10 days; or"
+					+ "<br><br>- a short term biopersistence test by intratracheal instillation has shown that the fibres longer than 20 Î¼m have a weighted half-life less than 40 days; or"
 					+ "<br><br>- an appropriate intra-peritoneal test has shown no evidence of excess carcinogenicity; or"
 					+ "<br><br>- absence of relevant pathogenicity or neoplastic changes in a suitable long term inhalation test.";
 
 		} else if (ar.Note.equals("R")) {
-			Note = "R	The classification as a carcinogen need not apply to fibres with a length weighted geometric mean diameter less two standard geometric errors greater than 6 μm.";
+			Note = "R	The classification as a carcinogen need not apply to fibres with a length weighted geometric mean diameter less two standard geometric errors greater than 6 Î¼m.";
 		} else if (ar.Note.equals("T")) {
 			Note = "This substance may be marketed in a form which does not have the physical hazards indicated by the classification in the entry in this spreadsheet. If the specific form of substance marketed does not exhibit these physical hazards, the substance should be given a classification which reflects this. Relevant information, including reference to the relevant test method(s) should be included in the safety data sheet.";
 		} else if (ar.Note.equals("U")) {
-			Note = "When put on the market gases should be classified as ‘Gases under pressure’, in one of the groups compressed gas, liquefied gas, refrigerated liquefied gas or dissolved gas. The group depends on the physical state in which the gas is packaged and therefore has to be assigned case by case.";
+			Note = "When put on the market gases should be classified as âGases under pressureâ, in one of the groups compressed gas, liquefied gas, refrigerated liquefied gas or dissolved gas. The group depends on the physical state in which the gas is packaged and therefore has to be assigned case by case.";
 		} else if (ar.Note.equals("7")) {
-			Note = "Alloys containing nickel are classified for skin sensitisation when the release rate of 0.5 μg Ni/cm2/week, as measured by the European Standard reference test method EN 1811, is exceeded.";
+			Note = "Alloys containing nickel are classified for skin sensitisation when the release rate of 0.5 Î¼g Ni/cm2/week, as measured by the European Standard reference test method EN 1811, is exceeded.";
 		} else if (ar.Note.equals("8")) {
 			Note = "The tables in schedule 6 of the WHS regulations replace some tables in the GHS, this may affect the cut off concentrations for this chemical.";
 		}
@@ -1225,12 +1232,10 @@ public class ParseAustralia extends Parse {
 
 	private ScoreRecord createScoreRecord(Score score, String CAS,String name,String hazardCategory, String hazardCode, String hazardStatement,
 			String toxRoute, String strScore, String strNote,String url) {
-		ScoreRecord sr = new ScoreRecord();
+
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,CAS,name);
 		score.records.add(sr);
 
-		sr.CAS=CAS;
-		sr.name=name;
-		sr.hazard_name=score.hazard_name;
 		sr.source = ScoreRecord.sourceAustralia;
 		sr.category = hazardCategory;// TODO or assign to classification?
 		sr.hazard_code = hazardCode;

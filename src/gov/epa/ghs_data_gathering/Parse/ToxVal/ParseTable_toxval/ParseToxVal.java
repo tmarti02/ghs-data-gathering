@@ -443,12 +443,11 @@ public class ParseToxVal extends Parse {
 	 * genetox_call = "inconclusive" OR "not clastogen" then score= N/A -Leora
 	 */
 
-	static ScoreRecord saveToxValInfo(RecordToxVal tr) {
+	static ScoreRecord saveToxValInfo(Score score,RecordToxVal tr) {
 		// Organism Test Type Route Reported Dose (Normalized Dose) Effect Source
 
-		ScoreRecord sr=new ScoreRecord();
-		sr.CAS=tr.casrn;
-		sr.name=tr.name;
+		ScoreRecord sr=new ScoreRecord(score.hazard_name,tr.casrn,tr.name);
+		
 		sr.route=tr.exposure_route;
 		
 		sr.url=tr.url;		

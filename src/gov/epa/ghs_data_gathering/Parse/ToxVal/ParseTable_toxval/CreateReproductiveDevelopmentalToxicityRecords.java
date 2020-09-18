@@ -50,68 +50,37 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 	 * */						
 
 
-	void createReproductiveDevelopmentalRecords(Chemical chemical, RecordToxVal r) {
+	public void createReproductiveDevelopmentalRecords(Chemical chemical, RecordToxVal r) {
 		// System.out.println("Creating records");
 		// This prints.  It works up to here.
+		
+		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(r)) return;
+
+		Score score=getScore(chemical, r);
+		ScoreRecord sr=ParseToxVal.saveToxValInfo(score,r);
+		
+		
 		if (r.toxval_type.contains("NOAEL") || r.toxval_type.contains("LOAEL")) {
 			//	System.out.println("NOAEL or LOAEL");
 			if (r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("oral")) {
-				createOralRecord(chemical, r);	
+				setOralScore(sr, chemical);	
 				//		System.out.println("creating RepDev oral record");
 			} else if(r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("dermal")) {
-				createDermalRecord(chemical, r);
+				setDermalScore(sr, chemical);
 			} else if(r.toxval_units.contentEquals("mg/L") && r.exposure_route.contentEquals("inhalation")) {
-				createInhalationRecord(chemical, r);
+				setInhalationScore(sr, chemical);
 				//				System.out.println("creating rep/dev inhalation record");
 			}
 		}
-	}
-
-
-	private void createOralRecord(Chemical chemical, RecordToxVal tr) {
-		//		System.out.println("*Creating Oral Record");
-
-
-		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(tr)) return;
-
-		//		Create an instance of a class to call a non-static method:
-		//		CreateAcuteMammalianToxicityRecords bob=new CreateAcuteMammalianToxicityRecords();
-		//		bob.[Method Name]
-
-		//		ArrayList<String> okSpecies = new ArrayList<String>();
-		//		okSpecies.add("mouse");// 27796
-		//		okSpecies.add("rat");// 13124
-		//		okSpecies.add("rabbit");// 1089
-		//		okSpecies.add("guinea pig");// 970
-		//		okSpecies.add("house mouse");
-		//		okSpecies.add("mouse / rat");
-		//		okSpecies.add("cottontail rabbit");
-		//		okSpecies.add("white-footed mouse");
-		//		okSpecies.add("norway rat");
-		//
-		//		if (!okSpecies.contains(tr.species_common))
-		//			return;
-
-		ScoreRecord sr=ParseToxVal.saveToxValInfo(tr);
-		setOralScore(sr, chemical);
-
-		addRecord(chemical, tr, sr);
-
-		//		if (tr.risk_assessment_class.contentEquals("developmental") ||
-		//			tr.risk_assessment_class.contentEquals("developmental neurotoxicity")) {
-		//			chemical.scoreDevelopmental.records.add(sr);
-		//		} else if (tr.risk_assessment_class.contentEquals("reproductive")) {
-		//			chemical.scoreReproductive.records.add(sr);
-		//		}
-		//			
-		//	}
-
-
+		
+		if (sr.score!=null)	score.records.add(sr);
 	}
 
 
 
-	void addRecord (Chemical chemical, RecordToxVal tr, ScoreRecord sr) {
+
+
+	private Score getScore (Chemical chemical, RecordToxVal tr) {
 
 		Score score=null;
 		
@@ -132,11 +101,8 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 			//	System.out.println("Adding Developmental Score");
 			score=chemical.scoreDevelopmental;
 		}
-		
-		if (score!=null) {
-			sr.hazard_name=score.hazard_name;
-			score.records.add(sr);			
-		}
+
+		return score;
 	}
 
 
@@ -200,17 +166,6 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		}
 	}
 
-	private void createDermalRecord(Chemical chemical, RecordToxVal tr) {
-		//		System.out.println("Creating Dermal Record");
-
-		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(tr)) return;
-		ScoreRecord sr =ParseToxVal.saveToxValInfo(tr);
-		setDermalScore(sr, chemical);
-
-		addRecord(chemical, tr, sr);
-
-
-	}
 
 
 	private static void setDermalScore(ScoreRecord sr, Chemical chemical) {
@@ -262,24 +217,6 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		}
 	}
 
-
-
-	private void createInhalationRecord(Chemical chemical, RecordToxVal tr){
-		// System.out.println("Creating Inhalation Record");
-
-
-		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(tr)) return;
-
-
-		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);		
-		setInhalationScore(sr, chemical);
-
-		if (sr.score==null)
-			return;
-
-		addRecord(chemical, tr, sr);
-
-	}
 
 	private static void setInhalationScore(ScoreRecord sr, Chemical chemical) {
 

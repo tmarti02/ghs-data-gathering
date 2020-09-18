@@ -217,14 +217,14 @@ public class ParseKorea extends Parse {
 								+ dictCode.get(toxCode));
 					} else {
 
-						this.createRecord(score, toxCode, route, strScore, htHazardStatement);
+						this.createRecord(score, chemical,toxCode, route, strScore, htHazardStatement);
 
 						// For korea, they dont distinguish between repro and dev tox, so also add to
 						// dev tox too:
 						if (hazardName.equals(Chemical.strReproductive)) {
 							// System.out.println(chemical.CAS+"\t"+toxCode);
 							score = chemical.getScore(Chemical.strDevelopmental);
-							this.createRecord(score, toxCode, route, strScore, htHazardStatement);
+							this.createRecord(score, chemical,toxCode, route, strScore, htHazardStatement);
 						}
 
 					}
@@ -354,9 +354,9 @@ public class ParseKorea extends Parse {
 	}
 
 	
-	private void createRecord(Score score, String toxCode, String toxRoute, String strScore,
+	private void createRecord(Score score, Chemical chemical,String toxCode, String toxRoute, String strScore,
 			Hashtable<String, String> htHazardStatement) {
-		ScoreRecord sr = new ScoreRecord();
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 
 		sr.source = ScoreRecord.sourceKorea;
@@ -456,14 +456,14 @@ public class ParseKorea extends Parse {
 								+ dictCode.get(toxCode[i]));
 					} else {
 
-						this.createRecord(score, toxCode[i], route, strScore, htHazardStatement);
+						this.createRecord(score, chemical, toxCode[i], route, strScore, htHazardStatement);
 
 						// For korea, they dont distinguish between repro and dev tox, so also add to
 						// dev tox too:
 						if (hazardName.equals(Chemical.strReproductive)) {
 							// System.out.println(chemical.CAS+"\t"+toxCode);
 							score = chemical.getScore(Chemical.strDevelopmental);
-							this.createRecord(score, toxCode[i], route, strScore, htHazardStatement);
+							this.createRecord(score, chemical,toxCode[i], route, strScore, htHazardStatement);
 						}
 
 					}

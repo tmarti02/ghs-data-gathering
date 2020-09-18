@@ -134,7 +134,7 @@ public class ParseReportOnCarcinogens extends Parse {
 		Score score = chemical.scoreCarcinogenicity;
 
 		// Create carcinogenicity score record:
-		ScoreRecord sr = new ScoreRecord();
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 
 		sr.source = ScoreRecord.sourceROC;

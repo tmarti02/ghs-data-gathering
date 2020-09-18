@@ -222,14 +222,14 @@ public class ParseUMD extends Parse {
 		chemical.name = tr.Name;
 
 //		System.out.println(chemical.CAS);
-		this.createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityOral, "Acute toxin", tr.AcuteToxin,ScoreRecord.scoreVH);
-		this.createScoreRecord(chemical.scoreGenotoxicity_Mutagenicity, "Mutagen", tr.Mutagen,ScoreRecord.scoreVH);
-		this.createScoreRecord(chemical.scoreCarcinogenicity, "Carcinogen", tr.Carcinogen,ScoreRecord.scoreVH);
+		this.createScoreRecord(chemical.scoreAcute_Mammalian_ToxicityOral, chemical,"Acute toxin", tr.AcuteToxin,ScoreRecord.scoreVH);
+		this.createScoreRecord(chemical.scoreGenotoxicity_Mutagenicity, chemical, "Mutagen",tr.Mutagen,ScoreRecord.scoreVH);
+		this.createScoreRecord(chemical.scoreCarcinogenicity, chemical,"Carcinogen", tr.Carcinogen,ScoreRecord.scoreVH);
 
 		return chemical;
 	}
 
-	private void createScoreRecord(Score score, String endpoint, String var,String strScore) {
+	private void createScoreRecord(Score score, Chemical chemical,String endpoint, String var,String strScore) {
 
 		if (var.toLowerCase().indexOf(endpoint.toLowerCase()) == -1) {
 			return;
@@ -239,7 +239,7 @@ public class ParseUMD extends Parse {
 
 		// System.out.println(endpoint+"\t"+var);
 
-		ScoreRecord sr = new ScoreRecord();
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 
 		sr.source = ScoreRecord.sourceUMD;

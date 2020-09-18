@@ -187,9 +187,8 @@ public class ParseEU_Detergent_Ingredient_Database_2014 extends Parse {
 		}
 	}
 
-	private void createScoreRecord(Score score, String hazardCategory, String hazardCode, String hazardStatement,
-			String toxRoute, String strScore, String strNote) {
-		ScoreRecord sr = new ScoreRecord();
+	private void createScoreRecord(Score score, GenotoxicityRecords gr) {
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,gr.CASRN,gr.Name);
 		score.records.add(sr);
 	}
 

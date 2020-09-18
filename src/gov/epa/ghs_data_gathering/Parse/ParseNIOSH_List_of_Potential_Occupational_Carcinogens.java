@@ -149,15 +149,15 @@ public class ParseNIOSH_List_of_Potential_Occupational_Carcinogens extends Parse
 		chemical.CAS = ir.CASRN;
 
 		Score score = chemical.scoreCarcinogenicity;
-		this.createScoreRecord(score, ir.NIOSH_List_of_Potential_Occupational_Carcinogens, "", "", "",
+		this.createScoreRecord(score, chemical, ir.NIOSH_List_of_Potential_Occupational_Carcinogens, "", "", "",
 				ScoreRecord.scoreVH, "");
 
 		return chemical;
 	}
 
-	private void createScoreRecord(Score score, String hazardCategory, String hazardCode, String hazardStatement,
+	private void createScoreRecord(Score score, Chemical chemical,String hazardCategory, String hazardCode, String hazardStatement,
 			String toxRoute, String strScore, String strNote) {
-		ScoreRecord sr = new ScoreRecord();
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 
 		sr.source = ScoreRecord.sourceNIOSH_Potential_Occupational_Carcinogens;

@@ -102,7 +102,7 @@ public class GenerateOverallDictionary {
 	}
 	
 	ScoreRecord convertLineToFlatFileRecord(String line) {
-		ScoreRecord f=new ScoreRecord();
+		ScoreRecord f=new ScoreRecord(null,null,null);
 		
 		String [] vals=line.split("\t");
 		f.hazard_name=vals[0];

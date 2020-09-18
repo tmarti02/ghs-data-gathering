@@ -497,20 +497,19 @@ public class CreateGHS_Database  {
 //	}
 	
 	private  static ScoreRecord createScoreRecord(ResultSet rs) {
-		ScoreRecord f=new ScoreRecord();
+		ScoreRecord f=new ScoreRecord(null,null,null);
 		
 		 for (int i = 0; i < f.allFieldNames.length; i++) {
 				try {
 				
 					Field myField = f.getClass().getDeclaredField(f.allFieldNames[i]);
 					
-					if (f.allFieldNames[i].equals("valueMass")) {
+					if (myField.getType().getName().contains("Double")) {
 						double val=rs.getDouble(i+1);
 //						System.out.println("*"+val);
 						
-						if (val!=0) {
-							f.valueMass=val;//no need to use reflection for one field
-						}
+						myField.set(f, val);
+						
 					} else {
 						String val=rs.getString(i+1);
 						

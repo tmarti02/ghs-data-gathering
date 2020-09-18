@@ -171,7 +171,7 @@ public class ParseIRIS extends Parse {
 
 		Score score=chemical.scoreCarcinogenicity;
 		
-		ScoreRecord sr = new ScoreRecord();
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 
 		sr.source = ScoreRecord.sourceIRIS;

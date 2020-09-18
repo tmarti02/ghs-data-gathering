@@ -308,9 +308,8 @@ public class ParseAcute_Toxicity_Data_from_EPA_HPVIS extends Parse {
 
 	
 
-	private void createScoreRecord(Score score, String hazardCategory, String hazardCode, String hazardStatement,
-			String toxRoute, String strScore, String strNote) {
-		ScoreRecord sr = new ScoreRecord();
+	private void createScoreRecord(Score score, ToxicityRecords tr) {
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,tr.CASRN,tr.Name);
 		score.records.add(sr);
 	}
 

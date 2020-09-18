@@ -206,7 +206,7 @@ public class ParseDSL extends Parse {
 
 	private void createRecord(Chemical chemical,Score score, String endpoint, String var) {
 
-		ScoreRecord sr = new ScoreRecord();
+		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
 		score.records.add(sr);
 		
 		sr.name=chemical.name;

@@ -3,6 +3,7 @@ package gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval;
 import java.util.ArrayList;
 
 import gov.epa.api.Chemical;
+import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 
 public class CreateOrganOrSystemicToxRecords {
@@ -56,8 +57,27 @@ public class CreateOrganOrSystemicToxRecords {
 			return;//not a valid record for systemic tox
 		}
 
-		ScoreRecord sr=createScoreRecord(chemical, tr);//create generic score record
-
+		
+		Score score=null;
+		
+		if(tr.study_type.toLowerCase().contains("neuro") ||	isNeuroCriticalEffect(tr)) {
+			if (tr.study_type.contentEquals("single limit dose") ||
+					tr.study_duration_class.contentEquals("single dose")) {	
+				score=chemical.scoreNeurotoxicity_Single_Exposure;
+			} else; {
+				score=chemical.scoreNeurotoxicity_Repeat_Exposure;
+			}
+		} else {
+			if (tr.study_type.contentEquals("single limit dose") ||
+					tr.study_duration_class.contentEquals("single dose")) {	
+				score=chemical.scoreSystemic_Toxicity_Single_Exposure;
+			} else; {
+				score=chemical.scoreSystemic_Toxicity_Repeat_Exposure;
+			}
+		}
+		
+				
+		ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr);		
 		sr.duration=study_dur_in_days;
 		sr.durationUnits="days";
 
@@ -130,16 +150,11 @@ public class CreateOrganOrSystemicToxRecords {
 		}
 
 
-		if (sr.score==null) return;
+		if (sr.score!=null) score.records.add(sr);//if we were able to set the score, add record to list
 
 		//		System.out.println(sr.scoreToInt());
 
 
-		if(tr.study_type.toLowerCase().contains("neuro") ||
-				isNeuroCriticalEffect(tr)) {
-			handleNeuro(chemical, tr, sr);
-		} else
-			handleOther(chemical, tr, sr);
 	}
 
 	private static void handleNeuro(Chemical chemical, RecordToxVal tr, ScoreRecord sr) {
@@ -208,10 +223,6 @@ public class CreateOrganOrSystemicToxRecords {
 
 
 
-	private static ScoreRecord createScoreRecord(Chemical chemical, RecordToxVal tr) {
-		ScoreRecord sr = ParseToxVal.saveToxValInfo(tr);
-		return sr;
-	}
 
 
 
