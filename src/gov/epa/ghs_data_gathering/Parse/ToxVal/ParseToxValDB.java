@@ -42,9 +42,9 @@ public class ParseToxValDB {
 	//	public static final String DB_Path_AA_Dashboard_Records = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal\\databases\\toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 
 	//use relative path so dont have to keep changing this- i.e. it is relative to java installation:  "D:\Users\TMARTI02\OneDrive - Environmental Protection Agency (EPA)\0 java\ghs-data-gathering\AA Dashboard\databases\toxval_v8.db"
-//	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
-	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
-
+	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
+//	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
+//  This didn't work even when I moved the database, so I switched it back to the  other folder.
 	public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
 

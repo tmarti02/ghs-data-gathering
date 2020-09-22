@@ -84,7 +84,8 @@ public class CreateOrganOrSystemicToxRecords {
 		//		System.out.println("duration="+sr.duration+" days");
 
 
-		if (tr.exposure_route.contentEquals("oral") && tr.toxval_units.contentEquals("mg/kg-day")) {
+		if ((tr.exposure_route.contentEquals("oral") || tr.toxval_subtype.toLowerCase().contains("oral"))
+				&& tr.toxval_units.contentEquals("mg/kg-day")) {
 			/* if (study_dur_in_days <= 91.0 && study_dur_in_days >= 89.0) { 
 			   Broadening the range to be more inclusive (90 + or - 5).
 			   Also switching the order for more logical reading. */			
@@ -100,7 +101,8 @@ public class CreateOrganOrSystemicToxRecords {
 			}
 
 
-		} else if (tr.exposure_route.contentEquals("dermal")  && tr.toxval_units.contentEquals("mg/kg-day")) {
+		} else if ((tr.exposure_route.contentEquals("dermal")  || tr.toxval_subtype.toLowerCase().contains("dermal"))
+				&& tr.toxval_units.contentEquals("mg/kg-day")) {
 			/* if (study_dur_in_days <= 91.0 && study_dur_in_days >= 89.0) {
 				Broadening the range to be more inclusive (90 + or - 5).
 				Also switching the order for more logical reading. */
@@ -115,7 +117,19 @@ public class CreateOrganOrSystemicToxRecords {
 				setTwentyEightDermalScore(sr,chemical);
 			}
 
-		} else if (tr.exposure_route.contentEquals("inhalation")  && tr.toxval_units.contentEquals("mg/L-day")) {
+		} else if ((tr.exposure_route.contentEquals("inhalation") || tr.toxval_subtype.toLowerCase().contains("inhalation"))
+			&& (tr.toxval_units.contentEquals("mg/L") || tr.toxval_units.contentEquals("mg/m3"))) {
+		
+			if (tr.toxval_units.contentEquals("mg/m3")){
+
+					// change value and units
+					// 1 mg/L = 1000 mg/m3
+
+					double toxval_numeric2 = Double.parseDouble(tr.toxval_numeric)/1000.0;
+					tr.toxval_numeric = toxval_numeric2 + "";
+					tr.toxval_units = "mg/L (converted from mg/m3)";
+				}
+
 			/* if (study_dur_in_days <= 91.0 && study_dur_in_days >= 89.0) {
 			Broadening the range to be more inclusive (90 + or - 5).
 			Also switching the order for more logical reading. */
@@ -131,7 +145,9 @@ public class CreateOrganOrSystemicToxRecords {
 			}
 
 		}
-
+		
+		
+	
 
 		if (tr.study_type.contentEquals("single limit dose") ||
 				tr.study_duration_class.contentEquals("single dose")) {
@@ -217,12 +233,6 @@ public class CreateOrganOrSystemicToxRecords {
 			return false;
 		}
 	}
-
-
-
-
-
-
 
 
 

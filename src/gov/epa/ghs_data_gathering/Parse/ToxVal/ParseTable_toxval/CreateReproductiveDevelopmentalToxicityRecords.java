@@ -62,12 +62,24 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		
 		if (r.toxval_type.contains("NOAEL") || r.toxval_type.contains("LOAEL")) {
 			//	System.out.println("NOAEL or LOAEL");
-			if (r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("oral")) {
+			if (r.toxval_units.contentEquals("mg/kg-day") &&
+					(r.exposure_route.contentEquals("oral") || r.toxval_subtype.toLowerCase().contains("oral"))) {
 				setOralScore(sr, chemical);	
 				//		System.out.println("creating RepDev oral record");
-			} else if(r.toxval_units.contentEquals("mg/kg-day") && r.exposure_route.contentEquals("dermal")) {
+			} else if(r.toxval_units.contentEquals("mg/kg-day") &&
+					(r.exposure_route.contentEquals("dermal") || r.toxval_subtype.toLowerCase().contains("dermal"))) {
 				setDermalScore(sr, chemical);
-			} else if(r.toxval_units.contentEquals("mg/L") && r.exposure_route.contentEquals("inhalation")) {
+			} else if((r.toxval_units.contentEquals("mg/L") || r.toxval_units.contentEquals("mg/m3")) &&
+					(r.exposure_route.contentEquals("inhalation") || r.toxval_subtype.toLowerCase().contains("inhalation"))) {
+				if (r.toxval_units.contentEquals("mg/m3")){
+
+					// change value and units
+					// 1 mg/L = 1000 mg/m3
+
+					double toxval_numeric2 = Double.parseDouble(r.toxval_numeric)/1000.0;
+					r.toxval_numeric = toxval_numeric2 + "";
+					r.toxval_units = "mg/L (converted from mg/m3)";
+				}
 				setInhalationScore(sr, chemical);
 				//				System.out.println("creating rep/dev inhalation record");
 			}
@@ -219,6 +231,7 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 
 
 	private static void setInhalationScore(ScoreRecord sr, Chemical chemical) {
+		
 
 		sr.rationale = "route: " + sr.route + ", ";
 		double dose = sr.valueMass;
