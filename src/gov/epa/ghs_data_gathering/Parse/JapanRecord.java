@@ -258,7 +258,7 @@ public class JapanRecord {
 //					file.delete();//could delete to avoid having lots of files on drive
 				}
 			}
-			//delete web pages folder once you are safe ok to do so.
+			//delete web pages folder once you are safe to do so.
 			
 			zipOS.close();
             fos.close();
@@ -548,7 +548,7 @@ public class JapanRecord {
 		String format=getFormat(jr,br,zipEntry.getName());
 		
 		if (format.contentEquals("maintenance")) {
-			System.out.println(zipEntry.getName());
+			System.out.println(zipEntry.getName()+"\tmaintenance");
 			return null;
 		}
 		

@@ -55,7 +55,7 @@ public class Chemicals extends ArrayList<Chemical> {
 				Chemicals chemicals=new Chemicals();
 
 				//Create array of chemicals that have the cas number (including ones with underscore):
-				for (int i=1;i<=3;i++) {
+				for (int i=1;i<=5;i++) {
 					String casSeek="";
 
 					if (i==1 ) casSeek=CAS;

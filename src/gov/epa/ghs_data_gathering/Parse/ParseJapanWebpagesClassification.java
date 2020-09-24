@@ -132,8 +132,11 @@ public class ParseJapanWebpagesClassification extends Parse {
 
 				}
 			}
-			
-			
+
+			String baseURL="https://www.nite.go.jp/chem/english/ghs/";
+			String filename=new File(jr.fileName).getName();
+			String url=baseURL+filename;
+
 
 
 			if (dictHazardNameToScoreName.get(hr.hazardClass)==null) {
@@ -257,10 +260,16 @@ public class ParseJapanWebpagesClassification extends Parse {
 					
 					String rationale = "Score of " + strScore + " was assigned based on a classification of \"" + classification+"\"";
 					String note=hr.rationale;
-					String note2=jr.fileName;
+//					String note2=jr.fileName;
 
-					ScoreRecord sr=new ScoreRecord(sourceName,strScore,classification,hazard_code,hazard_statement,
-							rationale,toxRoute,note,note2);
+//					ScoreRecord sr=new ScoreRecord(chemical.CAS,chemical.name,sourceName,strScore,classification,hazard_code,hazard_statement,
+//							rationale,toxRoute,note,note2,null);
+										
+//					public ScoreRecord(String CAS,String name,String hazard_name,String source,String score,String category,String hazard_code,String hazard_statement,
+//							String rationale,String route,String note,String note2,String url) {
+					
+					ScoreRecord sr=new ScoreRecord(chemical.CAS, chemical.name, scoreName, ScoreRecord.sourceJapan, strScore, 
+							classification, hazard_code, hazard_statement, rationale, toxRoute, note, null, url);
 					score.records.add(sr);
 					//				System.out.println(hr.hazardClass+"\t"+classification);
 

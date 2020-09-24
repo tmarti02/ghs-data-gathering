@@ -491,13 +491,15 @@ public class ParseTEDX extends Parse {
 
 		sr.rationale = "Chemical appears in TEDX (The Endocrine Disruptors Exchange) List.";
 
+		sr.long_ref="";
+		
 		if (tr.endocrineDisruptorReferences != null) {
 
-			sr.rationale += "<br><br>Endocrine disruptor references:<br><ul>";
+			sr.long_ref += "<ul>";
 			for (int k = 0; k < tr.endocrineDisruptorReferences.size(); k++) {
-				sr.rationale += "<li>" + tr.endocrineDisruptorReferences.get(k) + "</li>";
+				sr.long_ref += "<li>" + tr.endocrineDisruptorReferences.get(k) + "</li>";
 			}
-			sr.rationale += "</ul>";
+			sr.long_ref += "</ul>";
 		}
 		score.records.add(sr);
 		return chemical;

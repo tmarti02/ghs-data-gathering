@@ -8,7 +8,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 //import java.util.Vector;
 
-import org.openscience.cdk.AtomContainer;
+import org.openscience.cdk.interfaces.IAtomContainer;
 
 import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
@@ -36,7 +36,7 @@ public class Chemical {
 	public double molecularWeight;//molecular weight- need to convert from molar to mass units
 	public String molecularFormula;
 	
-	public transient AtomContainer atomContainer;
+	public transient IAtomContainer atomContainer;
 	
 	public String molFileV3000;//store MDL MOL FILE V3000 here from Chemistry Dashboard?
 	public String SMILES;//molecular structure as SMILES string
@@ -977,26 +977,14 @@ public class Chemical {
 		
 	}
 
-	
-	public static Chemical stringArrayToChemical(String header,ArrayList<String>lines) {
-		
-		Chemical chemical=new Chemical();
-		
-		
-		
-				
 
-		
-		
-		return chemical;
-	}
 	
-	ArrayList<String>toStringArray() {
+	public ArrayList<String>toStringArray() {
 		return toStringArray("|");
 	}
 	
 	
-	ArrayList<String>toStringArray(String d) {
+	public ArrayList<String>toStringArray(String d) {
 		ArrayList<String>a=new ArrayList<>();
 		
 //		System.out.println(FlatFileRecord.getHeader("|"));
@@ -1012,6 +1000,24 @@ public class Chemical {
 		return a;
 		
 	}
+	
+	
+	public ArrayList<String>toStringArray(String del,String [] fieldNames) {
+		ArrayList<String>a=new ArrayList<>();
+		
+//		System.out.println(FlatFileRecord.getHeader("|"));
+		
+		for (Score score: scores) {
+			for (ScoreRecord sr: score.records) {				
+//				System.out.println(f.toString("|"));
+				a.add(sr.toString(del,fieldNames));
+			}
+			
+		}
+		return a;
+
+	}
+	
 	
 	
 	/**
@@ -1053,8 +1059,8 @@ public class Chemical {
 //			builder.setPrettyPrinting();
 //			Gson gson = builder.create();
 //
-//			System.out.println(gson.toJson(chemical1));
-//			System.out.println(gson.toJson(chemical2));
+//			System.out.println("chemical1="+gson.toJson(chemical1));
+//			System.out.println("chemical2="+gson.toJson(chemical2));
 //		}
 		
 		
@@ -1067,6 +1073,8 @@ public class Chemical {
 				
 				ScoreRecord scoreRecord1=score1.records.get(j);
 				ScoreRecord scoreRecord2=null;
+				
+//				System.out.println(i+"\t"+j);
 				
 				if (scoreRecord1.route==null) {
 					
@@ -1081,6 +1089,7 @@ public class Chemical {
 					for (int k=0;k<score2.records.size();k++) {
 						if (score2.records.get(k).route.equals(scoreRecord1.route)) {
 							scoreRecord2=score2.records.get(k);
+							break;
 						}
 					}
 					
@@ -1096,13 +1105,20 @@ public class Chemical {
 
 //					System.out.println(score1.hazard_name);
 					
-//					if (scoreRecord1.category==null || !scoreRecord1.category.equals(scoreRecord2.category) ) {
+					if (scoreRecord1.category==null || !scoreRecord1.category.equals(scoreRecord2.category) ) {
 //						if (chemical1.CAS.equals("107-02-8"))
 //							System.out.println(chemical1.CAS+"\t"+score1.hazard_name+"\t"+scoreRecord1.category+"\t"+scoreRecord2.category);
-//					}
-					score1.records.remove(j);
-					scoreRecord2.note2=scoreRecord1.note2+"; Revised by "+scoreRecord2.note2;
-					score1.records.add(scoreRecord2);
+					}
+					
+					scoreRecord2.url=scoreRecord1.url+"; Revised by "+scoreRecord2.url;
+					
+					score1.records.set(j,scoreRecord2);
+					
+//					score1.records.add(scoreRecord2);
+
+//					System.out.println(chemical1.CAS+"\t"+scoreRecord1.route+"\t"+scoreRecord2.route+"\t"+
+//							score1.hazard_name+"\t"+scoreRecord1.category+"\t"+scoreRecord2.category+"\t"+scoreRecord2.url);
+
 					
 //					System.out.println(scoreRecord1.category);
 					

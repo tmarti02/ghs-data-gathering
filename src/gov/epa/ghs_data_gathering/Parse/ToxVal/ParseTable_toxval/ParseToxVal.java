@@ -538,7 +538,7 @@ public class ParseToxVal extends Parse {
 		
 	}
 
-	static String formatDose(double dose) {
+	public static String formatDose(double dose) {
 		DecimalFormat df = new DecimalFormat("0.00");
 		DecimalFormat df2 = new DecimalFormat("0");
 		DecimalFormat dfSci = new DecimalFormat("0.00E00");

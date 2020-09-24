@@ -182,7 +182,7 @@ public class ParseIARC extends Parse {
 		}
 
 		sr.rationale = "Score of " + sr.score + " was assigned based on a carcinogenicity category of " + sr.category;
-		sr.note = "Volume " + ir.Volume + ", " + ir.Year + ".";
+		sr.long_ref = "IARC Volume " + ir.Volume + ", " + ir.Year + ".";
 
 		if (!ir.Additional_Information.equals(""))
 			sr.note += " " + ir.Additional_Information + ".";
@@ -190,7 +190,7 @@ public class ParseIARC extends Parse {
 		
 		
 		if (chemical.CAS.indexOf("<br/>")>-1) {
-			if (!sr.note.equals("") ) sr.note+="<br><br>\n\n";
+			if (sr.note!=null && !sr.note.equals("") ) sr.note+="<br><br>\n\n";
 			sr.note+="Record is for multiple CAS numbers: "+chemical.CAS.replace("<br/>", "; ").replace("\n","").replace("*","");
 			
 //			System.out.println(sr.note);

@@ -557,10 +557,10 @@ public class CreateGHS_Database  {
 //		Parse.recreateFilesAllSources();
 		
 		String folder=AADashboard.dataFolder+"\\dictionary\\text output";
-		String filename="flat file 2019-05-29.txt";
+		String filename="flat file 2020-09-21.txt";
 		String textFilePath=folder+"\\"+filename;
 
-//		FlatFileRecord.createFlatFileFromAllSources(textFilePath);
+//		ScoreRecord.createFlatFileFromAllSources(textFilePath);
 
 		//Create flat file for all data:
 		ScoreRecord.createFlatFileFromAllSourcesSortedByCAS(textFilePath);
@@ -571,7 +571,7 @@ public class CreateGHS_Database  {
 		String del="|";		
 		//Create Sqlite database from flat file:
 		CreateGHS_Database.createDatabase(textFilePath,del,"HazardRecords",ScoreRecord.allFieldNames);
-//		CreateGHS_Database.createDatabaseIntegerKey(textFilePath,del,"HazardRecords",FlatFileRecord.fieldNames,"databases/db_integer_key.db");
+		
 		
 		String  []fields= {"CAS","Records"};
 //		CreateGHS_Database.createDatabaseWithPrimaryKey(textFilePath,"databases/AA dashboard_w_primary_key.db", del, "HazardRecords", fields);

@@ -5,17 +5,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -499,6 +498,8 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 	@Override
 	protected void createRecords() {
 
+		if (true) return;
+		
 		Vector<NewZealandRecord> records=null;
 		
 		if (useZipFile) {
@@ -582,8 +583,7 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 
 		// ***************************************************************************************************************
 		//Respiratory sensitizers
-		// dictCode.put("6.5A", ScoreRecord.scoreVH);//Category 1- â€‹Substances that are
-		// respiratory sensitisers
+		// dictCode.put("6.5A", ScoreRecord.scoreVH);//Category 1- â€‹Substances that are respiratory sensitisers
 		dictCode.put("6.5B", ScoreRecord.scoreM);// Category 1- Substances that are contact sensitisers
 		dictCat.put("6.5B", "Category 1");
 
@@ -733,7 +733,8 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 
 					String strScore = dictCode.get(toxCode);
 					if (strScore == null) {
-						System.out.println(nzr.filename+"\t"+chemical.CAS + "\t" + toxCode + "\tmissing toxCode in dictCode");
+						if (!toxCode.contentEquals("6.5A"))//respiratory 
+							System.out.println(nzr.filename+"\t"+chemical.CAS + "\t" + toxCode + "\tmissing toxCode in dictCode");
 					} else {
 						// System.out.println(chemical.CAS+"\t"+toxCode+"\t"+dictCode.get(toxCode));
 						 
@@ -828,8 +829,139 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 //			toxJustification = toxJustification.substring(4, toxJustification.length()).trim();
 //		}
 		
+		
+		//Example:			
+//		SPECIES: Rat
+//		<br>ENDPOINT: LD50
+//		<br>VALUE: 4 gm/kg (= 4000 mg/kg)
+//		<br>REFERENCE SOURCE: Cyprus Copper Company. Vol. 18JUN1991, [Chem ID Plus].
+
+		
 		if (toxJustification!=null) {
 			sr.note = toxJustification;
+						
+			String [] lines=toxJustification.split("\n");
+				
+			for (int i=0;i<lines.length;i++) {
+				String line=lines[i].replace("<br>", "").trim();				
+				if (line.length()==0) continue;
+								
+				
+				if (line.contains(":")) {
+					
+					String value=line.substring(line.indexOf(":")+1,line.length()).trim();
+					
+					if (!value.isEmpty()) {
+						if (line.toLowerCase().indexOf("species")==0) {
+							sr.test_organism=value;					
+//							System.out.println(sr.test_organism);
+						
+						} else if (line.toLowerCase().indexOf("value")==0) {
+
+
+							if (value.contains("&gt;")) {
+								sr.valueMassOperator=">";
+								value=value.replace("&gt;", "");
+							}
+							
+							if (value.contains("&lt;")) {
+								sr.valueMassOperator="<";
+								value=value.replace("&lt;", "");
+							}
+
+
+							int start = getAlphabeticCharacterLocation(value);
+
+							try {
+//								System.out.println("start="+start);
+
+								String strValue="";
+								String units="";
+								
+								if (start>-1) {
+									strValue=value.substring(0,start).trim();
+									units=value.substring(start,value.length()).trim();
+									
+								} else {
+									strValue=value;									
+								}
+
+								if (units.contains(",")) {
+									units=units.substring(0,units.indexOf(",")).trim();
+								}
+
+								if (units.contains("(")) {
+									units=units.substring(0,units.indexOf("(")).trim();
+								}
+
+								//TODO add code to handle parsing toxicity values that are ranges
+								//Need to add code to handle all variants- or just store valueMass as string???	Changing to string will impact lots of code							
+								
+								sr.valueMass=Double.parseDouble(strValue);
+								sr.valueMassUnits=units.replace("µ", "u");
+
+//								System.out.println("\nvalue="+value);
+//								System.out.println("valueMassOperator="+sr.valueMassOperator);
+//								System.out.println("valueMass="+sr.valueMass);
+//								System.out.println("valueMassUnits="+sr.valueMassUnits);
+
+							} catch (Exception ex2) {
+//								ex2.printStackTrace();
+								System.out.println("error parsing valueMass:"+value);
+							}
+
+												
+						
+						} else if (line.toLowerCase().indexOf("duration")==0) {
+							try {
+
+								//TODO add code to handle parsing values that are ranges
+								
+								int start = getAlphabeticCharacterLocation(value);
+
+
+								String strValue="";
+								String units="";
+									
+								if (start>-1) {
+									strValue=value.substring(0,start).trim();
+									units=value.substring(start,value.length()).trim();
+										
+								} else {
+									strValue=value;									
+								}
+
+								if (units.contains("(")) {
+									units=units.substring(0,units.indexOf("(")).trim();
+								}
+
+								
+								sr.duration=Double.parseDouble(strValue);
+								sr.durationUnits=units;
+								
+//								System.out.println("\nvalue="+value);
+//								System.out.println("duration="+sr.duration);
+//								System.out.println("durationUnits="+sr.durationUnits);
+								
+							} catch (Exception ex) {
+//								System.out.println("error parsing duration:"+value);
+							}
+							
+						} else if (line.toLowerCase().indexOf("endpoint")==0) {
+							sr.test_type=value;
+						} else if (line.toLowerCase().indexOf("reference")==0) {
+							sr.long_ref=value;
+						} else {
+//							System.out.println(i+"\t"+line);
+						}
+						
+					}
+				} 
+								
+				
+			}
+			
+			
 			sr.note=sr.note.replace("mg/m|3|"," mg/m3");
 			        
 			if (sr.note.contains("COEFF")) {
@@ -842,6 +974,22 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 		
 		sr.route = toxRoute;
 		sr.score = strScore;
+	}
+
+
+
+	private int getAlphabeticCharacterLocation(String value) {
+		int start=-1;
+
+		for (int ii=0;ii<value.length();ii++) {
+			char c=value.charAt(ii);
+
+			if( (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c=='µ') {
+				start=ii;
+				break;
+			}
+		}
+		return start;
 	}
 
 	

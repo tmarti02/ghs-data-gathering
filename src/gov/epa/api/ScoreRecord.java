@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -14,6 +16,7 @@ import java.util.Vector;
 
 import com.google.gson.Gson;
 
+import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 //Revised version of this class removed need to have FlatFileRecord class
@@ -60,7 +63,9 @@ public class ScoreRecord {
 	public Double valueMass;// quantitative value in mass units such as mg/L
 	// Should this be concentration instead of mass?
 	public String valueMassUnits;
-
+	
+	public Boolean valueActive;
+	
 	public String effect;
 
 	
@@ -77,7 +82,7 @@ public class ScoreRecord {
 	// public static String [] actualFieldNames=
 	// {"source","score","route","classification","hazard_statement","rationale","note"};
 
-	public static String[] allFieldNames= {"hazard_name","CAS","name","source","sourceOriginal", 
+	public static String[] allFieldNames= {"CAS","name","hazard_name","source","sourceOriginal", 
 			"score", "authority","route", "category", "hazard_code",
 			"hazard_statement", "rationale", "note","note2","toxval_id",
 			"test_organism","test_type","valueMassOperator","valueMass","valueMassUnits","effect",
@@ -94,7 +99,7 @@ public class ScoreRecord {
 			"Hazard Statement",  "Test duration","Test organism","Toxicity Type","Toxicity Value","Reference","Note" };
 
 	public static String[] actualFieldNames = { "name","source", "sourceOriginal","score", "rationale","route", "category", "hazard_code",
-			"hazard_statement", "duration","test_organism", "toxval_type","valueMass","long_ref","note" };
+			"hazard_statement", "duration","test_organism", "test_type","valueMass","long_ref","note" };
 	
 
 
@@ -336,9 +341,12 @@ public class ScoreRecord {
 //public static final String listTypeDenmark = typeScreeningOth; // don't see it on the GreenScreen list
 
 	
-	public ScoreRecord(String source,String score,String category,String hazard_code,String hazard_statement,
-			String rationale,String route,String note,String note2) {
+	public ScoreRecord(String CAS,String name,String hazard_name,String source,String score,String category,String hazard_code,String hazard_statement,
+			String rationale,String route,String note,String note2,String url) {
 		
+		this.CAS=CAS;
+		this.name=name;
+		this.hazard_name=hazard_name;		
 		this.source=source;
 		this.score=score;
 		this.category=category;
@@ -348,6 +356,7 @@ public class ScoreRecord {
 		this.route=route;
 		this.note=note;
 		this.note2=note2;
+		this.url=url;
 		
 	}
 	
@@ -381,7 +390,7 @@ public class ScoreRecord {
 				
 				if (myField.getType().getName().contains("Double")) {
 					if (!list.get(i).isEmpty())
-						myField.setDouble(r, Double.parseDouble(list.get(i)));					
+						myField.set(r, Double.parseDouble(list.get(i)));					
 				} else {
 					myField.set(r, list.get(i));	
 				}
@@ -428,6 +437,10 @@ public class ScoreRecord {
 				val=val.replace("\r\n","<br>");
 				val=val.replace("\n","<br>");
 				
+//				while(val.contains("<br><br>")) {
+//					val=val.replace("<br><br>", "<br>");
+//				}
+				
 //				if (fieldNames[i].equals("note")) {
 //					System.out.println(CAS+"\t"+source+"\t"+hazard_name+"\t"+val);
 //				}
@@ -451,6 +464,67 @@ public class ScoreRecord {
 		return Line;
 	}
 
+	
+	//convert to string by reflection:
+		public String toString(String del,String [] fieldNames) {
+			
+			String Line = "";
+			for (int i = 0; i < fieldNames.length; i++) {
+				try {
+				
+					
+					Field myField = this.getClass().getDeclaredField(fieldNames[i]);
+					
+					String val=null;
+					
+//					System.out.println(myField.getType().getName());
+					
+					if (myField.getType().getName().contains("Double")) {
+						if (myField.get(this)==null) {
+							val="";	
+						} else {
+							val=(Double)myField.get(this)+"";
+						}
+						
+					} else {
+						if (myField.get(this)==null) {
+//							val="\"\"";
+							val="";
+						} else {
+//							val="\""+(String)myField.get(this)+"\"";
+							val=(String)myField.get(this);
+						} 
+					}
+					
+					val=val.replace("\r\n","<br>");
+					val=val.replace("\n","<br>");
+					
+//					while(val.contains("<br><br>")) {
+//						val=val.replace("<br><br>", "<br>");
+//					}
+					
+//					if (fieldNames[i].equals("note")) {
+//						System.out.println(CAS+"\t"+source+"\t"+hazard_name+"\t"+val);
+//					}
+
+					if (val.contains(del)) {
+						System.out.println(this.CAS+"\t"+fieldNames[i]+"\t"+val+"\thas delimiter");
+					}
+					
+					Line += val;
+					if (i < fieldNames.length - 1) {
+						Line += del;
+					}
+				
+				
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+			}
+
+			return Line;
+		}
 	
 //	void createFlatFileFromAllSources() {
 //	AADashboard a=new AADashboard();
@@ -960,13 +1034,17 @@ public class ScoreRecord {
 
 			try {
 				String val = list.get(i);
-				if (allFieldNames[i].equals("valueMass")) {
+				
+				Field myField = f.getClass().getDeclaredField(allFieldNames[i]);
+				
+				if (myField.getType().getName().contains("Double")) {
+														
 					if (!val.isEmpty()) {
-						f.valueMass = Double.parseDouble(val);// no need to use reflection for one field
+						myField.set(f, Double.parseDouble(val));						
 					}
 				} else {
 					if (!val.isEmpty()) {
-						Field myField = f.getClass().getDeclaredField(allFieldNames[i]);
+						
 //						System.out.println(fieldNames[i]+"\t"+val);
 						myField.set(f, val);
 					}
@@ -980,6 +1058,7 @@ public class ScoreRecord {
 
 	}
 	
+
 	
 	public static void createFlatFileFromAllSourcesSortedByCAS(String outputPath) {
 		AADashboard a=new AADashboard();
@@ -1007,34 +1086,43 @@ public class ScoreRecord {
 				ArrayList<String>lines=Utilities.readFileToArray(filePathFlatChemicalRecords);
 				
 				String header=lines.remove(0);
+				
+				LinkedList<String>hlist=Utilities.Parse(header, "|");
 
 				for (String line:lines) {
 					
+					line=line.replace("<br><br><br>","<br><br>");
+					
 //					FlatFileRecord f=FlatFileRecord.createFlatFileRecord(line);
 					
-					String CAS=line.substring(0,line.indexOf(d)).trim();
-					line=line.substring(line.indexOf(d)+1,line.length());
-					String name=line.substring(0,line.indexOf(d));
-					line=line.substring(line.indexOf(d)+1,line.length());
+					LinkedList<String>list=Utilities.Parse(line, "|");
 					
-					if (CAS.isEmpty()) {
-						if (name.isEmpty()) {
+					if (list.size()!=hlist.size()) {
+						System.out.println("mismatch in num columns:"+line);
+						continue;
+					}
+					
+					
+					ScoreRecord sr=ScoreRecord.createRecord(hlist, list);
+										
+					if (sr.CAS.isEmpty()) {
+						if (sr.name.isEmpty()) {
 							System.out.println("CAS and name =null: "+line);
 							continue;
 						}
 						
-						if (htCASName.get(name)==null) {
+						if (htCASName.get(sr.name)==null) {
 							String newCAS="NOCAS"+(htCASName.size()+1);
-							htCASName.put(name,newCAS);
-							CAS=newCAS;
+							htCASName.put(sr.name,newCAS);
+							sr.CAS=newCAS;
 						} else {
-							CAS=htCASName.get(name);
+							sr.CAS=htCASName.get(sr.name);
 						}
 						
 					}
 					
-					line=line.replace("<br><br><br>","<br><br>");
-					overallLines.add(CAS+d+name+d+line);
+					
+					overallLines.add(sr.toString("|"));
 				}
 			}
 			

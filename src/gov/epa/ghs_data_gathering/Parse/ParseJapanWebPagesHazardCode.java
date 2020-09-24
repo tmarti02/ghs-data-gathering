@@ -177,6 +177,8 @@ public class ParseJapanWebPagesHazardCode extends Parse{
 			Chemical chemical = new Chemical();
 			chemical.CAS = casNumbers[i];
 			chemical.name = jr.chemicalName;
+			
+//			if (!chemical.CAS.contentEquals("109-89-7")) continue;//9/23/20
 
 //			if (chemical.CAS.equals("")) {
 //				chemical.CAS = chemical.name;
@@ -217,6 +219,11 @@ public class ParseJapanWebPagesHazardCode extends Parse{
 
 		classification=classification.replace("(Unclassified)","Not classified");
 		
+
+		String baseURL="https://www.nite.go.jp/chem/english/ghs/";		
+		String filename=new File(jr.fileName).getName();
+		String url=baseURL+filename;
+
 		
 		for (String scoreName:dictHazardNameToScoreName.get(hr.hazardClass)) {
 			
@@ -224,17 +231,23 @@ public class ParseJapanWebPagesHazardCode extends Parse{
 			
 			String strScore=null;
 
+			String note2=null;
 
 			if (scoreName.equals(Chemical.strCarcinogenicity)) {
 				//					System.out.println(classification);
 
 				if (classification.contains("Not classified")) {
-					if (!JapanRecord.isClassifiable(chemical.CAS, hr.rationale)) {							
+					if (!JapanRecord.isClassifiable(chemical.CAS, hr.rationale)) {
+						
+//						System.out.println(hr.rationale+"\t"+url);
+						
+						
 						//Need to fix it and change it to not classifiable:							
 						strScore=ScoreRecord.scoreNA;
 						String newClassification = "Classification not possible";
 						classification=newClassification;
 						hr.rationale=hr.rationale.replace("Not classified", newClassification);
+						hr.rationale+="<br><br>Note: EPA has corrected Category \"Not classified\" to \"Classification not possible\" based on the cancer group cited by Japan";
 						//							System.out.println(jr.CAS+"\t"+hr.rationale);
 					}
 				} else {
@@ -246,16 +259,11 @@ public class ParseJapanWebPagesHazardCode extends Parse{
 				strScore=ScoreRecord.scoreNA;
 			} else if (classification.contains("Not classified") || classification.contains("(Unclassified)")) {
 				strScore=ScoreRecord.scoreL;
-			} else if ((scoreName.equals("Reproductive") || scoreName.equals("Developmental")) && classification.equals("Category 1")) {
-				strScore=ScoreRecord.scoreH;
-				Score score=chemical.getScore(scoreName);
-				String hazardStatement="";
-				String hazardCode="H360";//assign it since Japan dropped the ball
-				String route="";
-				this.createRecord(score, classification, hazardStatement, hazardCode,route, strScore, hr.rationale,jr.fileName);
-
-			} else {
-				System.out.println("*"+jr.CAS+"\t"+hr.hazardClass+"\t"+scoreName+"\t"+classification);	
+			} else if (classification.contentEquals("*")) {
+				continue;			
+			} else  {
+				strScore=ScoreRecord.scoreNA;
+//				System.out.println("here NA:"+scoreName+"\t"+url);
 			}
 
 			String toxRoute = JapanRecord.getToxRoute(hr, scoreName);
@@ -264,8 +272,8 @@ public class ParseJapanWebPagesHazardCode extends Parse{
 //			System.out.println(scoreName);
 			
 			
-			this.createRecord(score, classification, "-", "-", toxRoute, strScore, hr.rationale,jr.fileName);
-			continue;
+			this.createRecord(chemical.CAS,chemical.name,score, classification, "-", "-", toxRoute, strScore, hr.rationale,note2,url);
+			
 		}
 	
 	}
@@ -285,6 +293,12 @@ public class ParseJapanWebPagesHazardCode extends Parse{
 		if (hr.classifications.size()!=hr.hazardCodes.size()) {
 			fixClassifications(hr);
 		}
+		
+		
+		String baseURL="https://www.nite.go.jp/chem/english/ghs/";		
+		String filename=new File(jr.fileName).getName();
+		String url=baseURL+filename;
+
 		
 		for (int i=0;i<hr.hazardCodes.size();i++) {
 			
@@ -351,7 +365,7 @@ public class ParseJapanWebPagesHazardCode extends Parse{
 //					System.out.println(scoreName+"\t"+strScore);
 //				}
 				
-				this.createRecord(score, classification, hazardStatement, hazardCode, toxRoute, strScore, hr.rationale,jr.fileName);
+				this.createRecord(chemical.CAS,chemical.name,score, classification, hazardStatement, hazardCode, toxRoute, strScore, hr.rationale,null,url);
 				//				System.out.println(hr.hazardCode+"\t"+hr.hazardClass+"\t"+scoreName);
 			}
 		}// end loop over hazard codes
@@ -457,21 +471,29 @@ public class ParseJapanWebPagesHazardCode extends Parse{
 	
 	
 	
-	private void createRecord(Score score, String hazardClassification, String hazardStatement,String toxCode, String toxRoute,
-			String strScore, String note,String note2) {
+	private void createRecord(String CAS,String name, Score score, String hazardClassification, String hazardStatement,String toxCode, String toxRoute,
+			String strScore, String note,String note2,String url) {
 
 		String rationale="";
+		
+		
 		if (toxCode.equals("-"))
 			rationale = "Score of " + strScore + " was assigned based on a classification of \"" + hazardClassification+"\"";
 		else
 			rationale = "Score of " + strScore + " was assigned based on a hazard code of " + toxCode;
-
+			
+		if (strScore==null) {
+//			System.out.println(score.hazard_name+"\t"+url);
+			return;
+		}
 		
-		ScoreRecord sr = new ScoreRecord(sourceName, strScore, hazardClassification, toxCode, 
-				hazardStatement,rationale, toxRoute, note, note2);
-		
-		
-		
+		if (strScore.contentEquals(ScoreRecord.scoreNA) && hazardClassification.contains("Category 1")) {
+			rationale = "Score of " + ScoreRecord.scoreNA + " was assigned since Japan did not assign a hazard code";
+			System.out.println(score.hazard_name+"\t"+rationale+"\t"+url);
+		}
+				
+		ScoreRecord sr = new ScoreRecord(CAS,name,score.hazard_name,sourceName, strScore, hazardClassification, toxCode, 
+				hazardStatement,rationale, toxRoute, note, note2,url);		
 
 		score.records.add(sr);
 
