@@ -204,8 +204,8 @@ public class ParseToxVal extends Parse {
 
 
 	public static void createScoreRecord(Chemical chemical, RecordToxVal r) {
-//			if (!r.toxval_id.contentEquals("136024"))
-//				return;
+//			if (!r.toxval_id.contentEquals("660309"))
+//			return;
 
 		//		CalculateRiskAssessmentClass.assignRAC(r);
 		//			

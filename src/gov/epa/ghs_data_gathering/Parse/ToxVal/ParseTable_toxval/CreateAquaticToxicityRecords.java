@@ -75,7 +75,12 @@ public class CreateAquaticToxicityRecords {
 //			System.out.println("here1123"+"\t"+tr.toxval_type+"\t"+study_dur_in_days);
 //		}
 
-		
+		if (tr.species_supercategory.toLowerCase().contains("exotic") ||
+			tr.species_supercategory.toLowerCase().contains("nuisance") ||
+			tr.species_supercategory.toLowerCase().contains("invasive"))
+			return;
+		// Excluding invasive species.
+			
 		if ((study_dur_in_days<5) &&
 				(tr.toxval_type.contentEquals("LC50") ||
 						tr.toxval_type.contentEquals("EC50"))) {

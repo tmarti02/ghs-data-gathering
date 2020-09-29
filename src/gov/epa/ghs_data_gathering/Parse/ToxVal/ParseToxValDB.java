@@ -42,8 +42,8 @@ public class ParseToxValDB {
 	//	public static final String DB_Path_AA_Dashboard_Records = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal\\databases\\toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 
 	//use relative path so dont have to keep changing this- i.e. it is relative to java installation:  "D:\Users\TMARTI02\OneDrive - Environmental Protection Agency (EPA)\0 java\ghs-data-gathering\AA Dashboard\databases\toxval_v8.db"
-//	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
-	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
+	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
+//	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
 //  This didn't work even when I moved the database, so I switched it back to the  other folder.
 	public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
@@ -931,8 +931,9 @@ public class ParseToxValDB {
 			
 			if (!casList.contains(recManual.CAS)) continue;//skip record if we hadnt run it in java
 			 
-//			if (!recManual.toxval_id.contentEquals("136024"))
+//			if (!recManual.toxval_id.contentEquals("660309"))
 //				return;
+			
 			if (recManual.hazard_name.contentEquals("Exclude")) continue;
 			
 			if (htJava.get(recManual.toxval_id)==null) {
@@ -961,7 +962,8 @@ public class ParseToxValDB {
 		for (int i=0;i<recordsJava.size();i++) {
 			ScoreRecord recJava=recordsJava.get(i);
 									
-			if (htManual.get(recJava.toxval_id)==null) {			
+			if ((htManual.get(recJava.toxval_id)==null) ||
+					htManual.get(recJava.toxval_id).hazard_name.contentEquals("Exclude")) {		
 				System.out.println(recJava.toxval_id+" present in Java, not in manual");			
 			} 
 		}
