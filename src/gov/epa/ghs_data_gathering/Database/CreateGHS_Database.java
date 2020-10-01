@@ -42,7 +42,7 @@ public class CreateGHS_Database  {
 		chemical.name=r0.name;
 		
 		for (ScoreRecord sr:array) {
-			Score score=chemical.getScore(sr.hazard_name);
+			Score score=chemical.getScore(sr.hazardName);
 			score.records.add(sr);
 		}
 		return chemical;
@@ -62,7 +62,7 @@ public class CreateGHS_Database  {
 		chemical.name=r0.name;
 		
 		for (ScoreRecord sr:array) {
-			Score score=chemical.getScore(sr.hazard_name);
+			Score score=chemical.getScore(sr.hazardName);
 			score.records.add(sr);
 		}
 		return chemical;

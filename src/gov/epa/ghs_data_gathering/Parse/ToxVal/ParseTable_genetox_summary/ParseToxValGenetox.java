@@ -51,9 +51,9 @@ public class ParseToxValGenetox {
 		//TODO determine what model predicted values come from (ask Richard!)- assign to sourceOriginal
 		
 		if (rc.genetox_call.contains("pred")) {
-			sr.authority=ScoreRecord.typePredicted;	
+			sr.listType=ScoreRecord.typePredicted;	
 		} else {
-			sr.authority=ScoreRecord.typeScreening;//Leora check this!
+			sr.listType=ScoreRecord.typeScreening;//Leora check this!
 		}
 						
 		
@@ -63,7 +63,7 @@ public class ParseToxValGenetox {
 		}
 		
 		sr.score=dictCC.get(rc.genetox_call);
-		sr.hazard_statement=rc.genetox_call;
+		sr.hazardStatement=rc.genetox_call;
 		
 		sr.rationale = "Score of "+sr.score+" was assigned based on a genetox call of "+"\""+rc.genetox_call+"\"";
 		

@@ -267,21 +267,21 @@ public class CreateOrganOrSystemicToxRecords {
 		if (sr.valueMassOperator.equals(">")) {
 			if (dose >= dose2) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = duration +" "+route+" "+sr.test_type+" > "+dose2+" "+units;
+				sr.rationale = duration +" "+route+" "+sr.testType+" > "+dose2+" "+units;
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = duration +" "+route+" "+sr.test_type+" does not provide enough information to assign a score";
+				sr.rationale = duration +" "+route+" "+sr.testType+" does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <=dose1) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = duration +" "+route+" "+sr.test_type+" < "+dose1+" "+units;
+				sr.rationale = duration +" "+route+" "+sr.testType+" < "+dose1+" "+units;
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = duration +" "+route+" "+sr.test_type+" does not provide enough information to assign a score";
+				sr.rationale = duration +" "+route+" "+sr.testType+" does not provide enough information to assign a score";
 
 				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
@@ -290,13 +290,13 @@ public class CreateOrganOrSystemicToxRecords {
 
 			if (dose < dose1) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = duration +" "+route+" "+sr.test_type+" < "+dose1+" "+units;
+				sr.rationale = duration +" "+route+" "+sr.testType+" < "+dose1+" "+units;
 			} else if (dose >= dose1 && dose <= dose2) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = dose1+" " +units+" < "+duration +" "+route+" "+sr.test_type+" <= "+dose2+" "+units;
+				sr.rationale = dose1+" " +units+" < "+duration +" "+route+" "+sr.testType+" <= "+dose2+" "+units;
 			} else if (dose > dose2) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = duration +" "+route+" "+sr.test_type + " > "+dose2+" "+units;
+				sr.rationale = duration +" "+route+" "+sr.testType + " > "+dose2+" "+units;
 			} else { 
 				System.out.println(chemical.CAS + "\t"+duration+" "+route+"\t" + strDose);
 			}
@@ -319,11 +319,11 @@ public class CreateOrganOrSystemicToxRecords {
 
 			if (dose >= dose3) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Single Dose "+route+" "+sr.test_type+" > "+dose3+" "+units;
+				sr.rationale = "Single Dose "+route+" "+sr.testType+" > "+dose3+" "+units;
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Single Dose "+route+" "+sr.test_type+" does not provide enough information to assign a score";
+				sr.rationale = "Single Dose "+route+" "+sr.testType+" does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
@@ -331,10 +331,10 @@ public class CreateOrganOrSystemicToxRecords {
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <=dose1) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Single Dose "+route+" "+sr.test_type+" < "+dose1+" "+units;
+				sr.rationale = "Single Dose "+route+" "+sr.testType+" < "+dose1+" "+units;
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = "Single Dose "+route+" "+sr.test_type+" does not provide enough information to assign a score";
+				sr.rationale = "Single Dose "+route+" "+sr.testType+" does not provide enough information to assign a score";
 
 				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
@@ -344,16 +344,16 @@ public class CreateOrganOrSystemicToxRecords {
 
 			if (dose <= dose1) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = "Single Dose "+route+" "+sr.test_type+" < "+dose1+" "+units;
+				sr.rationale = "Single Dose "+route+" "+sr.testType+" < "+dose1+" "+units;
 			} else if (dose > 300 && dose <= 2000) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = dose1+" "+units+" < Single Dose "+route+" "+sr.test_type+" <= "+dose2+" "+units;
+				sr.rationale = dose1+" "+units+" < Single Dose "+route+" "+sr.testType+" <= "+dose2+" "+units;
 			} else if (dose > 2000 && dose <= 3000) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = dose2+" "+units+" < Single Dose "+route+" "+sr.test_type+" <= "+dose3+" "+units;
+				sr.rationale = dose2+" "+units+" < Single Dose "+route+" "+sr.testType+" <= "+dose3+" "+units;
 			} else if (dose > 3000) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = "Single Dose "+route+" "+sr.test_type+" > "+dose3+" "+units;
+				sr.rationale = "Single Dose "+route+" "+sr.testType+" > "+dose3+" "+units;
 
 			} else { 
 				System.out.println(chemical.CAS + "\tSingleDoseOral\t" + strDose);

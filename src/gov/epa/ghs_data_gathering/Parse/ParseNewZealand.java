@@ -818,7 +818,7 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 
 		sr.category += " (" + dictCat.get(toxCode) + ")";
 
-		sr.hazard_statement = toxClassification;// TODO or classification?
+		sr.hazardStatement = toxClassification;// TODO or classification?
 
 		sr.rationale = "Score was assigned based on a category of " + sr.category + ".";
 
@@ -853,7 +853,7 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 					
 					if (!value.isEmpty()) {
 						if (line.toLowerCase().indexOf("species")==0) {
-							sr.test_organism=value;					
+							sr.testOrganism=value;					
 //							System.out.println(sr.test_organism);
 						
 						} else if (line.toLowerCase().indexOf("value")==0) {
@@ -948,9 +948,9 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 							}
 							
 						} else if (line.toLowerCase().indexOf("endpoint")==0) {
-							sr.test_type=value;
+							sr.testType=value;
 						} else if (line.toLowerCase().indexOf("reference")==0) {
-							sr.long_ref=value;
+							sr.longRef=value;
 						} else {
 //							System.out.println(i+"\t"+line);
 						}

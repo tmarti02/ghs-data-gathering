@@ -574,7 +574,7 @@ public class ParseJapanExcelClassification extends Parse {
 		
 		sr.category = hazard.get(strClassification).getAsString().trim();
 		
-		sr.hazard_statement = hazard.get(strHazardStatement).getAsString().trim();
+		sr.hazardStatement = hazard.get(strHazardStatement).getAsString().trim();
 		sr.route = route;
 		
 		sr.rationale = "N/A";

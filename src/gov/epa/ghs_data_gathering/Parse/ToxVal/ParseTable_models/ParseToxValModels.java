@@ -14,7 +14,7 @@ public class ParseToxValModels {
 		
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal = r.model;		
-		sr.authority=ScoreRecord.typePredicted;
+		sr.listType=ScoreRecord.typePredicted;
 				
 		return sr;
 	}
@@ -26,7 +26,7 @@ public class ParseToxValModels {
 		Score score=chemical.scoreBioaccumulation;
 		
 		ScoreRecord sr = createScoreRecord(rBCF,score.hazard_name,chemical.CAS,chemical.name);
-		sr.hazard_name=score.hazard_name;
+		sr.hazardName=score.hazard_name;
 		
 		sr.valueMass = Math.log10(Double.parseDouble(rBCF.value));
 		
@@ -40,7 +40,7 @@ public class ParseToxValModels {
 			sr.rationale = "Applicability domain of " + rBCF.model + " model for BCF violated";
 		}
 		
-		sr.valueMassUnits="log10 (BCF "+rBCF.units+")";
+		sr.valueMassUnits="log10("+rBCF.units+")";
 		
 		score.records.add(sr);
 
@@ -52,13 +52,13 @@ public class ParseToxValModels {
 		Score score=chemical.scoreBioaccumulation;
 		
 		ScoreRecord sr = createScoreRecord(rBCF,score.hazard_name,chemical.CAS,chemical.name);
-		sr.hazard_name=score.hazard_name;
+		sr.hazardName=score.hazard_name;
 		
 		sr.valueMass = Math.log10(Double.parseDouble(rBCF.value));
 	
 		sr.url="https://www.epa.gov/tsca-screening-tools/download-epi-suitetm-estimation-program-interface-v411";
 		setBioconcentrationScore(sr);
-		sr.valueMassUnits="log10 (BCF "+rBCF.units+")";
+		sr.valueMassUnits="log10("+rBCF.units+")";
 		score.records.add(sr);
 		
 	}
@@ -121,7 +121,7 @@ public class ParseToxValModels {
 		Score score=chemical.scorePersistence;
 		
 		ScoreRecord sr =createScoreRecord(r,score.hazard_name,chemical.CAS,chemical.name);	
-		sr.hazard_name=score.hazard_name;
+		sr.hazardName=score.hazard_name;
 		sr.valueMass = Double.parseDouble(r.value);
 		sr.valueMassUnits=r.units;
 		sr.url="https://www.epa.gov/tsca-screening-tools/download-epi-suitetm-estimation-program-interface-v411";

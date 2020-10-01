@@ -183,7 +183,7 @@ public class ParseIRIS extends Parse {
 		if (WtOfEvidence.equals(
 				"(i) A; Human Carcinogen (Inhalation route); (ii) D; Not classifiable as to human carcinogenicity (Oral route)")) {
 			sr.category = "Category A (inhalation); Category D (oral)";
-			sr.hazard_statement = "Human carcinogen (inhalation); Not classifiable as to human carcinogenicity (oral)";
+			sr.hazardStatement = "Human carcinogen (inhalation); Not classifiable as to human carcinogenicity (oral)";
 			sr.score = ScoreRecord.scoreVH;
 			sr.rationale = "Score of VH was assigned based on a carcinogenicity category of Category A from inhalation";
 //			sr.listType=ScoreRecord.typeAuthoritativeA;
@@ -193,7 +193,7 @@ public class ParseIRIS extends Parse {
 		// System.out.println(WtOfEvidence);
 
 		sr.category = "Category " + WtOfEvidence.substring(0, WtOfEvidence.indexOf(";"));
-		sr.hazard_statement = WtOfEvidence.substring(WtOfEvidence.indexOf(";") + 2, WtOfEvidence.length());
+		sr.hazardStatement = WtOfEvidence.substring(WtOfEvidence.indexOf(";") + 2, WtOfEvidence.length());
 
 		
 //		sr.listType=ScoreRecord.typeAuthoritativeA;//default type

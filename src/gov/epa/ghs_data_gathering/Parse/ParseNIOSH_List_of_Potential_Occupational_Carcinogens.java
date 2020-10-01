@@ -162,10 +162,10 @@ public class ParseNIOSH_List_of_Potential_Occupational_Carcinogens extends Parse
 
 		sr.source = ScoreRecord.sourceNIOSH_Potential_Occupational_Carcinogens;
 		sr.category = hazardCategory;// TODO or assign to classification?
-		sr.hazard_code = hazardCode;
+		sr.hazardCode = hazardCode;
 		sr.route = toxRoute;
 
-		sr.hazard_statement = hazardStatement;
+		sr.hazardStatement = hazardStatement;
 
 		sr.note = strNote;
 

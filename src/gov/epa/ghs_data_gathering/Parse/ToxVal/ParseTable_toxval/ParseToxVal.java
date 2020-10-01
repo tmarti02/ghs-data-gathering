@@ -451,7 +451,7 @@ public class ParseToxVal extends Parse {
 		sr.route=tr.exposure_route;
 		
 		sr.url=tr.url;		
-		sr.long_ref=tr.long_ref;
+		sr.longRef=tr.long_ref;
 
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=tr.source;
@@ -462,9 +462,9 @@ public class ParseToxVal extends Parse {
 		sr.valueMass = Double.parseDouble(tr.toxval_numeric);
 		sr.valueMassUnits = tr.toxval_units;
 		
-		sr.toxval_id=tr.toxval_id;
-		sr.test_organism=tr.species_common;
-		sr.test_type=tr.toxval_type;
+		sr.toxvalID=tr.toxval_id;
+		sr.testOrganism=tr.species_common;
+		sr.testType=tr.toxval_type;
 		
 		
 
@@ -529,9 +529,9 @@ public class ParseToxVal extends Parse {
 		screeningSources.add("TEST");
 		
 		if (authoritativeSources.contains(sr.sourceOriginal)) {
-			sr.authority=ScoreRecord.typeAuthoritative;
+			sr.listType=ScoreRecord.typeAuthoritative;
 		} else if (screeningSources.contains(sr.sourceOriginal)) {
-			sr.authority=ScoreRecord.typeScreening;				
+			sr.listType=ScoreRecord.typeScreening;				
 		} else {
 			System.out.println(sr.sourceOriginal+"\tunknown original source");
 		}

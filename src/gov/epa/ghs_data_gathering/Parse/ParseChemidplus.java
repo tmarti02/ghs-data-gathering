@@ -214,10 +214,10 @@ public class ParseChemidplus extends Parse {
 		sr.source = ScoreRecord.sourceChemIDplus;
 				
 		sr.route=tr.Route;
-		sr.long_ref=tr.Source;
+		sr.longRef=tr.Source;
 		sr.effect=tr.Effect;
-		sr.test_organism=tr.Organism;
-		sr.test_type=tr.TestType;
+		sr.testOrganism=tr.Organism;
+		sr.testType=tr.TestType;
 		
 		sr.url="https://chem.nlm.nih.gov/chemidplus/rn/"+sr.CAS;
 
@@ -241,7 +241,7 @@ public class ParseChemidplus extends Parse {
 		Score score=chemical.scoreAcute_Mammalian_ToxicityOral;
 		
 		ScoreRecord sr = createScoreRecord(score,chemical,tr);
-		sr.hazard_name=Chemical.strAcute_Mammalian_ToxicityOral;
+		sr.hazardName=Chemical.strAcute_Mammalian_ToxicityOral;
 
 		/*
 		 * 
@@ -338,7 +338,7 @@ public class ParseChemidplus extends Parse {
 
 		Score score=chemical.scoreAcute_Mammalian_ToxicityDermal;
 		ScoreRecord sr = createScoreRecord(score,chemical,tr);
-		sr.hazard_name=Chemical.strAcute_Mammalian_ToxicityDermal;
+		sr.hazardName=Chemical.strAcute_Mammalian_ToxicityDermal;
 
 		/*
 		 * EPA Health Effects Test Guidelines OPPTS 870.1200 Acute Dermal Toxicity: "The
@@ -403,7 +403,7 @@ public class ParseChemidplus extends Parse {
 
 		Score score=chemical.scoreAcute_Mammalian_ToxicityInhalation;
 		ScoreRecord sr = createScoreRecord(score,chemical,tr);
-		sr.hazard_name=Chemical.strAcute_Mammalian_ToxicityInhalation;
+		sr.hazardName=Chemical.strAcute_Mammalian_ToxicityInhalation;
 
 		
 		/*

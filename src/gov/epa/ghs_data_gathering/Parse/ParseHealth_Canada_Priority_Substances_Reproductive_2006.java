@@ -146,7 +146,7 @@ public class ParseHealth_Canada_Priority_Substances_Reproductive_2006 extends Pa
 		sr.category = rr.Reproductive_Toxicity;
 
 		sr.score = ScoreRecord.scoreH;
-		sr.hazard_statement = "Known to be reproductive toxin";
+		sr.hazardStatement = "Known to be reproductive toxin";
 
 		sr.rationale = "Score of " + sr.score + " was assigned based on a reproductive category of " + sr.category;
 		sr.note = "";

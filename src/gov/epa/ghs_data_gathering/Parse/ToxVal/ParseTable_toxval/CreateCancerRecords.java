@@ -31,7 +31,7 @@ public class CreateCancerRecords {
 
 		Score score=chemical.scoreCarcinogenicity;
 		ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr);
-		sr.hazard_name=score.hazard_name;
+		sr.hazardName=score.hazard_name;
 		sr.note2 = tr.toxval_type;
 
 		// I wanted a way to distinguish between toxval types below.

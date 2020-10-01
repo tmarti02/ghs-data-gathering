@@ -211,7 +211,7 @@ public class ParseDSL extends Parse {
 		
 		sr.name=chemical.name;
 		sr.CAS=chemical.CAS;
-		sr.hazard_name=score.hazard_name;
+		sr.hazardName=score.hazard_name;
 
 		sr.source = ScoreRecord.sourceDSL;
 

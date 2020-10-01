@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -22,14 +26,14 @@ import gov.epa.ghs_data_gathering.Utilities.Utilities;
 //Revised version of this class removed need to have FlatFileRecord class
 
 public class ScoreRecord {
-	public String hazard_name;//used to be in FlatFileRecord
+	public String hazardName;//used to be in FlatFileRecord
 	public String CAS;////used to be in FlatFileRecord
 	public String name;//chemical name
 	public String source;// where the record came from
 	public String sourceOriginal;// where the record came from
 	public String score;// i.e. L,M,H,VH
 	
-	public String authority;
+	public String listType;
 	
 	// following fields will be a work in progress as we gather data from different
 	// sources:
@@ -39,8 +43,8 @@ public class ScoreRecord {
 
 	// String hazard_name;
 	public String category;// i.e. Category 1
-	public String hazard_code;// code for hazard, i.e. "H301"
-	public String hazard_statement;// text based description of what hazard they think it is
+	public String hazardCode;// code for hazard, i.e. "H301"
+	public String hazardStatement;// text based description of what hazard they think it is
 	public String rationale;// why classification was assigned
 	// String signal_word;//
 	// String symbol;
@@ -51,12 +55,12 @@ public class ScoreRecord {
 	
 //	public String listType;//right now dont need this because getListType gets it from the source name
 	
-	public String toxval_id;
-	public String test_organism;//common name for animal used in testing
+	public String toxvalID;
+	public String testOrganism;//common name for animal used in testing
 //	public String reported_dose;
 //	public String normalized_dose;
 
-	public String test_type;//LC50, LD50 etc
+	public String testType;//LC50, LD50 etc
 	
 	// **************************************************************************************
 	public String valueMassOperator;// "<",">", or ""
@@ -73,34 +77,24 @@ public class ScoreRecord {
 	public String durationUnits;
 	
 	public String url;
-	public String long_ref;
+	public String longRef;
 	
 
-	// public static String [] displayFieldNames=
-	// {"Source","Score","Route","Classification","Hazard
-	// Statement","Rationale","Note"};
-	// public static String [] actualFieldNames=
-	// {"source","score","route","classification","hazard_statement","rationale","note"};
 
-	public static String[] allFieldNames= {"CAS","name","hazard_name","source","sourceOriginal", 
-			"score", "authority","route", "category", "hazard_code",
-			"hazard_statement", "rationale", "note","note2","toxval_id",
-			"test_organism","test_type","valueMassOperator","valueMass","valueMassUnits","effect",
-			"duration","durationUnits","url","long_ref"};
-	
+//	All the fields in the class in the desired order:	
+		public static String[] allFieldNames= {"CAS","name","hazardName","source","sourceOriginal", 
+				"score", "listType","route", "category", "hazardCode",
+				"hazardStatement", "rationale", "note","note2","toxvalID",
+				"testOrganism","testType","valueMassOperator","valueMass","valueMassUnits","effect",
+				"duration","durationUnits","url","longRef"};
 		
-//	public static String[] actualfieldNames = { "CAS","name","hazard_name","source", "score", "route", "category", "hazard_code",
-//			"hazard_statement", "rationale", "note","note2","valueMassOperator","valueMass","valueMassUnits"};
-//
-//	public static String[] displayFieldNames = { "CAS","Name","Hazard Name","Source", "Score", "Route", 
-//			"Category", "Hazard Code","Hazard Statement", "Rationale", "Note","Note2","Value Mass Operator","Value Mass","Value Mass Units"};
+		//Following for displaying results of hazard comparison in webpage:	
+		public static String[] displayFieldNames = { "Name","Source", "Original Source","Score", "Rationale","Route", "Category", "Hazard Code",
+				"Hazard Statement",  "Test duration","Test organism","Toxicity Type","Toxicity Value","Reference","Note" };
 
-	public static String[] displayFieldNames = { "Name","Source", "Original Source","Score", "Rationale","Route", "Category", "Hazard Code",
-			"Hazard Statement",  "Test duration","Test organism","Toxicity Type","Toxicity Value","Reference","Note" };
+		public static String[] actualFieldNames = { "name","source", "sourceOriginal","score", "rationale","route", "category", "hazardCode",
+				"hazardStatement", "duration","testOrganism", "testType","valueMass","longRef","note" };
 
-	public static String[] actualFieldNames = { "name","source", "sourceOriginal","score", "rationale","route", "category", "hazard_code",
-			"hazard_statement", "duration","test_organism", "test_type","valueMass","long_ref","note" };
-	
 
 
 	public static final String scoreVH = "VH";
@@ -346,12 +340,12 @@ public class ScoreRecord {
 		
 		this.CAS=CAS;
 		this.name=name;
-		this.hazard_name=hazard_name;		
+		this.hazardName=hazard_name;		
 		this.source=source;
 		this.score=score;
 		this.category=category;
-		this.hazard_code=hazard_code;
-		this.hazard_statement=hazard_statement;
+		this.hazardCode=hazard_code;
+		this.hazardStatement=hazard_statement;
 		this.rationale=rationale;
 		this.route=route;
 		this.note=note;
@@ -361,7 +355,7 @@ public class ScoreRecord {
 	}
 	
 	public ScoreRecord(String hazard_name,String CAS,String name) {
-		this.hazard_name=hazard_name;
+		this.hazardName=hazard_name;
 		this.CAS=CAS;
 		this.name=name;
 	}
@@ -790,6 +784,7 @@ public class ScoreRecord {
 	}
 	
 	public String getListType() {
+		if (listType!=null) return listType;
 		return getListType(source);
 	}
 	
@@ -851,9 +846,6 @@ public class ScoreRecord {
 		} else if (source.equals(ScoreRecord.sourceChemIDplus)) {
 			listType=listTypeChemidplus;
 		} else if (source.contentEquals(ScoreRecord.sourceToxVal)) {
-			//previously set in classes for toxval db
-			if (authority!=null)
-				listType=authority;
 		}
 
 
@@ -938,7 +930,7 @@ public class ScoreRecord {
 					chemical=new Chemical();
 				}
 
-				Score score=chemical.getScore(sr.hazard_name);
+				Score score=chemical.getScore(sr.hazardName);
 				
 				score.records.add(sr);
 
@@ -1076,11 +1068,18 @@ public class ScoreRecord {
 
 				File file=new File(filePathFlatChemicalRecords);
 				
+								
+				
 				if (!file.exists())  {
 					System.out.println("*** "+source+" text file missing");
 					continue;
 				} else {
-					System.out.println(source);
+					
+					Path path = Paths.get(file.getAbsolutePath());
+		            BasicFileAttributes attr =
+		                Files.readAttributes(path, BasicFileAttributes.class);
+		           		           
+					System.out.println(source+"\t"+attr.lastModifiedTime());
 				}
 				
 				ArrayList<String>lines=Utilities.readFileToArray(filePathFlatChemicalRecords);

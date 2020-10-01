@@ -849,25 +849,25 @@ public class ParsePubChem {
 			
 			
 			for (ScoreRecord recordMine:recordsMine) {
-				if (!recordMine.hazard_code.contains("H")) continue;
+				if (!recordMine.hazardCode.contains("H")) continue;
 				if (recordMine.CAS.isEmpty()) continue;
 				
-				if (htHazardName.get(recordMine.hazard_name)==null) {
-					System.out.println("Need "+recordMine.hazard_name);
+				if (htHazardName.get(recordMine.hazardName)==null) {
+					System.out.println("Need "+recordMine.hazardName);
 					continue;
-				} else if (htHazardName.get(recordMine.hazard_name).contains("Not implemented")) {
+				} else if (htHazardName.get(recordMine.hazardName).contains("Not implemented")) {
 					continue;
 				}
 				
-				String pubchemHazardName=htHazardName.get(recordMine.hazard_name);
+				String pubchemHazardName=htHazardName.get(recordMine.hazardName);
 				
 //				System.out.println(recordMine.hazard_name+"\t"+pubchemHazardName);
 				
-				FlatFileRecord2 recordPubchem=this.getPubchemRecordByCAS(recordsPubchem,recordMine.CAS,pubchemHazardName,recordMine.hazard_code);
+				FlatFileRecord2 recordPubchem=this.getPubchemRecordByCAS(recordsPubchem,recordMine.CAS,pubchemHazardName,recordMine.hazardCode);
 				
 				if (recordPubchem!=null) {
-					if (!recordPubchem.hazard_code.contentEquals(recordMine.hazard_code))					
-						System.out.println(recordMine.CAS+"\t"+recordMine.hazard_name+"\t"+recordPubchem.hazard_code+"\t"+recordMine.hazard_code);
+					if (!recordPubchem.hazard_code.contentEquals(recordMine.hazardCode))					
+						System.out.println(recordMine.CAS+"\t"+recordMine.hazardName+"\t"+recordPubchem.hazard_code+"\t"+recordMine.hazardCode);
 					
 				} else {
 //					System.out.println(recordMine.CAS+"\t"+recordMine.hazard_code+"\tNo Pubchem");

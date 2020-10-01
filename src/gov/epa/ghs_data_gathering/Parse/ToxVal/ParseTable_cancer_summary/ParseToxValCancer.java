@@ -154,7 +154,7 @@ public class ParseToxValCancer {
 		}
 		
 		sr.score=dictCC.get(rc.cancer_call);
-		sr.hazard_statement=rc.cancer_call;
+		sr.hazardStatement=rc.cancer_call;
 		
 		sr.rationale = "Score of "+sr.score+" was assigned based on a cancer call of "+"\""+rc.cancer_call+"\"";
 		

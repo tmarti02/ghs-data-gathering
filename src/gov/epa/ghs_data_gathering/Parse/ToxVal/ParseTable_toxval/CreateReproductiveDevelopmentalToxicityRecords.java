@@ -130,21 +130,21 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		if (sr.valueMassOperator.equals(">")) {
 			if (dose >= dose2) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = route+" "+sr.test_type+" > "+dose2+" "+units;
+				sr.rationale = route+" "+sr.testType+" > "+dose2+" "+units;
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = route+" "+sr.test_type+" does not provide enough information to assign a score";
+				sr.rationale = route+" "+sr.testType+" does not provide enough information to assign a score";
 				// System.out.println(chemical.CAS+"\t"+sr.rationale);
 			}
 
 		} else if (sr.valueMassOperator.equals("<")) {
 			if (dose <=dose1) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = route+" "+sr.test_type+" < "+dose1+" "+units;
+				sr.rationale = route+" "+sr.testType+" < "+dose1+" "+units;
 			} else {
 				sr.score = ScoreRecord.scoreNA;
-				sr.rationale = route+" "+sr.test_type+" does not provide enough information to assign a score";
+				sr.rationale = route+" "+sr.testType+" does not provide enough information to assign a score";
 
 				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
@@ -153,13 +153,13 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 
 			if (dose < dose1) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = route+" "+sr.test_type+" < "+dose1+" "+units;
+				sr.rationale = route+" "+sr.testType+" < "+dose1+" "+units;
 			} else if (dose >= dose1 && dose <= dose2) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = dose1+" " +units+" < "+route+" "+sr.test_type+" <= "+dose2+" "+units;
+				sr.rationale = dose1+" " +units+" < "+route+" "+sr.testType+" <= "+dose2+" "+units;
 			} else if (dose > dose2) {
 				sr.score = ScoreRecord.scoreL;
-				sr.rationale = route+" "+sr.test_type + " > "+dose2+" "+units;
+				sr.rationale = route+" "+sr.testType + " > "+dose2+" "+units;
 			} else { 
 				System.out.println(chemical.CAS + "\t"+route+"\t" + strDose);
 			}

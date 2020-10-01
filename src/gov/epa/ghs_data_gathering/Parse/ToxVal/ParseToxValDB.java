@@ -863,7 +863,7 @@ public class ParseToxValDB {
 				
 //				System.out.println((i+1)+"\t"+sheet.getSheetName());
 				
-				f.toxval_id=(int)(rowi.getCell(htColNums.get("toxval_id")).getNumericCellValue())+"";
+				f.toxvalID=(int)(rowi.getCell(htColNums.get("toxval_id")).getNumericCellValue())+"";
 //				f.hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
 				f.score=rowi.getCell(htColNums.get("ManualScore")).getStringCellValue();
 				
@@ -881,7 +881,7 @@ public class ParseToxValDB {
 					f.note=cell.getStringCellValue();//store leora's note
 				}
 
-				if (!hasRecord(recs, f.toxval_id))
+				if (!hasRecord(recs, f.toxvalID))
 					recs.add(f);
 
 				//				System.out.println(f.toxval_id+"\t"+f.hazard_name+"\t"+f.score);
@@ -894,7 +894,7 @@ public class ParseToxValDB {
 	
 	static boolean hasRecord(Vector<ScoreRecord> recs,String toxval_id) {
 		for (int i=0;i<recs.size();i++) {
-			if (recs.get(i).toxval_id.contentEquals(toxval_id)) return true;
+			if (recs.get(i).toxvalID.contentEquals(toxval_id)) return true;
 		}
 		return false;
 	}
@@ -904,7 +904,7 @@ public class ParseToxValDB {
 		
 		for (int i=0;i<records.size();i++) {
 			ScoreRecord rec=records.get(i);
-			ht.put(rec.toxval_id, rec);
+			ht.put(rec.toxvalID, rec);
 		}
 		return ht;
 	}
@@ -934,21 +934,21 @@ public class ParseToxValDB {
 //			if (!recManual.toxval_id.contentEquals("660309"))
 //				return;
 			
-			if (recManual.hazard_name.contentEquals("Exclude")) continue;
+			if (recManual.hazardName.contentEquals("Exclude")) continue;
 			
-			if (htJava.get(recManual.toxval_id)==null) {
+			if (htJava.get(recManual.toxvalID)==null) {
 			
-				System.out.println(recManual.toxval_id+" present in manual, not in Java");
+				System.out.println(recManual.toxvalID+" present in manual, not in Java");
 			
 			} else {
-				ScoreRecord recJava=htJava.get(recManual.toxval_id);
+				ScoreRecord recJava=htJava.get(recManual.toxvalID);
 				
-				if (!recManual.hazard_name.contentEquals(recJava.hazard_name)) {						
-					System.out.println(recJava.toxval_id+"\t"+recJava.hazard_name+"\t"+recManual.hazard_name+"\tmismatch hazard name\t"+recManual.note);						
+				if (!recManual.hazardName.contentEquals(recJava.hazardName)) {						
+					System.out.println(recJava.toxvalID+"\t"+recJava.hazardName+"\t"+recManual.hazardName+"\tmismatch hazard name\t"+recManual.note);						
 				}
 				
 				if (!recManual.score.contentEquals(recJava.score)) {						
-					System.out.println(recJava.toxval_id+"\t"+recJava.score+"\t"+recManual.score+"\tmismatch score\t"+recManual.note);						
+					System.out.println(recJava.toxvalID+"\t"+recJava.score+"\t"+recManual.score+"\tmismatch score\t"+recManual.note);						
 				} 
 				
 			}
@@ -962,9 +962,9 @@ public class ParseToxValDB {
 		for (int i=0;i<recordsJava.size();i++) {
 			ScoreRecord recJava=recordsJava.get(i);
 									
-			if ((htManual.get(recJava.toxval_id)==null) ||
-					htManual.get(recJava.toxval_id).hazard_name.contentEquals("Exclude")) {		
-				System.out.println(recJava.toxval_id+" present in Java, not in manual");			
+			if ((htManual.get(recJava.toxvalID)==null) ||
+					htManual.get(recJava.toxvalID).hazardName.contentEquals("Exclude")) {		
+				System.out.println(recJava.toxvalID+" present in Java, not in manual");			
 			} 
 		}
 				
@@ -986,7 +986,7 @@ public class ParseToxValDB {
 					ScoreRecord sr=score.records.get(k);
 					
 					ScoreRecord recJava=new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
-					recJava.toxval_id=sr.toxval_id;					
+					recJava.toxvalID=sr.toxvalID;					
 					recJava.score=sr.score;					
 					
 					recordsJava.add(recJava);					

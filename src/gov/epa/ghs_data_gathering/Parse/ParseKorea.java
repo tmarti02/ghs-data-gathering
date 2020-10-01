@@ -360,12 +360,12 @@ public class ParseKorea extends Parse {
 		score.records.add(sr);
 
 		sr.source = ScoreRecord.sourceKorea;
-		sr.hazard_code = toxCode;
+		sr.hazardCode = toxCode;
 		sr.route = toxRoute;
 		sr.score = strScore;
 
 		if (htHazardStatement.get(toxCode) != null) {
-			sr.hazard_statement = htHazardStatement.get(toxCode);
+			sr.hazardStatement = htHazardStatement.get(toxCode);
 		} else {
 			System.out.println("need statement for " + toxCode);
 		}

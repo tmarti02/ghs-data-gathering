@@ -21,11 +21,11 @@ public class ParseToxValBCFBAF {
 			sr.url=r.journal;
 		}
 		
-		sr.long_ref=r.author+" ("+r.year+") "+r.title+". "+r.journal;
+		sr.longRef=r.author+" ("+r.year+") "+r.title+". "+r.journal;
 		
-		sr.authority=ScoreRecord.typeScreening;//journal article
+		sr.listType=ScoreRecord.typeScreening;//journal article
 		
-		sr.test_type="logBCF";
+		sr.testType="logBCF";
 
 		try {
 			sr.duration=Double.parseDouble(r.exposure_duration);
@@ -35,7 +35,7 @@ public class ParseToxValBCFBAF {
 		}
 
 	
-		sr.test_organism=r.species_common;
+		sr.testOrganism=r.species_common;
 		
 
 		if (r.logbcf==null) return;//have BAF value instead probably
@@ -43,7 +43,7 @@ public class ParseToxValBCFBAF {
 //		System.out.println("r.logbcf="+r.logbcf);
 		sr.valueMass=Double.parseDouble(r.logbcf);
 		//	sr.valueMassUnits="log10 ("+r.units+")";
-		sr.valueMassUnits="log10 (BCF "+r.units+")";
+		sr.valueMassUnits="log10("+r.units+")";
 		setBioconcentrationScore(sr.valueMass, sr);
 
 		//TODO- add exclusion criteria so certain records arent added based on fields in RecordToxValBCFBAF

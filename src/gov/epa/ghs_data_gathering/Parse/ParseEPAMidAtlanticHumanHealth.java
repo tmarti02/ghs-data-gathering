@@ -186,7 +186,7 @@ public class ParseEPAMidAtlanticHumanHealth extends Parse {
 			// Assign score based on toxCode:
 			sr.score = ScoreRecord.scoreVH;
 			
-			sr.test_type="Cancer slope factor (SFO)";
+			sr.testType="Cancer slope factor (SFO)";
 			sr.valueMass=Double.parseDouble(ir.SFO);
 //			sr.valueMassUnits=ir.
 			

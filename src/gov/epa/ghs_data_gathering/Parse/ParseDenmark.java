@@ -285,7 +285,7 @@ public class ParseDenmark extends Parse {
 		}
 
 		if (this.dictHazardStatement.get(hazardClassification) != null) {
-			sr.hazard_statement = dictHazardStatement.get(hazardClassification);
+			sr.hazardStatement = dictHazardStatement.get(hazardClassification);
 		} else {
 			System.out.println("need statement for " + hazardClassification);
 		}

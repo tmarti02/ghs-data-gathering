@@ -164,25 +164,25 @@ public class ParseIARC extends Parse {
 
 		if (ir.Group.equals("1")) {
 			sr.score = ScoreRecord.scoreVH;
-			sr.hazard_statement = "Carcinogenic to humans";
+			sr.hazardStatement = "Carcinogenic to humans";
 		} else if (ir.Group.equals("2A")) {
 			sr.score = ScoreRecord.scoreVH;
-			sr.hazard_statement = "Probably carcinogenic to humans";
+			sr.hazardStatement = "Probably carcinogenic to humans";
 		} else if (ir.Group.equals("2B")) {
 			sr.score = ScoreRecord.scoreH;
-			sr.hazard_statement = "Possibly carcinogenic to humans";
+			sr.hazardStatement = "Possibly carcinogenic to humans";
 		} else if (ir.Group.equals("3")) {
-			sr.hazard_statement = "Not classifiable as to its carcinogenicity to humans";
+			sr.hazardStatement = "Not classifiable as to its carcinogenicity to humans";
 			sr.score = ScoreRecord.scoreNA;
 		} else if (ir.Group.equals("4")) {
-			sr.hazard_statement = "Probably not carcinogenic to humans";
+			sr.hazardStatement = "Probably not carcinogenic to humans";
 			sr.score = ScoreRecord.scoreL;// TODO- assign M instead? only 1 chemical
 		} else {
 			System.out.println(chemical.CAS + "\t" + chemical.name + "\t" + ir.Group);
 		}
 
 		sr.rationale = "Score of " + sr.score + " was assigned based on a carcinogenicity category of " + sr.category;
-		sr.long_ref = "IARC Volume " + ir.Volume + ", " + ir.Year + ".";
+		sr.longRef = "IARC Volume " + ir.Volume + ", " + ir.Year + ".";
 
 		if (!ir.Additional_Information.equals(""))
 			sr.note += " " + ir.Additional_Information + ".";

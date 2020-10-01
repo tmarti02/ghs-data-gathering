@@ -105,10 +105,10 @@ public class GenerateOverallDictionary {
 		ScoreRecord f=new ScoreRecord(null,null,null);
 		
 		String [] vals=line.split("\t");
-		f.hazard_name=vals[0];
+		f.hazardName=vals[0];
 		f.score=vals[1];
 		f.category=vals[2];
-		f.hazard_code=vals[3];
+		f.hazardCode=vals[3];
 		f.CAS=vals[4];
 		return f;
 	}
@@ -128,7 +128,7 @@ public class GenerateOverallDictionary {
 	            ScoreRecord f1=convertLineToFlatFileRecord(str1);
 	            ScoreRecord f2=convertLineToFlatFileRecord(str2);
 	            
-	            int sComp = f1.hazard_name.compareTo(f2.hazard_name);
+	            int sComp = f1.hazardName.compareTo(f2.hazardName);
 
 	            if (sComp != 0) {//sort by hazard name ascending
 	               return sComp;
@@ -367,8 +367,8 @@ public class GenerateOverallDictionary {
 
 		}
 
-		if (f.hazard_code != null)
-			f.hazard_code = f.hazard_code.trim();
+		if (f.hazardCode != null)
+			f.hazardCode = f.hazardCode.trim();
 
 		// System.out.println(srj.hazard_code);
 
@@ -393,7 +393,7 @@ public class GenerateOverallDictionary {
 //			System.out.println(chemical.CAS+"\t"+scorei.hazard_name);
 //		}
 		
-		String line = f.hazard_name + "\t" + f.score + "\t" + f.category + "\t" + f.hazard_code;
+		String line = f.hazardName + "\t" + f.score + "\t" + f.category + "\t" + f.hazardCode;
 
 		line = line.replace("_", " ");
 
@@ -613,8 +613,8 @@ public class GenerateOverallDictionary {
 					}
 				}
 				
-				if (!ht.get(f.hazard_name).contains(f.CAS)) {
-					ht.put(f.hazard_name, f.CAS);
+				if (!ht.get(f.hazardName).contains(f.CAS)) {
+					ht.put(f.hazardName, f.CAS);
 					
 				}
 				
@@ -714,8 +714,8 @@ public class GenerateOverallDictionary {
 					}
 				}
 				
-				if (!ht.get(f.hazard_name).contains(f.CAS)) {
-					ht.put(f.hazard_name, f.CAS);
+				if (!ht.get(f.hazardName).contains(f.CAS)) {
+					ht.put(f.hazardName, f.CAS);
 					
 				}
 				

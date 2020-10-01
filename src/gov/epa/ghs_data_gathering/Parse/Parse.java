@@ -272,17 +272,17 @@ public class Parse {
 ////		if (bob.contains("<br>")) 
 //			System.out.println("***"+hazardClassification);
 		
-		sr.hazard_code = toxCode;
+		sr.hazardCode = toxCode;
 		sr.route = toxRoute;
 
 		if (hazardStatement.isEmpty()) {
 			if (dictCodeToStatement.get(toxCode) != null) {
-				sr.hazard_statement = dictCodeToStatement.get(toxCode);
+				sr.hazardStatement = dictCodeToStatement.get(toxCode);
 			} else {
 				System.out.println("need statement for " + toxCode);
 			}
 		} else {
-			sr.hazard_statement=hazardStatement;	
+			sr.hazardStatement=hazardStatement;	
 		}
 		
 		
@@ -439,6 +439,12 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 		ParseAustralia parseAustralia = new ParseAustralia();
 		parseAustralia.createFiles();
 		
+		ParseCanada parseCanada = new ParseCanada();
+		parseCanada.createFiles();
+		
+		ParseChemidplus parseChemidplus=new ParseChemidplus();
+		parseChemidplus.createFiles();
+		
 		ParseDenmark parseDenmark = new ParseDenmark();
 		parseDenmark.createFiles();
 
@@ -465,7 +471,7 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 		ParseIRIS parseIRIS = new ParseIRIS();
 		parseIRIS.createFiles();
 
-		ParseJapanExcelClassification parseJapan = new ParseJapanExcelClassification();
+		ParseJapanWebPagesHazardCode parseJapan = new ParseJapanWebPagesHazardCode();
 		parseJapan.createFiles();
 
 //Need new source for Korea info		
@@ -608,6 +614,20 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 
 		System.out.println("Going through original records");
 		Chemicals chemicals=goThroughOriginalRecords();
+		
+		for (int i=0;i<chemicals.size();i++) {
+			Chemical chemical=chemicals.get(i);
+			
+			for (int j=0;j<chemical.scores.size();j++) {
+				Score score=chemical.scores.get(j);
+				
+				for (int k=0;k<score.records.size();k++) {
+					ScoreRecord sr=score.records.get(k);
+					sr.listType=sr.getListType();
+				}
+				
+			}
+		}
 
 		if (writeFlatFile) {
 			System.out.println("Writing flat file for chemical records");

@@ -142,10 +142,10 @@ public class ParseReportOnCarcinogens extends Parse {
 
 		if (roc.Listing_in_the_14th_RoC.equals("Known")) {
 			sr.score = ScoreRecord.scoreVH;
-			sr.hazard_statement = "Known to be a human carcinogen";
+			sr.hazardStatement = "Known to be a human carcinogen";
 		} else if (roc.Listing_in_the_14th_RoC.equals("RAHC")) {
 			sr.score = ScoreRecord.scoreVH;
-			sr.hazard_statement = "Reasonably anticipated to be a human carcinogen";
+			sr.hazardStatement = "Reasonably anticipated to be a human carcinogen";
 		} else {
 			System.out.println(roc.Listing_in_the_14th_RoC);
 		}

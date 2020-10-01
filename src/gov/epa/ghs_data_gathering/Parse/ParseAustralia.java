@@ -849,17 +849,17 @@ public class ParseAustralia extends Parse {
 				ScoreRecord sr = score.records.get(j);
 
 				if (sr.category.equals("N/A")) {
-					List<String> listCategory = (List<String>) this.dictCodeToCategory.get(sr.hazard_code);
+					List<String> listCategory = (List<String>) this.dictCodeToCategory.get(sr.hazardCode);
 					if (listCategory.size() == 0) {
-						System.out.println(chemical.CAS + "\tNo category for " + sr.hazard_code);
+						System.out.println(chemical.CAS + "\tNo category for " + sr.hazardCode);
 					} else if (listCategory.size() == 1) {
 						sr.category = listCategory.get(0);// assign missing category for that code
 					} else {
 						// Add missing category based on the hazard code:
-						if (sr.hazard_code.equals("H300") || sr.hazard_code.equals("H310")
-								|| sr.hazard_code.equals("H330")) {
+						if (sr.hazardCode.equals("H300") || sr.hazardCode.equals("H310")
+								|| sr.hazardCode.equals("H330")) {
 							sr.category = "Acute toxicity - category 1 or 2";
-						} else if (sr.hazard_code.contains("H360")) {
+						} else if (sr.hazardCode.contains("H360")) {
 							if (!catDevRepro.isEmpty()) sr.category=catDevRepro;
 							else {
 								sr.category = "Reproductive toxicity - category 1A or 1B";
@@ -868,13 +868,13 @@ public class ParseAustralia extends Parse {
 						} else {
 							
 							if (score.hazard_name.equals(Chemical.strSkin_Irritation)) {
-								if (sr.hazard_code.equals("H314")) {
+								if (sr.hazardCode.equals("H314")) {
 									sr.category="Skin corrosion - category 1";
 								} else {
-									System.out.println(chemical.CAS + "\tmultiple categories for " + sr.hazard_code+"\t"+sr.hazard_statement);									
+									System.out.println(chemical.CAS + "\tmultiple categories for " + sr.hazardCode+"\t"+sr.hazardStatement);									
 								}
 							} else {
-								System.out.println(chemical.CAS + "\tmultiple categories for " + sr.hazard_code+"\t"+sr.hazard_statement);
+								System.out.println(chemical.CAS + "\tmultiple categories for " + sr.hazardCode+"\t"+sr.hazardStatement);
 							}
 							
 						}
@@ -1238,9 +1238,9 @@ public class ParseAustralia extends Parse {
 
 		sr.source = ScoreRecord.sourceAustralia;
 		sr.category = hazardCategory;// TODO or assign to classification?
-		sr.hazard_code = hazardCode;
+		sr.hazardCode = hazardCode;
 		sr.route = toxRoute;
-		sr.hazard_statement = hazardStatement;
+		sr.hazardStatement = hazardStatement;
 		sr.note = strNote;
 		sr.score = strScore;
 		sr.rationale = "Score of " + strScore + " was assigned based on a hazard code of " + hazardCode;
