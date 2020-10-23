@@ -68,43 +68,48 @@ public class CreateAquaticToxicityRecords {
 		// but I think that's the way to do it in Java.
 
 		//TODO- does it need to be lethality as effect??? or is growth ok?
-		
 
-		
-//		if (tr.toxval_id.contentEquals("146599")) {
-//			System.out.println("here1123"+"\t"+tr.toxval_type+"\t"+study_dur_in_days);
-//		}
+
+
+		//		if (tr.toxval_id.contentEquals("146599")) {
+		//			System.out.println("here1123"+"\t"+tr.toxval_type+"\t"+study_dur_in_days);
+		//		}
 
 		if (tr.species_supercategory.toLowerCase().contains("exotic") ||
-			tr.species_supercategory.toLowerCase().contains("nuisance") ||
-			tr.species_supercategory.toLowerCase().contains("invasive"))
+				tr.species_supercategory.toLowerCase().contains("nuisance") ||
+				tr.species_supercategory.toLowerCase().contains("invasive"))
 			return;
 		// Excluding invasive species.
-			
-		if ((study_dur_in_days<5) &&
-				(tr.toxval_type.contentEquals("LC50") ||
-						tr.toxval_type.contentEquals("EC50"))) {
+
+		//		if ((study_dur_in_days<5) &&
+		
+		String species = tr.species_supercategory.toLowerCase();
+		
+		boolean fish4day = species.contains("fish") && study_dur_in_days==4;
+		boolean crustacean2day = species.contains("crustacean") && study_dur_in_days==2;
+		boolean algae3or4day = species.contains("algae") && (study_dur_in_days==3 || study_dur_in_days==4);
+		
+		if ((tr.toxval_type.contentEquals("LC50") || tr.toxval_type.contentEquals("EC50")) &&
+				(fish4day || crustacean2day || algae3or4day)) {
 			Score score=chemical.scoreAcute_Aquatic_Toxicity;
-			
+
 			ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr);
-			
+
 			sr.duration=study_dur_in_days;
 			sr.durationUnits="days";
-			
+
 			setAquaticToxAcuteScore(sr, chemical);
 			score.records.add(sr);
 
-		} else if ((study_dur_in_days>13) &&
-				(tr.toxval_type.contentEquals("NOEC") ||
-						tr.toxval_type.contentEquals("LOEC"))) {
 			
-			
+		} else if ((study_dur_in_days>6) && (tr.toxval_type.contentEquals("NOEC") || tr.toxval_type.contentEquals("LOEC"))) {
 
+//		} else if ((study_dur_in_days>13) &&
+//  	The GHS criteria document says "durations can vary widely depending on the test purpose
+//		(anywhere from 7 days to over 200 days)"							
 			
 			Score score=chemical.scoreChronic_Aquatic_Toxicity;
-			
 			ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr);
-			
 			sr.duration=study_dur_in_days;
 			sr.durationUnits="days";
 			setAquaticToxChronicScore(sr, chemical);

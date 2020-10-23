@@ -73,7 +73,7 @@ public class CreateOrganOrSystemicToxRecords {
 				setScore(sr, chemical, "2 year", "Oral", 1.25, 12.5);
 				
 			} else if (study_dur_in_days >= 360.0 && study_dur_in_days <= 370.0) {
-				System.out.println("1 year oral");
+			//	System.out.println("1 year oral");
 				setScore(sr, chemical, "1 year", "Oral", 2.5, 25);
 				
 			} else if (study_dur_in_days >= 175.0 && study_dur_in_days <= 185.0) {

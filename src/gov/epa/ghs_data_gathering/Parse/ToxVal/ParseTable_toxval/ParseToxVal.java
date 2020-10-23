@@ -165,39 +165,8 @@ public class ParseToxVal extends Parse {
 	}
 
 
-	//	public static boolean isNeuroCriticalEffect(RecordToxVal r) {
-	//
-	//		String ce=r.critical_effect;
-	//
-	//		//more keywords added
-	//
-	//		if (ce.contains("ataxia") || 
-	//				ce.contains("brain") ||
-	//				ce.contains("cholinesterase") ||
-	//				ce.contains("CNS") ||
-	//				ce.contains("COMA") ||
-	//				ce.contains("convulsions") ||
-	//				ce.contains("decreased retention (memory)") ||
-	//				ce.contains("demyelination") ||
-	//				ce.contains("HALLUCINATIONS") ||
-	//				ce.contains("headache, dizziness, weakness") ||
-	//				ce.contains("impaired reflex") ||
-	//				ce.contains("jerking movements") ||
-	//				ce.contains("motor and sensory function") ||
-	//				ce.contains("nerve") ||
-	//				ce.contains("NERVOUS SYSTEM") ||
-	//				ce.contains("paralysis") ||
-	//				ce.contains("Psychomotor") ||
-	//				ce.contains("seizure") ||
-	//				ce.contains("SENSE ORGANS") ||
-	//				ce.contains("Spinal cord") ||
-	//				ce.contains("TOXIC PSYCHOSIS") ||
-	//				ce.contains("tremor") ) {
-	//			return true;
-	//		} else {
-	//			return false;
-	//		}
-	//	}
+	// Deleted the NeuroCriticalEffect commented code because that code is included elsewhere.
+	
 
 
 
@@ -207,24 +176,31 @@ public class ParseToxVal extends Parse {
 //			if (!r.toxval_id.contentEquals("660309"))
 //			return;
 
+		
+		// Not using the RAC anymore due to errors and inconsistencies in the RAC. 
 		//		CalculateRiskAssessmentClass.assignRAC(r);
 		//			
 		//		if ( r.risk_assessment_class_calc==null || !r.risk_assessment_class.contentEquals(r.risk_assessment_class_calc))
 		//			System.out.println(r.risk_assessment_class+"\t"+r.risk_assessment_class_calc);
 //		crac2.getRAC(r);
+//		if (r.risk_assessment_class.contentEquals("acute")) {
 
-//		if (chemical.CAS == null) {
+		if (chemical.CAS == null) {
 			chemical.CAS = r.casrn;
 			chemical.name = r.name;
-//		}
-		//		System.out.println("before human eco");
+		}
+		
 		if (r.human_eco.contentEquals("human health")) {			
-			//	if (r.risk_assessment_class.contentEquals("acute")) {
 			handleHuman(chemical, r);
 		} else if (r.human_eco.contentEquals("eco") &&
 				r.habitat.contentEquals("aquatic") &&
 				r.toxval_units.contentEquals("mg/L") &&
-				!r.lifestage.toLowerCase().contains("egg")) {
+				r.species_supercategory.toLowerCase().contains("standard test species") &&
+				(r.species_supercategory.toLowerCase().contains("fish") ||
+						r.species_supercategory.toLowerCase().contains("crustacean") ||
+						r.species_supercategory.toLowerCase().contains("algae"))) {
+//				!r.lifestage.toLowerCase().contains("egg"))
+//				Including all lifestages.  Reproductive tox is more sensitive but is part of ecotox.
 			handleEco(chemical, r);
 		}	
 
@@ -277,7 +253,7 @@ public class ParseToxVal extends Parse {
 	 * but need to check this. -Leora 4/23/20
 	 * 
 	 * 
-	 * I'm not quite sure whether things the inclusion criteria such as for
+	 * I'm not quite sure whether things such as the inclusion criteria for
 	 * human_eco should go here or whether they should be located in the code for
 	 * the class.
 	 * 

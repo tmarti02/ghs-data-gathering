@@ -685,7 +685,7 @@ public class ParseToxValDB {
 //				getDataFromTable_cancer_summary(chemical);
 //				getDataFromTable_genetox_summary(chemical);
 //				getDataFromTable_models(chemical);
-//				getDataFromTable_bcfbaf(chemical);//TODO
+			    getDataFromTable_bcfbaf(chemical);//TODO
 
 			}
 
@@ -721,7 +721,6 @@ public class ParseToxValDB {
 				createRecord(rs, r);
 
 				ParseToxValBCFBAF.createScoreRecord(chemical, r);
-				//System.out.println(r.risk_assessment_class);
 				count++;
 			}
 
