@@ -48,6 +48,8 @@ public class ParseToxValGenetox {
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.name=rc.name;
 		
+		sr.toxvalID="genetox_summary_"+rc.genetox_summary_id;
+		
 		//TODO determine what model predicted values come from (ask Richard!)- assign to sourceOriginal
 		
 		if (rc.genetox_call.contains("pred")) {

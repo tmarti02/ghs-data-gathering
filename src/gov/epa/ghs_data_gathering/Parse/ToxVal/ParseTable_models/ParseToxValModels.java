@@ -15,6 +15,8 @@ public class ParseToxValModels {
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal = r.model;		
 		sr.listType=ScoreRecord.typePredicted;
+		
+		sr.toxvalID="models_"+r.model_id;
 				
 		return sr;
 	}

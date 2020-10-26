@@ -6,6 +6,7 @@ public class RecordToxValCancer {
 	
 	public String casrn;
 	public String name;
+	public String chemical_id;
 	public String dtxsid;
 	public String source;
 	public String cancer_call;
@@ -13,7 +14,7 @@ public class RecordToxValCancer {
 	public String url;
 	
 	public transient static String[] varlist = { 
-			"casrn","name","dtxsid","source","cancer_call","exposure_route","url"};
+			"casrn","name","chemical_id","dtxsid","source","cancer_call","exposure_route","url"};
 
 
 	/**

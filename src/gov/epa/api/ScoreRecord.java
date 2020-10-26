@@ -855,15 +855,15 @@ public class ScoreRecord {
 		return listType;
 
 	}
-	
 
-	public static String getHeader(String del) {
+	
+	public static String getHeader(String del,String [] fieldNames) {
 		// TODO Auto-generated method stub
 
 		String Line = "";
-		for (int i = 0; i < allFieldNames.length; i++) {
-			Line += allFieldNames[i];
-			if (i < allFieldNames.length - 1) {
+		for (int i = 0; i < fieldNames.length; i++) {
+			Line += fieldNames[i];
+			if (i < fieldNames.length - 1) {
 				Line += del;
 			}
 			
@@ -873,6 +873,11 @@ public class ScoreRecord {
 		}
 
 		return Line;
+	}
+
+
+	public static String getHeader(String del) {
+		return getHeader(del,allFieldNames);		
 	}
 
 	

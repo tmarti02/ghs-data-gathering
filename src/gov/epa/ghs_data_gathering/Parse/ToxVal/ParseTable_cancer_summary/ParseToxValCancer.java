@@ -153,6 +153,8 @@ public class ParseToxValCancer {
 			return;
 		}
 		
+		sr.toxvalID="cancer_summary_"+rc.chemical_id;
+		
 		sr.score=dictCC.get(rc.cancer_call);
 		sr.hazardStatement=rc.cancer_call;
 		

@@ -42,8 +42,8 @@ public class ParseToxValDB {
 	//	public static final String DB_Path_AA_Dashboard_Records = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal\\databases\\toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 
 	//use relative path so dont have to keep changing this- i.e. it is relative to java installation:  "D:\Users\TMARTI02\OneDrive - Environmental Protection Agency (EPA)\0 java\ghs-data-gathering\AA Dashboard\databases\toxval_v8.db"
-	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
-//	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
+//	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
+	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
 //  This didn't work even when I moved the database, so I switched it back to the  other folder.
 	public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
@@ -733,88 +733,70 @@ public class ParseToxValDB {
 	}
 
 
-
+	/**
+	 * This method runs the calculations and compares to manual results stored in a series of spreadsheets
+	 * @param args
+	 */	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
 		ParseToxValDB p = new ParseToxValDB();
+		String folder="AA dashboard/toxval/test spreadsheets";//use relative path so dont have to keep changing this- i.e. it is relative to java installation:  "D:\Users\TMARTI02\OneDrive - Environmental Protection Agency (EPA)\0 java\ghs-data-gathering\AA Dashboard\toxval"
 
-		//		String folder = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal";
-		//	 String folder="E:\\Documents\\0000 epa\\0 telework\\AA dashboard";
-		String folder="AA dashboard/toxval";//use relative path so dont have to keep changing this- i.e. it is relative to java installation:  "D:\Users\TMARTI02\OneDrive - Environmental Protection Agency (EPA)\0 java\ghs-data-gathering\AA Dashboard\toxval"
-
-
-		//***************************************************************************// 
-
-		String CAS="79-06-1";
-//		String CAS="50-00-0";
-//		String CAS="123-91-1"; // casList.add(CAS);
-//		CAS="75-73-0";
-
-//		String CAS="75-73-0";
+		boolean runSingle=false;
 		
+		if (runSingle) {
+
+			String CAS="79-06-1";
+			Vector<String>casList=new Vector<String>();		
+			casList.add(CAS);
+
+			String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json"; //
+			String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";			
+
+			Chemicals chemicals=p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json,filePathRecordsForCAS_txt);
+			
+		} else {
+			String filePathRecordsForCASList_json=folder+File.separator+"toxval_pod_summary_top 10.json"; String
+			filePathRecordsForCASList_txt=folder+File.separator+"toxval_pod_summary_Top10.txt"; 			
+			
+			Vector<String>casList=new Vector<String>();					
+
+			//Cas numbers in order of appearance on toxval.xls checking spreadsheet:
+			casList.add("79-06-1"); 
+			casList.add("79-01-6"); 
+			casList.add("111-30-8");
+			casList.add("75-21-8");
+			casList.add("101-77-9");
+			casList.add("7803-57-8");
+			casList.add("50-00-0");
+			casList.add("10588-01-9");
+			casList.add("302-01-2");
+			
+			//TODO which is 10th?
+//			casList.add("108-95-2");
+			  			
+			Vector<String>tableNames=new Vector<>();//tables in toxval, we have a manual xls file for each
+			tableNames.add("toxval");
+			tableNames.add("bcfbaf");
+			tableNames.add("cancer_summary");
+			tableNames.add("genetox_summary");
+			tableNames.add("models");
+						 		
+			Chemicals chemicals=p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCASList_json,filePathRecordsForCASList_txt);			
+			String filePathExcelManual=folder+"/toxval.xlsx";
+			compareWithManual(chemicals,folder,tableNames,casList);
+		}
 		
-		Vector<String>casList=new Vector<String>();
-		casList.add(CAS);
-
-		casList.add("79-01-6");
-		casList.add("111-30-8");
-		casList.add("75-21-8");
-		
-		casList.add("7803-57-8");
-		casList.add("101-77-9");
-		casList.add("50-00-0");
-		casList.add("10588-01-9");
-		casList.add("302-01-2");
-	
-	
-	//	casList.add("76-16-4");
-
-		String filePathRecordsForCAS_json=folder+File.separator+"records_"+CAS+".json"; //
-		String filePathRecordsForCAS_txt=folder+File.separator+"records_"+CAS+".txt";
-		Chemicals chemicals=p.goThroughRecordsMultipleChemicals(casList, filePathRecordsForCAS_json,filePathRecordsForCAS_txt);
-		
-//		String filePathExcelManual=folder+"/fromDBQuery.xlsx";
-		String filePathExcelManual=folder+"/manual.xlsx";
-		compareWithManual(chemicals,filePathExcelManual,casList);
-
-				
-		//***************************************************************************
-
-
-//		casList.add("76-16-4");
-//		casList.add("7664-39-3");
-		
-		
-//		casList.add("79-06-1"); casList.add("79-01-6"); casList.add("108-95-2");
-//		casList.add("50-00-0"); casList.add("111-30-8"); casList.add("302-01-2");
-//		casList.add("75-21-8"); casList.add("7803-57-8"); casList.add("101-77-9");
-//		casList.add("10588-01-9");
-//
-//
-//		casList.add("107-13-1");  casList.add("110-91-8"); //
-//		casList.add("106-93-4");  casList.add("67-56-1"); //
-//		casList.add("7664-39-3");  casList.add("556-52-5"); //
-//		casList.add("87-86-5");  casList.add("62-53-3"); //
-//		casList.add("106-89-8");  casList.add("7778-50-9"); //
-//		casList.add("123-45-6");
-//
-//
-//		String filePathRecordsForCASList_json=folder+File.separator+"toxval_pod_summary_top 10.json"; String
-//		filePathRecordsForCASList_txt=folder+File.separator+"toxval_pod_summary_Top10.txt"; 
-//		p.goThroughRecordsMultipleChemicals(casList,filePathRecordsForCASList_json, filePathRecordsForCASList_txt);
-
-
 	}
 
-	static Vector<ScoreRecord> getManualResults(String excelFilePath) {
+	static Vector<ScoreRecord> getManualResults(String folder,String tableName,Vector<ScoreRecord>recs) {
 		
-		Vector<ScoreRecord>recs=new Vector<>();
-		
+				
 		try
 		{
 											
-			FileInputStream file = new FileInputStream(new File(excelFilePath));
+			FileInputStream file = new FileInputStream(new File(folder+File.separator+tableName+".xlsx"));
 
 			//Create Workbook instance holding reference to .xlsx file
 			XSSFWorkbook workbook = new XSSFWorkbook(file);
@@ -824,7 +806,7 @@ public class ParseToxValDB {
 				//Get first/desired sheet from the workbook
 				XSSFSheet sheet = workbook.getSheetAt(i);
 				
-				getRecordsFromSheet(recs, sheet);
+				getRecordsFromSheet(recs, sheet,tableName);
 			}
 //			System.out.println("here size="+recs.size());
 			
@@ -836,7 +818,7 @@ public class ParseToxValDB {
 		
 	}
 
-	private static void getRecordsFromSheet(Vector<ScoreRecord> recs, XSSFSheet sheet) {
+	private static void getRecordsFromSheet(Vector<ScoreRecord> recs, XSSFSheet sheet,String tableName) {
 		try {
 			Row row=sheet.getRow(0);
 
@@ -855,19 +837,36 @@ public class ParseToxValDB {
 				
 				String hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
 				
-				String name=rowi.getCell(htColNums.get("name")).getStringCellValue();
-				String CAS=rowi.getCell(htColNums.get("casrn")).getStringCellValue();
+				String name=null;
+				String CAS=null;
+				
+				if (htColNums.get("name")!=null) {
+					name=rowi.getCell(htColNums.get("name")).getStringCellValue();
+					CAS=rowi.getCell(htColNums.get("casrn")).getStringCellValue();					
+				}
 				
 				ScoreRecord f=new ScoreRecord(hazard_name,CAS,name);
 				
 //				System.out.println((i+1)+"\t"+sheet.getSheetName());
 				
-				f.toxvalID=(int)(rowi.getCell(htColNums.get("toxval_id")).getNumericCellValue())+"";
+				if (tableName.contentEquals("toxval")) {
+					f.toxvalID=(int)(rowi.getCell(htColNums.get("toxval_id")).getNumericCellValue())+"";	
+				} else if (tableName.contentEquals("bcfbaf")) {					
+					f.toxvalID="bcfbaf_"+(int)(rowi.getCell(htColNums.get("bcfbaf_id")).getNumericCellValue())+"";					
+				} else if (tableName.contentEquals("cancer_summary")) {					
+					f.toxvalID="cancer_summary_"+(int)(rowi.getCell(htColNums.get("chemical_id")).getNumericCellValue())+"";									
+				} else if (tableName.contentEquals("genetox_summary")) {					
+					f.toxvalID="genetox_summary_"+(int)(rowi.getCell(htColNums.get("genetox_summary_id")).getNumericCellValue())+"";									
+				} else if (tableName.contentEquals("models")) {					
+					f.toxvalID="models_"+(int)(rowi.getCell(htColNums.get("model_id")).getNumericCellValue())+"";									
+				} else {
+					System.out.println("Need to specify ID column name");
+				}
+				
 //				f.hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
 				f.score=rowi.getCell(htColNums.get("ManualScore")).getStringCellValue();
 				
-			
-				
+						
 					
 //				System.out.println(sheet.getSheetName()+"\t"+f.toxval_id);
 
@@ -903,15 +902,26 @@ public class ParseToxValDB {
 		
 		for (int i=0;i<records.size();i++) {
 			ScoreRecord rec=records.get(i);
+//			System.out.println(rec.toxvalID);
 			ht.put(rec.toxvalID, rec);
 		}
 		return ht;
 	}
 	
 	
-	private static void compareWithManual(Chemicals chemicals,String excelFilePath,Vector<String>casList) {
+	private static void compareWithManual(Chemicals chemicals,String folderExcel, Vector<String>tableNames,Vector<String>casList) {
 		
-		Vector<ScoreRecord>recordsManual=getManualResults(excelFilePath);
+				
+		Vector<ScoreRecord>recordsManual=new Vector<>();
+		
+		for (String tableName:tableNames) {
+			getManualResults(folderExcel, tableName, recordsManual);
+		}
+		
+//		for (ScoreRecord sr:recordsManual) {
+//			System.out.println(sr.toxvalID);
+//		}
+				
 		Vector<ScoreRecord>recordsJava=getJavaRecords(chemicals);
 		
 		

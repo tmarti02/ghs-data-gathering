@@ -226,11 +226,11 @@ public class CreateAcuteMammalianToxicityRecords {
 			//	System.out.println("inhalation VH");
 			} else if (dose > 2 && dose <= 10) {
 				sr.score = ScoreRecord.scoreH;
-				sr.rationale = "50 mg/L < Inhalation LC50 <=10 mg/L";
+				sr.rationale = "2 mg/L < Inhalation LC50 <=10 mg/L";
 			//	System.out.println("inhalation H");
 			} else if (dose > 10 && dose <= 20) {
 				sr.score = ScoreRecord.scoreM;
-				sr.rationale = "300 mg/L < Inhalation LC50 <=20 mg/L";
+				sr.rationale = "10 mg/L < Inhalation LC50 <=20 mg/L";
 			//	System.out.println("inhalation M");
 			} else if (dose > 20) {// >20
 				sr.score = ScoreRecord.scoreL;

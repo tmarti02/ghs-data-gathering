@@ -8,6 +8,7 @@ public class RecordToxValGenetox {
 	public String name;
 	public String dtxsid;
 
+	public String genetox_summary_id;
 	public String reports_pos;
 	public String reports_neg;
 	public String reports_other;

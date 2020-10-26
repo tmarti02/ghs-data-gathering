@@ -24,6 +24,7 @@ public class ParseToxValBCFBAF {
 
 		sr.source = ScoreRecord.sourceToxVal;
 		sr.sourceOriginal=r.author+", "+r.year;
+		sr.toxvalID="bcfbaf_"+r.bcfbaf_id;//need this so can do manual check later
 
 		if (r.journal.contains("http")) {
 			sr.url=r.journal;
