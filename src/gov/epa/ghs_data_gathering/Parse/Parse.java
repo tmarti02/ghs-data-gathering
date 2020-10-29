@@ -48,6 +48,8 @@ public class Parse {
 	static Multimap<String, String> dictCodeToScoreName = CodeDictionary.populateCodeToScoreName();
 	static Hashtable<String, String> dictCodeToStatement = CodeDictionary.getHazardStatementDictionaryH();
 
+	public static final String pathRawHTMLDatabase="databases\\raw_html.db";
+	
 
 	Gson gson=null;
 

@@ -295,6 +295,36 @@ public class FileUtilities {
 		}
 	}
 
+	
+	public static String getText_UTF8(String url) {
+		//		   TODO move to a utility class    
+
+		try {
+
+			URL website = new URL(url);
+			URLConnection connection = website.openConnection();
+
+			
+		    BufferedReader input = new BufferedReader(
+		            new InputStreamReader(connection.getInputStream(), "UTF-8")); 
+		    
+		    StringBuilder strB = new StringBuilder();
+		    String str;
+		    while (null != (str = input.readLine())) {
+		        strB.append(str).append("\r\n"); 
+		    }
+		    input.close();
+			
+			
+			return strB.toString();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
+	}
+
+
 
 	/**
 	 * Read a file line by line until you hit seek string
@@ -402,6 +432,8 @@ public class FileUtilities {
 			ex.printStackTrace();
 		}
 	}
+	
+
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

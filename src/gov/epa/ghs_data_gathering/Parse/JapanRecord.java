@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.sql.Connection;
+import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
@@ -17,6 +19,9 @@ import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+
+import java.util.Date; 
+
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -29,6 +34,9 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.AADashboard;
 import gov.epa.api.HazardRecord;
+import gov.epa.api.RawDataRecord;
+import gov.epa.api.ScoreRecord;
+import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 import java.util.ArrayList;
@@ -53,6 +61,7 @@ public class JapanRecord {
 	String fileName;
 	
 	ArrayList<HazardRecord>records=new ArrayList<>();
+	
 	static Multimap<String, String> dictHazardNameToScoreName = CodeDictionary.populateJapanHazardClassToScoreName();
 	
 	
@@ -264,6 +273,72 @@ public class JapanRecord {
             fos.close();
 			
             fw.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+
+	}
+	
+	public static void downloadWebpagesToDatabase() {
+		
+		String tableName=ScoreRecord.sourceJapan;
+		
+		String mainFolder = AADashboard.dataFolder + File.separator + tableName;
+		String folderNameWebpages = "web pages";
+
+		//Download webpage at https://www.nite.go.jp/chem/english/ghs/all_fy_e.html ==> GHS Classification Results.html 		
+		File indexFile=new File(mainFolder+"/GHS Classification Results.html");
+
+
+		try {
+
+			Connection conn=CreateGHS_Database.createDatabaseTable(Parse.pathRawHTMLDatabase, tableName, RawDataRecord.fieldNames);
+			
+			Document doc = Jsoup.parse(indexFile, "utf-8");
+			Element table = doc.select("table.tblghs02").first();
+			Elements trs = table.select("tr");
+
+			for (int i=1;i<=3;i++) trs.remove(0);
+
+			for (Element tr:trs) {
+				if (tr.hasAttr("bgcolor") && tr.attr("bgcolor").equals("gray")) continue;
+				Elements as = tr.select("a");
+
+				for (Element a:as) {
+					if (a.attr("href").contains(".html")) {
+
+						String url=a.attr("href");
+						String fileName = url.substring( url.lastIndexOf("/")+1, url.length() );
+						
+//						if (!fileName.contentEquals("16-mhlw-0108e.html")) {
+//							continue;
+//						}
+
+						SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+						Date date = new Date();  
+						String strDate=formatter.format(date);
+
+						System.out.println(fileName+"\t"+strDate);
+
+						//Download the file as a string:
+						String html=FileUtilities.getText_UTF8(url).replace("'", "''");	//single quotes mess with the SQL insert later					
+						System.out.println(html);  
+						
+						//TODO: for now entire html is stored- could also just store the part of html we need via JSoup
+																			
+						RawDataRecord rec=new RawDataRecord(strDate, url, html);
+						rec.addRecordToDatabase(tableName, conn);
+																														
+//						if (true) System.exit(0);;
+						
+						Thread.sleep(3000);
+					}
+				}
+			}
+
+	
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -655,7 +730,8 @@ public class JapanRecord {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		JapanRecord.downloadWebpages();
+//		JapanRecord.downloadWebpages();
+		JapanRecord.downloadWebpagesToDatabase();
 	}
 
 }

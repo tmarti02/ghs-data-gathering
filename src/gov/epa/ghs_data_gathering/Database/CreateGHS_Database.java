@@ -293,6 +293,95 @@ public class CreateGHS_Database  {
 	 * @param filepath
 	 * @return
 	 */
+	public static void addDataToTable(String tableName,String [] fieldNames,String [] values,Connection conn) {
+
+//		Example:
+//		INSERT INTO Customers (CustomerName, ContactName, Address, City, PostalCode, Country)
+//		VALUES ('Cardinal','Tom B. Erichsen','Skagen 21','Stavanger','4006','Norway');
+
+		
+		try {
+			
+			String sql = "INSERT INTO " + tableName + " (";
+		
+			for (int i = 0; i < fieldNames.length; i++) {
+				sql+=fieldNames[i];				
+				if (i<fieldNames.length-1) sql+=",";
+			}
+			sql+=")\r\n";
+			
+			sql+="VALUES (";
+			
+			for (int i = 0; i < values.length; i++) {
+				sql+="'"+values[i]+"'";				
+				if (i<values.length-1) sql+=",";
+			}
+								
+			sql+=")\r\n";
+		
+//			System.out.println(sql);
+			
+			Statement stat = MySQL_DB.getStatement(conn);
+			stat.executeUpdate(sql);
+						
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
+	
+	
+	/**
+	 * Create sqlite database table with CAS as primary key (needs unique values for this to work)
+	 * 
+	 * Can search by any field in table but CAS is much faster since primary key
+	 * 
+	 * See http://sqlitebrowser.org/ for user friendly sqlite GUI to look at the database once it's created
+	 * 
+	 * @param filepath
+	 * @return
+	 */
+	public static Connection createDatabaseTable(String databaseFilePath,String tableName,String [] fieldNames) {
+
+		Connection conn=null;
+		
+		try {
+			System.out.println("Creating "+tableName+" table");
+
+			conn= MySQL_DB.getConnection(databaseFilePath);
+			Statement stat = MySQL_DB.getStatement(conn);
+			
+			conn.setAutoCommit(true);
+						
+			stat.executeUpdate("drop table if exists "+tableName+";");			 
+			stat.executeUpdate("VACUUM;");//compress db now that have deleted the table
+			
+			MySQL_DB.create_table(stat, tableName, fieldNames);
+			
+//			conn.setAutoCommit(true);
+//						
+//			String sqlAddIndex="CREATE INDEX idx_CAS ON "+tableName+" (CAS)";
+//			stat.executeUpdate(sqlAddIndex);			
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return conn;
+
+	}
+	
+	
+	/**
+	 * Create sqlite database table with CAS as primary key (needs unique values for this to work)
+	 * 
+	 * Can search by any field in table but CAS is much faster since primary key
+	 * 
+	 * See http://sqlitebrowser.org/ for user friendly sqlite GUI to look at the database once it's created
+	 * 
+	 * @param filepath
+	 * @return
+	 */
 	public static void createDatabaseWithPrimaryKey(String textFilePath,String dbPath,String del,String tableName,String [] fieldNames) {
 
 		try {
