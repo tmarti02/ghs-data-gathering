@@ -42,8 +42,9 @@ public class ParseToxValDB {
 	//	public static final String DB_Path_AA_Dashboard_Records = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal\\databases\\toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 
 	//use relative path so dont have to keep changing this- i.e. it is relative to java installation:  "D:\Users\TMARTI02\OneDrive - Environmental Protection Agency (EPA)\0 java\ghs-data-gathering\AA Dashboard\databases\toxval_v8.db"
-	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
-//	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
+//	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
+	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
+	
 //  The "databases/toxval_v8.db" folder didn't work even when I moved the database there, so I switched it back to the "AA Dashboard/databases/toxval_v8.db" folder.
 	public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
@@ -774,7 +775,7 @@ public class ParseToxValDB {
 			
 			//TODO which is 10th?
 			// Yes, 108-95-2 is the chemical that isn't in the toxval checking spreadsheet.
-			casList.add("108-95-2");
+//			casList.add("108-95-2");//dont add it until it is in the toxval spreadsheet
 			  			
 			Vector<String>tableNames=new Vector<>();//tables in toxval, we have a manual xls file for each
 			tableNames.add("toxval");
@@ -941,14 +942,8 @@ public class ParseToxValDB {
 		for (int i=0;i<recordsManual.size();i++) {
 			ScoreRecord recManual=recordsManual.get(i);
 
-//			The line below didn't work as intended so I deleted it:
-//		if (!casList.contains(recManual.CAS)) continue;//skip record if we hadnt run it in java
-//			Add cas column to spreadsheets and put this line back.
-//		I added the cas to the spreadsheet and it still isn't working correctly,
-//		but it works if I delete that line.
-			 
-//			System.out.println(recManual.CAS);
-			
+//			The following line works if there is a "casrn" column in the spreadsheet:
+			if (!casList.contains(recManual.CAS)) continue;//skip record if we hadnt run it in java
 			
 //			if (!recManual.toxval_id.contentEquals("660309"))
 //				return;

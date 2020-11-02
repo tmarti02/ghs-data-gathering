@@ -177,8 +177,8 @@ public class ParseToxVal extends Parse {
 //  Omitting this chemical for the toxval table for now.  It is in the other
 //	spreadsheets for checking (bcfbaf, cancer, genetox, models), but is not in the
 //	toxval checking spreadsheet.
-		if (r.casrn.contentEquals("108-95-2"))
-				return;
+//		if (r.casrn.contentEquals("108-95-2"))
+//				return;
 	
 		
 		// Not using the risk_assessment_class (RAC) anymore due to errors and inconsistencies in the RAC. 
