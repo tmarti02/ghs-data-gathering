@@ -68,6 +68,8 @@ public class CreateAquaticToxicityRecords {
 		// but I think that's the way to do it in Java.
 
 		//TODO- does it need to be lethality as effect??? or is growth ok?
+		// GHS criteria are based on chronic tests for endpoints that "can include
+		// "hatching success, growth (length and weight changes), spawning success, and survival."
 
 
 
@@ -82,6 +84,15 @@ public class CreateAquaticToxicityRecords {
 		// Excluding invasive species.
 
 		//		if ((study_dur_in_days<5) &&
+		
+//  We further restricted the criteria for acute aquatic toxicity based on the GHS criteria document:
+//	"Acute aquatic toxicity is normally determined using a fish 96 hour LC50 (OECD Test Guideline 203 or equivalent),
+//  a crustacea species 48 hour EC50 (OECD Test Guideline 202 or equivalent) and/or
+//  an algal species 72 or 96 hour EC50 (OECD Test Guideline 201 or equivalent).
+//  These species are considered as surrogate for all aquatic organisms and
+//  data on other species (e.g. Lemna spp.) may also be considered if the test methodology is suitable."
+//	Our criteria aim to include only standard test methods for consistency across chemicals.	
+		
 		
 		String species = tr.species_supercategory.toLowerCase();
 		
@@ -105,8 +116,9 @@ public class CreateAquaticToxicityRecords {
 		} else if ((study_dur_in_days>6) && (tr.toxval_type.contentEquals("NOEC") || tr.toxval_type.contentEquals("LOEC"))) {
 
 //		} else if ((study_dur_in_days>13) &&
-//  	The GHS criteria document says "durations can vary widely depending on the test purpose
-//		(anywhere from 7 days to over 200 days)"							
+//  	For chronic aquatic toxicity, the GHS criteria document says "durations can vary widely depending on the test purpose
+//		(anywhere from 7 days to over 200 days).
+//		So we're making the criteria > 6 days.	"							
 			
 			Score score=chemical.scoreChronic_Aquatic_Toxicity;
 			ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr);

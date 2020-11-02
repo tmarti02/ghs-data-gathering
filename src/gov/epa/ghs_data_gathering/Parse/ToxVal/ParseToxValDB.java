@@ -42,9 +42,9 @@ public class ParseToxValDB {
 	//	public static final String DB_Path_AA_Dashboard_Records = "C:\\Users\\Leora\\Desktop\\Tele\\ToxVal\\databases\\toxval_v8.db";//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 
 	//use relative path so dont have to keep changing this- i.e. it is relative to java installation:  "D:\Users\TMARTI02\OneDrive - Environmental Protection Agency (EPA)\0 java\ghs-data-gathering\AA Dashboard\databases\toxval_v8.db"
-//	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
-	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
-//  This didn't work even when I moved the database, so I switched it back to the  other folder.
+	public static final String DB_Path_AA_Dashboard_Records = "AA Dashboard/databases/toxval_v8.db";
+//	public static final String DB_Path_AA_Dashboard_Records = "databases/toxval_v8.db";
+//  The "databases/toxval_v8.db" folder didn't work even when I moved the database there, so I switched it back to the "AA Dashboard/databases/toxval_v8.db" folder.
 	public static Statement statToxVal = MySQL_DB.getStatement(DB_Path_AA_Dashboard_Records);
 
 
@@ -55,19 +55,19 @@ public class ParseToxValDB {
 
 		for(String field : RecordToxVal.varlist) {    		
 
-			//Following comes from chemical_list table:
+			// The following fields come from the chemical_list table:
 			if(field.contentEquals("casrn")) continue;//skip it
 			if(field.contentEquals("name")) continue;
 
-			//Following comes from toxval_type_dictionary:
+			// The following fields come from the toxval_type_dictionary:
 			if (field.contentEquals("toxval_type_supercategory")) continue; //do we need this field? need to add another join
 
-			//Following comes from species table, not toxval table:
+			// The following fields come from the species table, not the toxval table:
 			if (field.contentEquals("species_common")) continue; 
 			if (field.contentEquals("species_supercategory")) continue; 
 			if (field.contentEquals("habitat")) continue; 
 
-			//Following comes from record_source table, not toxval table:
+			// The following fields come from the record_source table, not the toxval table:
 			if (field.contentEquals("long_ref")) continue; 
 			if (field.contentEquals("title")) continue; 
 			if (field.contentEquals("author")) continue; 
@@ -474,7 +474,6 @@ public class ParseToxValDB {
 				RecordToxValGenetox r=new RecordToxValGenetox();						
 				createRecord(rs, r);						
 				ParseToxValGenetox.createScoreRecord(chemical, r,dictCC);
-				//System.out.println(r.risk_assessment_class);
 				count++;
 			}
 
@@ -498,9 +497,9 @@ public class ParseToxValDB {
 
 			//Create record based on opera biodegradation prediction:
 			//			createRecordPersistence_OPERA(chemical);
+			//  Not including this model.
 
 			//Create record based on episuite biodegradation prediction:
-			
 			createRecordPersistence_EPISUITE(chemical);		
 
 		} catch (Exception ex) {
@@ -510,7 +509,7 @@ public class ParseToxValDB {
 	}
 
 	//	I'm commenting this out since we're not including the OPERA persistence model data from ToxVal,
-	//	as discussed.  -Leora
+	//	due to applicability domain issues, as discussed.  -Leora
 
 	//	// Note different spellings: "Biodegredation Half-life" vs. "Biodegradation Score"  -Leora
 	//	
@@ -682,9 +681,9 @@ public class ParseToxValDB {
 				getDataFromTable_toxval(chemical);
 				
 // ***Uncomment these later.***
-//				getDataFromTable_cancer_summary(chemical);
-//				getDataFromTable_genetox_summary(chemical);
-//				getDataFromTable_models(chemical);
+				getDataFromTable_cancer_summary(chemical);
+				getDataFromTable_genetox_summary(chemical);
+				getDataFromTable_models(chemical);
 			    getDataFromTable_bcfbaf(chemical);//TODO
 
 			}
@@ -774,7 +773,8 @@ public class ParseToxValDB {
 			casList.add("302-01-2");
 			
 			//TODO which is 10th?
-//			casList.add("108-95-2");
+			// Yes, 108-95-2 is the chemical that isn't in the toxval checking spreadsheet.
+			casList.add("108-95-2");
 			  			
 			Vector<String>tableNames=new Vector<>();//tables in toxval, we have a manual xls file for each
 			tableNames.add("toxval");
@@ -855,8 +855,9 @@ public class ParseToxValDB {
 					f.toxvalID="bcfbaf_"+(int)(rowi.getCell(htColNums.get("bcfbaf_id")).getNumericCellValue())+"";					
 				} else if (tableName.contentEquals("cancer_summary")) {					
 					f.toxvalID="cancer_summary_"+(int)(rowi.getCell(htColNums.get("chemical_id")).getNumericCellValue())+"";									
-				} else if (tableName.contentEquals("genetox_summary")) {					
-					f.toxvalID="genetox_summary_"+(int)(rowi.getCell(htColNums.get("genetox_summary_id")).getNumericCellValue())+"";									
+				} else if (tableName.contentEquals("genetox_summary")) {
+					f.toxvalID="genetox_summary_"+(int)(rowi.getCell(htColNums.get("genetox_summary_id")).getNumericCellValue())+"";					
+//					f.toxvalID="genetox_summary_"+(int)(rowi.getCell(htColNums.get("genetox_summary_id")).getNumericCellValue())+"";														f.toxvalID="genetox_summary_"+(int)(rowi.getCell(htColNums.get("genetox_summary")).getNumericCellValue())+"";									
 				} else if (tableName.contentEquals("models")) {					
 					f.toxvalID="models_"+(int)(rowi.getCell(htColNums.get("model_id")).getNumericCellValue())+"";									
 				} else {
@@ -916,19 +917,21 @@ public class ParseToxValDB {
 		
 		for (String tableName:tableNames) {
 			getManualResults(folderExcel, tableName, recordsManual);
+			System.out.println(tableName);
 		}
 		
-//		for (ScoreRecord sr:recordsManual) {
-//			System.out.println(sr.toxvalID);
-//		}
+		for (int i=0;i<recordsManual.size();i++) {
+			ScoreRecord recManual=recordsManual.get(i);
+//			System.out.println("recManual: "+i+"\t"+recManual.toxvalID);
+		}
 				
 		Vector<ScoreRecord>recordsJava=getJavaRecords(chemicals);
 		
 		
-//		for (int i=0;i<recordsJava.size();i++) {
-//			FlatFileRecord recJava=recordsJava.get(i);
-//			System.out.println("recJava: "+i+"\t"+recJava.toxval_id);
-//		}
+		for (int i=0;i<recordsJava.size();i++) {
+			ScoreRecord recJava=recordsJava.get(i);
+//			System.out.println("recJava: "+i+"\t"+recJava.toxvalID);
+		}
 		
 		Hashtable<String,ScoreRecord>htManual=getHashtable(recordsManual);
 		Hashtable<String,ScoreRecord>htJava=getHashtable(recordsJava);
@@ -937,9 +940,16 @@ public class ParseToxValDB {
 		//First loop through manual records to find records present in manual but not in java:
 		for (int i=0;i<recordsManual.size();i++) {
 			ScoreRecord recManual=recordsManual.get(i);
-			
-			if (!casList.contains(recManual.CAS)) continue;//skip record if we hadnt run it in java
+
+//			The line below didn't work as intended so I deleted it:
+//		if (!casList.contains(recManual.CAS)) continue;//skip record if we hadnt run it in java
+//			Add cas column to spreadsheets and put this line back.
+//		I added the cas to the spreadsheet and it still isn't working correctly,
+//		but it works if I delete that line.
 			 
+//			System.out.println(recManual.CAS);
+			
+			
 //			if (!recManual.toxval_id.contentEquals("660309"))
 //				return;
 			
@@ -947,10 +957,16 @@ public class ParseToxValDB {
 			
 			if (htJava.get(recManual.toxvalID)==null) {
 			
+//				System.out.println(tableName);
+//				I want to get it to print the table name but I can't access the tableName variable.
 				System.out.println(recManual.toxvalID+" present in manual, not in Java");
 			
-			} else {
+			} else  {
 				ScoreRecord recJava=htJava.get(recManual.toxvalID);
+				
+			//	System.out.println("here");
+			//	System.out.println(recManual.score);
+			//	System.out.println(recJava.score);
 				
 				if (!recManual.hazardName.contentEquals(recJava.hazardName)) {						
 					System.out.println(recJava.toxvalID+"\t"+recJava.hazardName+"\t"+recManual.hazardName+"\tmismatch hazard name\t"+recManual.note);						

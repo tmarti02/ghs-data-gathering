@@ -169,21 +169,25 @@ public class ParseToxVal extends Parse {
 	
 
 
-
-
-
 	public static void createScoreRecord(Chemical chemical, RecordToxVal r) {
 //			if (!r.toxval_id.contentEquals("660309"))
 //			return;
-
 		
-		// Not using the RAC anymore due to errors and inconsistencies in the RAC. 
+		
+//  Omitting this chemical for the toxval table for now.  It is in the other
+//	spreadsheets for checking (bcfbaf, cancer, genetox, models), but is not in the
+//	toxval checking spreadsheet.
+		if (r.casrn.contentEquals("108-95-2"))
+				return;
+	
+		
+		// Not using the risk_assessment_class (RAC) anymore due to errors and inconsistencies in the RAC. 
 		//		CalculateRiskAssessmentClass.assignRAC(r);
 		//			
 		//		if ( r.risk_assessment_class_calc==null || !r.risk_assessment_class.contentEquals(r.risk_assessment_class_calc))
 		//			System.out.println(r.risk_assessment_class+"\t"+r.risk_assessment_class_calc);
-//		crac2.getRAC(r);
-//		if (r.risk_assessment_class.contentEquals("acute")) {
+		//		crac2.getRAC(r);
+		//		if (r.risk_assessment_class.contentEquals("acute")) {
 
 		if (chemical.CAS == null) {
 			chemical.CAS = r.casrn;
@@ -249,9 +253,7 @@ public class ParseToxVal extends Parse {
 
 	/*
 	 * Added: && r.human_eco.contentEquals("human health") because there is at least
-	 * one eco entry labeled "acute" I seem to remember it should be && instead of &
-	 * but need to check this. -Leora 4/23/20
-	 * 
+	 * one eco entry labeled "acute"  -Leora 4/23/20
 	 * 
 	 * I'm not quite sure whether things such as the inclusion criteria for
 	 * human_eco should go here or whether they should be located in the code for
@@ -348,15 +350,6 @@ public class ParseToxVal extends Parse {
 	 * } else if
 	 * (r.risk_assessment_class.contentEquals("developmental neurotoxicity")) {
 	 * createDevelopmentalNeurotoxicityRecords(chemical, r);
-	 */
-
-	/*
-	 * There does not appear to be a rac for genetox. However, there is a separate
-	 * file called toxval_genetox_summary_2020-01-16 that I downloaded from the ftp
-	 * site I want to do something like: If the chemical is in the
-	 * toxval_genetox_summary_2020-01-16 file then createGenetoxScore(chemical,r);
-	 * 
-	 * -Leora
 	 */
 
 	// } else {
@@ -470,7 +463,7 @@ public class ParseToxVal extends Parse {
 		authoritativeSources.add("EPA OPP");
 		authoritativeSources.add("EPA OPPT");
 		authoritativeSources.add("Cal OEHHA");
-		authoritativeSources.add("Cal EPA");//added by TMM
+//		I deleted "Cal EPA" because it is listed below.
 		authoritativeSources.add("RSL");
 		authoritativeSources.add("IRIS");
 		authoritativeSources.add("ECOTOX");
@@ -478,8 +471,8 @@ public class ParseToxVal extends Parse {
 		authoritativeSources.add("Cal EPA");
 		authoritativeSources.add("IARC");
 
-		authoritativeSources.add("NIOSH");//Leora check
-		authoritativeSources.add("NTP ROC");//Leora check
+		authoritativeSources.add("NIOSH");//Leora check // Yes, NIOSH is authoritative.  -Leora
+		authoritativeSources.add("NTP ROC");//Leora check // Yes, NTP ROC is authoritative.  -Leora
 		
 				
 		Vector<String>screeningSources=new Vector<>();
@@ -488,7 +481,6 @@ public class ParseToxVal extends Parse {
 		screeningSources.add("EFSA");
 		screeningSources.add("EFSA2");
 		screeningSources.add("ECHA IUCLID");
-		screeningSources.add("ToxRefDB");
 		screeningSources.add("Pennsylvania DEP ToxValues");
 		screeningSources.add("Chiu");
 		screeningSources.add("Wignall");
@@ -536,7 +528,7 @@ public class ParseToxVal extends Parse {
 	}
 
 	/*
-	 * Combining all of these into OrganOrSystemicToxRecords
+	 * Combining all of these into OrganOrSystemicToxRecords:
 	 * 
 	 * private void createChronicRecords(Chemical chemical, RecordToxVal r) {
 	 * }
@@ -568,22 +560,19 @@ public class ParseToxVal extends Parse {
 	 * }
 	 */
 
-	private void createReproductiveRecords(Chemical chemical, RecordToxVal r) {
+//	private void createReproductiveRecords(Chemical chemical, RecordToxVal r) {
 
 		/*
 		 * Reproductive will have the same code as Developmental (same DfE criteria),
-		 * which is detailed above. I'll add the code for Reproductive when I'm sure
-		 * Developmental is correct. -Leora
+		 * which is detailed above.  So ReproductiveDevelopmental was combined into one class.
 		 */
 
-	}
+	
 
-	private static void createNeurotoxicityRecords2(Chemical chemical, RecordToxVal r) {
+//	private static void createNeurotoxicityRecords2(Chemical chemical, RecordToxVal r) {
 
-		// study_duration_value and study_duration_units
-		// DfE criteria
+		// Neurotoxicity is now included in OrganOrSystemicToxRecords.
 
-	}
 
 	// private void createDevelopmentalNeurotoxicityRecords(Chemical chemical, RecordToxVal r) {
 	//  Including deveopmental neurotoxicity in neurotoxicity.

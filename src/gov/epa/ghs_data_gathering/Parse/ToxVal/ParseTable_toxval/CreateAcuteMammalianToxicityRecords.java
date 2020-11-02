@@ -158,7 +158,6 @@ public class CreateAcuteMammalianToxicityRecords {
 			if (dose <= 200) {
 				sr.score = ScoreRecord.scoreVH;
 				sr.rationale = "Dermal LD50 <= 200 mg/kg";
-				//		I deleted the plus sign after "Dermal LD50".  -Leora V
 			} else if (dose > 200 && dose <= 1000) {
 				sr.score = ScoreRecord.scoreH;
 				sr.rationale = "200 mg/kg < Dermal LD50 <=1000 mg/kg";
@@ -359,7 +358,7 @@ public class CreateAcuteMammalianToxicityRecords {
 
 
 		/* Okay, I understand the code.  This basically renames what Richard called toxval_numeric
-		 * into valueMass and then valueMass is renamed score and then for acute toxicity,
+		 * into valueMass and then valueMass is renamed score,
 		 * so then for AcuteMammalianToxicity, the same code that we used for the
 		 * AA Dashboard/CHA Database is directly used.  -Leora 4/23/20  */
 
