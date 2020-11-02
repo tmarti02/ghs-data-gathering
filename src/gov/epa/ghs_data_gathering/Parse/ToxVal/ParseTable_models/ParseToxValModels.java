@@ -135,19 +135,18 @@ public class ParseToxValModels {
 		//TODO add which biowin model it is- Biowin 3?
 		
 		/*	EpiSuite data is in the from of Biodegredation Score (Biowin Score)
- Conversion to days based on Scheringer citing Aronson et al 2006.  Can't access full Aronsen text.
-I tried to paste the conversion here but it wouldn't save due to unrecognized characters. 
+Conversion to days is based on Scheringer citing Aronson et al 2006.  Can't access full Aronsen text.
 -Leora
 
 Biowin Score	Aerobic biodegredation half-life (days)		Score
 > 4.75				0.17
-4.25â€“4.75			1.25
-3.75â€“4.25			2.33
-3.25â€“3.75			8.67					(>=3.25)	L
-2.75â€“3.25			15					(> 2.25 & < 3.25) M
-2.25â€“2.75			37.5								
-1.75â€“2.25			120					(1.75-2.25) H
-1.25â€“1.75			240					(<1.75)		VH
+4.25-4.75			1.25
+3.75-4.25			2.33
+3.25-3.75			8.67				(>=3.25)			L
+2.75-€“3.25			15					(> 2.25 & < 3.25) 	M
+2.25-2.75			37.5								
+1.75-€“2.25			120					(1.75-2.25) 		H
+1.25-1.75			240					(<1.75)				VH
 < 1.25				720									
 
 		 */

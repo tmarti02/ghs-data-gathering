@@ -53,8 +53,9 @@ public class CreateOrganOrSystemicToxRecords {
 				score=chemical.scoreSystemic_Toxicity_Repeat_Exposure;
 			}
 		}
+//  Note that "Systemic Toxicity" actually could be Organ or Systemic Toxicity.		
 
-
+		
 		ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr);		
 		sr.duration=study_dur_in_days;
 		sr.durationUnits="days";

@@ -17,7 +17,7 @@ public class RecordToxValGenetox {
 	public String genetox_call;
 	
 	public transient static String[] varlist = { 
-			"casrn","name","dtxsid","reports_pos","reports_neg","reports_other","ames","micronucleus","genetox_call"};
+			"genetox_summary_id", "casrn","name","dtxsid","reports_pos","reports_neg","reports_other","ames","micronucleus","genetox_call"};
 	
 	
 	/**
