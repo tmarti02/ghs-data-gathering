@@ -836,15 +836,21 @@ public class ParseToxValDB {
 			for (int i=1;i<=sheet.getLastRowNum();i++) {
 				Row rowi=sheet.getRow(i);
 				
+//				System.out.println("column number for cas="+htColNums.get("casrn"));
+				
 				String hazard_name=rowi.getCell(htColNums.get("ManualHazardEndpointCategorization")).getStringCellValue();
 				
 				String name=null;
 				String CAS=null;
 				
 				if (htColNums.get("name")!=null) {
-					name=rowi.getCell(htColNums.get("name")).getStringCellValue();
-					CAS=rowi.getCell(htColNums.get("casrn")).getStringCellValue();					
+					name=rowi.getCell(htColNums.get("name")).getStringCellValue();										
 				}
+				
+				if (htColNums.get("casrn")!=null) {
+					CAS=rowi.getCell(htColNums.get("casrn")).getStringCellValue();	
+				}
+				
 				
 				ScoreRecord f=new ScoreRecord(hazard_name,CAS,name);
 				
@@ -870,7 +876,7 @@ public class ParseToxValDB {
 				
 						
 					
-//				System.out.println(sheet.getSheetName()+"\t"+f.toxval_id);
+				
 
 
 				if (htColNums.get("Note")!=null) {
@@ -881,8 +887,12 @@ public class ParseToxValDB {
 					f.note=cell.getStringCellValue();//store leora's note
 				}
 
-				if (!hasRecord(recs, f.toxvalID))
+				if (!hasRecord(recs, f.toxvalID)) {
 					recs.add(f);
+//					if (tableName.contentEquals("bcfbaf"))
+//						System.out.println(sheet.getSheetName()+"\t"+f.toxvalID);
+				}
+					
 
 				//				System.out.println(f.toxval_id+"\t"+f.hazard_name+"\t"+f.score);
 
@@ -918,13 +928,13 @@ public class ParseToxValDB {
 		
 		for (String tableName:tableNames) {
 			getManualResults(folderExcel, tableName, recordsManual);
-			System.out.println(tableName);
+//			System.out.println(tableName);
 		}
 		
-		for (int i=0;i<recordsManual.size();i++) {
-			ScoreRecord recManual=recordsManual.get(i);
+//		for (int i=0;i<recordsManual.size();i++) {
+//			ScoreRecord recManual=recordsManual.get(i);
 //			System.out.println("recManual: "+i+"\t"+recManual.toxvalID);
-		}
+//		}
 				
 		Vector<ScoreRecord>recordsJava=getJavaRecords(chemicals);
 		
@@ -943,7 +953,13 @@ public class ParseToxValDB {
 			ScoreRecord recManual=recordsManual.get(i);
 
 //			The following line works if there is a "casrn" column in the spreadsheet:
+			
+//			System.out.println("here1234:"+recManual.toxvalID+"\t"+recManual.CAS);
+			
+			
 			if (!casList.contains(recManual.CAS)) continue;//skip record if we hadnt run it in java
+			
+			
 			
 //			if (!recManual.toxval_id.contentEquals("660309"))
 //				return;
