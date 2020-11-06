@@ -34,6 +34,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.AADashboard;
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.HazardRecord;
 import gov.epa.api.ScoreRecord;
 import gov.epa.api.RawDataRecord;
@@ -60,8 +61,8 @@ public class RecordLookChem {
 	String transportInformation;
 	String fileName;
 
-	public static void downloadWebpagesFromExcel(String filename) {
-		String sourceName="LookChem";
+	public static void downloadWebpagesFromExcelToZipFile(String filename,int start,int end) {
+		String sourceName=ExperimentalConstants.strSourceLookChem;
 		String mainFolder = AADashboard.dataFolder + File.separator + sourceName;
 		String folderNameWebpages = "web pages";
 
@@ -72,15 +73,32 @@ public class RecordLookChem {
 		
 		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = new Vector<String>();
-		for (int i = 1; i < records.size(); i++) {
-			// Selects a subset to test on - choose whatever expression you want
-			if (i < 10) {
-				String CAS = records.get(i).CASRN;
-				urls.add(baseURL+CAS.substring(0,3)+"/"+CAS+".html");
-			}
+		for (int i = start; i < end; i++) {
+			String CAS = records.get(i).CASRN;
+			String prefix = CAS.substring(0,3);
+			if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
+			urls.add(baseURL+prefix+"/"+CAS+".html");
 		}
 
 		Parse.downloadWebpagesToZipFile(urls,sourceName,mainFolder);
+		
+	}
+	
+	public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end,boolean startFresh) {
+		String tableName=ExperimentalConstants.strSourceLookChem;
+		
+		String baseURL = "https://www.lookchem.com/cas-";
+		
+		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+		Vector<String> urls = new Vector<String>();
+		for (int i = start; i < end; i++) {
+			String CAS = records.get(i).CASRN;
+			String prefix = CAS.substring(0,3);
+			if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
+			urls.add(baseURL+prefix+"/"+CAS+".html");
+		}
+
+		Parse.downloadWebpagesToDatabase(urls,tableName,startFresh);
 		
 	}
 	
@@ -130,7 +148,7 @@ public class RecordLookChem {
 	}
 	
 	public static Vector<RecordLookChem> parseWebpagesInZipFile(String zipFilePath) {
-		String sourceName="LookChem";
+		String sourceName=ExperimentalConstants.strSourceLookChem;
 		String mainFolder = AADashboard.dataFolder + File.separator + sourceName;
 		Vector<RecordLookChem> records = new Vector<>();
 
@@ -201,7 +219,7 @@ public class RecordLookChem {
 	}
 	
 	public static void main(String[] args) {
-		downloadWebpagesFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
+		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",15,20,true);
 	}
 	
 }

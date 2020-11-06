@@ -43,6 +43,7 @@ public class Parse {
 	protected String fileNameFlatExperimentalRecords;//records in flat format
 	protected String fileNameJsonExperimentalRecords;//records in ExperimentalRecord class format
 	protected String mainFolder;
+	protected static String pathRawHTMLDatabase = AADashboard.dataFolder + File.separator + "databases\\raw_html.db";
 	
 	public static boolean generateOriginalJSONRecords=true; //runs code to generate json records from original data format (json file has all the chemicals in one file)	
 	public static boolean writeFlatFile=true;//all data converted to final format stored as flat text file
@@ -56,7 +57,7 @@ public class Parse {
 		fileNameFlatExperimentalRecords = sourceName +" Experimental Records.txt";
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
 		mainFolder = AADashboard.dataFolder + File.separator + sourceName;
-		jsonFolder= mainFolder + "/json files";
+		jsonFolder= mainFolder + File.separator + "json files";
 		
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting();
@@ -64,37 +65,38 @@ public class Parse {
 
 	}
 	
-	public static void downloadWebpagesToDatabase(Vector<String> urls,String databasePath, 
-			String tableName, boolean startFresh) {
-		//table name based on source name in ExperimentalConstants
-		Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);// modify this method to only drop table if startFresh
+	public static void downloadWebpagesToDatabase(Vector<String> urls,String tableName, boolean startFresh) {
+		File db = new File(pathRawHTMLDatabase);
+		if(!db.getParentFile().exists()) {
+		     db.getParentFile().mkdirs();
+		}
+		
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(pathRawHTMLDatabase, tableName, RawDataRecord.fieldNames, startFresh);
 		Random rand = new Random();
 		
-		for (String url:urls) {
-			SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
-			Date date = new Date();  
-			String strDate=formatter.format(date);
-			
-			System.out.println(fileName+"\t"+strDate);
-			
-			//Download the file as a string:
-			String html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later                                 
-			System.out.println(html);  
-			                            
-			//TODO: for now entire html is stored- could also just store the part of html we need via JSoup
-			                                                                                                                  
-			RawDataRecord rec=new RawDataRecord(strDate, url, html);
-			
-			//TODO – code needs to be able to tell whether or not your internet failed or if the webpage simply isn’t available. Some websites will return a simple webpage if record not available- the database should reflect this so that that you don’t waste 3 seconds of time the next time this method is ran (i.e. don’t try to download it again). 
-			
-			//TODO- add query here to see if already have record in the database:
-			boolean haveRecord=rec.haveRecordInDatabase(tableName,conn);//add this method
-			
-			if (!haveRecord || startFresh) {
-				rec.addRecordToDatabase(tableName, conn);            
-			}
+		try {
+			for (String url:urls) {
+				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+				Date date = new Date();  
+				String strDate=formatter.format(date);
+				
+				//Download the file as a string:
+				String html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+				                                                                                                                  
+				RawDataRecord rec=new RawDataRecord(strDate, url, html);
+				
+				//TODO code needs to be able to tell whether or not your internet failed or if the webpage simply isn’t available. Some websites will return a simple webpage if record not available- the database should reflect this so that that you don’t waste 3 seconds of time the next time this method is ran (i.e. don’t try to download it again). 
+				
+				boolean haveRecord=rec.haveRecordInDatabase(pathRawHTMLDatabase,tableName,conn);
+				
+				if (!haveRecord || startFresh) {
+					rec.addRecordToDatabase(tableName, conn);            
+				}
 
-			Thread.sleep(2000+rand.nextInt(2000));
+				Thread.sleep(2000+rand.nextInt(2000));
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 

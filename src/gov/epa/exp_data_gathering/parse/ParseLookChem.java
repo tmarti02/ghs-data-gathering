@@ -31,7 +31,7 @@ import gov.epa.exp_data_gathering.parse.RecordLookChem;
 public class ParseLookChem extends Parse {
 	
 	public ParseLookChem() {
-		sourceName = "LookChem";
+		sourceName = ExperimentalConstants.strSourceLookChem;
 		folderNameWebpages = "web pages";
 		fileNameHtmlZip = "web pages.zip";
 		this.init();
