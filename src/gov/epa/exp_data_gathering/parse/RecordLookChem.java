@@ -12,6 +12,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -39,6 +41,7 @@ import gov.epa.api.HazardRecord;
 import gov.epa.api.ScoreRecord;
 import gov.epa.api.RawDataRecord;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
+import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 
@@ -184,6 +187,39 @@ public class RecordLookChem {
 		return null;
 	}
 	
+	public static Vector<RecordLookChem> parseWebpagesInDatabase() {
+		Vector<RecordLookChem> records = new Vector<>();
+
+		try {
+
+			Statement stat = MySQL_DB.getStatement(Parse.pathRawHTMLDatabase);
+			ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceLookChem);
+
+			while (rs.next()) {
+
+				String html = rs.getString("html");
+				String url = rs.getString("url");
+				Document doc = Jsoup.parse(html);
+				
+				RecordLookChem lcr=new RecordLookChem();
+				parseDocument(url,lcr,doc);
+
+				if (lcr.CAS != null) {
+					records.add(lcr);
+				} else {
+					rs.updateString("html", ExperimentalConstants.strRecordUnavailable);
+				}
+			}
+			
+			return records;
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	private static void parseDocument(String filename, RecordLookChem lcr, Document doc) {
 		
 		try {
@@ -212,14 +248,14 @@ public class RecordLookChem {
 				lcr.fileName=filename;
 			}
 		} catch (Exception ex) {
-			System.out.println(filename+" not found");
+			System.out.println("No data in "+filename);
 			lcr = null;
 		}
 
 	}
 	
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",15,20,true);
+		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,10,true);
 	}
 	
 }

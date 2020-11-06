@@ -40,7 +40,7 @@ public class ParseLookChem extends Parse {
 	@Override
 	protected void createRecords() {
 		Vector<RecordLookChem> records = 
-				RecordLookChem.parseWebpagesInZipFile(mainFolder+File.separator+fileNameHtmlZip);
+				RecordLookChem.parseWebpagesInDatabase();
 		writeOriginalRecordsToFile(records);
 	}
 	
