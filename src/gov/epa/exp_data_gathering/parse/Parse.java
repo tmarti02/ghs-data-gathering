@@ -22,6 +22,7 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.AADashboard;
 import gov.epa.api.RawDataRecord;
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
@@ -158,7 +159,7 @@ public class Parse {
 				for (Cell cell:row) {
 					int col = cell.getColumnIndex();
 					String field = sheet.getRow(0).getCell(col).getStringCellValue();
-					if (RecordDashboard.getHeader().contains(field) && cell.getCellType() == CellType.STRING) {
+					if (RecordDashboard.getHeader().contains(field) && CellType.forInt(cell.getCellType()) == CellType.STRING) {
 						String data = cell.getStringCellValue();
 						temp.setValue(field,data);
 					}

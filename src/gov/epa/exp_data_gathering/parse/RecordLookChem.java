@@ -74,7 +74,7 @@ public class RecordLookChem {
 		Vector<String> urls = new Vector<String>();
 		for (int i = 1; i < records.size(); i++) {
 			// Selects a subset to test on - choose whatever expression you want
-			if (i % 800 == 8) {
+			if (i < 10) {
 				String CAS = records.get(i).CASRN;
 				urls.add(baseURL+CAS.substring(0,3)+"/"+CAS+".html");
 			}
