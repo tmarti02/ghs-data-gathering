@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
@@ -15,7 +16,8 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
-import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -67,9 +69,7 @@ public class Parse {
 	
 	public static void downloadWebpagesToDatabase(Vector<String> urls,String tableName, boolean startFresh) {
 		File db = new File(pathRawHTMLDatabase);
-		if(!db.getParentFile().exists()) {
-		     db.getParentFile().mkdirs();
-		}
+		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
 		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(pathRawHTMLDatabase, tableName, RawDataRecord.fieldNames, startFresh);
 		Random rand = new Random();
@@ -80,22 +80,23 @@ public class Parse {
 				Date date = new Date();  
 				String strDate=formatter.format(date);
 				
-				//Download the file as a string:
-				String html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
-				                                                                                                                  
-				RawDataRecord rec=new RawDataRecord(strDate, url, html);
-				
-				//TODO code needs to be able to tell whether or not your internet failed or if the webpage simply isn’t available. Some websites will return a simple webpage if record not available- the database should reflect this so that that you don’t waste 3 seconds of time the next time this method is ran (i.e. don’t try to download it again). 
-				
+				RawDataRecord rec=new RawDataRecord(strDate, url, "");
 				boolean haveRecord=rec.haveRecordInDatabase(pathRawHTMLDatabase,tableName,conn);
-				
 				if (!haveRecord || startFresh) {
-					rec.addRecordToDatabase(tableName, conn);            
+					String html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+					Document doc = Jsoup.parse(html);
+					if (doc.title().length()!=0) {
+						rec.html = html;
+					} else {
+						// Title field of LookChem "no results" page is blank
+						// How do we generalize this?
+						rec.html = ExperimentalConstants.strRecordUnavailable;
+					}
+					rec.addRecordToDatabase(tableName, conn);
+					Thread.sleep(2000+rand.nextInt(2000));
 				}
-
-				Thread.sleep(2000+rand.nextInt(2000));
 			}
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -112,9 +113,7 @@ public class Parse {
 				String fileName = url.substring( url.lastIndexOf("/")+1, url.length() );
 				String destFilePath = destFolder + "/" + fileName;
 				File destFile = new File(destFilePath);
-				if(!destFile.getParentFile().exists()) {
-				     destFile.getParentFile().mkdirs();
-				}
+				if(!destFile.getParentFile().exists()) { destFile.getParentFile().mkdirs(); }
 	
 				FileUtilities.downloadFile(url, destFilePath);
 				
