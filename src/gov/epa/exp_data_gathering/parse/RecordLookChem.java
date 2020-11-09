@@ -215,7 +215,8 @@ public class RecordLookChem {
 					records.add(lcr);
 					counter++;
 				} else {
-					rs.updateString("html", ExperimentalConstants.strRecordUnavailable);
+					// rs.updateString("html", ExperimentalConstants.strRecordUnavailable);
+					// Updater doesn't work - JDBC version issue?
 				}
 			}
 			
@@ -264,7 +265,7 @@ public class RecordLookChem {
 	}
 	
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",1000,1010,true);
+		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,817,false);
 	}
 	
 }

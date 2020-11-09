@@ -17,13 +17,14 @@ public class ExperimentalConstants {
 	public static final String str_mg_L="mg/L";
 	public static final String str_g_L="g/L";
 	public static final String str_g_cm3="g/cm3";
+	public static final String str_g_mL="g/mL";
 	public static final String str_C="C";
 	public static final String str_F="F";
 	
 	//Other:
 	public static final String str_dec="decomposes";
 	public static final String str_lit="literature";
-	public static final String str_approx="approximate";
+	public static final String str_subl="sublimates";
 	
 	//Add list of source names here:
 	public static final String strSourceLookChem="LookChem";

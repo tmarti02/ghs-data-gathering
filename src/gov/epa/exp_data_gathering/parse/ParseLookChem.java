@@ -2,6 +2,7 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.Objects;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -76,7 +77,6 @@ public class ParseLookChem extends Parse {
 	
 	/**
 	 * Does the actual "dirty work" of translating a RecordLookChem object to an experimental data record
-	 * Should probably be cleaned up and split into several methods
 	 * @param lcr					The RecordLookChem object to be translated
 	 * @param propertyName			The name of the property to be translated
 	 * @param propertyValue			The property value in the RecordLookChem object, as a string
@@ -93,88 +93,67 @@ public class ParseLookChem extends Parse {
 		er.url="https://www.lookchem.com/cas-"+lcr.CAS.substring(0,3)+"/"+lcr.CAS+".html";
 		er.source_name=ExperimentalConstants.strSourceLookChem;
 
-		boolean badUnits = false;
-		String badUnitsMsg = "Unrecognized or missing units for property "+propertyName+" for chemical "+lcr.chemicalName;
+		boolean badUnits = true;
 		int unitsIndex = -1;
+		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
 		if (propertyName==ExperimentalConstants.strDensity) {
-			if (propertyValue.contains("g/cm3") || propertyValue.contains("g/cm 3")) {
+			if (propertyValue.toLowerCase().contains("g/cm3") || propertyValue.toLowerCase().contains("g/cm 3")) {
 				er.property_value_units = ExperimentalConstants.str_g_cm3;
 				unitsIndex = propertyValue.indexOf("g/cm");
-			} else {
-				System.out.println(badUnitsMsg);
-				badUnits = true;
-				unitsIndex = propertyValue.length();
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("g/ml")) {
+				er.property_value_units = ExperimentalConstants.str_g_mL;
+				unitsIndex = propertyValue.indexOf("g/m");
+				badUnits = false;
 			}
+
+			try {
+				er.pressure_kPa = getPressureCondition(propertyValue);
+			} catch (Exception ex) { }
+			
+			try {
+				er.temperature_C = getTemperatureCondition(propertyValue);
+			} catch (Exception ex) { }
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint) {
 			String units = getTemperatureUnits(propertyValue);
 			if (units.length()!=0) {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
-			} else {
-				System.out.println(badUnitsMsg);
-				badUnits = true;
-				unitsIndex = propertyValue.length();
+				badUnits = false;
 			}
-		} else if (propertyName==ExperimentalConstants.strBoilingPoint) {
+		} else if (propertyName==ExperimentalConstants.strBoilingPoint || propertyName==ExperimentalConstants.strFlashPoint) {
 			String units = getTemperatureUnits(propertyValue);
 			if (units.length()!=0) {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
-			} else {
-				System.out.println(badUnitsMsg);
-				badUnits = true;
-				unitsIndex = propertyValue.length();
-			}
-			
-			try {
-				er.pressure_kPa = getPressureCondition(propertyValue);
-			} catch (Exception ex) { }
-		} else if (propertyName==ExperimentalConstants.strFlashPoint) {
-			String units = getTemperatureUnits(propertyValue);
-			if (units.length()!=0) {
-				er.property_value_units = units;
-				unitsIndex = propertyValue.indexOf(units);
-			} else {
-				System.out.println(badUnitsMsg);
-				badUnits = true;
-				unitsIndex = propertyValue.length();
+				badUnits = false;
 			}
 			
 			try {
 				er.pressure_kPa = getPressureCondition(propertyValue);
 			} catch (Exception ex) { }
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			if (propertyValue.contains("mg/L") || propertyValue.contains("mg/l")) {
+			if (propertyValue.toLowerCase().contains("mg/l")) {
 				er.property_value_units = ExperimentalConstants.str_mg_L;
 				unitsIndex = propertyValue.indexOf("mg/");
-			} else if (propertyValue.contains("g/L") || propertyValue.contains("g/l")) {
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("g/l")) {
 				er.property_value_units = ExperimentalConstants.str_g_L;
 				unitsIndex = propertyValue.indexOf("g/");
-			} else {
-				System.out.println(badUnitsMsg);
-				badUnits = true;
-				unitsIndex = propertyValue.length();
+				badUnits = false;
 			}
 			
-			// Checks if there is a temperature condition associated with solubility
-			String units = getTemperatureUnits(propertyValue);
-			if (units.equals(ExperimentalConstants.str_C)) {
-				int tempIndex = propertyValue.indexOf("C");
-				// Finds last number before "C" - excludes beginning of line
-				Matcher m = Pattern.compile("(?<!^)[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,tempIndex));
-				String temp = "";
-				while (m.find()) { temp = m.group(); }
-				er.temperature_C = Double.parseDouble(temp);
-			} else if (units.equals(ExperimentalConstants.str_F)) {
-				int tempIndex = propertyValue.indexOf("F");
-				Matcher m = Pattern.compile("(?<!^)[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,tempIndex));
-				String temp = "";
-				while (m.find()) { temp = m.group(); }
-				er.temperature_C = (Double.parseDouble(temp)-32)*5/9;
-			}
+			try {
+				er.pressure_kPa = getPressureCondition(propertyValue);
+			} catch (Exception ex) { }
+			
+			try {
+				er.temperature_C = getTemperatureCondition(propertyValue);
+			} catch (Exception ex) { }
 		}
 		
-		// Gets numerical value of property
+		if (badUnits) { unitsIndex = propertyValue.length(); }
+		
 		try {
 			double[] range = extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
 			if (!badUnits) {
@@ -184,16 +163,19 @@ public class ParseLookChem extends Parse {
 		} catch (IllegalStateException ex1) {
 			try {
 				double propertyValueAsDouble = extractFirstDoubleFromString(propertyValue,unitsIndex);
-				// Rough - what if there are other characters first?
-				if (propertyValue.charAt(0)=='>' && !badUnits) {
-					er.property_value_min = propertyValueAsDouble;
-				} else if (propertyValue.charAt(0)=='<' && !badUnits) {
-					er.property_value_max = propertyValueAsDouble;
+				int propertyValueIndex = propertyValue.indexOf(Double.toString(propertyValueAsDouble).charAt(0));
+				if (propertyValueIndex > 0 && !badUnits) {
+					if (propertyValue.charAt(propertyValueIndex-1)=='>') {
+						er.property_value_min = propertyValueAsDouble;
+					} else if (propertyValue.charAt(propertyValueIndex-1)=='<') {
+						er.property_value_max = propertyValueAsDouble;
+					} else {
+						er.property_value_point_estimate = propertyValueAsDouble;
+					}
 				} else if (!badUnits) {
 					er.property_value_point_estimate = propertyValueAsDouble;
 				}
 			} catch (IllegalStateException ex2) {
-				System.out.println("Unrecognized or missing value of property "+propertyName+" for chemical "+lcr.chemicalName);
 				propertyName = "";
 			}
 		}
@@ -203,13 +185,17 @@ public class ParseLookChem extends Parse {
 		if (propertyName.length()!=0 && !badUnits) {
 			if (propertyValue.contains("lit")) { er.measurement_method = ExperimentalConstants.str_lit; }
 			if (propertyValue.contains("dec")) { er.note = ExperimentalConstants.str_dec; }
-			if (propertyValue.contains("~")) { er.note = ExperimentalConstants.str_approx; }
+			if (propertyValue.contains("subl")) { er.note = Objects.isNull(er.note) ? ExperimentalConstants.str_subl : er.note+", "+ExperimentalConstants.str_subl; }
+			// Warns if there may be multiple records in one entry
+			if (propertyValue.contains(",")) {
+				System.out.println(propertyName+" for chemical "+lcr.chemicalName+" parsed successfully, but requires manual checking");
+			}
 		} else {
 			er.property_value_units = null;
 			er.pressure_kPa = null;
 			er.temperature_C = null;
 		}
-
+		
 		recordsExperimental.add(er);
 	}
 	
@@ -234,18 +220,45 @@ public class ParseLookChem extends Parse {
 	 * If the property value contains a pressure, returns the pressure converted to kPa
 	 * @param propertyValue	The string to be read
 	 * @return				The pressure condition in kPa
+	 * @throws NumberFormatException	If no pressure condition is present
+	 * @throws IllegalStateException	If pressure cannot be read
 	 */
-	private double getPressureCondition(String propertyValue) {
-		// "mmHg","mm Hg","mm" Do any units besides mmHg appear in LookChem?
+	private double getPressureCondition(String propertyValue) throws IllegalStateException, NumberFormatException {
+		propertyValue = propertyValue.toLowerCase();
 		int pressureIndex = propertyValue.indexOf("mm");
+		if (pressureIndex == -1) { pressureIndex = propertyValue.indexOf("torr"); }
 		String pressure = "";
-		if (pressureIndex!=-1) {
-			// Finds last number before "mm" - excludes beginning of line
-			Matcher m = Pattern.compile("(?<!^)[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
+		
+		if (pressureIndex>0) {
+			Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
 			while (m.find()) { pressure = m.group(); }
 		}
+		
 		double pressurekPa = Double.parseDouble(pressure)*ExperimentalConstants.mmHg_to_kPa;
 		return pressurekPa;
+	}
+	
+	/**
+	 * If the property value contains a temperature, returns the temperature converted to C
+	 * @param propertyValue	The string to be read
+	 * @return				The temperature condition in kPa
+	 * @throws NumberFormatException	If no temperature condition is present
+	 * @throws IllegalStateException	If temperature cannot be read
+	 */
+	private double getTemperatureCondition(String propertyValue) throws IllegalStateException, NumberFormatException {
+		String units = getTemperatureUnits(propertyValue);
+		int tempIndex = propertyValue.indexOf(units);
+		String temp = "";
+
+		if (tempIndex>0) {
+			Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,tempIndex));
+			while (m.find()) { temp = m.group(); }
+		}
+		
+		double tempC = Double.parseDouble(temp);
+		if (units == ExperimentalConstants.str_F) { tempC = (tempC-32)*5/9; }
+
+		return tempC;
 	}
 	
 	/**
@@ -256,9 +269,9 @@ public class ParseLookChem extends Parse {
 	 * @throws IllegalStateException	If no number is found in the given range
 	 */
 	private double extractFirstDoubleFromString(String str,int end) throws IllegalStateException {
-		Matcher numberMatcher = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
+		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
 		numberMatcher.find();
-		return Double.parseDouble(numberMatcher.group());
+		return Double.parseDouble(numberMatcher.group().replace(" ",""));
 	}
 	
 	/**
@@ -270,17 +283,17 @@ public class ParseLookChem extends Parse {
 	 */
 	private double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
 		// Format "n[ ]-[ ]m [units]"
-		Matcher anyRangeMatcher = Pattern.compile("[-]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
+		Matcher anyRangeMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
 		String rangeAsStr = anyRangeMatcher.group();
 		double[] range = new double[2];
 		Matcher absMatcher = Pattern.compile("[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
-		Matcher negMinMatcher = Pattern.compile("[-][0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
-		Matcher negMaxMatcher = Pattern.compile("[-]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-][0-9]*\\.?[0-9]+").matcher(rangeAsStr);
+		Matcher negMinMatcher = Pattern.compile("[-][ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
+		Matcher negMaxMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-][ ]?[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
 		absMatcher.find();
-		range[0] = Double.parseDouble(absMatcher.group());
+		range[0] = Double.parseDouble(absMatcher.group().replace(" ",""));
 		absMatcher.find();
-		range[1] = Double.parseDouble(absMatcher.group());
+		range[1] = Double.parseDouble(absMatcher.group().replace(" ",""));
 		if (negMinMatcher.matches()) { range[0] *= -1; }
 		if (negMaxMatcher.matches()) { range[1] *= -1; }
 		return range;
