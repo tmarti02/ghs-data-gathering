@@ -1,32 +1,13 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Vector;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import com.google.common.collect.Multimap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.exp_data_gathering.parse.RecordLookChem;
 
 public class ParseLookChem extends Parse {
 	
@@ -37,19 +18,24 @@ public class ParseLookChem extends Parse {
 		this.init();
 	}
 	
+	/**
+	 * Parses HTML entries, either in zip folder or database, to RecordLookChem objects, then saves them to a JSON file
+	 */
 	@Override
 	protected void createRecords() {
-		Vector<RecordLookChem> records = 
-				RecordLookChem.parseWebpagesInDatabase();
+		// Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInZipFile();
+		Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInDatabase();
 		writeOriginalRecordsToFile(records);
 	}
 	
+	/**
+	 * Reads the JSON file created by createRecords() and translates it to an ExperimentalRecords object
+	 */
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
-			
 			File jsonFile = new File(mainFolder + "/" + fileNameJSON_Records);
 			
 			RecordLookChem[] recordsLookChem = gson.fromJson(new FileReader(jsonFile), RecordLookChem[].class);
@@ -58,46 +44,44 @@ public class ParseLookChem extends Parse {
 				RecordLookChem r = recordsLookChem[i];
 				addExperimentalRecords(r,recordsExperimental);
 			}
-			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		
-		// Prints out records to check
-//		for (ExperimentalRecord er:recordsExperimental) {
-//			GsonBuilder builder = new GsonBuilder();
-//			builder.setPrettyPrinting();
-//			Gson gson = builder.create();
-//			System.out.println(gson.toJson(er));
-//		}
-		
 		return recordsExperimental;
 	}
 	
+	/**
+	 * Translates a RecordLookChem object to a set of experimental data records and adds them to an ExperimentalRecords object
+	 * @param lcr					The RecordLookChem object to be translated
+	 * @param recordsExperimental	The ExperimentalRecords object to store the new records
+	 */
 	private void addExperimentalRecords(RecordLookChem lcr,ExperimentalRecords recordsExperimental) {
-		
 		if (lcr.density.length()!=0) {
 			createRecord(lcr,ExperimentalConstants.strDensity,lcr.density,recordsExperimental);
 	    }
-		
         if (lcr.meltingPoint.length()!=0) {
 			createRecord(lcr,ExperimentalConstants.strMeltingPoint,lcr.meltingPoint,recordsExperimental);
         }
-        
         if (lcr.boilingPoint.length()!=0) {
 			createRecord(lcr,ExperimentalConstants.strBoilingPoint,lcr.boilingPoint,recordsExperimental);
 	    }
-        
         if (lcr.flashPoint.length()!=0) {
 			createRecord(lcr,ExperimentalConstants.strFlashPoint,lcr.flashPoint,recordsExperimental);
 	    }
-
         if (lcr.solubility.length()!=0) {
 			createRecord(lcr,ExperimentalConstants.strWaterSolubility,lcr.solubility,recordsExperimental);
         } 
-        
 	}
 	
+	/**
+	 * Does the actual "dirty work" of translating a RecordLookChem object to an experimental data record
+	 * Should probably be cleaned up and split into several methods
+	 * @param lcr					The RecordLookChem object to be translated
+	 * @param propertyName			The name of the property to be translated
+	 * @param propertyValue			The property value in the RecordLookChem object, as a string
+	 * @param recordsExperimental	The ExperimentalRecords object to store the new record
+	 */
 	void createRecord(RecordLookChem lcr,String propertyName,String propertyValue,ExperimentalRecords recordsExperimental) {
 		ExperimentalRecord er=new ExperimentalRecord();
 		
@@ -105,9 +89,7 @@ public class ParseLookChem extends Parse {
 		er.chemical_name=lcr.chemicalName;
 		er.synonyms=lcr.synonyms.replace(';','|');
 		er.property_name=propertyName;
-		
 		er.property_value_string=propertyValue;
-		
 		er.url="https://www.lookchem.com/cas-"+lcr.CAS.substring(0,3)+"/"+lcr.CAS+".html";
 		er.source_name=ExperimentalConstants.strSourceLookChem;
 
@@ -124,7 +106,7 @@ public class ParseLookChem extends Parse {
 				unitsIndex = propertyValue.length();
 			}
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint) {
-			String units = getTemperatureUnits(propertyValue,propertyName,lcr.chemicalName);
+			String units = getTemperatureUnits(propertyValue);
 			if (units.length()!=0) {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
@@ -134,7 +116,7 @@ public class ParseLookChem extends Parse {
 				unitsIndex = propertyValue.length();
 			}
 		} else if (propertyName==ExperimentalConstants.strBoilingPoint) {
-			String units = getTemperatureUnits(propertyValue,propertyName,lcr.chemicalName);
+			String units = getTemperatureUnits(propertyValue);
 			if (units.length()!=0) {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
@@ -145,10 +127,10 @@ public class ParseLookChem extends Parse {
 			}
 			
 			try {
-				er.pressure_kPa = getPressureCondition(propertyValue,propertyName,lcr.chemicalName);
+				er.pressure_kPa = getPressureCondition(propertyValue);
 			} catch (Exception ex) { }
 		} else if (propertyName==ExperimentalConstants.strFlashPoint) {
-			String units = getTemperatureUnits(propertyValue,propertyName,lcr.chemicalName);
+			String units = getTemperatureUnits(propertyValue);
 			if (units.length()!=0) {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
@@ -159,7 +141,7 @@ public class ParseLookChem extends Parse {
 			}
 			
 			try {
-				er.pressure_kPa = getPressureCondition(propertyValue,propertyName,lcr.chemicalName);
+				er.pressure_kPa = getPressureCondition(propertyValue);
 			} catch (Exception ex) { }
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			if (propertyValue.contains("mg/L") || propertyValue.contains("mg/l")) {
@@ -175,7 +157,7 @@ public class ParseLookChem extends Parse {
 			}
 			
 			// Checks if there is a temperature condition associated with solubility
-			String units = getTemperatureUnits(propertyValue,"Solubility temperature condition",lcr.chemicalName);
+			String units = getTemperatureUnits(propertyValue);
 			if (units.equals(ExperimentalConstants.str_C)) {
 				int tempIndex = propertyValue.indexOf("C");
 				// Finds last number before "C" - excludes beginning of line
@@ -229,10 +211,14 @@ public class ParseLookChem extends Parse {
 		}
 
 		recordsExperimental.add(er);
-	
 	}
 	
-	private String getTemperatureUnits(String propertyValue, String propertyName, String chemicalName) {
+	/**
+	 * If the property value string contains temperature units, returns the units in standardized format
+	 * @param propertyValue	The string to be read
+	 * @return				A standardized temperature unit string from ExperimentalConstants
+	 */
+	private String getTemperatureUnits(String propertyValue) {
 		String units = "";
 		if (propertyValue.contains("°C") || propertyValue.contains("ºC") 
 				|| propertyValue.contains(" C") || propertyValue.contains("oC")) {
@@ -244,9 +230,13 @@ public class ParseLookChem extends Parse {
 		return units;
 	}
 	
-	// Checks if there is a mmHg pressure condition associated with a property
-	// "mmHg","mm Hg","mm" Do any units besides mmHg appear in LookChem?
-	private double getPressureCondition(String propertyValue, String propertyName, String chemicalName) {
+	/**
+	 * If the property value contains a pressure, returns the pressure converted to kPa
+	 * @param propertyValue	The string to be read
+	 * @return				The pressure condition in kPa
+	 */
+	private double getPressureCondition(String propertyValue) {
+		// "mmHg","mm Hg","mm" Do any units besides mmHg appear in LookChem?
 		int pressureIndex = propertyValue.indexOf("mm");
 		String pressure = "";
 		if (pressureIndex!=-1) {
@@ -258,12 +248,26 @@ public class ParseLookChem extends Parse {
 		return pressurekPa;
 	}
 	
+	/**
+	 * Extracts the first number before a given index in a string
+	 * @param str	The string to be read
+	 * @param end	The index to stop searching
+	 * @return		The number found as a double
+	 * @throws IllegalStateException	If no number is found in the given range
+	 */
 	private double extractFirstDoubleFromString(String str,int end) throws IllegalStateException {
 		Matcher numberMatcher = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
 		numberMatcher.find();
 		return Double.parseDouble(numberMatcher.group());
 	}
 	
+	/**
+	 * Extracts the first range of numbers before a given index in a string
+	 * @param str	The string to be read
+	 * @param end	The index to stop searching
+	 * @return		The range found as a double[2]
+	 * @throws IllegalStateException	If no number range is found in the given range
+	 */
 	private double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
 		// Format "n[ ]-[ ]m [units]"
 		Matcher anyRangeMatcher = Pattern.compile("[-]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));

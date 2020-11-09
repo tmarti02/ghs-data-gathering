@@ -3,46 +3,29 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.List;
 import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
-import java.util.Date;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.api.HazardRecord;
-import gov.epa.api.ScoreRecord;
-import gov.epa.api.RawDataRecord;
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
-import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 
 
@@ -63,36 +46,47 @@ public class RecordLookChem {
 	String safety;
 	String transportInformation;
 	String fileName;
+	
+	static final String sourceName=ExperimentalConstants.strSourceLookChem;
 
+	/**
+	 * Gets a list (or sublist) of chemicals from an Excel file and downloads the corresponding LookChem pages to a zip folder
+	 * List must be downloaded from the CompTox dashboard or formatted to match
+	 * @param filename	The file or path to the list
+	 * @param start		The index in the list to start downloading
+	 * @param end		The index in the list to stop downloading
+	 */
 	public static void downloadWebpagesFromExcelToZipFile(String filename,int start,int end) {
-		String sourceName=ExperimentalConstants.strSourceLookChem;
-		String mainFolder = AADashboard.dataFolder + File.separator + sourceName;
-		String folderNameWebpages = "web pages";
-
-		String destFolder=mainFolder+File.separator+folderNameWebpages;
-		String destZipFolder=destFolder+".zip";
-		
-		String baseURL = "https://www.lookchem.com/cas-";
-		
 		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
-		Vector<String> urls = new Vector<String>();
-		for (int i = start; i < end; i++) {
-			String CAS = records.get(i).CASRN;
-			String prefix = CAS.substring(0,3);
-			if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
-			urls.add(baseURL+prefix+"/"+CAS+".html");
-		}
+		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
-		Parse.downloadWebpagesToZipFile(urls,sourceName,mainFolder);
-		
+		Parse.downloadWebpagesToZipFile(urls,sourceName);	
 	}
 	
+	/**
+	 * Gets a list (or sublist) of chemicals from an Excel file and downloads the corresponding LookChem pages to a database
+	 * List must be downloaded from the CompTox dashboard or formatted to match
+	 * @param filename		The file or path to the list
+	 * @param start			The index in the list to start downloading
+	 * @param end			The index in the list to stop downloading
+	 * @param startFresh	True to remake database table completely, false to append new records to existing table
+	 */
 	public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end,boolean startFresh) {
-		String tableName=ExperimentalConstants.strSourceLookChem;
-		
-		String baseURL = "https://www.lookchem.com/cas-";
-		
 		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
+
+		Parse.downloadWebpagesToDatabase(urls,sourceName,startFresh);		
+	}
+	
+	/**
+	 * Extracts CAS RNs from CompTox dashboard records and translates them to LookChem URLs
+	 * @param records	A vector of RecordDashboard objects
+	 * @param start		The index in the vector to start converting
+	 * @param end		The index in the vector to stop converting
+	 * @return			A vector of LookChem URLs as strings
+	 */
+	private static Vector<String> getURLsFromDashboardRecords(Vector<RecordDashboard> records,int start,int end) {
+		String baseURL = "https://www.lookchem.com/cas-";
 		Vector<String> urls = new Vector<String>();
 		for (int i = start; i < end; i++) {
 			String CAS = records.get(i).CASRN;
@@ -100,28 +94,28 @@ public class RecordLookChem {
 			if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
 			urls.add(baseURL+prefix+"/"+CAS+".html");
 		}
-
-		Parse.downloadWebpagesToDatabase(urls,tableName,startFresh);
-		
+		return urls;
 	}
 	
+	/**
+	 * Parses an HTML file to a RecordLookChem object and prints it out in JSON format
+	 * For output checking and debugging
+	 * @param file	The HTML file to parse
+	 * @return		A RecordLookChem object containing the data from the HTML file
+	 */
 	private static RecordLookChem parseWebpage(File file) {
 		RecordLookChem lcr = new RecordLookChem();
 		
 		try {
-
-			BufferedReader br=new BufferedReader(new FileReader(file));
-
+			lcr.fileName = file.getName();
 			Document doc = Jsoup.parse(file, "UTF-8");
-
-			parseDocument(file.getName(),lcr,doc);
+			
+			parseDocument(lcr,doc);
 			
 			GsonBuilder builder = new GsonBuilder();
 			builder.setPrettyPrinting();
 			Gson gson = builder.create();
-			
 			System.out.println(gson.toJson(lcr));
-
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -129,42 +123,48 @@ public class RecordLookChem {
 		return lcr;
 	}
 	
+	/**
+	 * Parses a single zipped HTML file to a RecordLookChem object
+	 * @param zipFile	The zip file containing the HTML file to be parsed
+	 * @param zipEntry	The zipped HTML file to be parsed
+	 * @return			A RecordLookChem object containing the data from the HTML file
+	 * @throws IOException
+	 * @throws UnsupportedEncodingException
+	 */
 	private static RecordLookChem parseZipWebpage(ZipFile zipFile, ZipEntry zipEntry)
 			throws IOException, UnsupportedEncodingException {
 		
 		RecordLookChem lcr=new RecordLookChem();
-
-		InputStream input = zipFile.getInputStream(zipEntry);
-		BufferedReader br = new BufferedReader(new InputStreamReader(input, "UTF-8"));
-
-		Document doc = Jsoup.parse(zipFile.getInputStream(zipEntry),"UTF-8","");
-
-		String filename=zipEntry.getName().replace("web pages\\", "");
-		parseDocument(filename, lcr, doc);
 		
-		// GsonBuilder builder = new GsonBuilder();
-		// builder.setPrettyPrinting();
-		// Gson gson = builder.create();
-		// System.out.println(gson.toJson(lcr));
+		String filename=zipEntry.getName().replace("web pages\\", "");
+		lcr.fileName = filename;
+		Document doc = Jsoup.parse(zipFile.getInputStream(zipEntry),"UTF-8","");
+		
+		parseDocument(lcr, doc);
 		
 		return lcr;
 	}
 	
-	public static Vector<RecordLookChem> parseWebpagesInZipFile(String zipFilePath) {
-		String sourceName=ExperimentalConstants.strSourceLookChem;
-		String mainFolder = AADashboard.dataFolder + File.separator + sourceName;
+	/**
+	 * Parses the HTML files in a zip file to RecordLookChem objects
+	 * @param zipFilePath	The path to the zip file containing the HTML files to be parsed
+	 * @return				A vector of RecordLookChem objects containing the data from the HTML files
+	 */
+	public static Vector<RecordLookChem> parseWebpagesInZipFile() {
+		String folderNameWebpages = "web pages";
+		String mainFolder=AADashboard.dataFolder+File.separator+sourceName;
+		String zipFilePath = mainFolder + File.separator+folderNameWebpages+".zip";
 		Vector<RecordLookChem> records = new Vector<>();
 
 		try {
-
 			ZipFile zipFile = new ZipFile(zipFilePath);
 
 			Enumeration<? extends ZipEntry> entries = zipFile.entries();
-			// Eventually print this to show progress when handling multiple files
+
 			int counter = 1;
-
 			while (entries.hasMoreElements()) {
-
+				if (counter % 1000==0) { System.out.println("Parsed "+counter+" entries"); }
+				
 				ZipEntry zipEntry = entries.nextElement();
 
 				RecordLookChem lcr = parseZipWebpage(zipFile, zipEntry);
@@ -178,8 +178,8 @@ public class RecordLookChem {
 				}
 			}
 			
+			System.out.println("Parsed "+(counter-1)+" entries");
 			return records;
-			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -187,32 +187,40 @@ public class RecordLookChem {
 		return null;
 	}
 	
+	/**
+	 * Parses the HTML strings in the raw HTML database to RecordLookChem objects
+	 * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
+	 */
 	public static Vector<RecordLookChem> parseWebpagesInDatabase() {
 		Vector<RecordLookChem> records = new Vector<>();
 
 		try {
-
 			Statement stat = MySQL_DB.getStatement(Parse.pathRawHTMLDatabase);
 			ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceLookChem);
 
+			int counter = 1;
 			while (rs.next()) {
-
+				if (counter % 1000==0) { System.out.println("Parsed "+counter+" entries"); }
+				
 				String html = rs.getString("html");
 				String url = rs.getString("url");
 				Document doc = Jsoup.parse(html);
 				
 				RecordLookChem lcr=new RecordLookChem();
-				parseDocument(url,lcr,doc);
+				lcr.fileName=url.substring(url.lastIndexOf("/")+1, url.length());
+				
+				parseDocument(lcr,doc);
 
 				if (lcr.CAS != null) {
 					records.add(lcr);
+					counter++;
 				} else {
 					rs.updateString("html", ExperimentalConstants.strRecordUnavailable);
 				}
 			}
 			
+			System.out.println("Parsed "+(counter-1)+" entries");
 			return records;
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -220,8 +228,12 @@ public class RecordLookChem {
 		return null;
 	}
 	
-	private static void parseDocument(String filename, RecordLookChem lcr, Document doc) {
-		
+	/**
+	 * Parses a jSoup Document object to a RecordLookChem object
+	 * @param lcr	The RecordLookChem object to store data
+	 * @param doc	The Document object to be parsed
+	 */
+	private static void parseDocument(RecordLookChem lcr, Document doc) {	
 		try {
 			Element basicInfoTable = doc.selectFirst("table");
 			Elements rows = basicInfoTable.getElementsByTag("tr");
@@ -245,17 +257,14 @@ public class RecordLookChem {
 				} else if (header.contains("Risk Codes")) { lcr.riskCodes = data;
 				} else if (header.contains("Safety")) { lcr.safety = data;
 				} else if (header.contains("Transport Information")) { lcr.transportInformation = data; }
-				lcr.fileName=filename;
 			}
 		} catch (Exception ex) {
-			System.out.println("No data in "+filename);
-			lcr = null;
+			System.out.println("No data for "+lcr.fileName);
 		}
-
 	}
 	
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,10,true);
+		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",1000,1010,true);
 	}
 	
 }

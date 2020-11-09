@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
@@ -45,6 +44,7 @@ public class Parse {
 	protected String fileNameFlatExperimentalRecords;//records in flat format
 	protected String fileNameJsonExperimentalRecords;//records in ExperimentalRecord class format
 	protected String mainFolder;
+	
 	protected static String pathRawHTMLDatabase = AADashboard.dataFolder + File.separator + "databases\\raw_html.db";
 	
 	public static boolean generateOriginalJSONRecords=true; //runs code to generate json records from original data format (json file has all the chemicals in one file)	
@@ -54,7 +54,6 @@ public class Parse {
 	Gson gson=null;
 
 	public void init() {
-		
 		fileNameJSON_Records = sourceName +" Records.json";
 		fileNameFlatExperimentalRecords = sourceName +" Experimental Records.txt";
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
@@ -67,6 +66,12 @@ public class Parse {
 
 	}
 	
+	/**
+	 * Stores the HTML strings from a list of URLs in timestamped records in the raw HTML database
+	 * @param urls			The URLs to be downloaded
+	 * @param tableName		The name of the table to store the data in, i.e., the source name
+	 * @param startFresh	True to remake database table completely, false to append new records to existing table
+	 */
 	public static void downloadWebpagesToDatabase(Vector<String> urls,String tableName, boolean startFresh) {
 		File db = new File(pathRawHTMLDatabase);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
@@ -75,6 +80,7 @@ public class Parse {
 		Random rand = new Random();
 		
 		try {
+			int counter = 1;
 			for (String url:urls) {
 				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 				Date date = new Date();  
@@ -93,22 +99,32 @@ public class Parse {
 						rec.html = ExperimentalConstants.strRecordUnavailable;
 					}
 					rec.addRecordToDatabase(tableName, conn);
+					if (counter % 1000==0) { System.out.println("Downloaded "+counter+" entries"); }
+					counter++;
 					Thread.sleep(2000+rand.nextInt(2000));
 				}
 			}
+			
+			System.out.println("Downloaded "+(counter-1)+" entries");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void downloadWebpagesToZipFile(Vector<String> urls,String sourceName,String mainFolder) {
+	/**
+	 * Downloads the HTML files from a list of URLs and saves them in a zip folder
+	 * @param urls			The URLs to be downloaded
+	 * @param sourceName	The source name
+	 */
+	public static void downloadWebpagesToZipFile(Vector<String> urls,String sourceName) {
 		String folderNameWebpages = "web pages";
-		String destFolder=mainFolder+File.separator+folderNameWebpages;
+		String mainFolder=AADashboard.dataFolder+File.separator+sourceName;
+		String destFolder = mainFolder + File.separator+folderNameWebpages;
 		String destZipFolder=destFolder+".zip";
 		Random rand = new Random();
 
 		try {
-			
+			int counter = 1;
 			for (String url:urls) {
 				String fileName = url.substring( url.lastIndexOf("/")+1, url.length() );
 				String destFilePath = destFolder + "/" + fileName;
@@ -117,14 +133,17 @@ public class Parse {
 	
 				FileUtilities.downloadFile(url, destFilePath);
 				
+				if (counter % 1000==0) { System.out.println("Downloaded "+counter+" entries"); }
+				counter++;
 				Thread.sleep(2000+rand.nextInt(2000));
 			}
+			System.out.println("Downloaded "+(counter-1)+" entries");
 
 			FileOutputStream fos = new FileOutputStream(destZipFolder); 
 			ZipOutputStream zipOS = new ZipOutputStream(fos); 
 			
 			File webpageFolder=new File(destFolder);
-			File [] files=webpageFolder.listFiles();
+			File[] files=webpageFolder.listFiles();
 			
 			// Create a zip file
 			for (File file:files) {
@@ -139,13 +158,16 @@ public class Parse {
 			
 			zipOS.close();
             fos.close();
-
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		
 	}
 	
+	/**
+	 * Parses an Excel sheet downloaded from the CompTox dashboard to RecordDashboard objects
+	 * @param filename	The name or path to the Excel file to be parsed
+	 * @return			A vector of RecordDashboard objects containing the data from the Excel file
+	 */
 	public static Vector<RecordDashboard> getDashboardRecordsFromExcel(String filename) {
 		Vector<RecordDashboard> records = new Vector<RecordDashboard>();
 		
@@ -167,6 +189,7 @@ public class Parse {
 				}
 				records.add(temp);
 			}
+			wb.close();
 			fis.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -186,7 +209,6 @@ public class Parse {
 	
 	/**
 	 * Need to override
-	 * 
 	 * @return
 	 */
 	protected ExperimentalRecords goThroughOriginalRecords() {
@@ -195,7 +217,6 @@ public class Parse {
 	}
 	
 	public void createFiles() {
-
 		System.out.println("Creating " + sourceName + " json files...");
 		
 		if (generateOriginalJSONRecords) {
@@ -208,15 +229,12 @@ public class Parse {
 			} else {
 				System.out.println("Parsing original file(s)");	
 			}
-			
-//			System.out.println("here1");
-			
+
 			createRecords();
 		}
 
 		System.out.println("Going through original records");
 		ExperimentalRecords records=goThroughOriginalRecords();
-		
 
 		if (writeFlatFile) {
 			System.out.println("Writing flat file for chemical records");
@@ -229,11 +247,9 @@ public class Parse {
 		}
 		
 		System.out.println("done\n");
-
 	}
 	
-	void writeOriginalRecordsToFile(Vector<?>records) {
-
+	void writeOriginalRecordsToFile(Vector<?> records) {
 		try {
 			GsonBuilder builder = new GsonBuilder();
 			builder.setPrettyPrinting();
@@ -267,7 +283,6 @@ public class Parse {
 		str=str.replace("\u03B1", "&alpha;");//alpha
 
 		return str;
-		
 	}
 }
 
