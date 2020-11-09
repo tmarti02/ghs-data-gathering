@@ -105,6 +105,12 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_g_mL;
 				unitsIndex = propertyValue.indexOf("g/m");
 				badUnits = false;
+			} else {
+				// Only g/cm3 or g/mL are ever used in LookChem, so we can safely assume units where they are missing
+				er.property_value_units = ExperimentalConstants.str_g_cm3;
+				unitsIndex = propertyValue.length();
+				badUnits = false;
+				er = updateNote(er,ExperimentalConstants.str_g_cm3+" assumed");
 			}
 
 			try {
@@ -120,6 +126,8 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
 				badUnits = false;
+			} else {
+				er = updateNote(er, "units cannot be assumed");
 			}
 		} else if (propertyName==ExperimentalConstants.strBoilingPoint || propertyName==ExperimentalConstants.strFlashPoint) {
 			String units = getTemperatureUnits(propertyValue);
@@ -127,6 +135,8 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
 				badUnits = false;
+			} else {
+				er = updateNote(er, "units cannot be assumed");
 			}
 			
 			try {
@@ -141,6 +151,8 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_g_L;
 				unitsIndex = propertyValue.indexOf("g/");
 				badUnits = false;
+			} else {
+				er = updateNote(er, "units cannot be assumed");
 			}
 			
 			try {
@@ -183,12 +195,12 @@ public class ParseLookChem extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		if (propertyName.length()!=0 && !badUnits) {
-			if (propertyValue.contains("lit")) { er.measurement_method = ExperimentalConstants.str_lit; }
-			if (propertyValue.contains("dec")) { er.note = ExperimentalConstants.str_dec; }
-			if (propertyValue.contains("subl")) { er.note = Objects.isNull(er.note) ? ExperimentalConstants.str_subl : er.note+", "+ExperimentalConstants.str_subl; }
+			if (propertyValue.contains("lit.")) { er = updateNote(er,ExperimentalConstants.str_lit); }
+			if (propertyValue.contains("dec.")) { er = updateNote(er,ExperimentalConstants.str_dec); }
+			if (propertyValue.contains("subl.")) { er = updateNote(er,ExperimentalConstants.str_subl); }
 			// Warns if there may be multiple records in one entry
 			if (propertyValue.contains(",")) {
-				System.out.println(propertyName+" for chemical "+lcr.chemicalName+" parsed successfully, but requires manual checking");
+				System.out.println(propertyName+" record for chemical "+lcr.chemicalName+" was parsed successfully, but requires manual checking");
 			}
 		} else {
 			er.property_value_units = null;
@@ -197,6 +209,17 @@ public class ParseLookChem extends Parse {
 		}
 		
 		recordsExperimental.add(er);
+	}
+	
+	/**
+	 * Adds a string to the note field of an ExperimentalRecord object
+	 * @param er	The ExperimentalRecord object to be updated
+	 * @param str	The string to be added
+	 * @return		The updated ExperimentalRecord object
+	 */
+	private ExperimentalRecord updateNote(ExperimentalRecord er, String str) {
+		er.note = Objects.isNull(er.note) ? str : er.note+", "+str;
+		return er;
 	}
 	
 	/**
