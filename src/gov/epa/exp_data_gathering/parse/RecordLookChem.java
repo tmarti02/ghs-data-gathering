@@ -1,12 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -163,7 +158,7 @@ public class RecordLookChem {
 
 			int counter = 1;
 			while (entries.hasMoreElements()) {
-				if (counter % 1000==0) { System.out.println("Parsed "+counter+" entries"); }
+				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 				
 				ZipEntry zipEntry = entries.nextElement();
 
@@ -178,7 +173,7 @@ public class RecordLookChem {
 				}
 			}
 			
-			System.out.println("Parsed "+(counter-1)+" entries");
+			System.out.println("Parsed "+(counter-1)+" pages");
 			return records;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -200,7 +195,7 @@ public class RecordLookChem {
 
 			int counter = 1;
 			while (rs.next()) {
-				if (counter % 1000==0) { System.out.println("Parsed "+counter+" entries"); }
+				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 				
 				String html = rs.getString("html");
 				String url = rs.getString("url");
@@ -220,7 +215,7 @@ public class RecordLookChem {
 				}
 			}
 			
-			System.out.println("Parsed "+(counter-1)+" entries");
+			System.out.println("Parsed "+(counter-1)+" pages");
 			return records;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -234,38 +229,39 @@ public class RecordLookChem {
 	 * @param lcr	The RecordLookChem object to store data
 	 * @param doc	The Document object to be parsed
 	 */
-	private static void parseDocument(RecordLookChem lcr, Document doc) {	
+	private static void parseDocument(RecordLookChem lcr, Document doc) {
 		try {
 			Element basicInfoTable = doc.selectFirst("table");
 			Elements rows = basicInfoTable.getElementsByTag("tr");
-			
 			for (Element row:rows) {
 				String header = row.getElementsByTag("th").text();
 				String data = row.getElementsByTag("td").text();
 				// Will need to check & adjust these conditions as necessary if other pages formatted differently
-				if (header.contains("CAS No")) { lcr.CAS = data;
-				} else if (header.contains("Name")) { lcr.chemicalName = data;
-				} else if (header.contains("Formula")) { lcr.formula = data;
-				} else if (header.contains("Molecular Weight")) { lcr.molecularWeight = data;
-				} else if (header.contains("Synonyms")) { lcr.synonyms = data;
-				} else if (header.contains("EINECS")) { lcr.EINECS = data;
-				} else if (header.contains("Density")) { lcr.density = data;
-				} else if (header.contains("Melting Point")) { lcr.meltingPoint = data;
-				} else if (header.contains("Boiling Point")) { lcr.boilingPoint = data;
-				} else if (header.contains("Flash Point")) { lcr.flashPoint = data;
-				} else if (header.contains("Solubility")) {	lcr.solubility = data;
-				} else if (header.contains("Appearance")) { lcr.appearance = data;
-				} else if (header.contains("Risk Codes")) { lcr.riskCodes = data;
-				} else if (header.contains("Safety")) { lcr.safety = data;
-				} else if (header.contains("Transport Information")) { lcr.transportInformation = data; }
+				if (data != null && !data.isBlank()) {
+					if (header.contains("CAS No")) { lcr.CAS = data;
+					} else if (header.contains("Name")) { lcr.chemicalName = data;
+					} else if (header.contains("Formula")) { lcr.formula = data;
+					} else if (header.contains("Molecular Weight")) { lcr.molecularWeight = data;
+					} else if (header.contains("Synonyms")) { lcr.synonyms = data;
+					} else if (header.contains("EINECS")) { lcr.EINECS = data;
+					} else if (header.contains("Density")) { lcr.density = data;
+					} else if (header.contains("Melting Point")) { lcr.meltingPoint = data;
+					} else if (header.contains("Boiling Point")) { lcr.boilingPoint = data;
+					} else if (header.contains("Flash Point")) { lcr.flashPoint = data;
+					} else if (header.contains("Solubility")) {	lcr.solubility = data;
+					} else if (header.contains("Appearance")) { lcr.appearance = data;
+					} else if (header.contains("Risk Codes")) { lcr.riskCodes = data;
+					} else if (header.contains("Safety")) { lcr.safety = data;
+					} else if (header.contains("Transport Information")) { lcr.transportInformation = data; }
+				}
 			}
 		} catch (Exception ex) {
-			System.out.println("No data for "+lcr.fileName);
+			System.out.println("Could not retrieve data from "+lcr.fileName);
 		}
 	}
 	
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,817,false);
+		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",817,2000,false);
 	}
 	
 }

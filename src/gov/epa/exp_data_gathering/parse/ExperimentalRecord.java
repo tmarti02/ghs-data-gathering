@@ -12,6 +12,7 @@ public class ExperimentalRecord {
 	String synonyms;//	Pipe deliminated synonyms (only if provided in the reference)
 	String smiles;//Simplified Molecular Input Line Entry System for molecular structure (only if provided in the reference)
 	String property_name;//	Name of the property (use  "options_property_names" lookup table to consistently populate the field)
+	String property_value_numeric_qualifier;// >, <, or ~
 	Double property_value_min;//The minimum value of a property when a range of values is given
 	Double property_value_max;//The maximum value of a property when a range of values is given
 	Double property_value_point_estimate;// Point estimate of the property (when a single value is given)

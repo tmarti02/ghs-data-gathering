@@ -99,13 +99,13 @@ public class Parse {
 						rec.html = ExperimentalConstants.strRecordUnavailable;
 					}
 					rec.addRecordToDatabase(tableName, conn);
-					if (counter % 1000==0) { System.out.println("Downloaded "+counter+" entries"); }
+					if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
 					counter++;
 					Thread.sleep(2000+rand.nextInt(2000));
 				}
 			}
 			
-			System.out.println("Downloaded "+(counter-1)+" entries");
+			System.out.println("Downloaded "+(counter-1)+" pages");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -133,11 +133,11 @@ public class Parse {
 	
 				FileUtilities.downloadFile(url, destFilePath);
 				
-				if (counter % 1000==0) { System.out.println("Downloaded "+counter+" entries"); }
+				if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
 				counter++;
 				Thread.sleep(2000+rand.nextInt(2000));
 			}
-			System.out.println("Downloaded "+(counter-1)+" entries");
+			System.out.println("Downloaded "+(counter-1)+" pages");
 
 			FileOutputStream fos = new FileOutputStream(destZipFolder); 
 			ZipOutputStream zipOS = new ZipOutputStream(fos); 

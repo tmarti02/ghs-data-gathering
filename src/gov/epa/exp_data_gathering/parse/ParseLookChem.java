@@ -58,19 +58,19 @@ public class ParseLookChem extends Parse {
 	 * @param recordsExperimental	The ExperimentalRecords object to store the new records
 	 */
 	private void addExperimentalRecords(RecordLookChem lcr,ExperimentalRecords recordsExperimental) {
-		if (lcr.density.length()!=0) {
+		if (lcr.density != null && !lcr.density.isBlank()) {
 			createRecord(lcr,ExperimentalConstants.strDensity,lcr.density,recordsExperimental);
 	    }
-        if (lcr.meltingPoint.length()!=0) {
+        if (lcr.meltingPoint != null && !lcr.meltingPoint.isBlank()) {
 			createRecord(lcr,ExperimentalConstants.strMeltingPoint,lcr.meltingPoint,recordsExperimental);
         }
-        if (lcr.boilingPoint.length()!=0) {
+        if (lcr.boilingPoint != null && !lcr.boilingPoint.isBlank()) {
 			createRecord(lcr,ExperimentalConstants.strBoilingPoint,lcr.boilingPoint,recordsExperimental);
 	    }
-        if (lcr.flashPoint.length()!=0) {
+        if (lcr.flashPoint != null && !lcr.flashPoint.isBlank()) {
 			createRecord(lcr,ExperimentalConstants.strFlashPoint,lcr.flashPoint,recordsExperimental);
 	    }
-        if (lcr.solubility.length()!=0) {
+        if (lcr.solubility != null && !lcr.solubility.isBlank()) {
 			createRecord(lcr,ExperimentalConstants.strWaterSolubility,lcr.solubility,recordsExperimental);
         } 
 	}
@@ -83,18 +83,25 @@ public class ParseLookChem extends Parse {
 	 * @param recordsExperimental	The ExperimentalRecords object to store the new record
 	 */
 	void createRecord(RecordLookChem lcr,String propertyName,String propertyValue,ExperimentalRecords recordsExperimental) {
+		// Creates a new ExperimentalRecord object and sets all the fields that do not require advanced parsing
 		ExperimentalRecord er=new ExperimentalRecord();
-		
 		er.casrn=lcr.CAS;
 		er.chemical_name=lcr.chemicalName;
-		er.synonyms=lcr.synonyms.replace(';','|');
+		if (lcr.synonyms != null) { er.synonyms=lcr.synonyms.replace(';','|'); }
 		er.property_name=propertyName;
 		er.property_value_string=propertyValue;
-		er.url="https://www.lookchem.com/cas-"+lcr.CAS.substring(0,3)+"/"+lcr.CAS+".html";
 		er.source_name=ExperimentalConstants.strSourceLookChem;
+		
+		// Constructs a LookChem URL from the CAS RN
+		String baseURL = "https://www.lookchem.com/cas-";
+		String prefix = lcr.CAS.substring(0,3);
+		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
+		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
 
 		boolean badUnits = true;
 		int unitsIndex = -1;
+		// Replaces any intra-numerical commas with decimal points to handle international decimal format
+		// Possible this could cause issues w/ commas as thousands separators, but I haven't seen any yet
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			if (propertyValue.toLowerCase().contains("g/cm3") || propertyValue.toLowerCase().contains("g/cm 3")) {
@@ -110,16 +117,12 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_g_cm3;
 				unitsIndex = propertyValue.length();
 				badUnits = false;
-				er = updateNote(er,ExperimentalConstants.str_g_cm3+" assumed");
+				updateNote(er,ExperimentalConstants.str_g_cm3+" assumed");
 			}
 
-			try {
-				er.pressure_kPa = getPressureCondition(propertyValue);
-			} catch (Exception ex) { }
+			getPressureCondition(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
 			
-			try {
-				er.temperature_C = getTemperatureCondition(propertyValue);
-			} catch (Exception ex) { }
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint) {
 			String units = getTemperatureUnits(propertyValue);
 			if (units.length()!=0) {
@@ -127,7 +130,7 @@ public class ParseLookChem extends Parse {
 				unitsIndex = propertyValue.indexOf(units);
 				badUnits = false;
 			} else {
-				er = updateNote(er, "units cannot be assumed");
+				updateNote(er, "units cannot be assumed");
 			}
 		} else if (propertyName==ExperimentalConstants.strBoilingPoint || propertyName==ExperimentalConstants.strFlashPoint) {
 			String units = getTemperatureUnits(propertyValue);
@@ -136,12 +139,11 @@ public class ParseLookChem extends Parse {
 				unitsIndex = propertyValue.indexOf(units);
 				badUnits = false;
 			} else {
-				er = updateNote(er, "units cannot be assumed");
+				updateNote(er, "units cannot be assumed");
 			}
 			
-			try {
-				er.pressure_kPa = getPressureCondition(propertyValue);
-			} catch (Exception ex) { }
+			getPressureCondition(er,propertyValue);
+			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			if (propertyValue.toLowerCase().contains("mg/l")) {
 				er.property_value_units = ExperimentalConstants.str_mg_L;
@@ -152,16 +154,11 @@ public class ParseLookChem extends Parse {
 				unitsIndex = propertyValue.indexOf("g/");
 				badUnits = false;
 			} else {
-				er = updateNote(er, "units cannot be assumed");
+				updateNote(er, "units cannot be assumed");
 			}
 			
-			try {
-				er.pressure_kPa = getPressureCondition(propertyValue);
-			} catch (Exception ex) { }
+			getTemperatureCondition(er,propertyValue);
 			
-			try {
-				er.temperature_C = getTemperatureCondition(propertyValue);
-			} catch (Exception ex) { }
 		}
 		
 		if (badUnits) { unitsIndex = propertyValue.length(); }
@@ -176,16 +173,17 @@ public class ParseLookChem extends Parse {
 			try {
 				double propertyValueAsDouble = extractFirstDoubleFromString(propertyValue,unitsIndex);
 				int propertyValueIndex = propertyValue.indexOf(Double.toString(propertyValueAsDouble).charAt(0));
-				if (propertyValueIndex > 0 && !badUnits) {
-					if (propertyValue.charAt(propertyValueIndex-1)=='>') {
-						er.property_value_min = propertyValueAsDouble;
-					} else if (propertyValue.charAt(propertyValueIndex-1)=='<') {
-						er.property_value_max = propertyValueAsDouble;
-					} else {
-						er.property_value_point_estimate = propertyValueAsDouble;
-					}
-				} else if (!badUnits) {
+				if (!badUnits) {
 					er.property_value_point_estimate = propertyValueAsDouble;
+					if (propertyValueIndex > 0) {
+						if (propertyValue.charAt(propertyValueIndex-1)=='>') {
+							er.property_value_numeric_qualifier = ">";
+						} else if (propertyValue.charAt(propertyValueIndex-1)=='<') {
+							er.property_value_numeric_qualifier = "<";
+						} else if (propertyValue.charAt(propertyValueIndex-1)=='~') {
+							er.property_value_numeric_qualifier = "~";
+						}
+					}
 				}
 			} catch (IllegalStateException ex2) {
 				propertyName = "";
@@ -195,12 +193,12 @@ public class ParseLookChem extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		if (propertyName.length()!=0 && !badUnits) {
-			if (propertyValue.contains("lit.")) { er = updateNote(er,ExperimentalConstants.str_lit); }
-			if (propertyValue.contains("dec.")) { er = updateNote(er,ExperimentalConstants.str_dec); }
-			if (propertyValue.contains("subl.")) { er = updateNote(er,ExperimentalConstants.str_subl); }
+			if (propertyValue.contains("lit.")) { updateNote(er,ExperimentalConstants.str_lit); }
+			if (propertyValue.contains("dec.")) { updateNote(er,ExperimentalConstants.str_dec); }
+			if (propertyValue.contains("subl.")) { updateNote(er,ExperimentalConstants.str_subl); }
 			// Warns if there may be multiple records in one entry
 			if (propertyValue.contains(",")) {
-				System.out.println(propertyName+" record for chemical "+lcr.chemicalName+" was parsed successfully, but requires manual checking");
+				System.out.println(propertyName+" record for chemical "+lcr.chemicalName+" was created successfully, but requires manual checking");
 			}
 		} else {
 			er.property_value_units = null;
@@ -217,9 +215,8 @@ public class ParseLookChem extends Parse {
 	 * @param str	The string to be added
 	 * @return		The updated ExperimentalRecord object
 	 */
-	private ExperimentalRecord updateNote(ExperimentalRecord er, String str) {
+	private static void updateNote(ExperimentalRecord er, String str) {
 		er.note = Objects.isNull(er.note) ? str : er.note+", "+str;
-		return er;
 	}
 	
 	/**
@@ -227,7 +224,7 @@ public class ParseLookChem extends Parse {
 	 * @param propertyValue	The string to be read
 	 * @return				A standardized temperature unit string from ExperimentalConstants
 	 */
-	private String getTemperatureUnits(String propertyValue) {
+	private static String getTemperatureUnits(String propertyValue) {
 		String units = "";
 		if (propertyValue.contains("°C") || propertyValue.contains("ºC") 
 				|| propertyValue.contains(" C") || propertyValue.contains("oC")) {
@@ -240,48 +237,56 @@ public class ParseLookChem extends Parse {
 	}
 	
 	/**
-	 * If the property value contains a pressure, returns the pressure converted to kPa
+	 * Sets the pressure condition for an ExperimentalRecord object, if present
+	 * @param er			The ExperimentalRecord object to be updated
 	 * @param propertyValue	The string to be read
 	 * @return				The pressure condition in kPa
-	 * @throws NumberFormatException	If no pressure condition is present
-	 * @throws IllegalStateException	If pressure cannot be read
 	 */
-	private double getPressureCondition(String propertyValue) throws IllegalStateException, NumberFormatException {
+	private static void getPressureCondition(ExperimentalRecord er,String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
 		int pressureIndex = propertyValue.indexOf("mm");
+		// If "mm" not found, looks for "torr" instead - a handful of records use this
 		if (pressureIndex == -1) { pressureIndex = propertyValue.indexOf("torr"); }
-		String pressure = "";
-		
-		if (pressureIndex>0) {
-			Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
-			while (m.find()) { pressure = m.group(); }
+		// If either set of pressure units were found, looks for the last number that precedes them
+		if (pressureIndex > 0) {
+			try {
+				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
+				String pressure = "";
+				while (m.find()) { pressure = m.group(); }
+				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure)*ExperimentalConstants.mmHg_to_kPa; }
+			} catch (Exception ex) { }
 		}
-		
-		double pressurekPa = Double.parseDouble(pressure)*ExperimentalConstants.mmHg_to_kPa;
-		return pressurekPa;
 	}
 	
 	/**
-	 * If the property value contains a temperature, returns the temperature converted to C
+	 * Sets the temperature condition for an ExperimentalRecord object, if present
+	 * @param er			The ExperimentalRecord object to be updated
 	 * @param propertyValue	The string to be read
-	 * @return				The temperature condition in kPa
-	 * @throws NumberFormatException	If no temperature condition is present
-	 * @throws IllegalStateException	If temperature cannot be read
+	 * @return				The temperature condition in C
 	 */
-	private double getTemperatureCondition(String propertyValue) throws IllegalStateException, NumberFormatException {
+	private static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
 		String units = getTemperatureUnits(propertyValue);
 		int tempIndex = propertyValue.indexOf(units);
-		String temp = "";
-
-		if (tempIndex>0) {
-			Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,tempIndex));
-			while (m.find()) { temp = m.group(); }
+		// If temperature units were found, looks for the last number that precedes them
+		if (tempIndex > 0) {
+			try {
+				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,tempIndex));
+				String tempStr = "";
+				while (m.find()) { tempStr = m.group(); }
+				if (tempStr.length()!=0) {
+					// Converts to C as needed
+					double tempC = Double.parseDouble(tempStr);
+					switch (units) {
+					case "C":
+						er.temperature_C = tempC;
+						break;
+					case "F":
+						er.temperature_C = (tempC-32)*5/9;
+						break;
+					}
+				}
+			} catch (Exception ex) { }
 		}
-		
-		double tempC = Double.parseDouble(temp);
-		if (units == ExperimentalConstants.str_F) { tempC = (tempC-32)*5/9; }
-
-		return tempC;
 	}
 	
 	/**
