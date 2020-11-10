@@ -89,18 +89,15 @@ public class Parse {
 				RawDataRecord rec=new RawDataRecord(strDate, url, "");
 				boolean haveRecord=rec.haveRecordInDatabase(pathRawHTMLDatabase,tableName,conn);
 				if (!haveRecord || startFresh) {
-					String html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
-					Document doc = Jsoup.parse(html);
-					if (doc.title().length()!=0) {
-						rec.html = html;
-					} else {
-						// Title field of LookChem "no results" page is blank
-						// How do we generalize this?
-						rec.html = ExperimentalConstants.strRecordUnavailable;
+					String html = "";
+					try {
+						rec.html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.addRecordToDatabase(tableName, conn);
+						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+						counter++;
+					} catch (Exception ex) {
+						System.out.println("Failed to download "+url);
 					}
-					rec.addRecordToDatabase(tableName, conn);
-					if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
-					counter++;
 					Thread.sleep(2000+rand.nextInt(2000));
 				}
 			}
@@ -131,10 +128,13 @@ public class Parse {
 				File destFile = new File(destFilePath);
 				if(!destFile.getParentFile().exists()) { destFile.getParentFile().mkdirs(); }
 	
-				FileUtilities.downloadFile(url, destFilePath);
-				
-				if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
-				counter++;
+				try {
+					FileUtilities.downloadFile(url, destFilePath);
+					if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+					counter++;
+				} catch (Exception ex) {
+					System.out.println("Failed to download "+url);
+				}
 				Thread.sleep(2000+rand.nextInt(2000));
 			}
 			System.out.println("Downloaded "+(counter-1)+" pages");

@@ -230,38 +230,38 @@ public class RecordLookChem {
 	 * @param doc	The Document object to be parsed
 	 */
 	private static void parseDocument(RecordLookChem lcr, Document doc) {
-		try {
-			Element basicInfoTable = doc.selectFirst("table");
-			Elements rows = basicInfoTable.getElementsByTag("tr");
-			for (Element row:rows) {
-				String header = row.getElementsByTag("th").text();
-				String data = row.getElementsByTag("td").text();
-				// Will need to check & adjust these conditions as necessary if other pages formatted differently
-				if (data != null && !data.isBlank()) {
-					if (header.contains("CAS No")) { lcr.CAS = data;
-					} else if (header.contains("Name")) { lcr.chemicalName = data;
-					} else if (header.contains("Formula")) { lcr.formula = data;
-					} else if (header.contains("Molecular Weight")) { lcr.molecularWeight = data;
-					} else if (header.contains("Synonyms")) { lcr.synonyms = data;
-					} else if (header.contains("EINECS")) { lcr.EINECS = data;
-					} else if (header.contains("Density")) { lcr.density = data;
-					} else if (header.contains("Melting Point")) { lcr.meltingPoint = data;
-					} else if (header.contains("Boiling Point")) { lcr.boilingPoint = data;
-					} else if (header.contains("Flash Point")) { lcr.flashPoint = data;
-					} else if (header.contains("Solubility")) {	lcr.solubility = data;
-					} else if (header.contains("Appearance")) { lcr.appearance = data;
-					} else if (header.contains("Risk Codes")) { lcr.riskCodes = data;
-					} else if (header.contains("Safety")) { lcr.safety = data;
-					} else if (header.contains("Transport Information")) { lcr.transportInformation = data; }
+		Element basicInfo = doc.selectFirst("table");
+		if (basicInfo != null) { 
+			Elements rows = basicInfo.getElementsByTag("tr");
+			if (!rows.isEmpty()) {
+				for (Element row:rows) {
+					String header = row.getElementsByTag("th").text();
+					String data = row.getElementsByTag("td").text();
+					// Will need to check & adjust these conditions as necessary if other pages formatted differently
+					if (data != null && !data.isBlank()) {
+						if (header.contains("CAS No")) { lcr.CAS = data;
+						} else if (header.contains("Name")) { lcr.chemicalName = data;
+						} else if (header.contains("Formula")) { lcr.formula = data;
+						} else if (header.contains("Molecular Weight")) { lcr.molecularWeight = data;
+						} else if (header.contains("Synonyms")) { lcr.synonyms = data;
+						} else if (header.contains("EINECS")) { lcr.EINECS = data;
+						} else if (header.contains("Density")) { lcr.density = data;
+						} else if (header.contains("Melting Point")) { lcr.meltingPoint = data;
+						} else if (header.contains("Boiling Point")) { lcr.boilingPoint = data;
+						} else if (header.contains("Flash Point")) { lcr.flashPoint = data;
+						} else if (header.contains("Solubility")) {	lcr.solubility = data;
+						} else if (header.contains("Appearance")) { lcr.appearance = data;
+						} else if (header.contains("Risk Codes")) { lcr.riskCodes = data;
+						} else if (header.contains("Safety")) { lcr.safety = data;
+						} else if (header.contains("Transport Information")) { lcr.transportInformation = data; }
+					}
 				}
-			}
-		} catch (Exception ex) {
-			System.out.println("Could not retrieve data from "+lcr.fileName);
-		}
+			} else { System.out.println("No data in "+lcr.fileName); }
+		} else { System.out.println("No data in "+lcr.fileName); }
 	}
-	
+
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",817,2000,false);
+		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",5695,8164,false);
 	}
 	
 }

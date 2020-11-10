@@ -129,8 +129,6 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
 				badUnits = false;
-			} else {
-				updateNote(er, "units cannot be assumed");
 			}
 		} else if (propertyName==ExperimentalConstants.strBoilingPoint || propertyName==ExperimentalConstants.strFlashPoint) {
 			String units = getTemperatureUnits(propertyValue);
@@ -138,8 +136,6 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
 				badUnits = false;
-			} else {
-				updateNote(er, "units cannot be assumed");
 			}
 			
 			getPressureCondition(er,propertyValue);
@@ -153,8 +149,6 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_g_L;
 				unitsIndex = propertyValue.indexOf("g/");
 				badUnits = false;
-			} else {
-				updateNote(er, "units cannot be assumed");
 			}
 			
 			getTemperatureCondition(er,propertyValue);
@@ -296,7 +290,7 @@ public class ParseLookChem extends Parse {
 	 * @return		The number found as a double
 	 * @throws IllegalStateException	If no number is found in the given range
 	 */
-	private double extractFirstDoubleFromString(String str,int end) throws IllegalStateException {
+	private static double extractFirstDoubleFromString(String str,int end) throws IllegalStateException {
 		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
 		numberMatcher.find();
 		return Double.parseDouble(numberMatcher.group().replace(" ",""));
@@ -309,7 +303,7 @@ public class ParseLookChem extends Parse {
 	 * @return		The range found as a double[2]
 	 * @throws IllegalStateException	If no number range is found in the given range
 	 */
-	private double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
+	private static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
 		// Format "n[ ]-[ ]m [units]"
 		Matcher anyRangeMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
