@@ -232,7 +232,9 @@ public class ParseLookChem extends Parse {
 			if (er.casrn.contains("13252-14-7")) { er.property_value_point_estimate = 0.01894; }
 		}
 		
-		recordsExperimental.add(er);
+		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units==null)) {
+			recordsExperimental.add(er);
+		}
 	}
 	
 	/**
