@@ -37,7 +37,7 @@ public class ParseLookChem extends Parse {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
-			File jsonFile = new File(mainFolder + "/" + fileNameJSON_Records);
+			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
 			
 			RecordLookChem[] recordsLookChem = gson.fromJson(new FileReader(jsonFile), RecordLookChem[].class);
 			
@@ -385,7 +385,6 @@ public class ParseLookChem extends Parse {
 		ParseLookChem p = new ParseLookChem();
 		p.createRecords();
 		ExperimentalRecords records = p.goThroughOriginalRecords();
-		records.toJSON_File(AADashboard.dataFolder+File.separator+sourceName+
-				File.separator+sourceName+" Experimental Records.json");
+		records.toJSON_File(p.jsonFolder+File.separator+p.sourceName+" Experimental Records.json");
 	}
 }

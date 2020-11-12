@@ -31,8 +31,10 @@ import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 public class Parse {
 	
-	public static String sourceName;
-	public static String jsonFolder;
+	public String sourceName;
+	public String jsonFolder;
+	public String databaseFolder;
+	public String webpageFolder;
 
 	protected String fileNameSourceExcel;//input excel spreadsheet
 	protected String fileNameHtmlZip;//input as zip file of webpages
@@ -46,8 +48,6 @@ public class Parse {
 	protected String fileNameJsonExperimentalRecords;//records in ExperimentalRecord class format
 	protected String mainFolder;
 	
-	protected static String pathRawHTMLDatabase = AADashboard.dataFolder + File.separator + "databases\\raw_html.db";
-	
 	public static boolean generateOriginalJSONRecords=true; //runs code to generate json records from original data format (json file has all the chemicals in one file)	
 	public static boolean writeFlatFile=true;//all data converted to final format stored as flat text file
 	public static boolean writeJsonChemicalsFile=true;//all data converted to final format stored as Json file
@@ -58,8 +58,10 @@ public class Parse {
 		fileNameJSON_Records = sourceName +" Records.json";
 		fileNameFlatExperimentalRecords = sourceName +" Experimental Records.txt";
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
-		mainFolder = AADashboard.dataFolder + File.separator + sourceName;
+		mainFolder = AADashboard.dataFolder + File.separator + "Experimental" + File.separator + sourceName;
+		databaseFolder = mainFolder + File.separator + "databases";
 		jsonFolder= mainFolder + File.separator + "json files";
+		webpageFolder = mainFolder + File.separator + "web pages";
 		
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting();
@@ -73,11 +75,13 @@ public class Parse {
 	 * @param tableName		The name of the table to store the data in, i.e., the source name
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public static void downloadWebpagesToDatabase(Vector<String> urls,String tableName, boolean startFresh) {
-		File db = new File(pathRawHTMLDatabase);
+	public void downloadWebpagesToDatabase(Vector<String> urls,String tableName, boolean startFresh) {
+		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
+		System.out.println(databasePath);
+		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
-		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(pathRawHTMLDatabase, tableName, RawDataRecord.fieldNames, startFresh);
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
 		Random rand = new Random();
 		
 		try {
@@ -88,7 +92,7 @@ public class Parse {
 				String strDate=formatter.format(date);
 				
 				RawDataRecord rec=new RawDataRecord(strDate, url, "");
-				boolean haveRecord=rec.haveRecordInDatabase(pathRawHTMLDatabase,tableName,conn);
+				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
 				if (!haveRecord || startFresh) {
 					long delay = 0;
 					try {
@@ -119,14 +123,16 @@ public class Parse {
 	 * @param tableName		The name of the table to store the data in, i.e., the source name
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public static void downloadWebpagesToDatabase(Vector<String> urls,String htmlClass,String tableName, boolean startFresh) {
-		File db = new File(pathRawHTMLDatabase);
+	public void downloadWebpagesToDatabase(Vector<String> urls,String htmlClass,String tableName, boolean startFresh) {
+		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
+		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
-		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(pathRawHTMLDatabase, tableName, RawDataRecord.fieldNames, startFresh);
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
 		Random rand = new Random();
 		
 		try {
+			long totalStartTime=System.currentTimeMillis();
 			int counter = 0;
 			for (String url:urls) {
 				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
@@ -134,7 +140,7 @@ public class Parse {
 				String strDate=formatter.format(date);
 				
 				RawDataRecord rec=new RawDataRecord(strDate, url, "");
-				boolean haveRecord=rec.haveRecordInDatabase(pathRawHTMLDatabase,tableName,conn);
+				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
 				if (!haveRecord || startFresh) {
 					String html="";
 					long delay=0;
@@ -149,7 +155,10 @@ public class Parse {
 							rec.html=table.outerHtml();
 							rec.addRecordToDatabase(tableName, conn);
 							counter++;
-							if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+							if (counter % 100==0) {
+								long batchTime = System.currentTimeMillis();
+								System.out.println("Downloaded "+counter+" pages in "+(batchTime-totalStartTime)/1000+" seconds");
+							}
 						} else { System.out.println("No data table at "+url); }
 					} catch (Exception ex) {
 						System.out.println("Failed to download "+url);
@@ -169,18 +178,15 @@ public class Parse {
 	 * @param urls			The URLs to be downloaded
 	 * @param sourceName	The source name
 	 */
-	public static void downloadWebpagesToZipFile(Vector<String> urls,String sourceName) {
-		String folderNameWebpages = "web pages";
-		String mainFolder=AADashboard.dataFolder+File.separator+sourceName;
-		String destFolder = mainFolder + File.separator+folderNameWebpages;
-		String destZipFolder=destFolder+".zip";
+	public void downloadWebpagesToZipFile(Vector<String> urls,String sourceName) {
+		String destZipFolder=webpageFolder+".zip";
 		Random rand = new Random();
 
 		try {
 			int counter = 1;
 			for (String url:urls) {
 				String fileName = url.substring( url.lastIndexOf("/")+1, url.length() );
-				String destFilePath = destFolder + "/" + fileName;
+				String destFilePath = webpageFolder + "/" + fileName;
 				File destFile = new File(destFilePath);
 				if(!destFile.getParentFile().exists()) { destFile.getParentFile().mkdirs(); }
 	
@@ -202,19 +208,19 @@ public class Parse {
 			FileOutputStream fos = new FileOutputStream(destZipFolder); 
 			ZipOutputStream zipOS = new ZipOutputStream(fos); 
 			
-			File webpageFolder=new File(destFolder);
-			File[] files=webpageFolder.listFiles();
+			File webpageFile=new File(webpageFolder);
+			File[] files=webpageFile.listFiles();
 			
 			// Create a zip file
 			for (File file:files) {
 				if (file.getName().contains(".html")); {
-					FileUtilities.writeToZipFile(file.getName(),destFolder,folderNameWebpages, zipOS);
+					FileUtilities.writeToZipFile(file.getName(),webpageFolder,folderNameWebpages, zipOS);
 				}
 				// Deletes all files so folder can be deleted after zip finishes
 				file.delete();
 			}
 			// Delete web pages folder
-			webpageFolder.delete();
+			webpageFile.delete();
 			
 			zipOS.close();
             fos.close();
@@ -315,7 +321,7 @@ public class Parse {
 			builder.setPrettyPrinting();
 			Gson gson = builder.create();
 			
-			FileWriter fw = new FileWriter(mainFolder + "/" + fileNameJSON_Records);
+			FileWriter fw = new FileWriter(jsonFolder + File.separator + fileNameJSON_Records);
 			String strRecords=gson.toJson(records);
 			
 			strRecords=Parse.fixChars(strRecords);

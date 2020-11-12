@@ -55,7 +55,8 @@ public class RecordLookChem {
 		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
-		Parse.downloadWebpagesToZipFile(urls,sourceName);	
+		ParseLookChem p = new ParseLookChem();
+		p.downloadWebpagesToZipFile(urls,sourceName);	
 	}
 	
 	/**
@@ -70,7 +71,8 @@ public class RecordLookChem {
 		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
-		Parse.downloadWebpagesToDatabase(urls,"reir_l_info_table",sourceName,startFresh);		
+		ParseLookChem p = new ParseLookChem();
+		p.downloadWebpagesToDatabase(urls,"reir_l_info_table",sourceName,startFresh);		
 	}
 	
 	/**
@@ -149,7 +151,7 @@ public class RecordLookChem {
 	 */
 	public static Vector<RecordLookChem> parseWebpagesInZipFile() {
 		String folderNameWebpages = "web pages";
-		String mainFolder=AADashboard.dataFolder+File.separator+sourceName;
+		String mainFolder = AADashboard.dataFolder+File.separator+"Experimental"+ File.separator + sourceName;
 		String zipFilePath = mainFolder + File.separator+folderNameWebpages+".zip";
 		Vector<RecordLookChem> records = new Vector<>();
 
@@ -189,10 +191,12 @@ public class RecordLookChem {
 	 * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
 	 */
 	public static Vector<RecordLookChem> parseWebpagesInDatabase() {
+		String databaseFolder = AADashboard.dataFolder+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "databases";
+		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		Vector<RecordLookChem> records = new Vector<>();
 
 		try {
-			Statement stat = MySQL_DB.getStatement(Parse.pathRawHTMLDatabase);
+			Statement stat = MySQL_DB.getStatement(databasePath);
 			ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceLookChem);
 
 			int counter = 1;
@@ -263,7 +267,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",300,8163,false);
+		downloadWebpagesFromExcelToZipFile(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,10);
 	}
 	
 }
