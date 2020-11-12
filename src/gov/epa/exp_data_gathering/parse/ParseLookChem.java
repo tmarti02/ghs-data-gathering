@@ -73,6 +73,23 @@ public class ParseLookChem extends Parse {
         if (lcr.solubility != null && !lcr.solubility.isBlank()) {
 			createRecord(lcr,ExperimentalConstants.strWaterSolubility,lcr.solubility,recordsExperimental);
         } 
+        if (lcr.appearance != null && !lcr.appearance.isBlank()) {
+    		ExperimentalRecord er=new ExperimentalRecord();
+    		er.casrn=lcr.CAS;
+    		er.chemical_name=lcr.chemicalName;
+    		if (lcr.synonyms != null) { er.synonyms=lcr.synonyms.replace(';','|'); }
+    		er.property_name=ExperimentalConstants.strAppearance;
+    		er.property_value_string=lcr.appearance;
+    		er.source_name=ExperimentalConstants.strSourceLookChem;
+    		
+    		// Constructs a LookChem URL from the CAS RN
+    		String baseURL = "https://www.lookchem.com/cas-";
+    		String prefix = lcr.CAS.substring(0,3);
+    		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
+    		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
+    		
+    		recordsExperimental.add(er);
+        } 
 	}
 	
 	/**

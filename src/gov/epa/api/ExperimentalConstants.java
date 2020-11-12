@@ -12,6 +12,7 @@ public class ExperimentalConstants {
 	public static final String strMeltingPoint="Melting point";
 	public static final String strBoilingPoint="Boiling point";
 	public static final String strFlashPoint="Flash point";
+	public static final String strAppearance="Appearance";
 
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
@@ -28,7 +29,6 @@ public class ExperimentalConstants {
 	
 	//Add list of source names here:
 	public static final String strSourceLookChem="LookChem";
-	public static final String strRecordUnavailable="Unavailable";
 	
 	//Conversion factors:
 	public static final double mmHg_to_kPa=0.133322;
