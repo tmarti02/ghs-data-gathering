@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -89,20 +90,75 @@ public class Parse {
 				RawDataRecord rec=new RawDataRecord(strDate, url, "");
 				boolean haveRecord=rec.haveRecordInDatabase(pathRawHTMLDatabase,tableName,conn);
 				if (!haveRecord || startFresh) {
-					String html = "";
+					long delay = 0;
 					try {
+						long startTime=System.currentTimeMillis();
 						rec.html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						long endTime=System.currentTimeMillis();
+						delay = endTime-startTime;
 						rec.addRecordToDatabase(tableName, conn);
-						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
 						counter++;
+						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
 					} catch (Exception ex) {
 						System.out.println("Failed to download "+url);
 					}
-					Thread.sleep(2000+rand.nextInt(2000));
+					Thread.sleep((long) (delay*(1+rand.nextDouble())));
 				}
 			}
 			
-			System.out.println("Downloaded "+(counter-1)+" pages");
+			System.out.println("Downloaded "+counter+" pages");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Stores HTML excerpts from a list of URLs in timestamped records in the raw HTML database
+	 * @param urls			The URLs to be downloaded
+	 * @param htmlClass		The class for the elements to be excerpted and stored
+	 * @param tableName		The name of the table to store the data in, i.e., the source name
+	 * @param startFresh	True to remake database table completely, false to append new records to existing table
+	 */
+	public static void downloadWebpagesToDatabase(Vector<String> urls,String htmlClass,String tableName, boolean startFresh) {
+		File db = new File(pathRawHTMLDatabase);
+		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
+		
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(pathRawHTMLDatabase, tableName, RawDataRecord.fieldNames, startFresh);
+		Random rand = new Random();
+		
+		try {
+			int counter = 0;
+			for (String url:urls) {
+				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+				Date date = new Date();  
+				String strDate=formatter.format(date);
+				
+				RawDataRecord rec=new RawDataRecord(strDate, url, "");
+				boolean haveRecord=rec.haveRecordInDatabase(pathRawHTMLDatabase,tableName,conn);
+				if (!haveRecord || startFresh) {
+					String html="";
+					long delay=0;
+					try {
+						long startTime=System.currentTimeMillis();
+						html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						long endTime=System.currentTimeMillis();
+						delay=endTime-startTime;
+						Document doc = Jsoup.parse(html);
+						Element table=doc.select("."+htmlClass).first();
+						if (table!=null) {
+							rec.html=table.outerHtml();
+							rec.addRecordToDatabase(tableName, conn);
+							counter++;
+							if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+						} else { System.out.println("No data table at "+url); }
+					} catch (Exception ex) {
+						System.out.println("Failed to download "+url);
+					}
+					Thread.sleep((long) (delay*(1+rand.nextDouble())));
+				}
+			}
+			
+			System.out.println("Downloaded "+counter+" pages");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -128,16 +184,20 @@ public class Parse {
 				File destFile = new File(destFilePath);
 				if(!destFile.getParentFile().exists()) { destFile.getParentFile().mkdirs(); }
 	
+				long delay = 0;
 				try {
+					long startTime=System.currentTimeMillis();
 					FileUtilities.downloadFile(url, destFilePath);
-					if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+					long endTime=System.currentTimeMillis();
+					delay=endTime-startTime;
 					counter++;
+					if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
 				} catch (Exception ex) {
 					System.out.println("Failed to download "+url);
 				}
-				Thread.sleep(2000+rand.nextInt(2000));
+				Thread.sleep((long) (delay*(1+rand.nextDouble())));
 			}
-			System.out.println("Downloaded "+(counter-1)+" pages");
+			System.out.println("Downloaded "+counter+" pages");
 
 			FileOutputStream fos = new FileOutputStream(destZipFolder); 
 			ZipOutputStream zipOS = new ZipOutputStream(fos); 

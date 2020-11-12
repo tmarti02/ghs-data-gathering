@@ -70,7 +70,7 @@ public class RecordLookChem {
 		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
-		Parse.downloadWebpagesToDatabase(urls,sourceName,startFresh);		
+		Parse.downloadWebpagesToDatabase(urls,"reir_l_info_table",sourceName,startFresh);		
 	}
 	
 	/**
@@ -85,9 +85,11 @@ public class RecordLookChem {
 		Vector<String> urls = new Vector<String>();
 		for (int i = start; i < end; i++) {
 			String CAS = records.get(i).CASRN;
-			String prefix = CAS.substring(0,3);
-			if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
-			urls.add(baseURL+prefix+"/"+CAS+".html");
+			if (!CAS.startsWith("NOCAS")) {
+				String prefix = CAS.substring(0,3);
+				if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
+				urls.add(baseURL+prefix+"/"+CAS+".html");
+			}
 		}
 		return urls;
 	}
@@ -261,7 +263,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",5695,8164,false);
+		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",300,8163,false);
 	}
 	
 }

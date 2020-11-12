@@ -347,14 +347,12 @@ public class CreateGHS_Database  {
 		Connection conn=null;
 		
 		try {
-			System.out.println("Creating "+tableName+" table");
-
 			conn= MySQL_DB.getConnection(databaseFilePath);
-			Statement stat = MySQL_DB.getStatement(conn);
-			
 			conn.setAutoCommit(true);
 			
 			if (startFresh) {
+				System.out.println("Creating "+tableName+" table");
+				Statement stat = MySQL_DB.getStatement(conn);
 				stat.executeUpdate("drop table if exists "+tableName+";");			 
 				stat.executeUpdate("VACUUM;");//compress db now that have deleted the table
 				MySQL_DB.create_table(stat, tableName, fieldNames);
@@ -368,6 +366,7 @@ public class CreateGHS_Database  {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return conn;
 
 	}
