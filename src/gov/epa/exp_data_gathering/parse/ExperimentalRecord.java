@@ -17,6 +17,7 @@ public class ExperimentalRecord {
 	Double property_value_max;//The maximum value of a property when a range of values is given
 	Double property_value_point_estimate;// Point estimate of the property (when a single value is given)
 	String property_value_units;//The units for the property value (convert to defined values in ExperimentalConstants class)
+	String property_value_qualitative;// Valid qualitative data: solubility descriptor, appearance
 	Double temperature_C;//The temperature in C that the property is measured at (vapor pressure might be given at 23 C for example)
 	Double pressure_kPa;//The pressure in kPa that the property is measured at (important for boiling points for example)
 	String measurement_method;//	The experimental method used to measure the property
@@ -28,6 +29,8 @@ public class ExperimentalRecord {
 	String url;
 	String source_name;//use Experimental constants
 	String date_accessed;//use Experimental constants
+	
+	boolean keep;//Does the record contain useful data?
 	
 	//TODO do we need parent url too? sometimes there are several urls we have to follow along the way to get to the final url
 

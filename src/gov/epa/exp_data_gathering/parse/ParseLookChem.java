@@ -80,6 +80,7 @@ public class ParseLookChem extends Parse {
     		if (lcr.synonyms != null) { er.synonyms=lcr.synonyms.replace(';','|'); }
     		er.property_name=ExperimentalConstants.strAppearance;
     		er.property_value_string=lcr.appearance;
+    		er.property_value_qualitative=lcr.appearance;
     		er.source_name=ExperimentalConstants.strSourceLookChem;
     		
     		// Constructs a LookChem URL from the CAS RN
@@ -88,6 +89,7 @@ public class ParseLookChem extends Parse {
     		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
     		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
     		
+    		er.keep = true;
     		recordsExperimental.add(er);
         } 
 	}
@@ -232,9 +234,13 @@ public class ParseLookChem extends Parse {
 			if (er.casrn.contains("13252-14-7")) { er.property_value_point_estimate = 0.01894; }
 		}
 		
-		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units==null)) {
-			recordsExperimental.add(er);
+		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units==null)
+				&& (er.property_value_units!=null || er.property_value_qualitative!=null)) {
+			er.keep = true;
+		} else {
+			er.keep = false;
 		}
+		recordsExperimental.add(er);
 	}
 	
 	/**
@@ -320,26 +326,26 @@ public class ParseLookChem extends Parse {
 	
 	private static void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
 		String[] solubilities = {ExperimentalConstants.str_inSol,ExperimentalConstants.str_verySol,ExperimentalConstants.str_freelySol,
-				ExperimentalConstants.str_sparinglySol,ExperimentalConstants.str_slightlySol,ExperimentalConstants.str_verySlightlySol,
+				ExperimentalConstants.str_sparinglySol,ExperimentalConstants.str_verySlightlySol,ExperimentalConstants.str_slightlySol,
 				ExperimentalConstants.str_sol};
 		propertyValue = propertyValue.toLowerCase();
 		boolean foundSol = false;
 		for (String sol:solubilities) {
 			if (!foundSol && propertyValue.contains(sol+" in water")) {
-				updateNote(er, sol);
+				er.property_value_qualitative=sol;
 				foundSol = true;
 			} else if (!foundSol && propertyValue.contains(sol+" in")) { // Do nothing if solvent is not water
 			} else if (!foundSol && propertyValue.contains(sol)) {
-				updateNote(er, sol); // Assume water if solvent not explicit
+				er.property_value_qualitative=sol; // Assume water if solvent not explicit
 				foundSol = true;
 			}
 		}
 		
-		if (propertyValue.contains("immiscible with water")) { updateNote(er,ExperimentalConstants.str_immisc);
-		} else if (propertyValue.contains("miscible with water")) { updateNote(er,ExperimentalConstants.str_misc);
+		if (propertyValue.contains("immiscible with water")) { er.property_value_qualitative=ExperimentalConstants.str_immisc;
+		} else if (propertyValue.contains("miscible with water")) { er.property_value_qualitative=ExperimentalConstants.str_misc;
 		} else if (propertyValue.contains("miscible with")) { // Do nothing if solvent is not water
-		} else if (propertyValue.contains("immiscible")) { updateNote(er,ExperimentalConstants.str_immisc);
-		} else if (propertyValue.contains("miscible")) { updateNote(er,ExperimentalConstants.str_misc);
+		} else if (propertyValue.contains("immiscible")) { er.property_value_qualitative=ExperimentalConstants.str_immisc;
+		} else if (propertyValue.contains("miscible")) { er.property_value_qualitative=ExperimentalConstants.str_misc;
 		}
 	}
 	
@@ -385,6 +391,14 @@ public class ParseLookChem extends Parse {
 		ParseLookChem p = new ParseLookChem();
 		p.createRecords();
 		ExperimentalRecords records = p.goThroughOriginalRecords();
+		ExperimentalRecords recordsBad = new ExperimentalRecords();
+		for (ExperimentalRecord rec:records) {
+			if (!rec.keep) {
+				recordsBad.add(rec);
+				records.remove(rec);
+			}
+		}
 		records.toJSON_File(p.jsonFolder+File.separator+p.sourceName+" Experimental Records.json");
+		recordsBad.toJSON_File(p.jsonFolder+File.separator+p.sourceName+" Experimental Records-Bad.json");
 	}
 }

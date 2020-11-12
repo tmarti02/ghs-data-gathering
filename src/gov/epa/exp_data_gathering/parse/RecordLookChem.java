@@ -267,7 +267,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToZipFile(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,10);
+		downloadWebpagesFromExcelToZipFile(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,8163);
 	}
 	
 }
