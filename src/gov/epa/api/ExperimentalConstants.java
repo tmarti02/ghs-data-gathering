@@ -21,6 +21,19 @@ public class ExperimentalConstants {
 	public static final String str_g_mL="g/mL";
 	public static final String str_C="C";
 	public static final String str_F="F";
+	public static final String str_pctWt="%w";
+	public static final String str_ppm="ppm";
+	
+	//Solubility descriptors:
+	public static final String str_verySol="very soluble";// <1 mL solvent to dissolve 1 g solute, per Sigma-Aldrich
+	public static final String str_freelySol="freely soluble";// 1-10 mL solvent
+	public static final String str_sol="soluble";// 10-30 mL solvent
+	public static final String str_sparinglySol="sparingly soluble";//30-100 mL solvent
+	public static final String str_slightlySol="slightly soluble";//100-1000 mL solvent
+	public static final String str_verySlightlySol="very slightly soluble";//1000-10000 mL solvent
+	public static final String str_inSol="insoluble";
+	public static final String str_misc="miscible";
+	public static final String str_immisc="immiscible";
 	
 	//Other:
 	public static final String str_dec="decomposes";

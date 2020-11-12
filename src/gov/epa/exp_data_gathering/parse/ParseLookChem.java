@@ -166,9 +166,18 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_g_L;
 				unitsIndex = propertyValue.indexOf("g/");
 				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("% w/w")) {
+				er.property_value_units = ExperimentalConstants.str_pctWt;
+				unitsIndex = propertyValue.indexOf("%");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("ppm")) {
+				er.property_value_units = ExperimentalConstants.str_ppm;
+				unitsIndex = propertyValue.indexOf("ppm");
+				badUnits = false;
 			}
 			
 			getTemperatureCondition(er,propertyValue);
+			getQualitativeSolubility(er, propertyValue);
 			
 		}
 		
@@ -183,15 +192,15 @@ public class ParseLookChem extends Parse {
 		} catch (IllegalStateException ex1) {
 			try {
 				double propertyValueAsDouble = extractFirstDoubleFromString(propertyValue,unitsIndex);
-				int propertyValueIndex = propertyValue.indexOf(Double.toString(propertyValueAsDouble).charAt(0));
+				int propertyValueIndex = propertyValue.replaceAll(" ","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
 				if (!badUnits) {
 					er.property_value_point_estimate = propertyValueAsDouble;
 					if (propertyValueIndex > 0) {
-						if (propertyValue.charAt(propertyValueIndex-1)=='>') {
+						if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>') {
 							er.property_value_numeric_qualifier = ">";
-						} else if (propertyValue.charAt(propertyValueIndex-1)=='<') {
+						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<') {
 							er.property_value_numeric_qualifier = "<";
-						} else if (propertyValue.charAt(propertyValueIndex-1)=='~') {
+						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='~') {
 							er.property_value_numeric_qualifier = "~";
 						}
 					}
@@ -217,6 +226,12 @@ public class ParseLookChem extends Parse {
 			er.temperature_C = null;
 		}
 		
+		// Handles specific entries with weird formatting
+		// I know hard-coding this is not preferred, but having this error constantly popping up bothers me!
+		if (propertyName==ExperimentalConstants.strWaterSolubility) {
+			if (er.casrn.contains("13252-14-7")) { er.property_value_point_estimate = 0.01894; }
+		}
+		
 		recordsExperimental.add(er);
 	}
 	
@@ -236,12 +251,13 @@ public class ParseLookChem extends Parse {
 	 * @return				A standardized temperature unit string from ExperimentalConstants
 	 */
 	private static String getTemperatureUnits(String propertyValue) {
+		propertyValue=propertyValue.replaceAll(" ","");
 		String units = "";
-		if (propertyValue.contains("°C") || propertyValue.contains("ºC") 
-				|| propertyValue.contains(" C") || propertyValue.contains("oC")) {
+		if (propertyValue.contains("°C") || propertyValue.contains("ºC") || propertyValue.contains("oC")
+				|| (propertyValue.contains("C") && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1)))) {
 			units = ExperimentalConstants.str_C;
-		} else if (propertyValue.contains("°F") || propertyValue.contains("ºF") 
-				|| propertyValue.contains(" F")|| propertyValue.contains("oF")) {
+		} else if (propertyValue.contains("°F") || propertyValue.contains("ºF") || propertyValue.contains("oF")
+				|| (propertyValue.contains("F") && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("F")-1)))) {
 			units = ExperimentalConstants.str_F;
 		} 
 		return units;
@@ -297,6 +313,31 @@ public class ParseLookChem extends Parse {
 					}
 				}
 			} catch (Exception ex) { }
+		}
+	}
+	
+	private static void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
+		String[] solubilities = {ExperimentalConstants.str_inSol,ExperimentalConstants.str_verySol,ExperimentalConstants.str_freelySol,
+				ExperimentalConstants.str_sparinglySol,ExperimentalConstants.str_slightlySol,ExperimentalConstants.str_verySlightlySol,
+				ExperimentalConstants.str_sol};
+		propertyValue = propertyValue.toLowerCase();
+		boolean foundSol = false;
+		for (String sol:solubilities) {
+			if (!foundSol && propertyValue.contains(sol+" in water")) {
+				updateNote(er, sol);
+				foundSol = true;
+			} else if (!foundSol && propertyValue.contains(sol+" in")) { // Do nothing if solvent is not water
+			} else if (!foundSol && propertyValue.contains(sol)) {
+				updateNote(er, sol); // Assume water if solvent not explicit
+				foundSol = true;
+			}
+		}
+		
+		if (propertyValue.contains("immiscible with water")) { updateNote(er,ExperimentalConstants.str_immisc);
+		} else if (propertyValue.contains("miscible with water")) { updateNote(er,ExperimentalConstants.str_misc);
+		} else if (propertyValue.contains("miscible with")) { // Do nothing if solvent is not water
+		} else if (propertyValue.contains("immiscible")) { updateNote(er,ExperimentalConstants.str_immisc);
+		} else if (propertyValue.contains("miscible")) { updateNote(er,ExperimentalConstants.str_misc);
 		}
 	}
 	
