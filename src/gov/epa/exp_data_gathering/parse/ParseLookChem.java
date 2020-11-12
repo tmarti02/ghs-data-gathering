@@ -14,8 +14,6 @@ public class ParseLookChem extends Parse {
 	
 	public ParseLookChem() {
 		sourceName = ExperimentalConstants.strSourceLookChem;
-		folderNameWebpages = "web pages";
-		fileNameHtmlZip = "web pages.zip";
 		this.init();
 	}
 	
