@@ -9,6 +9,10 @@ public class ParsePubChem extends Parse {
 		this.init();
 	}
 	
+	public void () {
+		
+	}
+	
 	public static void main(String[] args) {
 		// TODO
 	}

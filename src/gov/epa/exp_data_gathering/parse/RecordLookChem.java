@@ -98,7 +98,7 @@ public class RecordLookChem {
 	
 	/**
 	 * Parses an HTML file to a RecordLookChem object and prints it out in JSON format
-	 * For output checking and debugging
+	 * Unused in final code - for output checking and debugging
 	 * @param file	The HTML file to parse
 	 * @return		A RecordLookChem object containing the data from the HTML file
 	 */
@@ -267,7 +267,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToZipFile(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,8163);
+		downloadWebpagesFromExcelToZipFile(AADashboard.dataFolder+"/PFASSTRUCT.xls",4400,8163);
 	}
 	
 }

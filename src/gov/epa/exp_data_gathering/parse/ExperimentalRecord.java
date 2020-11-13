@@ -1,6 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 public class ExperimentalRecord {
 
@@ -104,6 +105,16 @@ public class ExperimentalRecord {
 		}
 
 		return Line;
+	}
+	
+	/**
+	 * Adds a string to the note field of an ExperimentalRecord object
+	 * @param er	The ExperimentalRecord object to be updated
+	 * @param str	The string to be added
+	 * @return		The updated ExperimentalRecord object
+	 */
+	public void updateNote(String str) {
+		note = Objects.isNull(note) ? str : note+", "+str;
 	}
 
 

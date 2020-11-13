@@ -2,12 +2,11 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileReader;
-import java.util.Objects;
+import java.util.Iterator;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
 
 public class ParseLookChem extends Parse {
@@ -22,8 +21,8 @@ public class ParseLookChem extends Parse {
 	 */
 	@Override
 	protected void createRecords() {
-		// Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInZipFile();
-		Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInDatabase();
+		Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInZipFile();
+		// Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInDatabase();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -57,19 +56,19 @@ public class ParseLookChem extends Parse {
 	 */
 	private void addExperimentalRecords(RecordLookChem lcr,ExperimentalRecords recordsExperimental) {
 		if (lcr.density != null && !lcr.density.isBlank()) {
-			createRecord(lcr,ExperimentalConstants.strDensity,lcr.density,recordsExperimental);
+			addNewExperimentalRecord(lcr,ExperimentalConstants.strDensity,lcr.density,recordsExperimental);
 	    }
         if (lcr.meltingPoint != null && !lcr.meltingPoint.isBlank()) {
-			createRecord(lcr,ExperimentalConstants.strMeltingPoint,lcr.meltingPoint,recordsExperimental);
+			addNewExperimentalRecord(lcr,ExperimentalConstants.strMeltingPoint,lcr.meltingPoint,recordsExperimental);
         }
         if (lcr.boilingPoint != null && !lcr.boilingPoint.isBlank()) {
-			createRecord(lcr,ExperimentalConstants.strBoilingPoint,lcr.boilingPoint,recordsExperimental);
+			addNewExperimentalRecord(lcr,ExperimentalConstants.strBoilingPoint,lcr.boilingPoint,recordsExperimental);
 	    }
         if (lcr.flashPoint != null && !lcr.flashPoint.isBlank()) {
-			createRecord(lcr,ExperimentalConstants.strFlashPoint,lcr.flashPoint,recordsExperimental);
+			addNewExperimentalRecord(lcr,ExperimentalConstants.strFlashPoint,lcr.flashPoint,recordsExperimental);
 	    }
         if (lcr.solubility != null && !lcr.solubility.isBlank()) {
-			createRecord(lcr,ExperimentalConstants.strWaterSolubility,lcr.solubility,recordsExperimental);
+			addNewExperimentalRecord(lcr,ExperimentalConstants.strWaterSolubility,lcr.solubility,recordsExperimental);
         } 
         if (lcr.appearance != null && !lcr.appearance.isBlank()) {
     		ExperimentalRecord er=new ExperimentalRecord();
@@ -99,7 +98,7 @@ public class ParseLookChem extends Parse {
 	 * @param propertyValue			The property value in the RecordLookChem object, as a string
 	 * @param recordsExperimental	The ExperimentalRecords object to store the new record
 	 */
-	void createRecord(RecordLookChem lcr,String propertyName,String propertyValue,ExperimentalRecords recordsExperimental) {
+	private void addNewExperimentalRecord(RecordLookChem lcr,String propertyName,String propertyValue,ExperimentalRecords recordsExperimental) {
 		// Creates a new ExperimentalRecord object and sets all the fields that do not require advanced parsing
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.casrn=lcr.CAS;
@@ -134,7 +133,7 @@ public class ParseLookChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_g_cm3;
 				unitsIndex = propertyValue.length();
 				badUnits = false;
-				updateNote(er,ExperimentalConstants.str_g_cm3+" assumed");
+				er.updateNote(ExperimentalConstants.str_g_cm3+" assumed");
 			}
 
 			getPressureCondition(er,propertyValue);
@@ -213,9 +212,9 @@ public class ParseLookChem extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		if (propertyName.length()!=0 && !badUnits) {
-			if (propertyValue.contains("lit.")) { updateNote(er,ExperimentalConstants.str_lit); }
-			if (propertyValue.contains("dec.")) { updateNote(er,ExperimentalConstants.str_dec); }
-			if (propertyValue.contains("subl.")) { updateNote(er,ExperimentalConstants.str_subl); }
+			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
+			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
+			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
 			// Warns if there may be multiple records in one entry
 			if (propertyValue.contains(",")) {
 				System.out.println(propertyName+" record for chemical "+lcr.chemicalName+" was created successfully, but requires manual checking");
@@ -239,16 +238,6 @@ public class ParseLookChem extends Parse {
 			er.keep = false;
 		}
 		recordsExperimental.add(er);
-	}
-	
-	/**
-	 * Adds a string to the note field of an ExperimentalRecord object
-	 * @param er	The ExperimentalRecord object to be updated
-	 * @param str	The string to be added
-	 * @return		The updated ExperimentalRecord object
-	 */
-	private static void updateNote(ExperimentalRecord er, String str) {
-		er.note = Objects.isNull(er.note) ? str : er.note+", "+str;
 	}
 	
 	/**
@@ -339,11 +328,27 @@ public class ParseLookChem extends Parse {
 			}
 		}
 		
+		// Note non-aqueous solubility
+		// Will need to update if other solvents show up in other records
+		foundSol = false;
+		for (String sol:solubilities) {
+			if (!foundSol && propertyValue.contains(sol+" in most common solvents")) {
+				er.updateNote(sol+" in most common solvents");
+				foundSol = true;
+			}
+		}
+		
 		if (propertyValue.contains("immiscible with water")) { er.property_value_qualitative=ExperimentalConstants.str_immisc;
 		} else if (propertyValue.contains("miscible with water")) { er.property_value_qualitative=ExperimentalConstants.str_misc;
 		} else if (propertyValue.contains("miscible with")) { // Do nothing if solvent is not water
 		} else if (propertyValue.contains("immiscible")) { er.property_value_qualitative=ExperimentalConstants.str_immisc;
 		} else if (propertyValue.contains("miscible")) { er.property_value_qualitative=ExperimentalConstants.str_misc;
+		}
+		
+		// Note non-aqueous miscibility
+		// Will need to update if other solvents show up in other records
+		if (propertyValue.contains("immiscible with cfcs")) { er.updateNote(ExperimentalConstants.str_immisc+" with CFCs");
+		} else if (propertyValue.contains("miscible with cfcs")) { er.updateNote(ExperimentalConstants.str_misc+" with CFCs");
 		}
 	}
 	
@@ -385,17 +390,24 @@ public class ParseLookChem extends Parse {
 		return range;
 	}
 	
+	public static ExperimentalRecords dumpBadRecords(ExperimentalRecords records) {
+		ExperimentalRecords recordsBad = new ExperimentalRecords();
+		Iterator<ExperimentalRecord> it = records.iterator();
+		while (it.hasNext() ) {
+			ExperimentalRecord temp = it.next();
+			if (!temp.keep) {
+				recordsBad.add(temp);
+				it.remove();
+			}
+		}
+		return recordsBad;
+	}
+	
 	public static void main(String[] args) {
 		ParseLookChem p = new ParseLookChem();
 		p.createRecords();
 		ExperimentalRecords records = p.goThroughOriginalRecords();
-		ExperimentalRecords recordsBad = new ExperimentalRecords();
-		for (ExperimentalRecord rec:records) {
-			if (!rec.keep) {
-				recordsBad.add(rec);
-				records.remove(rec);
-			}
-		}
+		ExperimentalRecords recordsBad = dumpBadRecords(records);
 		records.toJSON_File(p.jsonFolder+File.separator+p.sourceName+" Experimental Records.json");
 		recordsBad.toJSON_File(p.jsonFolder+File.separator+p.sourceName+" Experimental Records-Bad.json");
 	}

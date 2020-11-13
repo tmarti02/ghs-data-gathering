@@ -24,7 +24,6 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.AADashboard;
 import gov.epa.api.RawDataRecord;
-import gov.epa.api.ExperimentalConstants;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
@@ -66,7 +65,6 @@ public class Parse {
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting();
 		gson = builder.create();
-
 	}
 	
 	/**
@@ -214,7 +212,7 @@ public class Parse {
 			// Create a zip file
 			for (File file:files) {
 				if (file.getName().contains(".html")); {
-					FileUtilities.writeToZipFile(file.getName(),webpageFolder,folderNameWebpages, zipOS);
+					FileUtilities.writeToZipFile(file.getName(),webpageFolder,"web pages", zipOS);
 				}
 				// Deletes all files so folder can be deleted after zip finishes
 				file.delete();
@@ -269,8 +267,7 @@ public class Parse {
 	 * Need to override
 	 */
 	protected void createRecords() {
-		System.out.println("Need to override createRecords()!");
-		
+		System.out.println("Need to override createRecords()!");	
 	}
 	
 	/**
@@ -315,7 +312,7 @@ public class Parse {
 		System.out.println("done\n");
 	}
 	
-	void writeOriginalRecordsToFile(Vector<?> records) {
+	protected void writeOriginalRecordsToFile(Vector<?> records) {
 		try {
 			GsonBuilder builder = new GsonBuilder();
 			builder.setPrettyPrinting();
