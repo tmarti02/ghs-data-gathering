@@ -114,6 +114,42 @@ public class Parse {
 		}
 	}
 	
+	public void downloadJSONsToDatabase(Vector<String> urls,String databaseName,String tableName, boolean startFresh) {
+		String databasePath = databaseFolder+File.separator+databaseName;
+		File db = new File(databasePath);
+		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
+		
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
+		Random rand = new Random();
+		
+		try {
+			int counter = 1;
+			for (String url:urls) {
+				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+				Date date = new Date();  
+				String strDate=formatter.format(date);
+				
+				RawDataRecord rec=new RawDataRecord(strDate, url, "");
+				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
+				if (!haveRecord || startFresh) {
+					try {
+						rec.html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.addRecordToDatabase(tableName, conn);
+						counter++;
+						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+					} catch (Exception ex) {
+						System.out.println("Failed to download "+url);
+					}
+					Thread.sleep(200);
+				}
+			}
+			
+			System.out.println("Downloaded "+counter+" pages");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * Stores HTML excerpts from a list of URLs in timestamped records in the raw HTML database
 	 * @param urls			The URLs to be downloaded
