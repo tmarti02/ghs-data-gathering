@@ -342,22 +342,21 @@ public class CreateGHS_Database  {
 	 * @param filepath
 	 * @return
 	 */
-	public static Connection createDatabaseTable(String databaseFilePath,String tableName,String [] fieldNames) {
+	public static Connection createDatabaseTable(String databaseFilePath,String tableName,String [] fieldNames, boolean startFresh) {
 
 		Connection conn=null;
 		
 		try {
-			System.out.println("Creating "+tableName+" table");
-
 			conn= MySQL_DB.getConnection(databaseFilePath);
-			Statement stat = MySQL_DB.getStatement(conn);
-			
 			conn.setAutoCommit(true);
-						
-			stat.executeUpdate("drop table if exists "+tableName+";");			 
-			stat.executeUpdate("VACUUM;");//compress db now that have deleted the table
 			
-			MySQL_DB.create_table(stat, tableName, fieldNames);
+			if (startFresh) {
+				System.out.println("Creating "+tableName+" table");
+				Statement stat = MySQL_DB.getStatement(conn);
+				stat.executeUpdate("drop table if exists "+tableName+";");			 
+				stat.executeUpdate("VACUUM;");//compress db now that have deleted the table
+				MySQL_DB.create_table(stat, tableName, fieldNames);
+			}
 			
 //			conn.setAutoCommit(true);
 //						
@@ -367,6 +366,7 @@ public class CreateGHS_Database  {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return conn;
 
 	}
