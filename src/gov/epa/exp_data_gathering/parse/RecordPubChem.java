@@ -3,17 +3,20 @@ package gov.epa.exp_data_gathering.parse;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Vector;
 
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.JSONsForPubChem.*;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
+import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 public class RecordPubChem {
 	String iupacName;
@@ -59,14 +62,50 @@ public class RecordPubChem {
 		
 		for (int i = start; i < end; i++) {
 			String dtxsid = records.get(i).DTXSID;
-			cids.add(dict.get(dtxsid));
+			String cid = dict.get(dtxsid);
+			if (cid!=null) { cids.add(cid); }
 		}
 		
 		return cids;
 	}
 	
+	private static Vector<RecordPubChem> generatePubChemRecordsFromCIDs(Vector<String> cids) {
+		GsonBuilder builder = new GsonBuilder().disableHtmlEscaping();
+		builder.setPrettyPrinting();
+		Gson gson = builder.create();
+		
+		Vector<RecordPubChem> records = new Vector<RecordPubChem>();
+		String url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid="+cids.get(0);
+		for (int i = 1; i < cids.size(); i++) { url = url + "," + cids.get(i); }
+		try {
+			URL readURL = new URL(url);
+			InputStreamReader isr = new InputStreamReader(readURL.openStream());
+			IdentifierData ids = gson.fromJson(isr,IdentifierData.class);
+			List<Property> properties = ids.propertyTable.properties;
+			for (Property prop:properties) {
+				RecordPubChem pcr = new RecordPubChem();
+				pcr.iupacName = prop.iupacName;
+				pcr.smiles = prop.canonicalSMILES;
+				records.add(pcr);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		return records;
+	}
+	
+	private void getSynonyms(String cid) {
+		String baseURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/";
+		String tailURL = "/synonyms/TXT";
+		String url = baseURL+cid+tailURL;
+		synonyms = FileUtilities.getText_UTF8(url).replace("\r\n","|");
+	}
+	
 	public static void main(String[] args) {
-		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
-		Vector<String> cids = getCIDsFromDashboardRecords(records,AADashboard.dataFolder+"/CIDDICT.csv",1,1000);
+		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
+		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,100);
+		Vector<RecordPubChem> pcrs = generatePubChemRecordsFromCIDs(cids);
+		for (RecordPubChem pcr:pcrs) { System.out.println(pcr.iupacName+","+pcr.smiles); }
 	}
 }
