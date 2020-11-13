@@ -8,11 +8,7 @@ public class ParsePubChem extends Parse {
 		sourceName = ExperimentalConstants.strSourcePubChem;
 		this.init();
 	}
-	
-	public void () {
-		
-	}
-	
+
 	public static void main(String[] args) {
 		// TODO
 	}

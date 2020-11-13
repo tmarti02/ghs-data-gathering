@@ -1,7 +1,17 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.LinkedHashMap;
 import java.util.Vector;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+
+import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 
@@ -30,9 +40,33 @@ public class RecordPubChem {
 	 * @param end		The index in the vector to stop converting
 	 * @return			A vector of PubChem CIDs as strings
 	 */
-	private static Vector<String> getCIDsFromDashboardRecords(Vector<RecordDashboard> records,int start,int end) {
+	private static Vector<String> getCIDsFromDashboardRecords(Vector<RecordDashboard> records,String dictFilePath,int start,int end) {
 		Vector<String> cids = new Vector<String>();
-		// TODO
+		LinkedHashMap<String,String> dict = new LinkedHashMap<String, String>();
+		
+		try {
+			File file = new File(dictFilePath);
+			BufferedReader br = new BufferedReader(new FileReader(file));
+			String line="";
+			while ((line=br.readLine())!=null) {
+				String[] cells=line.split(",");
+				dict.put(cells[0], cells[1]);
+			}
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		for (int i = start; i < end; i++) {
+			String dtxsid = records.get(i).DTXSID;
+			cids.add(dict.get(dtxsid));
+		}
+		
 		return cids;
+	}
+	
+	public static void main(String[] args) {
+		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
+		Vector<String> cids = getCIDsFromDashboardRecords(records,AADashboard.dataFolder+"/CIDDICT.csv",1,1000);
 	}
 }
