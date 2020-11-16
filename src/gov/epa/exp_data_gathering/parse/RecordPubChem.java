@@ -7,9 +7,12 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.Vector;
 
 import com.google.gson.Gson;
@@ -17,7 +20,9 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.api.RawDataRecord;
 import gov.epa.exp_data_gathering.parse.JSONsForPubChem.*;
+import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
@@ -88,27 +93,52 @@ public class RecordPubChem {
 		return cids;
 	}
 	
-	private static void downloadIdentifierDataJSONsToDatabase(Vector<String> cids, boolean startFresh) {
-		String baseURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid=";
-		String databaseName = sourceName+"_raw_json.db";
-		String tableName = "Identifiers";
-		Vector<String> urls = new Vector<String>();
-		for (String cid:cids) { urls.add(baseURL+cid); }
-		
+	private static void downloadJSONsToDatabase(Vector<String> cids, boolean startFresh) {
 		ParsePubChem p = new ParsePubChem();
-		p.downloadWebpagesToDatabase(urls,databaseName,tableName,startFresh);
-	}
-	
-	private static void downloadJSONsToDatabase(Vector<String> cids, String heading, boolean startFresh) {
-		String baseURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/";
-		String tailURL = "/JSON?heading="+heading;
-		String databaseName = sourceName+"_raw_json.db";
-		String tableName = heading.replaceAll("[^a-zA-Z0-9]", "");
-		Vector<String> urls = new Vector<String>();
-		for (String cid:cids) { urls.add(baseURL+cid+tailURL); }
+		String databaseName = p.sourceName+"_raw_json.db";
+		String tableName = p.sourceName;
+		String databasePath = p.databaseFolder+File.separator+databaseName;
+		File db = new File(databasePath);
+		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecordPubChem.fieldNames, startFresh);
 		
-		ParsePubChem p = new ParsePubChem();
-		p.downloadWebpagesToDatabase(urls,databaseName,tableName,startFresh);
+		try {
+			int counter = 1;
+			for (String cid:cids) {
+				String experimentalURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/"+cid+"/JSON?heading=Experimental+Properties";
+				String idURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid="+cid;
+				String casURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/"+cid+"/JSON?heading=CAS";
+				String synonymURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/"+cid+"/synonyms/TXT";
+				
+				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+				Date date = new Date();  
+				String strDate=formatter.format(date);
+				
+				RawDataRecordPubChem rec=new RawDataRecordPubChem(strDate, cid, "", "", "", "");
+				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
+				if (!haveRecord || startFresh) {
+					try {
+						rec.experimental=FileUtilities.getText_UTF8(experimentalURL).replace("'", "''"); //single quotes mess with the SQL insert later
+						Thread.sleep(200);
+						rec.identifiers=FileUtilities.getText_UTF8(idURL).replace("'", "''");
+						Thread.sleep(200);
+						rec.cas=FileUtilities.getText_UTF8(casURL).replace("'", "''");
+						Thread.sleep(200);
+						rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replace("'", "''");
+						Thread.sleep(200);
+						if (rec.experimental!=null) { 
+							rec.addRecordToDatabase(tableName, conn);
+							counter++;
+						}
+						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+					} catch (Exception ex) {
+						System.out.println("Failed to download data for CID "+cid);
+					}
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	private static Vector<RecordPubChem> parseJSONsInDatabase() {
@@ -152,19 +182,6 @@ public class RecordPubChem {
 				}
 				records.add(pcr);
 			}
-//			ResultSet rsIdentifiers = MySQL_DB.getAllRecords(stat,"Identifiers");
-//			while (rsIdentifiers.next()) {
-//				String json = rsIdentifiers.getString("content");
-//				IdentifierData idData = gson.fromJson(json,IdentifierData.class);
-//				List<Property> properties = idData.propertyTable.properties;
-//				for (Property prop:properties) {
-//					RecordPubChem pcr = new RecordPubChem();
-//					pcr.cid = prop.cid;
-//					pcr.iupacName = prop.iupacName;
-//					pcr.smiles = prop.canonicalSMILES;
-//					records.add(pcr);
-//				}
-//			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -179,15 +196,13 @@ public class RecordPubChem {
 	}
 	
 	public static void main(String[] args) {
-//		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
-//		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,1000);
-//		downloadJSONsToDatabase(cids,"CAS",true);
-//		downloadJSONsToDatabase(cids,"Experimental+Properties",true);
-//		downloadIdentifierDataJSONsToDatabase(cids,true);
-		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-		Vector<RecordPubChem> pcrs = parseJSONsInDatabase();
-		for (RecordPubChem pcr:pcrs) {
-			System.out.println(gson.toJson(pcr));
-		}
+		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
+		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,100);
+		downloadJSONsToDatabase(cids,true);
+//		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+//		Vector<RecordPubChem> pcrs = parseJSONsInDatabase();
+//		for (RecordPubChem pcr:pcrs) {
+//			System.out.println(gson.toJson(pcr));
+//		}
 	}
 }
