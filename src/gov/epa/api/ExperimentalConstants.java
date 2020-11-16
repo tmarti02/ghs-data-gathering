@@ -16,6 +16,7 @@ public class ExperimentalConstants {
 
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
+	public static final String str_mg_mL="mg/mL";
 	public static final String str_g_L="g/L";
 	public static final String str_g_cm3="g/cm3";
 	public static final String str_g_mL="g/mL";
@@ -23,6 +24,10 @@ public class ExperimentalConstants {
 	public static final String str_F="F";
 	public static final String str_pctWt="%w";
 	public static final String str_ppm="ppm";
+	public static final String str_m3_atm_mol="m3-atm/mol";
+	public static final String str_mmHg="mmHg";
+	public static final String str_atm="atm";
+	public static final String str_kpa="kPa";
 	
 	//Solubility descriptors:
 	public static final String str_verySol="very soluble";// <1 mL solvent to dissolve 1 g solute, per Sigma-Aldrich

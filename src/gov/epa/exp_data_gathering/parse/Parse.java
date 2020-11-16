@@ -402,6 +402,59 @@ public class Parse {
 	}
 	
 	/**
+	 * Sets the temperature condition for an ExperimentalRecord object, if present
+	 * @param er			The ExperimentalRecord object to be updated
+	 * @param propertyValue	The string to be read
+	 * @return				The temperature condition in C
+	 */
+	static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
+		String units = getTemperatureUnits(propertyValue);
+		int tempIndex = propertyValue.indexOf(units);
+		// If temperature units were found, looks for the last number that precedes them
+		if (tempIndex > 0) {
+			try {
+				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,tempIndex));
+				String tempStr = "";
+				while (m.find()) { tempStr = m.group(); }
+				if (tempStr.length()!=0) {
+					// Converts to C as needed
+					double tempC = Double.parseDouble(tempStr);
+					switch (units) {
+					case "C":
+						er.temperature_C = tempC;
+						break;
+					case "F":
+						er.temperature_C = (tempC-32)*5/9;
+						break;
+					}
+				}
+			} catch (Exception ex) { }
+		}
+	}
+
+	/**
+	 * Sets the pressure condition for an ExperimentalRecord object, if present
+	 * @param er			The ExperimentalRecord object to be updated
+	 * @param propertyValue	The string to be read
+	 * @return				The pressure condition in kPa
+	 */
+	static void getPressureCondition(ExperimentalRecord er,String propertyValue) {
+		propertyValue = propertyValue.toLowerCase();
+		int pressureIndex = propertyValue.indexOf("mm");
+		// If "mm" not found, looks for "torr" instead - a handful of records use this
+		if (pressureIndex == -1) { pressureIndex = propertyValue.indexOf("torr"); }
+		// If either set of pressure units were found, looks for the last number that precedes them
+		if (pressureIndex > 0) {
+			try {
+				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
+				String pressure = "";
+				while (m.find()) { pressure = m.group(); }
+				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure)*ExperimentalConstants.mmHg_to_kPa; }
+			} catch (Exception ex) { }
+		}
+	}
+
+	/**
 	 * Extracts the first range of numbers before a given index in a string
 	 * @param str	The string to be read
 	 * @param end	The index to stop searching

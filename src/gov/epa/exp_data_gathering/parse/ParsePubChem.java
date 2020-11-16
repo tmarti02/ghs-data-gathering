@@ -100,15 +100,18 @@ public class ParsePubChem extends Parse {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		if (propertyName==ExperimentalConstants.strDensity) {
-			if (propertyValue.toLowerCase().contains("g/cm3") || propertyValue.toLowerCase().contains("g/cm 3")) {
+			if (propertyValue.toLowerCase().contains("g/cm") || propertyValue.toLowerCase().contains("g/cu cm")) {
 				er.property_value_units = ExperimentalConstants.str_g_cm3;
-				unitsIndex = propertyValue.toLowerCase().indexOf("g/cm");
+				unitsIndex = propertyValue.toLowerCase().indexOf("g/c");
 				badUnits = false;
 			} else if (propertyValue.toLowerCase().contains("g/ml")) {
 				er.property_value_units = ExperimentalConstants.str_g_mL;
 				unitsIndex = propertyValue.toLowerCase().indexOf("g/m");
 				badUnits = false;
 			}
+			
+			Parse.getPressureCondition(er,propertyValue);
+			Parse.getTemperatureCondition(er,propertyValue);
 			
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint) {
 			String units = Parse.getTemperatureUnits(propertyValue);
@@ -125,9 +128,15 @@ public class ParsePubChem extends Parse {
 				badUnits = false;
 			}
 			
+			Parse.getPressureCondition(er,propertyValue);
+			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			if (propertyValue.toLowerCase().contains("mg/l")) {
 				er.property_value_units = ExperimentalConstants.str_mg_L;
+				unitsIndex = propertyValue.indexOf("mg/");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("mg/ml")) {
+				er.property_value_units = ExperimentalConstants.str_mg_mL;
 				unitsIndex = propertyValue.indexOf("mg/");
 				badUnits = false;
 			} else if (propertyValue.toLowerCase().contains("g/l")) {
@@ -144,6 +153,36 @@ public class ParsePubChem extends Parse {
 				badUnits = false;
 			}
 			
+			Parse.getTemperatureCondition(er,propertyValue);
+			
+		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
+			if (propertyValue.toLowerCase().contains("mmhg") || propertyValue.toLowerCase().contains("mm hg")) {
+				er.property_value_units = ExperimentalConstants.str_mmHg;
+				unitsIndex = propertyValue.toLowerCase().indexOf("mm");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("atm")) {
+				er.property_value_units = ExperimentalConstants.str_atm;
+				unitsIndex = propertyValue.toLowerCase().indexOf("atm");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("kpa")) {
+				er.property_value_units = ExperimentalConstants.str_kpa;
+				unitsIndex = propertyValue.toLowerCase().indexOf("kpa");
+				badUnits = false;
+			}
+				
+			Parse.getTemperatureCondition(er,propertyValue);
+			
+		} else if (propertyName==ExperimentalConstants.strHenrysLawConstant) {
+			if (propertyValue.toLowerCase().contains("atm-m3/mole")) {
+				er.property_value_units = ExperimentalConstants.str_m3_atm_mol;
+				unitsIndex = propertyValue.indexOf("atm");
+				badUnits = false;
+			}
+		} else if (propertyName==ExperimentalConstants.strLogKow) {
+			unitsIndex = propertyValue.length();
+			badUnits = false;
+			
+			Parse.getTemperatureCondition(er,propertyValue);
 		} else {
 			// not handling other properties yet
 			badUnits = true;
