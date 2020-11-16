@@ -11,18 +11,18 @@ public class RawDataRecord {
 
 	public String date;//date accessed
 	public String url;//url accessed
-	public String html;//raw data as html
+	public String content;//raw data as html or json
 	
-	public final static String [] fieldNames= {"date","url","html"};
+	public final static String [] fieldNames= {"date","url","content"};
 	
 	public RawDataRecord (String date,String url,String html) {
 		this.date=date;
 		this.url=url;
-		this.html=html;
+		this.content=html;
 	}
 	
 	public void addRecordToDatabase(String tableName,Connection conn) {
-		String [] values= {date,url,html};
+		String [] values= {date,url,content};
 		CreateGHS_Database.addDataToTable(tableName, fieldNames, values, conn);
 	}
 	

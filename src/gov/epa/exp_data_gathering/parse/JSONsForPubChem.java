@@ -4,6 +4,11 @@ import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Classes to replicate the structure of various JSONs downloaded from PubChem
+ * @author GSINCL01
+ *
+ */
 public class JSONsForPubChem {
 	
 	public class IdentifierData {
@@ -25,7 +30,7 @@ public class JSONsForPubChem {
 		public String iupacName;
 	}
 	
-	public class CASData {
+	public class Data {
 		@SerializedName("Record")
 		public Record record;
 	}
@@ -34,7 +39,7 @@ public class JSONsForPubChem {
 		@SerializedName("RecordType")
 		public String recordType;
 		@SerializedName("RecordNumber")
-		public Integer recordNumber;
+		public String recordNumber;
 		@SerializedName("RecordTitle")
 		public String recordTitle;
 		@SerializedName("Section")
@@ -58,7 +63,7 @@ public class JSONsForPubChem {
 	
 	public class Reference {
 		@SerializedName("ReferenceNumber")
-		public Integer referenceNumber;
+		public String referenceNumber;
 		@SerializedName("SourceName")
 		public String sourceName;
 		@SerializedName("SourceID")
@@ -74,14 +79,14 @@ public class JSONsForPubChem {
 		@SerializedName("LicenseURL")
 		public String licenseURL;
 		@SerializedName("ANID")
-		public Integer aNID;
+		public String aNID;
 		@SerializedName("IsToxnet")
 		public Boolean isToxnet;
 	}
 	
 	public class Information {
 		@SerializedName("ReferenceNumber")
-		public Integer referenceNumber;
+		public String referenceNumber;
 		@SerializedName("Value")
 		public Value value;
 		@SerializedName("Name")

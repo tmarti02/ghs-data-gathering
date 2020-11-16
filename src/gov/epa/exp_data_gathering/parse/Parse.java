@@ -2,6 +2,7 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
@@ -68,12 +69,13 @@ public class Parse {
 	}
 	
 	/**
-	 * Stores the HTML strings from a list of URLs in timestamped records in the raw HTML database
+	 * Stores the content from a list of URLs in timestamped records in a RawDataRecord database
+	 * Crawl delay is adaptive: Random multiplier of 1-2 times the time taken to load the page (~1-2 seconds on LookChem)
 	 * @param urls			The URLs to be downloaded
 	 * @param tableName		The name of the table to store the data in, i.e., the source name
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public void downloadWebpagesToDatabase(Vector<String> urls,String tableName, boolean startFresh) {
+	public void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String tableName, boolean startFresh) {
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		System.out.println(databasePath);
 		File db = new File(databasePath);
@@ -95,7 +97,7 @@ public class Parse {
 					long delay = 0;
 					try {
 						long startTime=System.currentTimeMillis();
-						rec.html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay = endTime-startTime;
 						rec.addRecordToDatabase(tableName, conn);
@@ -114,42 +116,6 @@ public class Parse {
 		}
 	}
 	
-	public void downloadJSONsToDatabase(Vector<String> urls,String databaseName,String tableName, boolean startFresh) {
-		String databasePath = databaseFolder+File.separator+databaseName;
-		File db = new File(databasePath);
-		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
-		
-		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
-		Random rand = new Random();
-		
-		try {
-			int counter = 1;
-			for (String url:urls) {
-				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
-				Date date = new Date();  
-				String strDate=formatter.format(date);
-				
-				RawDataRecord rec=new RawDataRecord(strDate, url, "");
-				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
-				if (!haveRecord || startFresh) {
-					try {
-						rec.html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
-						rec.addRecordToDatabase(tableName, conn);
-						counter++;
-						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
-					} catch (Exception ex) {
-						System.out.println("Failed to download "+url);
-					}
-					Thread.sleep(200);
-				}
-			}
-			
-			System.out.println("Downloaded "+counter+" pages");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
 	/**
 	 * Stores HTML excerpts from a list of URLs in timestamped records in the raw HTML database
 	 * @param urls			The URLs to be downloaded
@@ -157,7 +123,7 @@ public class Parse {
 	 * @param tableName		The name of the table to store the data in, i.e., the source name
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public void downloadWebpagesToDatabase(Vector<String> urls,String htmlClass,String tableName, boolean startFresh) {
+	public void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String htmlClass,String tableName, boolean startFresh) {
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
@@ -186,7 +152,7 @@ public class Parse {
 						Document doc = Jsoup.parse(html);
 						Element table=doc.select("."+htmlClass).first();
 						if (table!=null) {
-							rec.html=table.outerHtml();
+							rec.content=table.outerHtml();
 							rec.addRecordToDatabase(tableName, conn);
 							counter++;
 							if (counter % 100==0) {
@@ -208,6 +174,50 @@ public class Parse {
 	}
 
 	/**
+	 * Stores the content from a list of URLs in timestamped records in a RawDataRecord database
+	 * Constant crawl delay (200 ms for PubChem, per stated 5 requests/sec policy)
+	 * @param urls			The URLs to be downloaded
+	 * @param tableName		The name of the table to store the data in, i.e., the source name
+	 * @param startFresh	True to remake database table completely, false to append new records to existing table
+	 */
+	public void downloadWebpagesToDatabase(Vector<String> urls,String databaseName,String tableName, boolean startFresh) {
+		String databasePath = databaseFolder+File.separator+databaseName;
+		File db = new File(databasePath);
+		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
+		
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
+		Random rand = new Random();
+		
+		try {
+			int counter = 1;
+			for (String url:urls) {
+				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+				Date date = new Date();  
+				String strDate=formatter.format(date);
+				
+				RawDataRecord rec=new RawDataRecord(strDate, url, "");
+				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
+				if (!haveRecord || startFresh) {
+					try {
+						rec.content=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						if (rec.content!=null) { 
+							rec.addRecordToDatabase(tableName, conn);
+							counter++;
+						}
+						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+					} catch (Exception ex) {
+						System.out.println("Failed to download "+url);
+					}
+					Thread.sleep(200);
+				}
+			}
+			System.out.println("Downloaded "+counter+" pages");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * Downloads the HTML files from a list of URLs and saves them in a zip folder
 	 * @param urls			The URLs to be downloaded
 	 * @param sourceName	The source name
@@ -220,7 +230,7 @@ public class Parse {
 			int counter = 1;
 			for (String url:urls) {
 				String fileName = url.substring( url.lastIndexOf("/")+1, url.length() );
-				String destFilePath = webpageFolder + "/" + fileName;
+				String destFilePath = webpageFolder + File.separator + fileName;
 				File destFile = new File(destFilePath);
 				if(!destFile.getParentFile().exists()) { destFile.getParentFile().mkdirs(); }
 	

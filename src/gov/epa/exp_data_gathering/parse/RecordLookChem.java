@@ -72,7 +72,7 @@ public class RecordLookChem {
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
 		ParseLookChem p = new ParseLookChem();
-		p.downloadWebpagesToDatabase(urls,"reir_l_info_table",sourceName,startFresh);		
+		p.downloadWebpagesToDatabaseAdaptive(urls,"reir_l_info_table",sourceName,startFresh);		
 	}
 	
 	/**
@@ -203,7 +203,7 @@ public class RecordLookChem {
 			while (rs.next()) {
 				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 				
-				String html = rs.getString("html");
+				String html = rs.getString("content");
 				String url = rs.getString("url");
 				Document doc = Jsoup.parse(html);
 				

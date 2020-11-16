@@ -352,10 +352,14 @@ public class CreateGHS_Database  {
 			
 			if (startFresh) {
 				System.out.println("Creating "+tableName+" table");
-				Statement stat = MySQL_DB.getStatement(conn);
-				stat.executeUpdate("drop table if exists "+tableName+";");			 
-				stat.executeUpdate("VACUUM;");//compress db now that have deleted the table
-				MySQL_DB.create_table(stat, tableName, fieldNames);
+				Statement stat1 = MySQL_DB.getStatement(conn);
+				stat1.executeUpdate("drop table if exists "+tableName+";");
+				stat1.close();
+				Statement stat2 = MySQL_DB.getStatement(conn);
+				stat2.executeUpdate("VACUUM;");//compress db now that have deleted the table
+				stat2.close();
+				Statement stat3 = MySQL_DB.getStatement(conn);
+				MySQL_DB.create_table(stat3, tableName, fieldNames);
 			}
 			
 //			conn.setAutoCommit(true);

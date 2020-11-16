@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,6 +18,7 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.JSONsForPubChem.*;
+import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
@@ -37,6 +40,19 @@ public class RecordPubChem {
 	Vector<String> pKa;
 	
 	static final String sourceName=ExperimentalConstants.strSourcePubChem;
+	
+	private RecordPubChem() {
+		physicalDescription = new Vector<String>();
+		density = new Vector<String>();
+		meltingPoint = new Vector<String>();
+		boilingPoint = new Vector<String>();
+		flashPoint = new Vector<String>();
+		solubility = new Vector<String>();
+		vaporPressure = new Vector<String>();
+		henrysLawConstant = new Vector<String>();
+		logP = new Vector<String>();
+		pKa = new Vector<String>();
+	}
 	
 	/**
 	 * Extracts DTXSIDs from CompTox dashboard records and translates them to PubChem CIDs
@@ -65,74 +81,94 @@ public class RecordPubChem {
 		for (int i = start; i < end; i++) {
 			String dtxsid = records.get(i).DTXSID;
 			String cid = dict.get(dtxsid);
-			if (cid!=null) { cids.add(cid); }
+			if (cid!=null) { cids.add(cid);
+			} else { System.out.println("CID not found for "+dtxsid); }
 		}
 		
 		return cids;
 	}
 	
-	private static Vector<RecordPubChem> generatePubChemRecordsFromCIDs(Vector<String> cids) {
-		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-		Vector<RecordPubChem> records = new Vector<RecordPubChem>();
-		String url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid="+cids.get(0);
-		for (int i = 1; i < cids.size(); i++) { url = url + "," + cids.get(i); }
-		try {
-			URL readURL = new URL(url);
-			InputStreamReader isr = new InputStreamReader(readURL.openStream());
-			IdentifierData idData = gson.fromJson(isr,IdentifierData.class);
-			List<Property> properties = idData.propertyTable.properties;
-			for (Property prop:properties) {
-				RecordPubChem pcr = new RecordPubChem();
-				pcr.cid = prop.cid;
-				pcr.iupacName = prop.iupacName;
-				pcr.smiles = prop.canonicalSMILES;
-				records.add(pcr);
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+	private static void downloadIdentifierDataJSONsToDatabase(Vector<String> cids, boolean startFresh) {
+		String baseURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid=";
+		String databaseName = sourceName+"_raw_json.db";
+		String tableName = "Identifiers";
+		Vector<String> urls = new Vector<String>();
+		for (String cid:cids) { urls.add(baseURL+cid); }
 		
-		return records;
+		ParsePubChem p = new ParsePubChem();
+		p.downloadWebpagesToDatabase(urls,databaseName,tableName,startFresh);
 	}
 	
-	private static void downloadIdentifierDataJSON(Vector<String> cids) {
-		// TODO
-	}
-	
-	private static void downloadCASDataJSONsToDatabase(Vector<String> cids) {
+	private static void downloadJSONsToDatabase(Vector<String> cids, String heading, boolean startFresh) {
 		String baseURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/";
-		String tailURL = "/JSON?heading=CAS";
-		String databaseName = "PubChem_cas_jsons.db";
+		String tailURL = "/JSON?heading="+heading;
+		String databaseName = sourceName+"_raw_json.db";
+		String tableName = heading.replaceAll("[^a-zA-Z0-9]", "");
 		Vector<String> urls = new Vector<String>();
 		for (String cid:cids) { urls.add(baseURL+cid+tailURL); }
 		
 		ParsePubChem p = new ParsePubChem();
-		p.downloadJSONsToDatabase(urls,databaseName,sourceName,true);
+		p.downloadWebpagesToDatabase(urls,databaseName,tableName,startFresh);
 	}
 	
-	private static void downloadExperimentalDataJSONsToDatabase(String cid) {
-		// TODO
-	}
-	
-	private void getCAS() {
+	private static Vector<RecordPubChem> parseJSONsInDatabase() {
+		String databaseFolder = AADashboard.dataFolder+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "databases";
+		String databasePath = databaseFolder+File.separator+sourceName+"_raw_json.db";
+		Vector<RecordPubChem> records = new Vector<>();
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-		String baseURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/";
-		String tailURL = "/JSON?heading=CAS";
-		String url = baseURL+cid+tailURL;
 		try {
-			URL readURL = new URL(url);
-			InputStreamReader isr = new InputStreamReader(readURL.openStream());
-			CASData casData = gson.fromJson(isr,CASData.class);
-			List<Information> info = casData.record.section.get(0).section.get(0).section.get(0).information;
-			cas = info.get(0).value.stringWithMarkup.get(0).string;
-			boolean mismatch = false;
-			for (int i = 1; i < info.size() && !mismatch; i++) {
-				if (!info.get(i).value.stringWithMarkup.get(0).string.equals(cas)) { mismatch = true; }
+			Statement stat = MySQL_DB.getStatement(databasePath);
+			ResultSet rsExperimental = MySQL_DB.getAllRecords(stat,"ExperimentalProperties");
+			while (rsExperimental.next()) {
+				String json = rsExperimental.getString("content");
+				Data data = gson.fromJson(json,Data.class);
+				RecordPubChem pcr = new RecordPubChem();
+				pcr.cid = data.record.recordNumber;
+				List<Section> properties = data.record.section.get(0).section.get(0).section;
+				for (Section prop:properties) {
+					String heading = prop.tocHeading;
+					List<Information> info = prop.information;
+					if (heading.equals("Physical Description") || heading.equals("Color/Form")) {
+						for (Information i:info) { pcr.physicalDescription.add(i.value.stringWithMarkup.get(0).string); }
+					} else if (heading.equals("Density")) {
+						for (Information i:info) { pcr.density.add(i.value.stringWithMarkup.get(0).string); }
+					} else if (heading.equals("Melting Point")) {
+						for (Information i:info) { pcr.meltingPoint.add(i.value.stringWithMarkup.get(0).string); }
+					} else if (heading.equals("Boiling Point")) {
+						for (Information i:info) { pcr.boilingPoint.add(i.value.stringWithMarkup.get(0).string); }
+					} else if (heading.equals("Flash Point")) {
+						for (Information i:info) { pcr.flashPoint.add(i.value.stringWithMarkup.get(0).string); }
+					} else if (heading.equals("Solubility")) {
+						for (Information i:info) { pcr.solubility.add(i.value.stringWithMarkup.get(0).string); }
+					} else if (heading.equals("Vapor Pressure")) {
+						for (Information i:info) { pcr.vaporPressure.add(i.value.stringWithMarkup.get(0).string); }
+					} else if (heading.equals("Henrys Law Constant")) {
+						for (Information i:info) { pcr.henrysLawConstant.add(i.value.stringWithMarkup.get(0).string); }
+					} else if (heading.equals("LogP")) {
+						for (Information i:info) { pcr.logP.add(i.value.stringWithMarkup.get(0).string); }
+					} else if (heading.equals("pKa")) {
+						for (Information i:info) { pcr.pKa.add(i.value.stringWithMarkup.get(0).string); }
+					}
+				}
+				records.add(pcr);
 			}
-			if (mismatch) { System.out.println("CAS mismatch for "+iupacName); }
+//			ResultSet rsIdentifiers = MySQL_DB.getAllRecords(stat,"Identifiers");
+//			while (rsIdentifiers.next()) {
+//				String json = rsIdentifiers.getString("content");
+//				IdentifierData idData = gson.fromJson(json,IdentifierData.class);
+//				List<Property> properties = idData.propertyTable.properties;
+//				for (Property prop:properties) {
+//					RecordPubChem pcr = new RecordPubChem();
+//					pcr.cid = prop.cid;
+//					pcr.iupacName = prop.iupacName;
+//					pcr.smiles = prop.canonicalSMILES;
+//					records.add(pcr);
+//				}
+//			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		return records;
 	}
 	
 	private void getSynonyms() {
@@ -143,14 +179,15 @@ public class RecordPubChem {
 	}
 	
 	public static void main(String[] args) {
-		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
-		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,100);
-		downloadCASDataJSONsToDatabase(cids);
-//		Vector<RecordPubChem> pcrs = generatePubChemRecordsFromCIDs(cids);
-//		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-//		for (RecordPubChem pcr:pcrs) {
-//			pcr.getCAS();
-//			System.out.println(gson.toJson(pcr));
-//		}
+//		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
+//		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,1000);
+//		downloadJSONsToDatabase(cids,"CAS",true);
+//		downloadJSONsToDatabase(cids,"Experimental+Properties",true);
+//		downloadIdentifierDataJSONsToDatabase(cids,true);
+		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+		Vector<RecordPubChem> pcrs = parseJSONsInDatabase();
+		for (RecordPubChem pcr:pcrs) {
+			System.out.println(gson.toJson(pcr));
+		}
 	}
 }

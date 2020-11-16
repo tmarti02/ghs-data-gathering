@@ -319,7 +319,6 @@ public class FileUtilities {
 			return strB.toString();
 
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			return null;
 		}
 	}
