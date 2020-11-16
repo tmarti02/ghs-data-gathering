@@ -137,7 +137,7 @@ public class RecordPubChem {
 					} catch (Exception ex) {
 						System.out.println("Failed to download experimental data for CID "+cid);
 					}
-					if (rec.experimental!=null && rec.cas!=null) {
+					if (rec.experimental!=null && !rec.experimental.isBlank() && rec.cas!=null && !rec.cas.isBlank()) {
 						rec.addRecordToDatabase(tableName, conn);
 						counter++;
 						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }

@@ -14,6 +14,7 @@ public class ParsePubChem extends Parse {
 	public ParsePubChem() {
 		sourceName = ExperimentalConstants.strSourcePubChem;
 		this.init();
+		folderNameWebpages=null;
 	}
 	
 	/**
@@ -32,24 +33,156 @@ public class ParsePubChem extends Parse {
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
-//		try {
-//			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
-//			
-//			RecordLookChem[] recordsLookChem = gson.fromJson(new FileReader(jsonFile), RecordLookChem[].class);
-//			
-//			for (int i = 0; i < recordsLookChem.length; i++) {
-//				RecordLookChem r = recordsLookChem[i];
-//				addExperimentalRecords(r,recordsExperimental);
-//			}
-//		} catch (Exception ex) {
-//			ex.printStackTrace();
-//		}
+		try {
+			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			
+			RecordPubChem[] recordsPubChem = gson.fromJson(new FileReader(jsonFile), RecordPubChem[].class);
+			
+			for (int i = 0; i < recordsPubChem.length; i++) {
+				RecordPubChem r = recordsPubChem[i];
+				addExperimentalRecords(r,recordsExperimental);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 		
 		return recordsExperimental;
+	}
+	
+	private void addExperimentalRecords(RecordPubChem pcr, ExperimentalRecords recordsExperimental) {
+		if (!pcr.physicalDescription.isEmpty()) {
+			for (String s:pcr.physicalDescription) { addNewExperimentalRecord(pcr,ExperimentalConstants.strAppearance,s,recordsExperimental); }
+	    }
+		if (!pcr.density.isEmpty()) {
+			for (String s:pcr.density) { addNewExperimentalRecord(pcr,ExperimentalConstants.strDensity,s,recordsExperimental); }
+	    }
+        if (!pcr.meltingPoint.isEmpty()) {
+			for (String s:pcr.meltingPoint) { addNewExperimentalRecord(pcr,ExperimentalConstants.strMeltingPoint,s,recordsExperimental); }
+        }
+        if (!pcr.boilingPoint.isEmpty()) {
+			for (String s:pcr.boilingPoint) { addNewExperimentalRecord(pcr,ExperimentalConstants.strBoilingPoint,s,recordsExperimental); }
+	    }
+        if (!pcr.flashPoint.isEmpty()) {
+			for (String s:pcr.flashPoint) { addNewExperimentalRecord(pcr,ExperimentalConstants.strFlashPoint,s,recordsExperimental); }
+	    }
+        if (!pcr.solubility.isEmpty()) {
+			for (String s:pcr.solubility) { addNewExperimentalRecord(pcr,ExperimentalConstants.strWaterSolubility,s,recordsExperimental); }
+        }
+        if (!pcr.vaporPressure.isEmpty()) {
+			for (String s:pcr.vaporPressure) { addNewExperimentalRecord(pcr,ExperimentalConstants.strVaporPressure,s,recordsExperimental); }
+        }
+        if (!pcr.henrysLawConstant.isEmpty()) {
+			for (String s:pcr.henrysLawConstant) { addNewExperimentalRecord(pcr,ExperimentalConstants.strHenrysLawConstant,s,recordsExperimental); }
+        }
+        if (!pcr.logP.isEmpty()) {
+			for (String s:pcr.logP) { addNewExperimentalRecord(pcr,ExperimentalConstants.strLogKow,s,recordsExperimental); }
+        }
+        if (!pcr.pKa.isEmpty()) {
+			for (String s:pcr.pKa) { addNewExperimentalRecord(pcr,ExperimentalConstants.str_pKA,s,recordsExperimental); }
+        }
+	}
+	
+	private void addNewExperimentalRecord(RecordPubChem pcr,String propertyName,String propertyValue,ExperimentalRecords recordsExperimental) {
+		if (propertyValue==null) { return; }
+		// Creates a new ExperimentalRecord object and sets all the fields that do not require advanced parsing
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.casrn = String.join("|", pcr.cas);
+		er.chemical_name=pcr.iupacName;
+		er.smiles=pcr.smiles;
+		if (pcr.synonyms != null) { er.synonyms=pcr.synonyms; }
+		er.property_name=propertyName;
+		er.property_value_string=propertyValue;
+		// TODO carry over reference info, rather than just sourcing all as "PubChem"
+		// TODO URL
+		er.source_name=ExperimentalConstants.strSourcePubChem;
+		er.keep=true;
+		
+		boolean badUnits = true;
+		int unitsIndex = -1;
+		if (propertyName==ExperimentalConstants.strDensity) {
+			if (propertyValue.toLowerCase().contains("g/cm3") || propertyValue.toLowerCase().contains("g/cm 3")) {
+				er.property_value_units = ExperimentalConstants.str_g_cm3;
+				unitsIndex = propertyValue.toLowerCase().indexOf("g/cm");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("g/ml")) {
+				er.property_value_units = ExperimentalConstants.str_g_mL;
+				unitsIndex = propertyValue.toLowerCase().indexOf("g/m");
+				badUnits = false;
+			}
+			
+		} else if (propertyName==ExperimentalConstants.strMeltingPoint) {
+			String units = Parse.getTemperatureUnits(propertyValue);
+			if (units.length()!=0) {
+				er.property_value_units = units;
+				unitsIndex = propertyValue.indexOf(units);
+				badUnits = false;
+			}
+		} else if (propertyName==ExperimentalConstants.strBoilingPoint || propertyName==ExperimentalConstants.strFlashPoint) {
+			String units = Parse.getTemperatureUnits(propertyValue);
+			if (units.length()!=0) {
+				er.property_value_units = units;
+				unitsIndex = propertyValue.indexOf(units);
+				badUnits = false;
+			}
+			
+		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
+			if (propertyValue.toLowerCase().contains("mg/l")) {
+				er.property_value_units = ExperimentalConstants.str_mg_L;
+				unitsIndex = propertyValue.indexOf("mg/");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("g/l")) {
+				er.property_value_units = ExperimentalConstants.str_g_L;
+				unitsIndex = propertyValue.indexOf("g/");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("% w/w")) {
+				er.property_value_units = ExperimentalConstants.str_pctWt;
+				unitsIndex = propertyValue.indexOf("%");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("ppm")) {
+				er.property_value_units = ExperimentalConstants.str_ppm;
+				unitsIndex = propertyValue.indexOf("ppm");
+				badUnits = false;
+			}
+			
+		} else {
+			// not handling other properties yet
+			badUnits = true;
+		}
+		
+		if (badUnits) { unitsIndex = propertyValue.length(); }
+		
+		try {
+			double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
+			if (!badUnits) {
+				er.property_value_min = range[0];
+				er.property_value_max = range[1];
+			}
+		} catch (IllegalStateException ex1) {
+			try {
+				double propertyValueAsDouble = Parse.extractFirstDoubleFromString(propertyValue,unitsIndex);
+				int propertyValueIndex = propertyValue.replaceAll(" ","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
+				if (!badUnits) {
+					er.property_value_point_estimate = propertyValueAsDouble;
+					if (propertyValueIndex > 0) {
+						if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>') {
+							er.property_value_numeric_qualifier = ">";
+						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<') {
+							er.property_value_numeric_qualifier = "<";
+						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='~') {
+							er.property_value_numeric_qualifier = "~";
+						}
+					}
+				}
+			} catch (IllegalStateException ex2) {
+				propertyName = "";
+			}
+		}
+		
+		recordsExperimental.add(er);
 	}
 
 	public static void main(String[] args) {
 		ParsePubChem p = new ParsePubChem();
-		p.createRecords();
+		p.createFiles();
 	}
 }

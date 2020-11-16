@@ -7,7 +7,10 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipOutputStream;
 import java.util.Random;
 
@@ -24,6 +27,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.AADashboard;
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
@@ -46,10 +50,12 @@ public class Parse {
 	
 	protected String fileNameFlatExperimentalRecords;//records in flat format
 	protected String fileNameJsonExperimentalRecords;//records in ExperimentalRecord class format
+	protected String fileNameFlatExperimentalRecordsBad;
+	protected String fileNameJsonExperimentalRecordsBad;
 	protected String mainFolder;
 	
 	public static boolean generateOriginalJSONRecords=true; //runs code to generate json records from original data format (json file has all the chemicals in one file)	
-	public static boolean writeFlatFile=true;//all data converted to final format stored as flat text file
+	public static boolean writeFlatFile=false;//all data converted to final format stored as flat text file
 	public static boolean writeJsonChemicalsFile=true;//all data converted to final format stored as Json file
 	
 	Gson gson=null;
@@ -57,7 +63,9 @@ public class Parse {
 	public void init() {
 		fileNameJSON_Records = sourceName +" Records.json";
 		fileNameFlatExperimentalRecords = sourceName +" Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +" Experimental Records-Bad.txt";
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +" Experimental Records-Bad.json";
 		mainFolder = AADashboard.dataFolder + File.separator + "Experimental" + File.separator + sourceName;
 		databaseFolder = mainFolder + File.separator + "databases";
 		jsonFolder= mainFolder + File.separator + "json files";
@@ -344,18 +352,34 @@ public class Parse {
 
 		System.out.println("Going through original records");
 		ExperimentalRecords records=goThroughOriginalRecords();
+		ExperimentalRecords recordsBad = dumpBadRecords(records);
 
 		if (writeFlatFile) {
 			System.out.println("Writing flat file for chemical records");
 			records.toFlatFile(mainFolder+File.separator+fileNameFlatExperimentalRecords,"|");
+			recordsBad.toFlatFile(mainFolder+File.separator+fileNameFlatExperimentalRecordsBad,"|");
 		}
 		
 		if (writeJsonChemicalsFile) {
 			System.out.println("Writing json file for chemical records");
 			records.toJSON_File(mainFolder+File.separator+fileNameJsonExperimentalRecords);
+			recordsBad.toJSON_File(mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
 		}
 		
 		System.out.println("done\n");
+	}
+	
+	public static ExperimentalRecords dumpBadRecords(ExperimentalRecords records) {
+		ExperimentalRecords recordsBad = new ExperimentalRecords();
+		Iterator<ExperimentalRecord> it = records.iterator();
+		while (it.hasNext() ) {
+			ExperimentalRecord temp = it.next();
+			if (!temp.keep) {
+				recordsBad.add(temp);
+				it.remove();
+			}
+		}
+		return recordsBad;
 	}
 	
 	protected void writeOriginalRecordsToFile(Vector<?> records) {
@@ -377,6 +401,62 @@ public class Parse {
 		}
 	}
 	
+	/**
+	 * Extracts the first range of numbers before a given index in a string
+	 * @param str	The string to be read
+	 * @param end	The index to stop searching
+	 * @return		The range found as a double[2]
+	 * @throws IllegalStateException	If no number range is found in the given range
+	 */
+	static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
+		// Format "n[ ]-[ ]m [units]"
+		Matcher anyRangeMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
+		anyRangeMatcher.find();
+		String rangeAsStr = anyRangeMatcher.group();
+		double[] range = new double[2];
+		Matcher absMatcher = Pattern.compile("[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
+		Matcher negMinMatcher = Pattern.compile("[-][ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
+		Matcher negMaxMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-][ ]?[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
+		absMatcher.find();
+		range[0] = Double.parseDouble(absMatcher.group().replace(" ",""));
+		absMatcher.find();
+		range[1] = Double.parseDouble(absMatcher.group().replace(" ",""));
+		if (negMinMatcher.matches()) { range[0] *= -1; }
+		if (negMaxMatcher.matches()) { range[1] *= -1; }
+		return range;
+	}
+
+	/**
+	 * Extracts the first number before a given index in a string
+	 * @param str	The string to be read
+	 * @param end	The index to stop searching
+	 * @return		The number found as a double
+	 * @throws IllegalStateException	If no number is found in the given range
+	 */
+	static double extractFirstDoubleFromString(String str,int end) throws IllegalStateException {
+		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
+		numberMatcher.find();
+		return Double.parseDouble(numberMatcher.group().replace(" ",""));
+	}
+
+	/**
+	 * If the property value string contains temperature units, returns the units in standardized format
+	 * @param propertyValue	The string to be read
+	 * @return				A standardized temperature unit string from ExperimentalConstants
+	 */
+	static String getTemperatureUnits(String propertyValue) {
+		propertyValue=propertyValue.replaceAll(" ","");
+		String units = "";
+		if (propertyValue.contains("�C") || propertyValue.contains("�C") || propertyValue.contains("oC")
+				|| (propertyValue.contains("C") && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1)))) {
+			units = ExperimentalConstants.str_C;
+		} else if (propertyValue.contains("�F") || propertyValue.contains("�F") || propertyValue.contains("oF")
+				|| (propertyValue.contains("F") && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("F")-1)))) {
+			units = ExperimentalConstants.str_F;
+		} 
+		return units;
+	}
+
 	public static String fixChars(String str) {
 		str=str.replace("â€“","-").replace("â€™","'");
 		str=str.replace("\uff08", "(");// ï¼ˆ

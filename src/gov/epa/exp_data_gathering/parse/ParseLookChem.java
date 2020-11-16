@@ -140,14 +140,14 @@ public class ParseLookChem extends Parse {
 			getTemperatureCondition(er,propertyValue);
 			
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint) {
-			String units = getTemperatureUnits(propertyValue);
+			String units = Parse.getTemperatureUnits(propertyValue);
 			if (units.length()!=0) {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
 				badUnits = false;
 			}
 		} else if (propertyName==ExperimentalConstants.strBoilingPoint || propertyName==ExperimentalConstants.strFlashPoint) {
-			String units = getTemperatureUnits(propertyValue);
+			String units = Parse.getTemperatureUnits(propertyValue);
 			if (units.length()!=0) {
 				er.property_value_units = units;
 				unitsIndex = propertyValue.indexOf(units);
@@ -183,14 +183,14 @@ public class ParseLookChem extends Parse {
 		if (badUnits) { unitsIndex = propertyValue.length(); }
 		
 		try {
-			double[] range = extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
+			double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
 			if (!badUnits) {
 				er.property_value_min = range[0];
 				er.property_value_max = range[1];
 			}
 		} catch (IllegalStateException ex1) {
 			try {
-				double propertyValueAsDouble = extractFirstDoubleFromString(propertyValue,unitsIndex);
+				double propertyValueAsDouble = Parse.extractFirstDoubleFromString(propertyValue,unitsIndex);
 				int propertyValueIndex = propertyValue.replaceAll(" ","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
 				if (!badUnits) {
 					er.property_value_point_estimate = propertyValueAsDouble;
@@ -241,24 +241,6 @@ public class ParseLookChem extends Parse {
 	}
 	
 	/**
-	 * If the property value string contains temperature units, returns the units in standardized format
-	 * @param propertyValue	The string to be read
-	 * @return				A standardized temperature unit string from ExperimentalConstants
-	 */
-	private static String getTemperatureUnits(String propertyValue) {
-		propertyValue=propertyValue.replaceAll(" ","");
-		String units = "";
-		if (propertyValue.contains("°C") || propertyValue.contains("ºC") || propertyValue.contains("oC")
-				|| (propertyValue.contains("C") && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1)))) {
-			units = ExperimentalConstants.str_C;
-		} else if (propertyValue.contains("°F") || propertyValue.contains("ºF") || propertyValue.contains("oF")
-				|| (propertyValue.contains("F") && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("F")-1)))) {
-			units = ExperimentalConstants.str_F;
-		} 
-		return units;
-	}
-	
-	/**
 	 * Sets the pressure condition for an ExperimentalRecord object, if present
 	 * @param er			The ExperimentalRecord object to be updated
 	 * @param propertyValue	The string to be read
@@ -287,7 +269,7 @@ public class ParseLookChem extends Parse {
 	 * @return				The temperature condition in C
 	 */
 	private static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
-		String units = getTemperatureUnits(propertyValue);
+		String units = Parse.getTemperatureUnits(propertyValue);
 		int tempIndex = propertyValue.indexOf(units);
 		// If temperature units were found, looks for the last number that precedes them
 		if (tempIndex > 0) {
@@ -352,63 +334,8 @@ public class ParseLookChem extends Parse {
 		}
 	}
 	
-	/**
-	 * Extracts the first number before a given index in a string
-	 * @param str	The string to be read
-	 * @param end	The index to stop searching
-	 * @return		The number found as a double
-	 * @throws IllegalStateException	If no number is found in the given range
-	 */
-	private static double extractFirstDoubleFromString(String str,int end) throws IllegalStateException {
-		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
-		numberMatcher.find();
-		return Double.parseDouble(numberMatcher.group().replace(" ",""));
-	}
-	
-	/**
-	 * Extracts the first range of numbers before a given index in a string
-	 * @param str	The string to be read
-	 * @param end	The index to stop searching
-	 * @return		The range found as a double[2]
-	 * @throws IllegalStateException	If no number range is found in the given range
-	 */
-	private static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
-		// Format "n[ ]-[ ]m [units]"
-		Matcher anyRangeMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
-		anyRangeMatcher.find();
-		String rangeAsStr = anyRangeMatcher.group();
-		double[] range = new double[2];
-		Matcher absMatcher = Pattern.compile("[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
-		Matcher negMinMatcher = Pattern.compile("[-][ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
-		Matcher negMaxMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-][ ]?[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
-		absMatcher.find();
-		range[0] = Double.parseDouble(absMatcher.group().replace(" ",""));
-		absMatcher.find();
-		range[1] = Double.parseDouble(absMatcher.group().replace(" ",""));
-		if (negMinMatcher.matches()) { range[0] *= -1; }
-		if (negMaxMatcher.matches()) { range[1] *= -1; }
-		return range;
-	}
-	
-	public static ExperimentalRecords dumpBadRecords(ExperimentalRecords records) {
-		ExperimentalRecords recordsBad = new ExperimentalRecords();
-		Iterator<ExperimentalRecord> it = records.iterator();
-		while (it.hasNext() ) {
-			ExperimentalRecord temp = it.next();
-			if (!temp.keep) {
-				recordsBad.add(temp);
-				it.remove();
-			}
-		}
-		return recordsBad;
-	}
-	
 	public static void main(String[] args) {
 		ParseLookChem p = new ParseLookChem();
-		p.createRecords();
-		ExperimentalRecords records = p.goThroughOriginalRecords();
-		ExperimentalRecords recordsBad = dumpBadRecords(records);
-		records.toJSON_File(p.jsonFolder+File.separator+p.sourceName+" Experimental Records.json");
-		recordsBad.toJSON_File(p.jsonFolder+File.separator+p.sourceName+" Experimental Records-Bad.json");
+		p.createFiles();
 	}
 }
