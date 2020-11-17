@@ -180,18 +180,25 @@ public class ParseLookChem extends Parse {
 		
 		if (badUnits) { unitsIndex = propertyValue.length(); }
 		
-		try {
-			double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
-			if (!badUnits) {
-				er.property_value_min = range[0];
-				er.property_value_max = range[1];
-			}
-		} catch (IllegalStateException ex1) {
+		boolean foundNumeric = false;
+		if (!foundNumeric) {
 			try {
-				double propertyValueAsDouble = Parse.extractFirstDoubleFromString(propertyValue,unitsIndex);
+				double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
+				if (!badUnits) {
+					er.property_value_min = range[0];
+					er.property_value_max = range[1];
+				}
+				foundNumeric = true;
+			} catch (Exception ex) { }
+		}
+		
+		if (!foundNumeric) {
+			try {
+				double propertyValueAsDouble = Parse.extractDoubleFromString(propertyValue,unitsIndex);
 				int propertyValueIndex = propertyValue.replaceAll(" ","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
 				if (!badUnits) {
 					er.property_value_point_estimate = propertyValueAsDouble;
+					foundNumeric = true;
 					if (propertyValueIndex > 0) {
 						if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>') {
 							er.property_value_numeric_qualifier = ">";
@@ -202,19 +209,17 @@ public class ParseLookChem extends Parse {
 						}
 					}
 				}
-			} catch (IllegalStateException ex2) {
-				propertyName = "";
-			}
+			} catch (Exception ex) { }
 		}
 		
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
-		if (propertyName.length()!=0 && !badUnits) {
+		if (foundNumeric && !badUnits) {
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
-			// Warns if there may be multiple records in one entry
-			if (propertyValue.contains(",")) {
+			// Warns if there may be a problem with an entry
+			if (propertyValue.contains(",") || (er.property_value_min!=null && er.property_value_max <= er.property_value_min)) {
 				System.out.println(propertyName+" record for chemical "+lcr.chemicalName+" was created successfully, but requires manual checking");
 			}
 		} else {

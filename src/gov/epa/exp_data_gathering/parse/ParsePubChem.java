@@ -3,6 +3,8 @@ package gov.epa.exp_data_gathering.parse;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -100,14 +102,23 @@ public class ParsePubChem extends Parse {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		if (propertyName==ExperimentalConstants.strDensity) {
-			if (propertyValue.toLowerCase().contains("g/cm") || propertyValue.toLowerCase().contains("g/cu cm")) {
+			if (propertyValue.toLowerCase().contains("g/cm") || propertyValue.toLowerCase().contains("g/cu cm") || propertyValue.toLowerCase().contains("gm/cu cm")) {
 				er.property_value_units = ExperimentalConstants.str_g_cm3;
-				unitsIndex = propertyValue.toLowerCase().indexOf("g/c");
+				unitsIndex = propertyValue.toLowerCase().indexOf("g");
 				badUnits = false;
 			} else if (propertyValue.toLowerCase().contains("g/ml")) {
 				er.property_value_units = ExperimentalConstants.str_g_mL;
 				unitsIndex = propertyValue.toLowerCase().indexOf("g/m");
 				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("g/l")) {
+				er.property_value_units = ExperimentalConstants.str_g_L;
+				unitsIndex = propertyValue.toLowerCase().indexOf("g/l");
+				badUnits = false;
+			} else if (!propertyValue.toLowerCase().contains("relative")) {
+				er.property_value_units = ExperimentalConstants.str_g_cm3;
+				unitsIndex = propertyValue.toLowerCase().indexOf(" ");
+				badUnits = false;
+				er.updateNote(ExperimentalConstants.str_g_cm3+" assumed");
 			}
 			
 			Parse.getPressureCondition(er,propertyValue);
@@ -143,13 +154,25 @@ public class ParsePubChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_g_L;
 				unitsIndex = propertyValue.indexOf("g/");
 				badUnits = false;
-			} else if (propertyValue.toLowerCase().contains("% w/w")) {
+			} else if (propertyValue.toLowerCase().contains("ug/l")) {
+				er.property_value_units = ExperimentalConstants.str_ug_L;
+				unitsIndex = propertyValue.indexOf("ug/");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("% w/w") || propertyValue.toLowerCase().contains("wt%")) {
 				er.property_value_units = ExperimentalConstants.str_pctWt;
+				unitsIndex = propertyValue.indexOf("%");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("%")) {
+				er.property_value_units = ExperimentalConstants.str_pct;
 				unitsIndex = propertyValue.indexOf("%");
 				badUnits = false;
 			} else if (propertyValue.toLowerCase().contains("ppm")) {
 				er.property_value_units = ExperimentalConstants.str_ppm;
 				unitsIndex = propertyValue.indexOf("ppm");
+				badUnits = false;
+			} else if (propertyValue.contains("M")) {
+				er.property_value_units = ExperimentalConstants.str_M;
+				unitsIndex = propertyValue.indexOf("M");
 				badUnits = false;
 			}
 			
@@ -183,25 +206,47 @@ public class ParsePubChem extends Parse {
 			badUnits = false;
 			
 			Parse.getTemperatureCondition(er,propertyValue);
-		} else {
-			// not handling other properties yet
-			badUnits = true;
+			
+		} else if (propertyName==ExperimentalConstants.str_pKA) {
+			// No pKa values in test set yet
+			unitsIndex = propertyValue.length();
+			badUnits = false;
 		}
 		
 		if (badUnits) { unitsIndex = propertyValue.length(); }
 		
-		try {
-			double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
-			if (!badUnits) {
-				er.property_value_min = range[0];
-				er.property_value_max = range[1];
-			}
-		} catch (IllegalStateException ex1) {
+		boolean foundNumeric = false;
+		if (!foundNumeric) {
 			try {
-				double propertyValueAsDouble = Parse.extractFirstDoubleFromString(propertyValue,unitsIndex);
+				Matcher sciMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?(e|x10)[ ]?([-|\\+]?[ ]?[0-9]+)").matcher(propertyValue.toLowerCase().substring(0,unitsIndex));
+				sciMatcher.find();
+				String strMantissa = sciMatcher.group(1);
+				String strMagnitude = sciMatcher.group(3);
+				Double mantissa = Double.parseDouble(strMantissa.replaceAll(" ",""));
+				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll(" ", "").replaceAll("\\+", ""));
+				er.property_value_point_estimate = mantissa*Math.pow(10, magnitude);
+				foundNumeric = true;
+			} catch (Exception ex) { }
+		}
+		
+		if (!foundNumeric) {
+			try {
+				double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
+				if (!badUnits) {
+					er.property_value_min = range[0];
+					er.property_value_max = range[1];
+				}
+				foundNumeric = true;
+			} catch (Exception ex) { }
+		}
+		
+		if (!foundNumeric) {
+			try {
+				double propertyValueAsDouble = Parse.extractDoubleFromString(propertyValue,unitsIndex);
 				int propertyValueIndex = propertyValue.replaceAll(" ","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
 				if (!badUnits) {
 					er.property_value_point_estimate = propertyValueAsDouble;
+					foundNumeric = true;
 					if (propertyValueIndex > 0) {
 						if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>') {
 							er.property_value_numeric_qualifier = ">";
@@ -212,9 +257,7 @@ public class ParsePubChem extends Parse {
 						}
 					}
 				}
-			} catch (IllegalStateException ex2) {
-				propertyName = "";
-			}
+			} catch (Exception ex) { }
 		}
 		
 		recordsExperimental.add(er);

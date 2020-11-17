@@ -451,7 +451,14 @@ public class Parse {
 				while (m.find()) { pressure = m.group(); }
 				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure)*ExperimentalConstants.mmHg_to_kPa; }
 			} catch (Exception ex) { }
-		}
+		} else if ((pressureIndex = propertyValue.indexOf("atm")) > 0) {
+			try {
+				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
+				String pressure = "";
+				while (m.find()) { pressure = m.group(); }
+				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure)*ExperimentalConstants.atm_to_kPa; }
+			} catch (Exception ex) { }
+		};
 	}
 
 	/**
@@ -462,34 +469,26 @@ public class Parse {
 	 * @throws IllegalStateException	If no number range is found in the given range
 	 */
 	static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
-		// Format "n[ ]-[ ]m [units]"
-		Matcher anyRangeMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
+		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([-]{1}|to)[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
-		String rangeAsStr = anyRangeMatcher.group();
 		double[] range = new double[2];
-		Matcher absMatcher = Pattern.compile("[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
-		Matcher negMinMatcher = Pattern.compile("[-][ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
-		Matcher negMaxMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+[ ]*[-]{1}[ ]*[-][ ]?[0-9]*\\.?[0-9]+").matcher(rangeAsStr);
-		absMatcher.find();
-		range[0] = Double.parseDouble(absMatcher.group().replace(" ",""));
-		absMatcher.find();
-		range[1] = Double.parseDouble(absMatcher.group().replace(" ",""));
-		if (negMinMatcher.matches()) { range[0] *= -1; }
-		if (negMaxMatcher.matches()) { range[1] *= -1; }
+		range[0] = Double.parseDouble(anyRangeMatcher.group(1).replace(" ",""));
+		range[1] = Double.parseDouble(anyRangeMatcher.group(3).replace(" ",""));
 		return range;
 	}
 
 	/**
-	 * Extracts the first number before a given index in a string
+	 * Extracts the last number before a given index in a string
 	 * @param str	The string to be read
 	 * @param end	The index to stop searching
 	 * @return		The number found as a double
 	 * @throws IllegalStateException	If no number is found in the given range
 	 */
-	static double extractFirstDoubleFromString(String str,int end) throws IllegalStateException {
+	static double extractDoubleFromString(String str,int end) throws IllegalStateException, NumberFormatException {
 		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
-		numberMatcher.find();
-		return Double.parseDouble(numberMatcher.group().replace(" ",""));
+		String strDouble = "";
+		while (numberMatcher.find()) { strDouble = numberMatcher.group(); }
+		return Double.parseDouble(strDouble.replace(" ",""));
 	}
 
 	/**
