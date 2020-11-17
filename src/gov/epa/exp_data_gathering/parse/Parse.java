@@ -411,15 +411,7 @@ public class Parse {
 			if (!foundWaterSol && propertyValue.contains(sol+" in water")) {
 				er.property_value_qualitative=sol;
 				foundWaterSol = true;
-			} else if (propertyValue.contains(sol+" in")) {
-				System.out.println(propertyValue);
-				String search = sol+" in ";
-				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
-				Matcher solventMatcher = Pattern.compile("(\\w+)[\\W|$]").matcher(searchStr);
-				solventMatcher.find();
-				String solvent = solventMatcher.group(1);
-				er.updateNote(search+solvent);
-			} else if (!foundWaterSol && propertyValue.contains(sol)) {
+			} else if (!foundWaterSol && propertyValue.contains(sol) && !propertyValue.contains(sol+" in")) {
 				er.property_value_qualitative=sol; // Assume water if solvent not explicit
 				foundWaterSol = true;
 			}
@@ -430,17 +422,38 @@ public class Parse {
 			if (!foundWaterSol && propertyValue.contains(sol+" with water")) {
 				er.property_value_qualitative=sol;
 				foundWaterSol = true;
-			} else if (propertyValue.contains(sol+" with")) {
-				System.out.println(propertyValue);
-				String search = sol+" with ";
-				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
-				Matcher solventMatcher = Pattern.compile("(\\w+)[\\W|$]").matcher(searchStr);
-				solventMatcher.find();
-				String solvent = solventMatcher.group(1);
-				er.updateNote(search+solvent);
-			} else if (!foundWaterSol && propertyValue.contains(sol)) {
+			} else if (!foundWaterSol && propertyValue.contains(sol) && !propertyValue.contains(sol+" with")) {
 				er.property_value_qualitative=sol; // Assume water if solvent not explicit
 				foundWaterSol = true;
+			}
+		}
+		
+		Vector<String> solventCheck = new Vector<String>();
+		for (String sol:solubilityIn) {
+			if (propertyValue.contains(sol+" in ")) {
+				String search = sol+" in ";
+				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
+				Matcher solventMatcher = Pattern.compile("([a-zA-Z\s]+?)(\\.|,|\\z| and|\\()").matcher(searchStr);
+				solventMatcher.find();
+				String solvent = solventMatcher.group(1);
+				if (!solvent.contains("water") && !solventCheck.contains(solvent)) { 
+					er.updateNote(search+solvent);
+					solventCheck.add(solvent);
+				}
+			}
+		}
+
+		for (String sol:solubilityWith) {
+			if (propertyValue.contains(sol+" with ")) {
+				String search = sol+" with ";
+				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
+				Matcher solventMatcher = Pattern.compile("([a-zA-Z\s]+?)(\\.|,|\\z| and|\\()").matcher(searchStr);
+				solventMatcher.find();
+				String solvent = solventMatcher.group(1);
+				if (!solvent.contains("water") && !solventCheck.contains(solvent)) { 
+					er.updateNote(search+solvent);
+					solventCheck.add(solvent);
+				}
 			}
 		}
 	}
