@@ -42,6 +42,9 @@ public class ExperimentalConstants {
 	public static final String str_inSol="insoluble";
 	public static final String str_misc="miscible";
 	public static final String str_immisc="immiscible";
+	public static final String str_negl="negligible";
+	public static final String str_hydr="hydrolysis";
+	public static final String str_reacts="reacts";
 	
 	//Other:
 	public static final String str_dec="decomposes";

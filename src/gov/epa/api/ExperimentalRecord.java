@@ -26,6 +26,8 @@ public class ExperimentalRecord {
 	
 	String url;
 	String source_name;//use Experimental constants
+	String original_source;
+	String reference;
 	String date_accessed;//use Experimental constants
 	
 	//TODO do we need parent url too? sometimes there are several urls we have to follow along the way to get to the final url

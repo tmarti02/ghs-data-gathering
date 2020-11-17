@@ -69,24 +69,30 @@ public class ParseLookChem extends Parse {
 			addNewExperimentalRecord(lcr,ExperimentalConstants.strWaterSolubility,lcr.solubility,recordsExperimental);
         } 
         if (lcr.appearance != null && !lcr.appearance.isBlank()) {
-    		ExperimentalRecord er=new ExperimentalRecord();
-    		er.casrn=lcr.CAS;
-    		er.chemical_name=lcr.chemicalName;
-    		if (lcr.synonyms != null) { er.synonyms=lcr.synonyms.replace(';','|'); }
-    		er.property_name=ExperimentalConstants.strAppearance;
-    		er.property_value_string=lcr.appearance;
-    		er.property_value_qualitative=lcr.appearance;
-    		er.source_name=ExperimentalConstants.strSourceLookChem;
-    		
-    		// Constructs a LookChem URL from the CAS RN
-    		String baseURL = "https://www.lookchem.com/cas-";
-    		String prefix = lcr.CAS.substring(0,3);
-    		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
-    		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
-    		
-    		er.keep = true;
-    		recordsExperimental.add(er);
+    		addAppearanceRecord(lcr,recordsExperimental);
         } 
+	}
+	
+	private static void addAppearanceRecord(RecordLookChem lcr,ExperimentalRecords records) {
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.casrn=lcr.CAS;
+		er.chemical_name=lcr.chemicalName;
+		if (lcr.synonyms != null) { er.synonyms=lcr.synonyms.replace(';','|'); }
+		er.property_name=ExperimentalConstants.strAppearance;
+		er.property_value_string=lcr.appearance;
+		er.property_value_qualitative=lcr.appearance;
+		er.source_name=ExperimentalConstants.strSourceLookChem;
+		
+		// Constructs a LookChem URL from the CAS RN
+		String baseURL = "https://www.lookchem.com/cas-";
+		String prefix = lcr.CAS.substring(0,3);
+		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
+		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
+		
+		er.keep = true;
+		er.flag = false;
+		
+		records.add(er);
 	}
 	
 	/**
@@ -174,7 +180,7 @@ public class ParseLookChem extends Parse {
 			}
 			
 			Parse.getTemperatureCondition(er,propertyValue);
-			getQualitativeSolubility(er, propertyValue);
+			Parse.getQualitativeSolubility(er, propertyValue);
 			
 		}
 		
@@ -219,8 +225,9 @@ public class ParseLookChem extends Parse {
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
 			// Warns if there may be a problem with an entry
-			if (propertyValue.contains(",") || (er.property_value_min!=null && er.property_value_max <= er.property_value_min)) {
-				System.out.println(propertyName+" record for chemical "+lcr.chemicalName+" was created successfully, but requires manual checking");
+			er.flag = false;
+			if (propertyValue.contains(",")) {
+				er.flag=true;
 			}
 		} else {
 			er.property_value_units = null;
@@ -241,47 +248,6 @@ public class ParseLookChem extends Parse {
 			er.keep = false;
 		}
 		recordsExperimental.add(er);
-	}
-	
-	private static void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
-		String[] solubilities = {ExperimentalConstants.str_inSol,ExperimentalConstants.str_verySol,ExperimentalConstants.str_freelySol,
-				ExperimentalConstants.str_sparinglySol,ExperimentalConstants.str_verySlightlySol,ExperimentalConstants.str_slightlySol,
-				ExperimentalConstants.str_sol};
-		propertyValue = propertyValue.toLowerCase();
-		boolean foundSol = false;
-		for (String sol:solubilities) {
-			if (!foundSol && propertyValue.contains(sol+" in water")) {
-				er.property_value_qualitative=sol;
-				foundSol = true;
-			} else if (!foundSol && propertyValue.contains(sol+" in")) { // Do nothing if solvent is not water
-			} else if (!foundSol && propertyValue.contains(sol)) {
-				er.property_value_qualitative=sol; // Assume water if solvent not explicit
-				foundSol = true;
-			}
-		}
-		
-		// Note non-aqueous solubility
-		// Will need to update if other solvents show up in other records
-		foundSol = false;
-		for (String sol:solubilities) {
-			if (!foundSol && propertyValue.contains(sol+" in most common solvents")) {
-				er.updateNote(sol+" in most common solvents");
-				foundSol = true;
-			}
-		}
-		
-		if (propertyValue.contains("immiscible with water")) { er.property_value_qualitative=ExperimentalConstants.str_immisc;
-		} else if (propertyValue.contains("miscible with water")) { er.property_value_qualitative=ExperimentalConstants.str_misc;
-		} else if (propertyValue.contains("miscible with")) { // Do nothing if solvent is not water
-		} else if (propertyValue.contains("immiscible")) { er.property_value_qualitative=ExperimentalConstants.str_immisc;
-		} else if (propertyValue.contains("miscible")) { er.property_value_qualitative=ExperimentalConstants.str_misc;
-		}
-		
-		// Note non-aqueous miscibility
-		// Will need to update if other solvents show up in other records
-		if (propertyValue.contains("immiscible with cfcs")) { er.updateNote(ExperimentalConstants.str_immisc+" with CFCs");
-		} else if (propertyValue.contains("miscible with cfcs")) { er.updateNote(ExperimentalConstants.str_misc+" with CFCs");
-		}
 	}
 	
 	public static void main(String[] args) {

@@ -262,12 +262,12 @@ public class RecordLookChem {
 						} else if (header.contains("Transport Information")) { lcr.transportInformation = data; }
 					}
 				}
-			} else { System.out.println("No data in "+lcr.fileName); }
-		} else { System.out.println("No data in "+lcr.fileName); }
+			}
+		}
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToZipFile(AADashboard.dataFolder+"/PFASSTRUCT.xls",4400,8163);
+		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,8163,true);
 	}
 	
 }

@@ -53,7 +53,7 @@ public class ParsePubChem extends Parse {
 	
 	private void addExperimentalRecords(RecordPubChem pcr, ExperimentalRecords recordsExperimental) {
 		if (!pcr.physicalDescription.isEmpty()) {
-			for (String s:pcr.physicalDescription) { addNewExperimentalRecord(pcr,ExperimentalConstants.strAppearance,s,recordsExperimental); }
+			for (String s:pcr.physicalDescription) { addAppearanceRecord(pcr,s,recordsExperimental); }
 	    }
 		if (!pcr.density.isEmpty()) {
 			for (String s:pcr.density) { addNewExperimentalRecord(pcr,ExperimentalConstants.strDensity,s,recordsExperimental); }
@@ -82,6 +82,22 @@ public class ParsePubChem extends Parse {
         if (!pcr.pKa.isEmpty()) {
 			for (String s:pcr.pKa) { addNewExperimentalRecord(pcr,ExperimentalConstants.str_pKA,s,recordsExperimental); }
         }
+	}
+	
+	private static void addAppearanceRecord(RecordPubChem pcr,String physicalDescription,ExperimentalRecords records) {
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.casrn=String.join("|", pcr.cas);
+		er.chemical_name=pcr.iupacName;
+		if (pcr.synonyms != null) { er.synonyms=pcr.synonyms; }
+		er.property_name=ExperimentalConstants.strAppearance;
+		er.property_value_string=physicalDescription;
+		er.property_value_qualitative=physicalDescription;
+		er.source_name=ExperimentalConstants.strSourcePubChem;
+		
+		er.keep = true;
+		er.flag = false;
+		
+		records.add(er);
 	}
 	
 	private void addNewExperimentalRecord(RecordPubChem pcr,String propertyName,String propertyValue,ExperimentalRecords recordsExperimental) {
@@ -140,6 +156,7 @@ public class ParsePubChem extends Parse {
 			}
 			
 			Parse.getPressureCondition(er,propertyValue);
+			if (propertyValue.contains("closed cup")) { er.measurement_method = "closed cup"; }
 			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			if (propertyValue.toLowerCase().contains("mg/l")) {
@@ -248,9 +265,9 @@ public class ParsePubChem extends Parse {
 					er.property_value_point_estimate = propertyValueAsDouble;
 					foundNumeric = true;
 					if (propertyValueIndex > 0) {
-						if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>') {
+						if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>' || propertyValue.toLowerCase().contains("greater than")) {
 							er.property_value_numeric_qualifier = ">";
-						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<') {
+						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<' || propertyValue.toLowerCase().contains("less than")) {
 							er.property_value_numeric_qualifier = "<";
 						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='~') {
 							er.property_value_numeric_qualifier = "~";

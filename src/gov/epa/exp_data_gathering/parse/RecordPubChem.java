@@ -116,27 +116,19 @@ public class RecordPubChem {
 					try {
 						rec.experimental=FileUtilities.getText_UTF8(experimentalURL).replace("'", "''"); //single quotes mess with the SQL insert later
 						Thread.sleep(200);
-					} catch (Exception ex) {
-						System.out.println("Failed to download experimental data for CID "+cid);
-					}
+					} catch (Exception ex) { }
 					try {
 						rec.identifiers=FileUtilities.getText_UTF8(idURL).replace("'", "''");
 						Thread.sleep(200);
-					} catch (Exception ex) {
-						System.out.println("Failed to download identifier data for CID "+cid);
-					}
+					} catch (Exception ex) { }
 					try {
 						rec.cas=FileUtilities.getText_UTF8(casURL).replace("'", "''");
 						Thread.sleep(200);
-					} catch (Exception ex) {
-						System.out.println("Failed to download CAS data for CID "+cid);
-					}
+					} catch (Exception ex) { }
 					try {
 						rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replace("'", "''");
 						Thread.sleep(200);
-					} catch (Exception ex) {
-						System.out.println("Failed to download experimental data for CID "+cid);
-					}
+					} catch (Exception ex) { }
 					if (rec.experimental!=null && !rec.experimental.isBlank() && rec.cas!=null && !rec.cas.isBlank()) {
 						rec.addRecordToDatabase(tableName, conn);
 						counter++;
@@ -225,7 +217,7 @@ public class RecordPubChem {
 	
 	public static void main(String[] args) {
 		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
-		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,100);
-		downloadJSONsToDatabase(cids,true);
+		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,1000);
+		downloadJSONsToDatabase(cids,false);
 	}
 }

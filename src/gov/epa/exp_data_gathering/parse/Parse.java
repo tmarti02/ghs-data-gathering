@@ -401,6 +401,50 @@ public class Parse {
 		}
 	}
 	
+	static void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
+		String[] solubilityIn = {ExperimentalConstants.str_inSol,ExperimentalConstants.str_verySol,ExperimentalConstants.str_freelySol,
+				ExperimentalConstants.str_sparinglySol,ExperimentalConstants.str_verySlightlySol,ExperimentalConstants.str_slightlySol,
+				ExperimentalConstants.str_sol,ExperimentalConstants.str_negl,ExperimentalConstants.str_dec};
+		propertyValue = propertyValue.toLowerCase();
+		boolean foundWaterSol = false;
+		for (String sol:solubilityIn) {
+			if (!foundWaterSol && propertyValue.contains(sol+" in water")) {
+				er.property_value_qualitative=sol;
+				foundWaterSol = true;
+			} else if (propertyValue.contains(sol+" in")) {
+				System.out.println(propertyValue);
+				String search = sol+" in ";
+				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
+				Matcher solventMatcher = Pattern.compile("(\\w+)[\\W|$]").matcher(searchStr);
+				solventMatcher.find();
+				String solvent = solventMatcher.group(1);
+				er.updateNote(search+solvent);
+			} else if (!foundWaterSol && propertyValue.contains(sol)) {
+				er.property_value_qualitative=sol; // Assume water if solvent not explicit
+				foundWaterSol = true;
+			}
+		}
+		
+		String[] solubilityWith = {ExperimentalConstants.str_immisc,ExperimentalConstants.str_misc,ExperimentalConstants.str_hydr,ExperimentalConstants.str_reacts};
+		for (String sol:solubilityWith) {
+			if (!foundWaterSol && propertyValue.contains(sol+" with water")) {
+				er.property_value_qualitative=sol;
+				foundWaterSol = true;
+			} else if (propertyValue.contains(sol+" with")) {
+				System.out.println(propertyValue);
+				String search = sol+" with ";
+				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
+				Matcher solventMatcher = Pattern.compile("(\\w+)[\\W|$]").matcher(searchStr);
+				solventMatcher.find();
+				String solvent = solventMatcher.group(1);
+				er.updateNote(search+solvent);
+			} else if (!foundWaterSol && propertyValue.contains(sol)) {
+				er.property_value_qualitative=sol; // Assume water if solvent not explicit
+				foundWaterSol = true;
+			}
+		}
+	}
+
 	/**
 	 * Sets the temperature condition for an ExperimentalRecord object, if present
 	 * @param er			The ExperimentalRecord object to be updated
@@ -471,9 +515,16 @@ public class Parse {
 	static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
 		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([-]{1}|to)[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
-		double[] range = new double[2];
-		range[0] = Double.parseDouble(anyRangeMatcher.group(1).replace(" ",""));
-		range[1] = Double.parseDouble(anyRangeMatcher.group(3).replace(" ",""));
+		String strMin = anyRangeMatcher.group(1).replace(" ","");
+		String strMax = anyRangeMatcher.group(3).replace(" ","");
+		double min = Double.parseDouble(strMin);
+		double max = Double.parseDouble(strMax);
+		if (min >= max) {
+			int digits = strMax.length();
+			strMax = strMin.substring(0,strMin.length()-digits)+strMax;
+			max = Double.parseDouble(strMax);
+		}
+		double[] range = {min, max};
 		return range;
 	}
 

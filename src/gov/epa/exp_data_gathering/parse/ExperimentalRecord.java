@@ -29,9 +29,12 @@ public class ExperimentalRecord {
 	
 	String url;
 	String source_name;//use Experimental constants
+	String original_source_name;
+	String original_source_reference;
 	String date_accessed;//use Experimental constants
 	
 	boolean keep;//Does the record contain useful data?
+	boolean flag;
 	
 	//TODO do we need parent url too? sometimes there are several urls we have to follow along the way to get to the final url
 
