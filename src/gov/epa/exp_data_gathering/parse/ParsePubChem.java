@@ -194,6 +194,7 @@ public class ParsePubChem extends Parse {
 			}
 			
 			Parse.getTemperatureCondition(er,propertyValue);
+			Parse.getQualitativeSolubility(er, propertyValue);
 			
 		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
 			if (propertyValue.toLowerCase().contains("mmhg") || propertyValue.toLowerCase().contains("mm hg")) {

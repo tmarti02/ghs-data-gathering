@@ -117,7 +117,7 @@ public class ExperimentalRecord {
 	 * @return		The updated ExperimentalRecord object
 	 */
 	public void updateNote(String str) {
-		note = Objects.isNull(note) ? str : note+", "+str;
+		note = Objects.isNull(note) ? str : note+"; "+str;
 	}
 
 

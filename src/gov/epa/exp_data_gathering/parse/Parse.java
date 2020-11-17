@@ -433,9 +433,11 @@ public class Parse {
 			if (propertyValue.contains(sol+" in ")) {
 				String search = sol+" in ";
 				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
-				Matcher solventMatcher = Pattern.compile("([a-zA-Z\s]+?)(\\.|,|\\z| and|\\()").matcher(searchStr);
+				Matcher solventMatcher = Pattern.compile("([a-zA-Z\s]+?)(\\.|\\z| and|\\()|;").matcher(searchStr);
 				solventMatcher.find();
 				String solvent = solventMatcher.group(1);
+				// TODO fix null solvent
+				System.out.println(propertyValue);
 				if (!solvent.contains("water") && !solventCheck.contains(solvent)) { 
 					er.updateNote(search+solvent);
 					solventCheck.add(solvent);
@@ -447,7 +449,7 @@ public class Parse {
 			if (propertyValue.contains(sol+" with ")) {
 				String search = sol+" with ";
 				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
-				Matcher solventMatcher = Pattern.compile("([a-zA-Z\s]+?)(\\.|,|\\z| and|\\()").matcher(searchStr);
+				Matcher solventMatcher = Pattern.compile("([a-zA-Z\s]+?)(\\.|\\z| and|\\()|;").matcher(searchStr);
 				solventMatcher.find();
 				String solvent = solventMatcher.group(1);
 				if (!solvent.contains("water") && !solventCheck.contains(solvent)) { 
