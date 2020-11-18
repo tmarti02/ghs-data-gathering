@@ -18,7 +18,6 @@ import org.jsoup.select.Elements;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
@@ -151,7 +150,7 @@ public class RecordLookChem {
 	 */
 	public static Vector<RecordLookChem> parseWebpagesInZipFile() {
 		String folderNameWebpages = "web pages";
-		String mainFolder = AADashboard.dataFolder+File.separator+"Experimental"+ File.separator + sourceName;
+		String mainFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 		String zipFilePath = mainFolder + File.separator+folderNameWebpages+".zip";
 		Vector<RecordLookChem> records = new Vector<>();
 
@@ -191,7 +190,7 @@ public class RecordLookChem {
 	 * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
 	 */
 	public static Vector<RecordLookChem> parseWebpagesInDatabase() {
-		String databaseFolder = AADashboard.dataFolder+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "databases";
+		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "databases";
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		Vector<RecordLookChem> records = new Vector<>();
 
@@ -267,7 +266,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase(AADashboard.dataFolder+"/PFASSTRUCT.xls",1,8163,true);
+		downloadWebpagesFromExcelToDatabase("Data"+"/PFASSTRUCT.xls",1,8163,true);
 	}
 	
 }

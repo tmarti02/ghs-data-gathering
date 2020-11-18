@@ -164,6 +164,9 @@ public class ParsePubChem extends Parse {
 				unitsIndex = propertyValue.indexOf(units);
 				badUnits = false;
 			}
+			
+			Parse.getPressureCondition(er,propertyValue);
+			
 		} else if (propertyName==ExperimentalConstants.strBoilingPoint || propertyName==ExperimentalConstants.strFlashPoint) {
 			String units = Parse.getTemperatureUnits(propertyValue);
 			if (units.length()!=0) {

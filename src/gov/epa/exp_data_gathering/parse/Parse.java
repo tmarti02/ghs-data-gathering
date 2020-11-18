@@ -26,7 +26,6 @@ import org.jsoup.nodes.Element;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
@@ -66,7 +65,7 @@ public class Parse {
 		fileNameFlatExperimentalRecordsBad = sourceName +" Experimental Records-Bad.txt";
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
 		fileNameJsonExperimentalRecordsBad = sourceName +" Experimental Records-Bad.json";
-		mainFolder = AADashboard.dataFolder + File.separator + "Experimental" + File.separator + sourceName;
+		mainFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
 		databaseFolder = mainFolder + File.separator + "databases";
 		jsonFolder= mainFolder + File.separator + "json files";
 		webpageFolder = mainFolder + File.separator + "web pages";
@@ -528,7 +527,14 @@ public class Parse {
 				while (m.find()) { pressure = m.group(); }
 				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure)*ExperimentalConstants.atm_to_kPa; }
 			} catch (Exception ex) { }
-		};
+		} else if ((pressureIndex = propertyValue.toLowerCase().indexOf("kpa")) > 0) {
+			try {
+				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
+				String pressure = "";
+				while (m.find()) { pressure = m.group(); }
+				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure); }
+			} catch (Exception ex) { }
+		}
 	}
 
 	/**

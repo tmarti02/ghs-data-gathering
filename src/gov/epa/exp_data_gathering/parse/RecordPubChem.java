@@ -79,13 +79,45 @@ public class RecordPubChem {
 			ex.printStackTrace();
 		}
 		
+		int counter = 0;
 		for (int i = start; i < end; i++) {
 			String dtxsid = records.get(i).DTXSID;
 			String cid = dict.get(dtxsid);
-			if (cid!=null) { cids.add(cid);
-			} else { System.out.println("CID not found for "+dtxsid); }
+			if (cid!=null) {
+				cids.add(cid);
+				counter++;
+			} else {
+				boolean foundCID = false;
+				try {
+					String inchikey = records.get(i).INCHIKEY;
+					String url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchikey/"+inchikey+"/cids/TXT";
+					String cidsTxt = FileUtilities.getText_UTF8(url);
+					if (cidsTxt!=null) {
+						cids.add(cidsTxt.split("\r\n")[0]);
+						foundCID = true;
+						counter++;
+					}
+					Thread.sleep(200);
+				} catch (Exception ex) { ex.printStackTrace(); }
+				if (!foundCID) {
+					try {
+						String smiles = records.get(i).SMILES;
+						String url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/"+smiles+"/cids/TXT";
+						String cidsTxt = FileUtilities.getText_UTF8(url);
+						if (cidsTxt!=null) {
+							cids.add(cidsTxt.split("\r\n")[0]);
+							foundCID = true;
+							counter++;
+						}
+						Thread.sleep(200);
+					} catch (Exception ex) { ex.printStackTrace(); }
+				}
+			}
+			if (counter % 100 == 0) {
+				System.out.println("Found "+counter+" CIDs");
+			}
 		}
-		
+		System.out.println("Found "+counter+" CIDs");
 		return cids;
 	}
 	
@@ -101,6 +133,9 @@ public class RecordPubChem {
 		try {
 			int counterSuccess = 0;
 			int counterTotal = 0;
+			int counterNew = 0;
+			int counterMissingExpData = 0;
+			int counterMissingCAS = 0;
 			for (String cid:cids) {
 				String experimentalURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/"+cid+"/JSON?heading=Experimental+Properties";
 				String idURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid="+cid;
@@ -111,41 +146,64 @@ public class RecordPubChem {
 				Date date = new Date();  
 				String strDate=formatter.format(date);
 				
+				counterTotal++;
 				RawDataRecordPubChem rec=new RawDataRecordPubChem(strDate, cid, "", "", "", "");
 				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
 				if (!haveRecord || startFresh) {
+					boolean keepLooking = true;
 					try {
 						rec.experimental=FileUtilities.getText_UTF8(experimentalURL).replace("'", "''"); //single quotes mess with the SQL insert later
+					} catch (Exception ex) { 
+						counterMissingExpData++;
+						keepLooking = false;
+					}
+					Thread.sleep(200);
+					if (keepLooking) {
+						try {
+							rec.cas=FileUtilities.getText_UTF8(casURL).replace("'", "''");
+						} catch (Exception ex) {
+							counterMissingCAS++;
+							keepLooking = false;
+						}
+					}
+					Thread.sleep(200);
+					if (keepLooking) {
+						try {
+							rec.identifiers=FileUtilities.getText_UTF8(idURL).replace("'", "''");
+						} catch (Exception ex) { }
 						Thread.sleep(200);
-					} catch (Exception ex) { }
-					try {
-						rec.identifiers=FileUtilities.getText_UTF8(idURL).replace("'", "''");
+						try {
+							rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replace("'", "''");
+						} catch (Exception ex) { }
 						Thread.sleep(200);
-					} catch (Exception ex) { }
-					try {
-						rec.cas=FileUtilities.getText_UTF8(casURL).replace("'", "''");
-						Thread.sleep(200);
-					} catch (Exception ex) { }
-					try {
-						rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replace("'", "''");
-						Thread.sleep(200);
-					} catch (Exception ex) { }
+					}
+					counterNew++;
 					if (rec.experimental!=null && !rec.experimental.isBlank() && rec.cas!=null && !rec.cas.isBlank()) {
 						rec.addRecordToDatabase(tableName, conn);
 						counterSuccess++;
 					}
-					counterTotal++;
-					if (counterTotal % 100==0) { System.out.println("Attempted "+counterTotal+" pages, downloaded "+counterSuccess+" pages"); }
+					if (counterTotal % 100==0) {
+						System.out.println("Attempted: "+counterTotal);
+						System.out.println("New: "+counterNew);
+						System.out.println("Succeeded: "+counterSuccess);
+						System.out.println("Failed - no experimental properties: "+counterMissingExpData);
+						System.out.println("Failed - no CAS: "+counterMissingCAS);
+						System.out.println("~~~~~~~~~~");
+					}
 				}
 			}
-			System.out.println("Attempted "+counterTotal+"pages, downloaded "+counterSuccess+" pages");
+			System.out.println("Attempted: "+counterTotal);
+			System.out.println("New: "+counterNew);
+			System.out.println("Succeeded: "+counterSuccess);
+			System.out.println("Failed - no experimental properties: "+counterMissingExpData);
+			System.out.println("Failed - no CAS: "+counterMissingCAS);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 	
 	protected static Vector<RecordPubChem> parseJSONsInDatabase() {
-		String databaseFolder = AADashboard.dataFolder+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "databases";
+		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "databases";
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_json.db";
 		Vector<RecordPubChem> records = new Vector<>();
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
@@ -218,8 +276,8 @@ public class RecordPubChem {
 	}
 	
 	public static void main(String[] args) {
-		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
-		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,8164);
+		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel("Data"+"/PFASSTRUCT.xls");
+		Vector<String> cids = getCIDsFromDashboardRecords(drs,"Data"+"/CIDDICT.csv",1,8164);
 		downloadJSONsToDatabase(cids,false);
 	}
 }
