@@ -180,7 +180,7 @@ public class ParseLookChem extends Parse {
 			}
 			
 			Parse.getTemperatureCondition(er,propertyValue);
-			Parse.getQualitativeSolubility(er, propertyValue);
+			getQualitativeSolubility(er, propertyValue);
 			
 		}
 		
@@ -226,9 +226,8 @@ public class ParseLookChem extends Parse {
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
 			// Warns if there may be a problem with an entry
 			er.flag = false;
-			if (propertyValue.contains(",")) {
-				er.flag=true;
-			}
+			if (propertyValue.contains(",")) { er.flag=true; }
+			if (propertyName.contains("?")) { er.flag = true; }
 		} else {
 			er.property_value_units = null;
 			er.pressure_kPa = null;

@@ -118,6 +118,7 @@ public class ParsePubChem extends Parse {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		if (propertyName==ExperimentalConstants.strDensity) {
+			propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
 			if (propertyValue.toLowerCase().contains("g/cm") || propertyValue.toLowerCase().contains("g/cu cm") || propertyValue.toLowerCase().contains("gm/cu cm")) {
 				er.property_value_units = ExperimentalConstants.str_g_cm3;
 				unitsIndex = propertyValue.toLowerCase().indexOf("g");
@@ -130,9 +131,25 @@ public class ParsePubChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_g_L;
 				unitsIndex = propertyValue.toLowerCase().indexOf("g/l");
 				badUnits = false;
-			} else if (!propertyValue.toLowerCase().contains("relative")) {
+			} else if (propertyValue.toLowerCase().contains("relative")) {
+				unitsIndex = propertyValue.length();
+				badUnits = false;
+				if (propertyValue.toLowerCase().contains("mixture")) {
+					er.updateNote(ExperimentalConstants.str_relative_mixture_density);
+				} else if (propertyValue.toLowerCase().contains("gas")) {
+					er.updateNote(ExperimentalConstants.str_relative_gas_density);
+				} else {
+					er.updateNote(ExperimentalConstants.str_relative_density);
+				}
+			} else {
 				er.property_value_units = ExperimentalConstants.str_g_cm3;
-				unitsIndex = propertyValue.toLowerCase().indexOf(" ");
+				if (propertyValue.contains(":")) {
+					unitsIndex = propertyValue.length();
+				} else if (propertyValue.contains(" ")) {
+					unitsIndex = propertyValue.indexOf(" ");
+				} else {
+					unitsIndex = propertyValue.length();
+				}
 				badUnits = false;
 				er.updateNote(ExperimentalConstants.str_g_cm3+" assumed");
 			}
@@ -156,9 +173,10 @@ public class ParsePubChem extends Parse {
 			}
 			
 			Parse.getPressureCondition(er,propertyValue);
-			if (propertyValue.contains("closed cup")) { er.measurement_method = "closed cup"; }
+			if (propertyValue.contains("closed cup") || propertyValue.contains("c.c.")) { er.measurement_method = "closed cup"; }
 			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
+			propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
 			if (propertyValue.toLowerCase().contains("mg/l")) {
 				er.property_value_units = ExperimentalConstants.str_mg_L;
 				unitsIndex = propertyValue.indexOf("mg/");
@@ -167,13 +185,17 @@ public class ParsePubChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_mg_mL;
 				unitsIndex = propertyValue.indexOf("mg/");
 				badUnits = false;
-			} else if (propertyValue.toLowerCase().contains("g/l")) {
-				er.property_value_units = ExperimentalConstants.str_g_L;
-				unitsIndex = propertyValue.indexOf("g/");
-				badUnits = false;
 			} else if (propertyValue.toLowerCase().contains("ug/l")) {
 				er.property_value_units = ExperimentalConstants.str_ug_L;
 				unitsIndex = propertyValue.indexOf("ug/");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("ug/ml")) {
+				er.property_value_units = ExperimentalConstants.str_ug_mL;
+				unitsIndex = propertyValue.indexOf("ug/");
+				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains("g/l")) {
+				er.property_value_units = ExperimentalConstants.str_g_L;
+				unitsIndex = propertyValue.indexOf("g/");
 				badUnits = false;
 			} else if (propertyValue.toLowerCase().contains("% w/w") || propertyValue.toLowerCase().contains("wt%")) {
 				er.property_value_units = ExperimentalConstants.str_pctWt;
@@ -191,12 +213,17 @@ public class ParsePubChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_M;
 				unitsIndex = propertyValue.indexOf("M");
 				badUnits = false;
+			} 
+			
+			if (propertyValue.contains(":")) {
+				unitsIndex = propertyValue.length();
 			}
 			
 			Parse.getTemperatureCondition(er,propertyValue);
-			Parse.getQualitativeSolubility(er, propertyValue);
+			getQualitativeSolubility(er, propertyValue);
 			
 		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
+			propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
 			if (propertyValue.toLowerCase().contains("mmhg") || propertyValue.toLowerCase().contains("mm hg")) {
 				er.property_value_units = ExperimentalConstants.str_mmHg;
 				unitsIndex = propertyValue.toLowerCase().indexOf("mm");
@@ -209,6 +236,12 @@ public class ParsePubChem extends Parse {
 				er.property_value_units = ExperimentalConstants.str_kpa;
 				unitsIndex = propertyValue.toLowerCase().indexOf("kpa");
 				badUnits = false;
+			} else if (propertyValue.toLowerCase().contains(ExperimentalConstants.str_negl)) {
+				er.property_value_qualitative = ExperimentalConstants.str_negl;
+			}
+			
+			if (propertyValue.contains(":")) {
+				unitsIndex = propertyValue.length();
 			}
 				
 			Parse.getTemperatureCondition(er,propertyValue);
@@ -244,6 +277,16 @@ public class ParsePubChem extends Parse {
 				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll(" ", "").replaceAll("\\+", ""));
 				er.property_value_point_estimate = mantissa*Math.pow(10, magnitude);
 				foundNumeric = true;
+				int propertyValueIndex;
+				if ((propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
+					if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>' || propertyValue.toLowerCase().contains("greater than")) {
+						er.property_value_numeric_qualifier = ">";
+					} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<' || propertyValue.toLowerCase().contains("less than")) {
+						er.property_value_numeric_qualifier = "<";
+					} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='~') {
+						er.property_value_numeric_qualifier = "~";
+					}
+				}
 			} catch (Exception ex) { }
 		}
 		
@@ -276,6 +319,34 @@ public class ParsePubChem extends Parse {
 					}
 				}
 			} catch (Exception ex) { }
+		}
+		
+		// Adds measurement methods and notes to valid records
+		// Clears all numerical fields if property value was not obtainable
+		if (foundNumeric && !badUnits) {
+			if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
+				er.updateNote(ExperimentalConstants.str_dec);
+			}
+			if (propertyValue.toLowerCase().contains("est")) { er.updateNote(ExperimentalConstants.str_est); }
+			if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp")) && !propertyValue.toLowerCase().contains("extreme")) {
+				er.updateNote(ExperimentalConstants.str_ext);
+			}
+			// Warns if there may be a problem with an entry
+			er.flag = false;
+			if (propertyName.equals(ExperimentalConstants.strWaterSolubility) && !propertyValue.toLowerCase().contains("water") && foundNumeric) {
+				er.flag = true;
+			}
+			if (propertyValue.contains("?")) { er.flag = true; }
+		} else {
+			er.property_value_units = null;
+			er.pressure_kPa = null;
+			er.temperature_C = null;
+		}
+		
+		if (er.property_value_point_estimate!=null || er.property_value_min!=null || er.property_value_qualitative!=null || er.note!=null) {
+			er.keep = true;
+		} else {
+			er.keep = false;
 		}
 		
 		recordsExperimental.add(er);

@@ -99,7 +99,8 @@ public class RecordPubChem {
 		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecordPubChem.fieldNames, startFresh);
 		
 		try {
-			int counter = 1;
+			int counterSuccess = 0;
+			int counterTotal = 0;
 			for (String cid:cids) {
 				String experimentalURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/"+cid+"/JSON?heading=Experimental+Properties";
 				String idURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid="+cid;
@@ -131,12 +132,13 @@ public class RecordPubChem {
 					} catch (Exception ex) { }
 					if (rec.experimental!=null && !rec.experimental.isBlank() && rec.cas!=null && !rec.cas.isBlank()) {
 						rec.addRecordToDatabase(tableName, conn);
-						counter++;
-						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+						counterSuccess++;
 					}
+					counterTotal++;
+					if (counterTotal % 100==0) { System.out.println("Attempted "+counterTotal+" pages, downloaded "+counterSuccess+" pages"); }
 				}
 			}
-			System.out.println("Downloaded "+counter+" pages");
+			System.out.println("Attempted "+counterTotal+"pages, downloaded "+counterSuccess+" pages");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -217,7 +219,7 @@ public class RecordPubChem {
 	
 	public static void main(String[] args) {
 		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel(AADashboard.dataFolder+"/PFASSTRUCT.xls");
-		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,1000);
+		Vector<String> cids = getCIDsFromDashboardRecords(drs,AADashboard.dataFolder+"/CIDDICT.csv",1,8164);
 		downloadJSONsToDatabase(cids,false);
 	}
 }

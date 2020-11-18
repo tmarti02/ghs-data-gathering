@@ -19,6 +19,7 @@ public class ExperimentalConstants {
 	public static final String str_mg_mL="mg/mL";
 	public static final String str_g_L="g/L";
 	public static final String str_ug_L="ug/L";
+	public static final String str_ug_mL="ug/mL";
 	public static final String str_g_cm3="g/cm3";
 	public static final String str_g_mL="g/mL";
 	public static final String str_C="C";
@@ -45,11 +46,20 @@ public class ExperimentalConstants {
 	public static final String str_negl="negligible";
 	public static final String str_hydr="hydrolysis";
 	public static final String str_reacts="reacts";
+	public static final String str_reaction="reaction";
+	public static final String str_poor="poor";
+	public static final String str_none="none";
+	public static final String str_low="low";
 	
 	//Other:
 	public static final String str_dec="decomposes";
 	public static final String str_lit="literature";
 	public static final String str_subl="sublimates";
+	public static final String str_relative_density="relative density (water = 1)";
+	public static final String str_relative_mixture_density="relative density of the vapor-air mixture (air = 1)";
+	public static final String str_relative_gas_density="relative gas density (air = 1)";
+	public static final String str_est="estimated";
+	public static final String str_ext="extrapolated";
 	
 	//Add list of source names here:
 	public static final String strSourceLookChem="LookChem";

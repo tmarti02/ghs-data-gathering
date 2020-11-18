@@ -197,7 +197,8 @@ public class Parse {
 		Random rand = new Random();
 		
 		try {
-			int counter = 1;
+			int counterSuccess = 0;
+			int counterTotal = 0;
 			for (String url:urls) {
 				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 				Date date = new Date();  
@@ -210,16 +211,17 @@ public class Parse {
 						rec.content=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
 						if (rec.content!=null) { 
 							rec.addRecordToDatabase(tableName, conn);
-							counter++;
+							counterSuccess++;
 						}
-						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+						counterTotal++;
+						if (counterTotal % 100==0) { System.out.println("Attempted "+counterTotal+" pages, downloaded "+counterSuccess+" pages"); }
 					} catch (Exception ex) {
 						System.out.println("Failed to download "+url);
 					}
 					Thread.sleep(200);
 				}
 			}
-			System.out.println("Downloaded "+counter+" pages");
+			System.out.println("Attempted "+counterTotal+"pages, downloaded "+counterSuccess+" pages");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -401,10 +403,11 @@ public class Parse {
 		}
 	}
 	
-	static void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
+	void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
 		String[] solubilityIn = {ExperimentalConstants.str_inSol,ExperimentalConstants.str_verySol,ExperimentalConstants.str_freelySol,
 				ExperimentalConstants.str_sparinglySol,ExperimentalConstants.str_verySlightlySol,ExperimentalConstants.str_slightlySol,
-				ExperimentalConstants.str_sol,ExperimentalConstants.str_negl,ExperimentalConstants.str_dec};
+				ExperimentalConstants.str_sol,ExperimentalConstants.str_negl,ExperimentalConstants.str_dec,ExperimentalConstants.str_poor,
+				ExperimentalConstants.str_none,ExperimentalConstants.str_low};
 		propertyValue = propertyValue.toLowerCase();
 		boolean foundWaterSol = false;
 		for (String sol:solubilityIn) {
@@ -417,7 +420,8 @@ public class Parse {
 			}
 		}
 		
-		String[] solubilityWith = {ExperimentalConstants.str_immisc,ExperimentalConstants.str_misc,ExperimentalConstants.str_hydr,ExperimentalConstants.str_reacts};
+		String[] solubilityWith = {ExperimentalConstants.str_immisc,ExperimentalConstants.str_misc,ExperimentalConstants.str_hydr,
+				ExperimentalConstants.str_reaction,ExperimentalConstants.str_reacts};
 		for (String sol:solubilityWith) {
 			if (!foundWaterSol && propertyValue.contains(sol+" with water")) {
 				er.property_value_qualitative=sol;
@@ -428,16 +432,20 @@ public class Parse {
 			}
 		}
 		
+		String solventMatcherStr = "";
+		if (sourceName.equals(ExperimentalConstants.strSourceLookChem)) {
+			solventMatcherStr = "([a-zA-Z0-9\s,-]+?)(\\.|\\z| and|\\(|;)";
+		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
+			solventMatcherStr = "([a-zA-Z0-9\s,-]+?)(\\.|\\z| at|\\(|;)";
+		}
 		Vector<String> solventCheck = new Vector<String>();
 		for (String sol:solubilityIn) {
 			if (propertyValue.contains(sol+" in ")) {
 				String search = sol+" in ";
 				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
-				Matcher solventMatcher = Pattern.compile("([a-zA-Z\s]+?)(\\.|\\z| and|\\()|;").matcher(searchStr);
+				Matcher solventMatcher = Pattern.compile(solventMatcherStr).matcher(searchStr);
 				solventMatcher.find();
 				String solvent = solventMatcher.group(1);
-				// TODO fix null solvent
-				System.out.println(propertyValue);
 				if (!solvent.contains("water") && !solventCheck.contains(solvent)) { 
 					er.updateNote(search+solvent);
 					solventCheck.add(solvent);
@@ -449,7 +457,7 @@ public class Parse {
 			if (propertyValue.contains(sol+" with ")) {
 				String search = sol+" with ";
 				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
-				Matcher solventMatcher = Pattern.compile("([a-zA-Z\s]+?)(\\.|\\z| and|\\()|;").matcher(searchStr);
+				Matcher solventMatcher = Pattern.compile(solventMatcherStr).matcher(searchStr);
 				solventMatcher.find();
 				String solvent = solventMatcher.group(1);
 				if (!solvent.contains("water") && !solventCheck.contains(solvent)) { 
@@ -458,6 +466,9 @@ public class Parse {
 				}
 			}
 		}
+		
+		if (er.note!= null) { er.note = er.note.replaceAll("reacts", "reaction"); }
+		if (er.property_value_qualitative!=null) { er.property_value_qualitative = er.property_value_qualitative.replaceAll("reacts", "reaction"); }
 	}
 
 	/**
