@@ -2,9 +2,22 @@ package gov.epa.exp_data_gathering.parse;
 
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Vector;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -92,6 +105,77 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			ex.printStackTrace();
 		}
 
+	}
+	
+	public void toExcel_File(String filePath) {
+		Workbook wb = new XSSFWorkbook();
+		Sheet recSheet = wb.createSheet("Records");
+		Sheet badSheet = wb.createSheet("Records-Bad");
+		Row recSubtotalRow = recSheet.createRow(0);
+		Row recHeaderRow = recSheet.createRow(1);
+		Row badSubtotalRow = badSheet.createRow(0);
+		Row badHeaderRow = badSheet.createRow(1);
+		String[] subtotals = {"SUBTOTAL(3,D$3:D$100000)","SUBTOTAL(3,E$3:E$100000)","SUBTOTAL(3,F$3:F$100000)","SUBTOTAL(3,G$3:G$100000)",
+				"SUBTOTAL(3,H$3:H$100000)","SUBTOTAL(3,I$3:I$100000)","SUBTOTAL(3,J$3:J$100000)","SUBTOTAL(3,K$3:K$100000)",
+				"SUBTOTAL(3,L$3:L$100000)","SUBTOTAL(3,M$3:M$100000)","SUBTOTAL(3,N$3:N$100000)","SUBTOTAL(3,O$3:O$100000)"};
+		String[] recHeaders = {"casrn","chemical_name","property_name","property_value_string","property_value_numeric_qualifier","property_value_point_estimate",
+				"property_value_min","property_value_max","property_value_units","pressure_kPa","temperature_C","property_value_qualitative","measurement_method",
+				"note","flag"};
+		String[] badHeaders = Arrays.copyOfRange(recHeaders,0,4);
+		CellStyle style = wb.createCellStyle();
+		Font font = wb.createFont();
+		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		style.setFont(font);
+		for (int i = 0; i < recHeaders.length; i++) {
+			Cell recCell = recHeaderRow.createCell(i);
+			recCell.setCellValue(recHeaders[i]);
+			recCell.setCellStyle(style);
+			if (i >= 3) { recSubtotalRow.createCell(i).setCellFormula(subtotals[i-3]); }
+			if (i < badHeaders.length) {
+				Cell badCell = badHeaderRow.createCell(i);
+				badCell.setCellValue(badHeaders[i]);
+				badCell.setCellStyle(style);
+				if (i >= 3) { badSubtotalRow.createCell(i).setCellFormula(subtotals[i-3]); }
+			}
+		}
+		int recCurrentRow = 2;
+		int badCurrentRow = 2;
+		for (ExperimentalRecord er:this) {
+			Class erClass = er.getClass();
+			try {
+				if (er.keep) {
+					Row recRow = recSheet.createRow(recCurrentRow);
+					recCurrentRow++;
+					for (int i = 0; i < recHeaders.length; i++) {
+						Field field = erClass.getDeclaredField(recHeaders[i]);
+						Object value = field.get(er);
+						if (value!=null && !(value instanceof Double)) { recRow.createCell(i).setCellValue(value.toString());
+						} else if (value!=null) { recRow.createCell(i).setCellValue((double) value); }
+					}
+				} else {
+					Row badRow = badSheet.createRow(badCurrentRow);
+					badCurrentRow++;
+					for (int i = 0; i < badHeaders.length; i++) {
+						Field field = erClass.getDeclaredField(badHeaders[i]);
+						Object value = field.get(er);
+						if (value!=null && !(value instanceof Double)) { badRow.createCell(i).setCellValue(value.toString());
+						} else if (value!=null) { badRow.createCell(i).setCellValue((double) value); }
+					}
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+		
+		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:O"+recCurrentRow));
+		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:D"+badCurrentRow));
+		
+		try {
+			OutputStream fos = new FileOutputStream(filePath);
+			wb.write(fos);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	

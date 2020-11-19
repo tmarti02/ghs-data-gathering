@@ -110,7 +110,6 @@ public class ParsePubChem extends Parse {
 		if (pcr.synonyms != null) { er.synonyms=pcr.synonyms; }
 		er.property_name=propertyName;
 		er.property_value_string=propertyValue;
-		// TODO carry over reference info, rather than just sourcing all as "PubChem"
 		// TODO URL
 		er.source_name=ExperimentalConstants.strSourcePubChem;
 		er.keep=true;

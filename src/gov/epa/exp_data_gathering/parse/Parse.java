@@ -49,13 +49,15 @@ public class Parse {
 	
 	protected String fileNameFlatExperimentalRecords;//records in flat format
 	protected String fileNameJsonExperimentalRecords;//records in ExperimentalRecord class format
+	protected String fileNameExcelExperimentalRecords;
 	protected String fileNameFlatExperimentalRecordsBad;
 	protected String fileNameJsonExperimentalRecordsBad;
 	protected String mainFolder;
 	
 	public static boolean generateOriginalJSONRecords=true; //runs code to generate json records from original data format (json file has all the chemicals in one file)	
 	public static boolean writeFlatFile=false;//all data converted to final format stored as flat text file
-	public static boolean writeJsonChemicalsFile=true;//all data converted to final format stored as Json file
+	public static boolean writeJsonExperimentalRecordsFile=true;//all data converted to final format stored as Json file
+	public static boolean writeExcelExperimentalRecordsFile=true;//all data converted to final format stored as xlsx file
 	
 	Gson gson=null;
 
@@ -65,6 +67,7 @@ public class Parse {
 		fileNameFlatExperimentalRecordsBad = sourceName +" Experimental Records-Bad.txt";
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
 		fileNameJsonExperimentalRecordsBad = sourceName +" Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +" Experimental Records.xlsx";
 		mainFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
 		databaseFolder = mainFolder + File.separator + "databases";
 		jsonFolder= mainFolder + File.separator + "json files";
@@ -361,10 +364,18 @@ public class Parse {
 			recordsBad.toFlatFile(mainFolder+File.separator+fileNameFlatExperimentalRecordsBad,"|");
 		}
 		
-		if (writeJsonChemicalsFile) {
+		if (writeJsonExperimentalRecordsFile) {
 			System.out.println("Writing json file for chemical records");
 			records.toJSON_File(mainFolder+File.separator+fileNameJsonExperimentalRecords);
 			recordsBad.toJSON_File(mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
+		}
+		
+		if (writeExcelExperimentalRecordsFile) {
+			System.out.println("Writing Excel file for chemical records");
+			ExperimentalRecords merge = new ExperimentalRecords();
+			merge.addAll(records);
+			merge.addAll(recordsBad);
+			merge.toExcel_File(mainFolder+File.separator+fileNameExcelExperimentalRecords);
 		}
 		
 		System.out.println("done\n");
