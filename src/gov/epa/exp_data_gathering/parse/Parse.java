@@ -406,7 +406,7 @@ public class Parse {
 		propertyValue = propertyValue.toLowerCase();
 		String solventMatcherStr = "";
 		if (sourceName.equals(ExperimentalConstants.strSourceLookChem)) {
-			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| and|\\(|;))?";
+			solventMatcherStr = "(([a-zA-Z0-9\s-]+?)(\\.|\\z| and|[ ]?\\(|;))?";
 		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| at| and only|\\(|;))?";
 		}

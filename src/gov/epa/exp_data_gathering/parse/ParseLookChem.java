@@ -80,7 +80,7 @@ public class ParseLookChem extends Parse {
 		if (lcr.synonyms != null) { er.synonyms=lcr.synonyms.replace(';','|'); }
 		er.property_name=ExperimentalConstants.strAppearance;
 		er.property_value_string=lcr.appearance;
-		er.property_value_qualitative=lcr.appearance;
+		er.property_value_qualitative=lcr.appearance.toLowerCase().replaceAll("colour","color").replaceAll("odour","odor").replaceAll("vapour","vapor");
 		er.source_name=ExperimentalConstants.strSourceLookChem;
 		
 		// Constructs a LookChem URL from the CAS RN
@@ -241,7 +241,7 @@ public class ParseLookChem extends Parse {
 		}
 		
 		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units==null)
-				&& (er.property_value_units!=null || er.property_value_qualitative!=null)) {
+				&& (er.property_value_units!=null || er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
 		} else {
 			er.keep = false;

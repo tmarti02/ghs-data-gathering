@@ -91,7 +91,7 @@ public class ParsePubChem extends Parse {
 		if (pcr.synonyms != null) { er.synonyms=pcr.synonyms; }
 		er.property_name=ExperimentalConstants.strAppearance;
 		er.property_value_string=physicalDescription;
-		er.property_value_qualitative=physicalDescription;
+		er.property_value_qualitative=physicalDescription.toLowerCase().replaceAll("colour","color").replaceAll("odour","odor").replaceAll("vapour","vapor");
 		er.source_name=ExperimentalConstants.strSourcePubChem;
 		
 		er.keep = true;
@@ -117,6 +117,8 @@ public class ParsePubChem extends Parse {
 		
 		boolean badUnits = true;
 		int unitsIndex = -1;
+		propertyValue = propertyValue.replaceAll("greater than( or equal to )?", ">");
+		propertyValue = propertyValue.replaceAll("less than( or equal to )?", "<");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
 			if (propertyValue.toLowerCase().contains("g/cm") || propertyValue.toLowerCase().contains("g/cu cm") || propertyValue.toLowerCase().contains("gm/cu cm")) {
@@ -213,13 +215,19 @@ public class ParsePubChem extends Parse {
 				unitsIndex = propertyValue.indexOf("ppm");
 				badUnits = false;
 			} else if (propertyValue.contains("M")) {
-				er.property_value_units = ExperimentalConstants.str_M;
 				unitsIndex = propertyValue.indexOf("M");
-				badUnits = false;
+				if (unitsIndex>0) {
+					er.property_value_units = ExperimentalConstants.str_M;
+					badUnits = false;
+				}
 			} 
 			
 			if (propertyValue.contains(":")) {
 				unitsIndex = propertyValue.length();
+			}
+			
+			if (!badUnits && Character.isAlphabetic(propertyValue.charAt(0)) && !propertyValue.contains("water")) {
+				er.keep = false;
 			}
 			
 			Parse.getTemperatureCondition(er,propertyValue);
@@ -282,9 +290,9 @@ public class ParsePubChem extends Parse {
 				foundNumeric = true;
 				int propertyValueIndex;
 				if ((propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
-					if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>' || propertyValue.toLowerCase().contains("greater than")) {
+					if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>') {
 						er.property_value_numeric_qualifier = ">";
-					} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<' || propertyValue.toLowerCase().contains("less than")) {
+					} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<') {
 						er.property_value_numeric_qualifier = "<";
 					} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='~') {
 						er.property_value_numeric_qualifier = "~";
@@ -324,29 +332,19 @@ public class ParsePubChem extends Parse {
 			} catch (Exception ex) { }
 		}
 		
-		// Adds measurement methods and notes to valid records
-		// Clears all numerical fields if property value was not obtainable
-//		if ((foundNumeric || er.property_value_qualitative!=null) && !badUnits) {
-			if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
-				er.updateNote(ExperimentalConstants.str_dec);
-			}
-			if (propertyValue.toLowerCase().contains("est")) { er.updateNote(ExperimentalConstants.str_est); }
-			if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp")) && !propertyValue.toLowerCase().contains("extreme")) {
-				er.updateNote(ExperimentalConstants.str_ext);
-			}
-			// Warns if there may be a problem with an entry
-			er.flag = false;
-			if (propertyName.equals(ExperimentalConstants.strWaterSolubility) && !propertyValue.toLowerCase().contains("water") && foundNumeric) {
-				er.flag = true;
-			}
-			if (propertyValue.contains("?")) { er.flag = true; }
-//		} else {
-//			er.property_value_units = null;
-//			er.pressure_kPa = null;
-//			er.temperature_C = null;
-//		}
+		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
+			er.updateNote(ExperimentalConstants.str_dec);
+		}
+		if (propertyValue.toLowerCase().contains("est")) { er.updateNote(ExperimentalConstants.str_est); }
+		if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp")) && !propertyValue.toLowerCase().contains("extreme")) {
+			er.updateNote(ExperimentalConstants.str_ext);
+		}
+		// Warns if there may be a problem with an entry
+		er.flag = false;
+		if (propertyValue.contains("?")) { er.flag = true; }
 		
-		if (er.property_value_point_estimate!=null || er.property_value_min!=null || er.property_value_qualitative!=null || er.note!=null) {
+		if ((er.property_value_point_estimate!=null || er.property_value_min!=null || er.property_value_qualitative!=null || er.note!=null)
+				&& !er.keep==false) {
 			er.keep = true;
 		} else {
 			er.keep = false;
