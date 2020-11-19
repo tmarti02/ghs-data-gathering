@@ -326,7 +326,7 @@ public class ParsePubChem extends Parse {
 		
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
-		if (foundNumeric && !badUnits) {
+//		if ((foundNumeric || er.property_value_qualitative!=null) && !badUnits) {
 			if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
 				er.updateNote(ExperimentalConstants.str_dec);
 			}
@@ -340,11 +340,11 @@ public class ParsePubChem extends Parse {
 				er.flag = true;
 			}
 			if (propertyValue.contains("?")) { er.flag = true; }
-		} else {
-			er.property_value_units = null;
-			er.pressure_kPa = null;
-			er.temperature_C = null;
-		}
+//		} else {
+//			er.property_value_units = null;
+//			er.pressure_kPa = null;
+//			er.temperature_C = null;
+//		}
 		
 		if (er.property_value_point_estimate!=null || er.property_value_min!=null || er.property_value_qualitative!=null || er.note!=null) {
 			er.keep = true;

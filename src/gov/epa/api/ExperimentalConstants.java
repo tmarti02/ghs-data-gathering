@@ -33,24 +33,6 @@ public class ExperimentalConstants {
 	public static final String str_kpa="kPa";
 	public static final String str_M="M";
 	
-	//Solubility descriptors:
-	public static final String str_verySol="very soluble";// <1 mL solvent to dissolve 1 g solute, per Sigma-Aldrich
-	public static final String str_freelySol="freely soluble";// 1-10 mL solvent
-	public static final String str_sol="soluble";// 10-30 mL solvent
-	public static final String str_sparinglySol="sparingly soluble";//30-100 mL solvent
-	public static final String str_slightlySol="slightly soluble";//100-1000 mL solvent
-	public static final String str_verySlightlySol="very slightly soluble";//1000-10000 mL solvent
-	public static final String str_inSol="insoluble";
-	public static final String str_misc="miscible";
-	public static final String str_immisc="immiscible";
-	public static final String str_negl="negligible";
-	public static final String str_hydr="hydrolysis";
-	public static final String str_reacts="reacts";
-	public static final String str_reaction="reaction";
-	public static final String str_poor="poor";
-	public static final String str_none="none";
-	public static final String str_low="low";
-	
 	//Other:
 	public static final String str_dec="decomposes";
 	public static final String str_lit="literature";
@@ -60,6 +42,7 @@ public class ExperimentalConstants {
 	public static final String str_relative_gas_density="relative gas density (air = 1)";
 	public static final String str_est="estimated";
 	public static final String str_ext="extrapolated";
+	public static final String str_negl="negligible";
 	
 	//Add list of source names here:
 	public static final String strSourceLookChem="LookChem";

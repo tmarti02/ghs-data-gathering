@@ -403,71 +403,37 @@ public class Parse {
 	}
 	
 	void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
-		String[] solubilityIn = {ExperimentalConstants.str_inSol,ExperimentalConstants.str_verySol,ExperimentalConstants.str_freelySol,
-				ExperimentalConstants.str_sparinglySol,ExperimentalConstants.str_verySlightlySol,ExperimentalConstants.str_slightlySol,
-				ExperimentalConstants.str_sol,ExperimentalConstants.str_negl,ExperimentalConstants.str_dec,ExperimentalConstants.str_poor,
-				ExperimentalConstants.str_none,ExperimentalConstants.str_low};
 		propertyValue = propertyValue.toLowerCase();
-		boolean foundWaterSol = false;
-		for (String sol:solubilityIn) {
-			if (!foundWaterSol && propertyValue.contains(sol+" in water")) {
-				er.property_value_qualitative=sol;
-				foundWaterSol = true;
-			} else if (!foundWaterSol && propertyValue.contains(sol) && !propertyValue.contains(sol+" in")) {
-				er.property_value_qualitative=sol; // Assume water if solvent not explicit
-				foundWaterSol = true;
-			}
-		}
-		
-		String[] solubilityWith = {ExperimentalConstants.str_immisc,ExperimentalConstants.str_misc,ExperimentalConstants.str_hydr,
-				ExperimentalConstants.str_reaction,ExperimentalConstants.str_reacts};
-		for (String sol:solubilityWith) {
-			if (!foundWaterSol && propertyValue.contains(sol+" with water")) {
-				er.property_value_qualitative=sol;
-				foundWaterSol = true;
-			} else if (!foundWaterSol && propertyValue.contains(sol) && !propertyValue.contains(sol+" with")) {
-				er.property_value_qualitative=sol; // Assume water if solvent not explicit
-				foundWaterSol = true;
-			}
-		}
-		
 		String solventMatcherStr = "";
 		if (sourceName.equals(ExperimentalConstants.strSourceLookChem)) {
-			solventMatcherStr = "([a-zA-Z0-9\s,-]+?)(\\.|\\z| and|\\(|;)";
+			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| and|\\(|;))?";
 		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
-			solventMatcherStr = "([a-zA-Z0-9\s,-]+?)(\\.|\\z| at|\\(|;)";
+			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| at| and only|\\(|;))?";
 		}
-		Vector<String> solventCheck = new Vector<String>();
-		for (String sol:solubilityIn) {
-			if (propertyValue.contains(sol+" in ")) {
-				String search = sol+" in ";
-				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
-				Matcher solventMatcher = Pattern.compile(solventMatcherStr).matcher(searchStr);
-				solventMatcher.find();
-				String solvent = solventMatcher.group(1);
-				if (!solvent.contains("water") && !solventCheck.contains(solvent)) { 
-					er.updateNote(search+solvent);
-					solventCheck.add(solvent);
-				}
-			}
-		}
-
-		for (String sol:solubilityWith) {
-			if (propertyValue.contains(sol+" with ")) {
-				String search = sol+" with ";
-				String searchStr = propertyValue.substring(propertyValue.indexOf(search)+search.length());
-				Matcher solventMatcher = Pattern.compile(solventMatcherStr).matcher(searchStr);
-				solventMatcher.find();
-				String solvent = solventMatcher.group(1);
-				if (!solvent.contains("water") && !solventCheck.contains(solvent)) { 
-					er.updateNote(search+solvent);
-					solventCheck.add(solvent);
-				}
+		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ])?([a-zA-Z]+y[ ])?(in|im)?(so[l]?uble|miscible))( (in|with) )?[ \\.]*"+solventMatcherStr).matcher(propertyValue);
+		while (solubilityMatcher.find()) {
+			String qualifier = solubilityMatcher.group(1);
+			qualifier = qualifier.equals("souble") ? "soluble" : qualifier;
+			String prep = solubilityMatcher.group(6);
+			String solvent = solubilityMatcher.group(9);
+			if (solvent==null || solvent.length()==0 || solvent.equals("water")) {
+				er.property_value_qualitative = qualifier;
+			} else {
+				prep = prep==null ? " " : prep;
+				er.updateNote(qualifier + prep + solvent);
 			}
 		}
 		
-		if (er.note!= null) { er.note = er.note.replaceAll("reacts", "reaction"); }
-		if (er.property_value_qualitative!=null) { er.property_value_qualitative = er.property_value_qualitative.replaceAll("reacts", "reaction"); }
+		if (propertyValue.contains("reacts") || propertyValue.contains("reaction")) {
+			er.property_value_qualitative = "reaction";
+		}
+		
+		String[] qualifiers = {"hydrolysis","decomposes","none","poor","low","negligible"};
+		for (String qual:qualifiers) {
+			if ((propertyValue.startsWith(qual) || (propertyValue.contains("solubility in water") && propertyValue.contains(qual))) && er.property_value_qualitative==null) {
+				er.property_value_qualitative = qual;
+			}
+		}
 	}
 
 	/**
