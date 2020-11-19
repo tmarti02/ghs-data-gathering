@@ -92,8 +92,8 @@ public class ParsePubChem extends Parse {
 		er.property_name=ExperimentalConstants.strAppearance;
 		er.property_value_string=physicalDescription;
 		er.property_value_qualitative=physicalDescription.toLowerCase().replaceAll("colour","color").replaceAll("odour","odor").replaceAll("vapour","vapor");
+		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
-		
 		er.keep = true;
 		er.flag = false;
 		
@@ -110,7 +110,7 @@ public class ParsePubChem extends Parse {
 		if (pcr.synonyms != null) { er.synonyms=pcr.synonyms; }
 		er.property_name=propertyName;
 		er.property_value_string=propertyValue;
-		// TODO URL
+		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
 		er.keep=true;
 		
