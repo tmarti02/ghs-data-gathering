@@ -19,6 +19,9 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -72,6 +75,7 @@ public class Parse {
 		databaseFolder = mainFolder + File.separator + "databases";
 		jsonFolder= mainFolder + File.separator + "json files";
 		webpageFolder = mainFolder + File.separator + "web pages";
+		folderNameExcel=mainFolder + File.separator + "excel files";
 		
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting();
@@ -133,7 +137,7 @@ public class Parse {
 	 * @param tableName		The name of the table to store the data in, i.e., the source name
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String htmlClass,String tableName, boolean startFresh) {
+	public void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String htmlClass,String tableName,boolean startFresh) {
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
@@ -234,7 +238,7 @@ public class Parse {
 	 * @param urls			The URLs to be downloaded
 	 * @param sourceName	The source name
 	 */
-	public void downloadWebpagesToZipFile(Vector<String> urls,String sourceName) {
+	public void downloadWebpagesToZipFile(Vector<String> urls) {
 		String destZipFolder=webpageFolder+".zip";
 		Random rand = new Random();
 
@@ -294,10 +298,15 @@ public class Parse {
 		Vector<RecordDashboard> records = new Vector<RecordDashboard>();
 		
 		try {
+			Workbook wb = null;
 			File file = new File(filename);
 			FileInputStream fis = new FileInputStream(file);
-			HSSFWorkbook wb=new HSSFWorkbook(fis);
-			HSSFSheet sheet=wb.getSheetAt(0);
+			if (filename.endsWith(".xlsx")) {
+				wb=new XSSFWorkbook(fis);
+			} else if (filename.endsWith(".xls")) {
+				wb=new HSSFWorkbook(fis);
+			}
+			Sheet sheet=wb.getSheetAt(0);
 			
 			for (Row row:sheet) {
 				RecordDashboard temp = new RecordDashboard();

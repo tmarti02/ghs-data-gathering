@@ -19,8 +19,8 @@ public class ParseLookChem extends Parse {
 	 */
 	@Override
 	protected void createRecords() {
-		Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInZipFile();
-		// Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInDatabase();
+		// Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInZipFile();
+		Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInDatabase();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -251,6 +251,9 @@ public class ParseLookChem extends Parse {
 	
 	public static void main(String[] args) {
 		ParseLookChem p = new ParseLookChem();
+		p.mainFolder = p.mainFolder + File.separator + "General";
+		p.databaseFolder = p.mainFolder + File.separator + "databases";
+		p.jsonFolder= p.mainFolder + File.separator + "json files";
 		p.createFiles();
 	}
 }

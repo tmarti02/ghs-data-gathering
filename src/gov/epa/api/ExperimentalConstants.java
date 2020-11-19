@@ -47,6 +47,7 @@ public class ExperimentalConstants {
 	//Add list of source names here:
 	public static final String strSourceLookChem="LookChem";
 	public static final String strSourcePubChem="PubChem";
+	public static final String strSourceEChem="eChemPortal";
 	
 	//Conversion factors:
 	public static final double mmHg_to_kPa=0.133322;

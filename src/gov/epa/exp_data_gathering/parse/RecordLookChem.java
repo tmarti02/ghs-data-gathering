@@ -55,7 +55,7 @@ public class RecordLookChem {
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
 		ParseLookChem p = new ParseLookChem();
-		p.downloadWebpagesToZipFile(urls,sourceName);	
+		p.downloadWebpagesToZipFile(urls);	
 	}
 	
 	/**
@@ -71,6 +71,8 @@ public class RecordLookChem {
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
 		ParseLookChem p = new ParseLookChem();
+		p.mainFolder = p.mainFolder + File.separator + "General";
+		p.databaseFolder = p.mainFolder + File.separator + "databases";
 		p.downloadWebpagesToDatabaseAdaptive(urls,"reir_l_info_table",sourceName,startFresh);		
 	}
 	
@@ -190,7 +192,7 @@ public class RecordLookChem {
 	 * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
 	 */
 	public static Vector<RecordLookChem> parseWebpagesInDatabase() {
-		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "databases";
+		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General" + File.separator + "databases";
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		Vector<RecordLookChem> records = new Vector<>();
 
@@ -266,7 +268,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase("Data"+"/PFASSTRUCT.xls",1,8163,true);
+		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx",1,100,true);
 	}
 	
 }
