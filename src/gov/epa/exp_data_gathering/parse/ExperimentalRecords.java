@@ -108,6 +108,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 	}
 	
 	public void toExcel_File(String filePath) {
+		int size = this.size();
 		Workbook wb = new XSSFWorkbook();
 		Sheet recSheet = wb.createSheet("Records");
 		Sheet badSheet = wb.createSheet("Records-Bad");

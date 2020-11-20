@@ -118,126 +118,31 @@ public class ParseLookChem extends Parse {
 		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
 
-		boolean badUnits = true;
-		int unitsIndex = -1;
-		// Replaces any intra-numerical commas with decimal points to handle international decimal format
-		// Possible this could cause issues w/ commas as thousands separators, but I haven't seen any yet
-		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
+		boolean foundNumeric = false;
 		if (propertyName==ExperimentalConstants.strDensity) {
-			if (propertyValue.toLowerCase().contains("g/cm3") || propertyValue.toLowerCase().contains("g/cm 3")) {
-				er.property_value_units = ExperimentalConstants.str_g_cm3;
-				unitsIndex = propertyValue.indexOf("g/cm");
-				badUnits = false;
-			} else if (propertyValue.toLowerCase().contains("g/ml")) {
-				er.property_value_units = ExperimentalConstants.str_g_mL;
-				unitsIndex = propertyValue.indexOf("g/m");
-				badUnits = false;
-			} else {
-				// Only g/cm3 or g/mL are ever used in LookChem, so we can safely assume units where they are missing
-				er.property_value_units = ExperimentalConstants.str_g_cm3;
-				unitsIndex = propertyValue.length();
-				badUnits = false;
-				er.updateNote(ExperimentalConstants.str_g_cm3+" assumed");
-			}
-
-			Parse.getPressureCondition(er,propertyValue);
-			Parse.getTemperatureCondition(er,propertyValue);
-			
-		} else if (propertyName==ExperimentalConstants.strMeltingPoint) {
-			String units = Parse.getTemperatureUnits(propertyValue);
-			if (units.length()!=0) {
-				er.property_value_units = units;
-				unitsIndex = propertyValue.indexOf(units);
-				badUnits = false;
-			}
-		} else if (propertyName==ExperimentalConstants.strBoilingPoint || propertyName==ExperimentalConstants.strFlashPoint) {
-			String units = Parse.getTemperatureUnits(propertyValue);
-			if (units.length()!=0) {
-				er.property_value_units = units;
-				unitsIndex = propertyValue.indexOf(units);
-				badUnits = false;
-			}
-			
-			Parse.getPressureCondition(er,propertyValue);
-			
+			foundNumeric = getDensity(er, propertyValue);			
+		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
+				propertyName==ExperimentalConstants.strFlashPoint) {
+			foundNumeric = getTemperatureProperty(er,propertyValue);	
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			if (propertyValue.toLowerCase().contains("mg/l")) {
-				er.property_value_units = ExperimentalConstants.str_mg_L;
-				unitsIndex = propertyValue.indexOf("mg/");
-				badUnits = false;
-			} else if (propertyValue.toLowerCase().contains("g/l")) {
-				er.property_value_units = ExperimentalConstants.str_g_L;
-				unitsIndex = propertyValue.indexOf("g/");
-				badUnits = false;
-			} else if (propertyValue.toLowerCase().contains("% w/w")) {
-				er.property_value_units = ExperimentalConstants.str_pctWt;
-				unitsIndex = propertyValue.indexOf("%");
-				badUnits = false;
-			} else if (propertyValue.toLowerCase().contains("ppm")) {
-				er.property_value_units = ExperimentalConstants.str_ppm;
-				unitsIndex = propertyValue.indexOf("ppm");
-				badUnits = false;
-			}
-			
-			Parse.getTemperatureCondition(er,propertyValue);
+			foundNumeric = getWaterSolubility(er, propertyValue);
 			getQualitativeSolubility(er, propertyValue);
 			
 		}
 		
-		if (badUnits) { unitsIndex = propertyValue.length(); }
-		
-		boolean foundNumeric = false;
-		if (!foundNumeric) {
-			try {
-				double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
-				if (!badUnits) {
-					er.property_value_min = range[0];
-					er.property_value_max = range[1];
-				}
-				foundNumeric = true;
-			} catch (Exception ex) { }
-		}
-		
-		if (!foundNumeric) {
-			try {
-				double propertyValueAsDouble = Parse.extractDoubleFromString(propertyValue,unitsIndex);
-				int propertyValueIndex = propertyValue.replaceAll(" ","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
-				if (!badUnits) {
-					er.property_value_point_estimate = propertyValueAsDouble;
-					foundNumeric = true;
-					if (propertyValueIndex > 0) {
-						if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>') {
-							er.property_value_numeric_qualifier = ">";
-						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<') {
-							er.property_value_numeric_qualifier = "<";
-						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='~') {
-							er.property_value_numeric_qualifier = "~";
-						}
-					}
-				}
-			} catch (Exception ex) { }
-		}
-		
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
-		if (foundNumeric && !badUnits) {
+		if (foundNumeric) {
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
 			// Warns if there may be a problem with an entry
 			er.flag = false;
-			if (propertyValue.contains(",")) { er.flag=true; }
 			if (propertyName.contains("?")) { er.flag = true; }
 		} else {
 			er.property_value_units = null;
 			er.pressure_kPa = null;
 			er.temperature_C = null;
-		}
-		
-		// Handles specific entries with weird formatting
-		// I know hard-coding this is not preferred, but having this error constantly popping up bothers me!
-		if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			if (er.casrn.contains("13252-14-7")) { er.property_value_point_estimate = 0.01894; }
 		}
 		
 		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units==null)
@@ -246,6 +151,7 @@ public class ParseLookChem extends Parse {
 		} else {
 			er.keep = false;
 		}
+		
 		recordsExperimental.add(er);
 	}
 	

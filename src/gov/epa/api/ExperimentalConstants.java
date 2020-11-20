@@ -20,6 +20,8 @@ public class ExperimentalConstants {
 	public static final String str_g_L="g/L";
 	public static final String str_ug_L="ug/L";
 	public static final String str_ug_mL="ug/mL";
+	public static final String str_g_100mL="g/100mL";
+	public static final String str_mg_100mL="mg/100mL";
 	public static final String str_g_cm3="g/cm3";
 	public static final String str_g_mL="g/mL";
 	public static final String str_C="C";
