@@ -120,14 +120,17 @@ public class ParseLookChem extends Parse {
 
 		boolean foundNumeric = false;
 		if (propertyName==ExperimentalConstants.strDensity) {
-			foundNumeric = getDensity(er, propertyValue);			
+			foundNumeric = getDensity(er, propertyValue);
+			getPressureCondition(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
 				propertyName==ExperimentalConstants.strFlashPoint) {
-			foundNumeric = getTemperatureProperty(er,propertyValue);	
+			foundNumeric = getTemperatureProperty(er,propertyValue);
+			getPressureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			foundNumeric = getWaterSolubility(er, propertyValue);
+			getTemperatureCondition(er,propertyValue);
 			getQualitativeSolubility(er, propertyValue);
-			
 		}
 		
 		// Adds measurement methods and notes to valid records

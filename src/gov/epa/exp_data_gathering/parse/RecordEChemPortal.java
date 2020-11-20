@@ -22,9 +22,22 @@ public class RecordEChemPortal {
 	boolean memberOfCategory;
 	String participant;
 	String section;
-	String values;
+	String url;
+	String reliability;
+	String method;
+	Vector<String> values;
+	Vector<String> pressure;
+	Vector<String> temperature;
+	Vector<String> pH;
 	
 	static final String sourceName = ExperimentalConstants.strSourceEChem;
+	
+	private RecordEChemPortal() {
+		values = new Vector<String>();
+		pressure = new Vector<String>();
+		temperature = new Vector<String>();
+		pH = new Vector<String>();
+	}
 	
 	public static Vector<RecordEChemPortal> parseEChemPortalQueryFromExcel() {
 		Vector<RecordEChemPortal> records = new Vector<RecordEChemPortal>();
@@ -43,14 +56,16 @@ public class RecordEChemPortal {
 					for (int i = 1; i < rows; i++) {
 						RecordEChemPortal ecpr = new RecordEChemPortal();
 						Row row = sheet.getRow(i);
-						ecpr.substanceName = row.getCell(0).getStringCellValue();
+						ecpr.substanceName = new String(row.getCell(0).getStringCellValue().getBytes("UTF-8"));
 						ecpr.nameType = row.getCell(1).getStringCellValue();
 						ecpr.number = row.getCell(2).getStringCellValue();
 						ecpr.numberType = row.getCell(3).getStringCellValue();
 						ecpr.memberOfCategory = row.getCell(4).getBooleanCellValue();
 						ecpr.participant = row.getCell(5).getStringCellValue();
 						ecpr.section = row.getCell(6).getStringCellValue();
-						ecpr.values = row.getCell(7).getStringCellValue();
+						if (ecpr.section.equals("Melting point / freezing point")) { ecpr.section = "Melting / freezing point"; }
+						ecpr.url = row.getCell(6).getHyperlink().getAddress();
+						ecpr.getValues(new String(row.getCell(7).getStringCellValue().getBytes("UTF-8")));
 						records.add(ecpr);
 					}
 					wb.close();
@@ -62,11 +77,24 @@ public class RecordEChemPortal {
 		return records;
 	}
 	
-	public static void main(String[] args) {
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		Vector<RecordEChemPortal> records = parseEChemPortalQueryFromExcel();
-		for (RecordEChemPortal record:records) {
-			System.out.println(gson.toJson(record));
+	private void getValues(String cellValues) {
+		String[] entryArray = cellValues.split("\n");
+		for (String entry:entryArray) {
+			if (entry!=null && entry.contains(":")) {
+				entry = entry.trim();
+				String data = entry.substring(entry.indexOf(":")+1).trim();
+				if (entry.startsWith("Reliability")) { reliability = data;
+				} else if (entry.startsWith("Type of method")) { method = data;
+				} else if (entry.startsWith(section+", "+section.split(" ")[0]) || entry.startsWith(section+", pKa")) { values.add(data);
+				} else if (entry.startsWith(section+", Atm. press.")) { pressure.add(data);
+				} else if (entry.startsWith(section+", Temp.")) { temperature.add(data);
+				} else if (entry.startsWith(section+", pH")) { pH.add(data);
+				}
+			}
 		}
+	}
+	
+	public static void main(String[] args) {
+		// TODO
 	}
 }

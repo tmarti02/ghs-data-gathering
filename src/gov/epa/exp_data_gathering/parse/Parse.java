@@ -409,7 +409,11 @@ public class Parse {
 			builder.setPrettyPrinting();
 			Gson gson = builder.create();
 			
-			FileWriter fw = new FileWriter(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
+			File file = new File(jsonPath);
+			if(!file.getParentFile().exists()) { file.getParentFile().mkdirs(); }
+			
+			FileWriter fw = new FileWriter(jsonPath);
 			String strRecords=gson.toJson(records);
 			
 			strRecords=Parse.fixChars(strRecords);
@@ -437,13 +441,18 @@ public class Parse {
 				foundNumeric = true;
 				int propertyValueIndex;
 				if ((propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
-					if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>') {
+					String checkSymbol = propertyValue.replaceAll(" ","");
+					if (checkSymbol.charAt(propertyValueIndex-1)=='>') {
 						er.property_value_numeric_qualifier = ">";
-					} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<') {
+					} else if (checkSymbol.charAt(propertyValueIndex-1)=='<') {
 						er.property_value_numeric_qualifier = "<";
-					} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='~') {
+					} else if (checkSymbol.charAt(propertyValueIndex-2)=='>' && checkSymbol.charAt(propertyValueIndex-1)=='=') {
+						er.property_value_numeric_qualifier = ">=";
+					} else if (checkSymbol.charAt(propertyValueIndex-2)=='<' && checkSymbol.charAt(propertyValueIndex-1)=='=') {
+						er.property_value_numeric_qualifier = "<=";
+					} else if (checkSymbol.charAt(propertyValueIndex-1)=='~') {
 						er.property_value_numeric_qualifier = "~";
-					}
+					} 
 				}
 			} catch (Exception ex) { }
 		}
@@ -520,8 +529,6 @@ public class Parse {
 			er.updateNote(ExperimentalConstants.str_g_cm3+" assumed");
 		}
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
-		getPressureCondition(er,propertyValue);
-		getTemperatureCondition(er,propertyValue);
 		return foundNumeric;
 	}
 	
@@ -535,10 +542,7 @@ public class Parse {
 			unitsIndex = propertyValue.indexOf(units);
 			badUnits = false;
 		}
-		
 		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
-		getPressureCondition(er,propertyValue);
-		if (propertyValue.contains("closed cup") || propertyValue.contains("c.c.")) { er.measurement_method = "closed cup"; }
 		return foundNumeric;
 	}
 	
@@ -607,7 +611,6 @@ public class Parse {
 		}
 		
 		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
-		getTemperatureCondition(er,propertyValue);
 		return foundNumeric;
 	}
 	
@@ -670,7 +673,6 @@ public class Parse {
 		}
 		
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
-		getTemperatureCondition(er,propertyValue);
 		return foundNumeric;
 	}
 
@@ -691,7 +693,6 @@ public class Parse {
 		int unitsIndex = propertyValue.length();
 		boolean badUnits = false;
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
-		getTemperatureCondition(er,propertyValue);
 		return foundNumeric;
 	}
 	

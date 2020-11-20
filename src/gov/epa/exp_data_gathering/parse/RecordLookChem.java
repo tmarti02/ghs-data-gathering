@@ -268,7 +268,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx",9000,10000,false);
+		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx",11000,15000,false);
 	}
 	
 }

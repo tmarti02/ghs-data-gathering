@@ -119,18 +119,25 @@ public class ParsePubChem extends Parse {
 		propertyValue = propertyValue.replaceAll("less than( or equal to )?", "<");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = getDensity(er,propertyValue);
+			getPressureCondition(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
 				propertyName==ExperimentalConstants.strFlashPoint) {
 			foundNumeric = getTemperatureProperty(er,propertyValue);
+			getPressureCondition(er,propertyValue);
+			if (propertyValue.contains("closed cup") || propertyValue.contains("c.c.")) { er.measurement_method = "closed cup"; }
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			foundNumeric = getWaterSolubility(er, propertyValue);
+			getTemperatureCondition(er,propertyValue);
 			getQualitativeSolubility(er, propertyValue);
 		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
 			foundNumeric = getVaporPressure(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strHenrysLawConstant) {
 			foundNumeric = getHenrysLawConstant(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strLogKow || propertyName==ExperimentalConstants.str_pKA) {
 			foundNumeric = getLogProperty(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
 		}
 		
 		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
