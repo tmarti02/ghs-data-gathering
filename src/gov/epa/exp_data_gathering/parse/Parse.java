@@ -548,31 +548,35 @@ public class Parse {
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
 		if (propertyValue.toLowerCase().contains("mg/l")) {
 			er.property_value_units = ExperimentalConstants.str_mg_L;
-			unitsIndex = propertyValue.indexOf("mg/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("mg/ml")) {
 			er.property_value_units = ExperimentalConstants.str_mg_mL;
-			unitsIndex = propertyValue.indexOf("mg/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("g/ml")) {
+			er.property_value_units = ExperimentalConstants.str_g_mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("ug/l")) {
 			er.property_value_units = ExperimentalConstants.str_ug_L;
-			unitsIndex = propertyValue.indexOf("ug/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("ug/ml")) {
 			er.property_value_units = ExperimentalConstants.str_ug_mL;
-			unitsIndex = propertyValue.indexOf("ug/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/l")) {
 			er.property_value_units = ExperimentalConstants.str_g_L;
-			unitsIndex = propertyValue.indexOf("g/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("mg/100")) {
-			er.property_value_units = ExperimentalConstants.str_g_L;
-			unitsIndex = propertyValue.indexOf("mg/");
+			er.property_value_units = ExperimentalConstants.str_mg_100mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/100")) {
-			er.property_value_units = ExperimentalConstants.str_g_L;
-			unitsIndex = propertyValue.indexOf("g/");
+			er.property_value_units = ExperimentalConstants.str_g_100mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("% w/w") || propertyValue.toLowerCase().contains("wt%")) {
 			er.property_value_units = ExperimentalConstants.str_pctWt;
@@ -584,7 +588,7 @@ public class Parse {
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("ppm")) {
 			er.property_value_units = ExperimentalConstants.str_ppm;
-			unitsIndex = propertyValue.indexOf("ppm");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
 			badUnits = false;
 		} else if (propertyValue.contains("M")) {
 			unitsIndex = propertyValue.indexOf("M");
@@ -594,7 +598,7 @@ public class Parse {
 			}
 		} 
 		
-		if (propertyValue.contains(":")) {
+		if (propertyValue.contains(":") && unitsIndex <= 0) {
 			unitsIndex = propertyValue.length();
 		}
 		
