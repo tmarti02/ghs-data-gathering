@@ -2,7 +2,6 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.text.SimpleDateFormat;
@@ -14,7 +13,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipOutputStream;
 import java.util.Random;
 
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -65,15 +63,15 @@ public class Parse {
 	Gson gson=null;
 
 	public void init() {
-		fileNameJSON_Records = sourceName +" Records.json";
+		fileNameJSON_Records = sourceName +" Original Records.json";
 		fileNameFlatExperimentalRecords = sourceName +" Experimental Records.txt";
 		fileNameFlatExperimentalRecordsBad = sourceName +" Experimental Records-Bad.txt";
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
 		fileNameJsonExperimentalRecordsBad = sourceName +" Experimental Records-Bad.json";
 		fileNameExcelExperimentalRecords = sourceName +" Experimental Records.xlsx";
 		mainFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
-		databaseFolder = mainFolder + File.separator + "databases";
-		jsonFolder= mainFolder + File.separator + "json files";
+		databaseFolder = mainFolder;
+		jsonFolder= mainFolder;
 		webpageFolder = mainFolder + File.separator + "web pages";
 		folderNameExcel=mainFolder + File.separator + "excel files";
 		
@@ -200,7 +198,6 @@ public class Parse {
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
 		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
-		Random rand = new Random();
 		
 		try {
 			int counterSuccess = 0;
@@ -435,13 +432,13 @@ public class Parse {
 				sciMatcher.find();
 				String strMantissa = sciMatcher.group(1);
 				String strMagnitude = sciMatcher.group(3);
-				Double mantissa = Double.parseDouble(strMantissa.replaceAll(" ",""));
-				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll(" ", "").replaceAll("\\+", ""));
+				Double mantissa = Double.parseDouble(strMantissa.replaceAll("\\s",""));
+				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll("\\s","").replaceAll("\\+", ""));
 				er.property_value_point_estimate_original = mantissa*Math.pow(10, magnitude);
 				foundNumeric = true;
 				int propertyValueIndex;
 				if ((propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
-					String checkSymbol = propertyValue.replaceAll(" ","");
+					String checkSymbol = propertyValue.replaceAll("\\s","");
 					if (checkSymbol.charAt(propertyValueIndex-1)=='>') {
 						er.property_value_numeric_qualifier = ">";
 					} else if (checkSymbol.charAt(propertyValueIndex-1)=='<') {
@@ -482,16 +479,21 @@ public class Parse {
 		if (!foundNumeric) {
 			try {
 				double propertyValueAsDouble = Parse.extractDoubleFromString(propertyValue,unitsIndex);
-				int propertyValueIndex = propertyValue.replaceAll(" ","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
+				int propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
 				if (!badUnits) {
 					er.property_value_point_estimate_original = propertyValueAsDouble;
 					foundNumeric = true;
 					if (propertyValueIndex > 0) {
-						if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='>' || propertyValue.toLowerCase().contains("greater than")) {
+						String checkSymbol = propertyValue.replaceAll("\\s","");
+						if (checkSymbol.charAt(propertyValueIndex-1)=='>') {
 							er.property_value_numeric_qualifier = ">";
-						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='<' || propertyValue.toLowerCase().contains("less than")) {
+						} else if (checkSymbol.charAt(propertyValueIndex-1)=='<') {
 							er.property_value_numeric_qualifier = "<";
-						} else if (propertyValue.replaceAll(" ","").charAt(propertyValueIndex-1)=='~') {
+						} else if (checkSymbol.charAt(propertyValueIndex-2)=='>' && checkSymbol.charAt(propertyValueIndex-1)=='=') {
+							er.property_value_numeric_qualifier = ">=";
+						} else if (checkSymbol.charAt(propertyValueIndex-2)=='<' && checkSymbol.charAt(propertyValueIndex-1)=='=') {
+							er.property_value_numeric_qualifier = "<=";
+						} else if (checkSymbol.charAt(propertyValueIndex-1)=='~') {
 							er.property_value_numeric_qualifier = "~";
 						}
 					}
@@ -573,17 +575,17 @@ public class Parse {
 			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/ml")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+		} else if (propertyValue.toLowerCase().contains("ug/ml")) {
+			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("ug/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ug/ml")) {
-			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
+		} else if (propertyValue.toLowerCase().contains("g/ml")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_L;
@@ -617,11 +619,11 @@ public class Parse {
 			}
 		} 
 		
-		if (propertyValue.contains(":") && unitsIndex <= 0) {
+		if (unitsIndex < propertyValue.indexOf(":")) {
 			unitsIndex = propertyValue.length();
 		}
 		
-		if (!badUnits && Character.isAlphabetic(propertyValue.charAt(0)) && !propertyValue.contains("water")) {
+		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.contains("water") || propertyValue.contains("h2o"))) {
 			er.keep = false;
 		}
 		
@@ -633,17 +635,17 @@ public class Parse {
 		propertyValue = propertyValue.toLowerCase();
 		String solventMatcherStr = "";
 		if (sourceName.equals(ExperimentalConstants.strSourceLookChem)) {
-			solventMatcherStr = "(([a-zA-Z0-9\s-]+?)(\\.|\\z| and|[ ]?\\(|;))?";
+			solventMatcherStr = "(([a-zA-Z0-9\s-]+)(,|\\.|\\z|[ ]?\\(|;))?";
 		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
-			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| at| and only|\\(|;))?";
+			solventMatcherStr = "(([a-zA-Z0-9\s,-]+)(\\.|\\z| at| and only|\\(|;))?";
 		}
-		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ])?([a-zA-Z]+y[ ])?(in|im)?(so[l]?uble|miscible))( (in|with) )?[ \\.]*"+solventMatcherStr).matcher(propertyValue);
+		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?uble|miscible))( (in|with) )[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
 		while (solubilityMatcher.find()) {
 			String qualifier = solubilityMatcher.group(1);
 			qualifier = qualifier.equals("souble") ? "soluble" : qualifier;
 			String prep = solubilityMatcher.group(6);
 			String solvent = solubilityMatcher.group(9);
-			if (solvent==null || solvent.length()==0 || solvent.equals("water")) {
+			if (solvent==null || solvent.length()==0 || solvent.contains("water")) {
 				er.property_value_qualitative = qualifier;
 			} else {
 				prep = prep==null ? " " : prep;
@@ -655,11 +657,27 @@ public class Parse {
 			er.property_value_qualitative = "reaction";
 		}
 		
-		String[] qualifiers = {"hydrolysis","decomposes","none","poor","low","negligible"};
+		if (propertyValue.contains("hydrolysis") || propertyValue.contains("hydrolyse") || propertyValue.contains("hydrolyze")) {
+			er.property_value_qualitative = "hydrolysis";
+		}
+		
+		if (propertyValue.contains("decompos")) {
+			er.property_value_qualitative = "decomposes";
+		}
+		
+		if (propertyValue.contains("autoignition")) {
+			er.property_value_qualitative = "autoignition";
+		}
+		
+		String[] qualifiers = {"none","very poor","poor","low","negligible","slight","significant","complete"};
 		for (String qual:qualifiers) {
 			if ((propertyValue.startsWith(qual) || (propertyValue.contains("solubility in water") && propertyValue.contains(qual))) && er.property_value_qualitative==null) {
 				er.property_value_qualitative = qual;
 			}
+		}
+		
+		if (er.property_value_qualitative!=null) {
+			er.keep = true;
 		}
 	}
 
@@ -667,17 +685,17 @@ public class Parse {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
-		if (propertyValue.toLowerCase().contains("mmhg") || propertyValue.toLowerCase().contains("mm hg")) {
+		if (propertyValue.toLowerCase().contains("kpa")) {
+			er.property_value_units_original = ExperimentalConstants.str_kpa;
+			unitsIndex = propertyValue.toLowerCase().indexOf("kpa");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mmhg") || propertyValue.toLowerCase().contains("mm hg")) {
 			er.property_value_units_original = ExperimentalConstants.str_mmHg;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mm");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("atm")) {
 			er.property_value_units_original = ExperimentalConstants.str_atm;
 			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("kpa")) {
-			er.property_value_units_original = ExperimentalConstants.str_kpa;
-			unitsIndex = propertyValue.toLowerCase().indexOf("kpa");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("hpa")) {
 			er.property_value_units_original = ExperimentalConstants.str_hpa;
@@ -710,7 +728,7 @@ public class Parse {
 		if (propertyValue.contains(":")) {
 			unitsIndex = propertyValue.length();
 		}
-		
+
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
 	}
@@ -718,9 +736,13 @@ public class Parse {
 	static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
-		if (propertyValue.toLowerCase().contains("atm-m3/mole")) {
-			er.property_value_units_original = ExperimentalConstants.str_m3_atm_mol;
-			unitsIndex = propertyValue.indexOf("atm");
+		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol")) {
+			er.property_value_units_original = ExperimentalConstants.str_atm_m3_mol;
+			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("pa m³/mol")) {
+			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
+			unitsIndex = propertyValue.toLowerCase().indexOf("pa");
 			badUnits = false;
 		}
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);

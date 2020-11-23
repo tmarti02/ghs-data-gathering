@@ -68,7 +68,7 @@ public class ParseEChemPortal extends Parse {
 					getTemperatureProperty(er,propertyValue);
 				} else if (ecpr.section.equals("Water solubility")) {
 					er.property_name = ExperimentalConstants.strWaterSolubility;
-					getWaterSolubility(er,ecpr.values.get(i));
+					getWaterSolubility(er,propertyValue);
 				} else if (ecpr.section.equals("Vapour pressure")) {
 					er.property_name = ExperimentalConstants.strVaporPressure;
 					getVaporPressure(er,propertyValue);
@@ -78,7 +78,11 @@ public class ParseEChemPortal extends Parse {
 				} else if (ecpr.section.equals("Dissociation constant")) {
 					er.property_name = ExperimentalConstants.str_pKA;
 					getLogProperty(er,propertyValue);
+				} else if (ecpr.section.equals("Henry's Law constant")) {
+					er.property_name = ExperimentalConstants.strHenrysLawConstant;
+					getHenrysLawConstant(er,propertyValue);
 				}
+				er.finalizeUnits();
 				er.keep = true;
 				records.add(er);
 			}

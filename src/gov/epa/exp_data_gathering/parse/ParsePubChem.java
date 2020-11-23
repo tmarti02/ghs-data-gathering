@@ -3,11 +3,6 @@ package gov.epa.exp_data_gathering.parse;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 
@@ -151,6 +146,7 @@ public class ParsePubChem extends Parse {
 		er.flag = false;
 		if (propertyValue.contains("?")) { er.flag = true; }
 		
+		if (foundNumeric) { er.finalizeUnits(); }
 		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep!=false) {
 			er.keep = true;
 		} else {

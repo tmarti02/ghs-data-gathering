@@ -14,7 +14,6 @@ import java.util.Vector;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import gov.epa.api.AADashboard;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.JSONsForPubChem.*;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
@@ -74,6 +73,7 @@ public class RecordPubChem {
 				String[] cells=line.split(",");
 				dict.put(cells[0], cells[1]);
 			}
+			br.close();
 			
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -135,7 +135,6 @@ public class RecordPubChem {
 			int counterTotal = 0;
 			int counterNew = 0;
 			int counterMissingExpData = 0;
-			int counterMissingCAS = 0;
 			for (String cid:cids) {
 				String experimentalURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/"+cid+"/JSON?heading=Experimental+Properties";
 				String idURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid="+cid;
@@ -196,7 +195,7 @@ public class RecordPubChem {
 	}
 	
 	protected static Vector<RecordPubChem> parseJSONsInDatabase() {
-		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "databases";
+		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_json.db";
 		Vector<RecordPubChem> records = new Vector<>();
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
@@ -217,10 +216,12 @@ public class RecordPubChem {
 				pcr.smiles = identifierProperty.canonicalSMILES;
 				String cas = rs.getString("cas");
 				Data casData = gson.fromJson(cas, Data.class);
-				List<Information> casInfo = casData.record.section.get(0).section.get(0).section.get(0).information;
-				for (Information c:casInfo) {
-					String newCAS = c.value.stringWithMarkup.get(0).string;
-					if (!pcr.cas.contains(newCAS)) { pcr.cas.add(newCAS); }
+				if (casData!=null) {
+					List<Information> casInfo = casData.record.section.get(0).section.get(0).section.get(0).information;
+					for (Information c:casInfo) {
+						String newCAS = c.value.stringWithMarkup.get(0).string;
+						if (!pcr.cas.contains(newCAS)) { pcr.cas.add(newCAS); }
+					}
 				}
 				pcr.synonyms = rs.getString("synonyms").replaceAll("\r\n","|");
 				records.add(pcr);

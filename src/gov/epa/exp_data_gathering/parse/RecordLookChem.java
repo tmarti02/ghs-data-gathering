@@ -72,7 +72,7 @@ public class RecordLookChem {
 
 		ParseLookChem p = new ParseLookChem();
 		p.mainFolder = p.mainFolder + File.separator + "General";
-		p.databaseFolder = p.mainFolder + File.separator + "databases";
+		p.databaseFolder = p.mainFolder;
 		p.downloadWebpagesToDatabaseAdaptive(urls,"reir_l_info_table",sourceName,startFresh);		
 	}
 	
@@ -97,31 +97,31 @@ public class RecordLookChem {
 		return urls;
 	}
 	
-	/**
-	 * Parses an HTML file to a RecordLookChem object and prints it out in JSON format
-	 * Unused in final code - for output checking and debugging
-	 * @param file	The HTML file to parse
-	 * @return		A RecordLookChem object containing the data from the HTML file
-	 */
-	private static RecordLookChem parseWebpage(File file) {
-		RecordLookChem lcr = new RecordLookChem();
-		
-		try {
-			lcr.fileName = file.getName();
-			Document doc = Jsoup.parse(file, "UTF-8");
-			
-			parseDocument(lcr,doc);
-			
-			GsonBuilder builder = new GsonBuilder();
-			builder.setPrettyPrinting();
-			Gson gson = builder.create();
-			System.out.println(gson.toJson(lcr));
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-		return lcr;
-	}
+//	/**
+//	 * Parses an HTML file to a RecordLookChem object and prints it out in JSON format
+//	 * Unused in final code - for output checking and debugging
+//	 * @param file	The HTML file to parse
+//	 * @return		A RecordLookChem object containing the data from the HTML file
+//	 */
+//	private static RecordLookChem parseWebpage(File file) {
+//		RecordLookChem lcr = new RecordLookChem();
+//		
+//		try {
+//			lcr.fileName = file.getName();
+//			Document doc = Jsoup.parse(file, "UTF-8");
+//			
+//			parseDocument(lcr,doc);
+//			
+//			GsonBuilder builder = new GsonBuilder();
+//			builder.setPrettyPrinting();
+//			Gson gson = builder.create();
+//			System.out.println(gson.toJson(lcr));
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//		}
+//		
+//		return lcr;
+//	}
 	
 	/**
 	 * Parses a single zipped HTML file to a RecordLookChem object
@@ -192,7 +192,7 @@ public class RecordLookChem {
 	 * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
 	 */
 	public static Vector<RecordLookChem> parseWebpagesInDatabase() {
-		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General" + File.separator + "databases";
+		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		Vector<RecordLookChem> records = new Vector<>();
 
@@ -266,7 +266,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx",20000,25000,false);
+		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx",30000,40000,false);
 	}
 	
 }

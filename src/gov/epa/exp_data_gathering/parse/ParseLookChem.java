@@ -2,7 +2,6 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileReader;
-import java.util.Iterator;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
@@ -138,6 +137,7 @@ public class ParseLookChem extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		if (foundNumeric) {
+			er.finalizeUnits();
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
@@ -163,8 +163,8 @@ public class ParseLookChem extends Parse {
 	public static void main(String[] args) {
 		ParseLookChem p = new ParseLookChem();
 		p.mainFolder = p.mainFolder + File.separator + "General";
-		p.databaseFolder = p.mainFolder + File.separator + "databases";
-		p.jsonFolder= p.mainFolder + File.separator + "json files";
+		p.databaseFolder = p.mainFolder;
+		p.jsonFolder= p.mainFolder;
 		p.createFiles();
 	}
 }

@@ -31,7 +31,8 @@ public class ExperimentalConstants {
 	public static final String str_pctWt="%w";
 	public static final String str_pct="%";
 	public static final String str_ppm="ppm";
-	public static final String str_m3_atm_mol="m3-atm/mol";
+	public static final String str_atm_m3_mol="atm-m3/mol";
+	public static final String str_Pa_m3_mol="Pa-m3/mol";
 	public static final String str_mmHg="mmHg";
 	public static final String str_atm="atm";
 	public static final String str_kpa="kPa";

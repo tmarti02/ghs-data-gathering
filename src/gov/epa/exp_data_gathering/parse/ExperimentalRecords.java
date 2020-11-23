@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Vector;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -17,6 +16,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.google.gson.Gson;
@@ -116,27 +116,25 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		Row recHeaderRow = recSheet.createRow(1);
 		Row badSubtotalRow = badSheet.createRow(0);
 		Row badHeaderRow = badSheet.createRow(1);
-		String[] subtotals = {"SUBTOTAL(3,D$3:D$100000)","SUBTOTAL(3,E$3:E$100000)","SUBTOTAL(3,F$3:F$100000)","SUBTOTAL(3,G$3:G$100000)",
-				"SUBTOTAL(3,H$3:H$100000)","SUBTOTAL(3,I$3:I$100000)","SUBTOTAL(3,J$3:J$100000)","SUBTOTAL(3,K$3:K$100000)",
-				"SUBTOTAL(3,L$3:L$100000)","SUBTOTAL(3,M$3:M$100000)","SUBTOTAL(3,N$3:N$100000)","SUBTOTAL(3,O$3:O$100000)"};
-		String[] recHeaders = {"casrn","chemical_name","property_name","property_value_string","property_value_numeric_qualifier","property_value_point_estimate",
-				"property_value_min","property_value_max","property_value_units","pressure_kPa","temperature_C","property_value_qualitative","measurement_method",
-				"note","flag"};
-		String[] badHeaders = Arrays.copyOfRange(recHeaders,0,4);
+		String[] headers = {"casrn","einecs","chemical_name","property_name","property_value_string","property_value_numeric_qualifier",
+				"property_value_point_estimate_final","property_value_min_final","property_value_max_final","property_value_units_final","pressure_kPa","temperature_C",
+				"property_value_qualitative","measurement_method","note","flag"};
 		CellStyle style = wb.createCellStyle();
 		Font font = wb.createFont();
 		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
 		style.setFont(font);
-		for (int i = 0; i < recHeaders.length; i++) {
+		for (int i = 0; i < headers.length; i++) {
 			Cell recCell = recHeaderRow.createCell(i);
-			recCell.setCellValue(recHeaders[i]);
+			recCell.setCellValue(headers[i]);
 			recCell.setCellStyle(style);
-			if (i >= 3) { recSubtotalRow.createCell(i).setCellFormula(subtotals[i-3]); }
-			if (i < badHeaders.length) {
+			String col = CellReference.convertNumToColString(i);
+			String subtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(size+3)+")";
+			if (i >= 3) { recSubtotalRow.createCell(i).setCellFormula(subtotal); }
+			if (i < 5) {
 				Cell badCell = badHeaderRow.createCell(i);
-				badCell.setCellValue(badHeaders[i]);
+				badCell.setCellValue(headers[i]);
 				badCell.setCellStyle(style);
-				if (i >= 3) { badSubtotalRow.createCell(i).setCellFormula(subtotals[i-3]); }
+				if (i >= 3) { badSubtotalRow.createCell(i).setCellFormula(subtotal); }
 			}
 		}
 		int recCurrentRow = 2;
@@ -147,8 +145,8 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 				if (er.keep) {
 					Row recRow = recSheet.createRow(recCurrentRow);
 					recCurrentRow++;
-					for (int i = 0; i < recHeaders.length; i++) {
-						Field field = erClass.getDeclaredField(recHeaders[i]);
+					for (int i = 0; i < headers.length; i++) {
+						Field field = erClass.getDeclaredField(headers[i]);
 						Object value = field.get(er);
 						if (value!=null && !(value instanceof Double)) { recRow.createCell(i).setCellValue(value.toString());
 						} else if (value!=null) { recRow.createCell(i).setCellValue((double) value); }
@@ -156,8 +154,8 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 				} else {
 					Row badRow = badSheet.createRow(badCurrentRow);
 					badCurrentRow++;
-					for (int i = 0; i < badHeaders.length; i++) {
-						Field field = erClass.getDeclaredField(badHeaders[i]);
+					for (int i = 0; i < 5; i++) {
+						Field field = erClass.getDeclaredField(headers[i]);
 						Object value = field.get(er);
 						if (value!=null && !(value instanceof Double)) { badRow.createCell(i).setCellValue(value.toString());
 						} else if (value!=null) { badRow.createCell(i).setCellValue((double) value); }
@@ -174,6 +172,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		try {
 			OutputStream fos = new FileOutputStream(filePath);
 			wb.write(fos);
+			wb.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
