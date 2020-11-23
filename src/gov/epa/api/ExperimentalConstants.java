@@ -23,9 +23,11 @@ public class ExperimentalConstants {
 	public static final String str_g_100mL="g/100mL";
 	public static final String str_mg_100mL="mg/100mL";
 	public static final String str_g_cm3="g/cm3";
+	public static final String str_kg_m3="kg/m3";
 	public static final String str_g_mL="g/mL";
 	public static final String str_C="C";
 	public static final String str_F="F";
+	public static final String str_K="K";
 	public static final String str_pctWt="%w";
 	public static final String str_pct="%";
 	public static final String str_ppm="ppm";
@@ -33,6 +35,12 @@ public class ExperimentalConstants {
 	public static final String str_mmHg="mmHg";
 	public static final String str_atm="atm";
 	public static final String str_kpa="kPa";
+	public static final String str_hpa="hPa";
+	public static final String str_pa="Pa";
+	public static final String str_mbar="mbar";
+	public static final String str_bar="bar";
+	public static final String str_torr="Torr";
+	public static final String str_psi="psi";
 	public static final String str_M="M";
 	
 	//Other:

@@ -245,30 +245,28 @@ public class RecordLookChem {
 					String header = row.getElementsByTag("th").text();
 					String data = row.getElementsByTag("td").text();
 					// Will need to check & adjust these conditions as necessary if other pages formatted differently
-					if (data != null && !data.isBlank()) {
-						if (header.contains("CAS No")) { lcr.CAS = data;
-						} else if (header.contains("Name")) { lcr.chemicalName = data;
-						} else if (header.contains("Formula")) { lcr.formula = data;
-						} else if (header.contains("Molecular Weight")) { lcr.molecularWeight = data;
-						} else if (header.contains("Synonyms")) { lcr.synonyms = data;
-						} else if (header.contains("EINECS")) { lcr.EINECS = data;
-						} else if (header.contains("Density")) { lcr.density = data;
-						} else if (header.contains("Melting Point")) { lcr.meltingPoint = data;
-						} else if (header.contains("Boiling Point")) { lcr.boilingPoint = data;
-						} else if (header.contains("Flash Point")) { lcr.flashPoint = data;
-						} else if (header.contains("Solubility")) {	lcr.solubility = data;
-						} else if (header.contains("Appearance")) { lcr.appearance = data;
-						} else if (header.contains("Risk Codes")) { lcr.riskCodes = data;
-						} else if (header.contains("Safety")) { lcr.safety = data;
-						} else if (header.contains("Transport Information")) { lcr.transportInformation = data; }
-					}
+					if (header.contains("CAS No")) { lcr.CAS = data;
+					} else if (header.contains("Name")) { lcr.chemicalName = data;
+					} else if (header.contains("Formula")) { lcr.formula = data;
+					} else if (header.contains("Molecular Weight")) { lcr.molecularWeight = data;
+					} else if (header.contains("Synonyms")) { lcr.synonyms = data;
+					} else if (header.contains("EINECS")) { lcr.EINECS = data;
+					} else if (header.contains("Density")) { lcr.density = data;
+					} else if (header.contains("Melting Point")) { lcr.meltingPoint = data;
+					} else if (header.contains("Boiling Point")) { lcr.boilingPoint = data;
+					} else if (header.contains("Flash Point")) { lcr.flashPoint = data;
+					} else if (header.contains("Solubility")) {	lcr.solubility = data;
+					} else if (header.contains("Appearance")) { lcr.appearance = data;
+					} else if (header.contains("Risk Codes")) { lcr.riskCodes = data;
+					} else if (header.contains("Safety")) { lcr.safety = data;
+					} else if (header.contains("Transport Information")) { lcr.transportInformation = data; }
 				}
 			}
 		}
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx",11000,15000,false);
+		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx",20000,25000,false);
 	}
 	
 }

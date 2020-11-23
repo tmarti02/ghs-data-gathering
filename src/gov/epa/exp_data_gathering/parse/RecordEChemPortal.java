@@ -56,16 +56,16 @@ public class RecordEChemPortal {
 					for (int i = 1; i < rows; i++) {
 						RecordEChemPortal ecpr = new RecordEChemPortal();
 						Row row = sheet.getRow(i);
-						ecpr.substanceName = new String(row.getCell(0).getStringCellValue().getBytes("UTF-8"));
-						ecpr.nameType = row.getCell(1).getStringCellValue();
-						ecpr.number = row.getCell(2).getStringCellValue();
-						ecpr.numberType = row.getCell(3).getStringCellValue();
+						ecpr.substanceName = new String(row.getCell(0).getStringCellValue().trim().getBytes("UTF-8"));
+						ecpr.nameType = row.getCell(1).getStringCellValue().trim();
+						ecpr.number = row.getCell(2).getStringCellValue().trim();
+						ecpr.numberType = row.getCell(3).getStringCellValue().trim();
 						ecpr.memberOfCategory = row.getCell(4).getBooleanCellValue();
-						ecpr.participant = row.getCell(5).getStringCellValue();
-						ecpr.section = row.getCell(6).getStringCellValue();
+						ecpr.participant = row.getCell(5).getStringCellValue().trim();
+						ecpr.section = row.getCell(6).getStringCellValue().trim();
 						if (ecpr.section.equals("Melting point / freezing point")) { ecpr.section = "Melting / freezing point"; }
 						ecpr.url = row.getCell(6).getHyperlink().getAddress();
-						ecpr.getValues(new String(row.getCell(7).getStringCellValue().getBytes("UTF-8")));
+						ecpr.getValues(new String(row.getCell(7).getStringCellValue().trim().getBytes("UTF-8")));
 						records.add(ecpr);
 					}
 					wb.close();
@@ -82,7 +82,7 @@ public class RecordEChemPortal {
 		for (String entry:entryArray) {
 			if (entry!=null && entry.contains(":")) {
 				entry = entry.trim();
-				String data = entry.substring(entry.indexOf(":")+1).trim();
+				String data = entry.substring(entry.indexOf(":")+1).trim().replaceAll("Â","").replaceAll("â€”","-");
 				if (entry.startsWith("Reliability")) { reliability = data;
 				} else if (entry.startsWith("Type of method")) { method = data;
 				} else if (entry.startsWith(section+", "+section.split(" ")[0]) || entry.startsWith(section+", pKa")) { values.add(data);

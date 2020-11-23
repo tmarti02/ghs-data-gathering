@@ -161,13 +161,8 @@ public class RecordPubChem {
 					if (keepLooking) {
 						try {
 							rec.cas=FileUtilities.getText_UTF8(casURL).replace("'", "''");
-						} catch (Exception ex) {
-							counterMissingCAS++;
-							keepLooking = false;
-						}
-					}
-					Thread.sleep(200);
-					if (keepLooking) {
+						} catch (Exception ex) { }
+						Thread.sleep(200);
 						try {
 							rec.identifiers=FileUtilities.getText_UTF8(idURL).replace("'", "''");
 						} catch (Exception ex) { }
@@ -178,7 +173,7 @@ public class RecordPubChem {
 						Thread.sleep(200);
 					}
 					counterNew++;
-					if (rec.experimental!=null && !rec.experimental.isBlank() && rec.cas!=null && !rec.cas.isBlank()) {
+					if (rec.experimental!=null && !rec.experimental.isBlank()) {
 						rec.addRecordToDatabase(tableName, conn);
 						counterSuccess++;
 					}
@@ -187,7 +182,6 @@ public class RecordPubChem {
 						System.out.println("New: "+counterNew);
 						System.out.println("Succeeded: "+counterSuccess);
 						System.out.println("Failed - no experimental properties: "+counterMissingExpData);
-						System.out.println("Failed - no CAS: "+counterMissingCAS);
 						System.out.println("~~~~~~~~~~");
 					}
 				}
@@ -196,7 +190,6 @@ public class RecordPubChem {
 			System.out.println("New: "+counterNew);
 			System.out.println("Succeeded: "+counterSuccess);
 			System.out.println("Failed - no experimental properties: "+counterMissingExpData);
-			System.out.println("Failed - no CAS: "+counterMissingCAS);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

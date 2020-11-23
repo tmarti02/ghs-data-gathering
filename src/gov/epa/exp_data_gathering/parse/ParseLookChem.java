@@ -76,6 +76,7 @@ public class ParseLookChem extends Parse {
 	private static void addAppearanceRecord(RecordLookChem lcr,ExperimentalRecords records) {
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.casrn=lcr.CAS;
+		er.einecs=lcr.EINECS;
 		er.chemical_name=lcr.chemicalName;
 		if (lcr.synonyms != null) { er.synonyms=lcr.synonyms.replace(';','|'); }
 		er.property_name=ExperimentalConstants.strAppearance;
@@ -106,6 +107,7 @@ public class ParseLookChem extends Parse {
 		// Creates a new ExperimentalRecord object and sets all the fields that do not require advanced parsing
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.casrn=lcr.CAS;
+		er.einecs=lcr.EINECS;
 		er.chemical_name=lcr.chemicalName;
 		if (lcr.synonyms != null) { er.synonyms=lcr.synonyms.replace(';','|'); }
 		er.property_name=propertyName;
@@ -143,13 +145,13 @@ public class ParseLookChem extends Parse {
 			er.flag = false;
 			if (propertyName.contains("?")) { er.flag = true; }
 		} else {
-			er.property_value_units = null;
+			er.property_value_units_original = null;
 			er.pressure_kPa = null;
 			er.temperature_C = null;
 		}
 		
-		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units==null)
-				&& (er.property_value_units!=null || er.property_value_qualitative!=null || er.note!=null)) {
+		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
+				&& (er.property_value_units_original!=null || er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
 		} else {
 			er.keep = false;
