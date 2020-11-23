@@ -24,6 +24,7 @@ public class ExperimentalRecord {
 	String property_value_qualitative;// Valid qualitative data: solubility descriptor, appearance
 	Double temperature_C;//The temperature in C that the property is measured at (vapor pressure might be given at 23 C for example)
 	Double pressure_kPa;//The pressure in kPa that the property is measured at (important for boiling points for example)
+	String pH;
 	String measurement_method;//	The experimental method used to measure the property
 	String note;//	Any additional note
 

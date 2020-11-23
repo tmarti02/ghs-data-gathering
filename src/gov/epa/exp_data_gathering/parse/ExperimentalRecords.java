@@ -118,7 +118,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		Row badHeaderRow = badSheet.createRow(1);
 		String[] headers = {"casrn","einecs","chemical_name","property_name","property_value_string","property_value_numeric_qualifier",
 				"property_value_point_estimate_final","property_value_min_final","property_value_max_final","property_value_units_final","pressure_kPa","temperature_C",
-				"property_value_qualitative","measurement_method","note","flag"};
+				"pH","property_value_qualitative","measurement_method","note","flag","url"};
 		CellStyle style = wb.createCellStyle();
 		Font font = wb.createFont();
 		font.setBoldweight(Font.BOLDWEIGHT_BOLD);

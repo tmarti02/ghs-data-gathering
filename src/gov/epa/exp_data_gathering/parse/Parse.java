@@ -439,17 +439,7 @@ public class Parse {
 				int propertyValueIndex;
 				if ((propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
 					String checkSymbol = propertyValue.replaceAll("\\s","");
-					if (checkSymbol.charAt(propertyValueIndex-1)=='>') {
-						er.property_value_numeric_qualifier = ">";
-					} else if (checkSymbol.charAt(propertyValueIndex-1)=='<') {
-						er.property_value_numeric_qualifier = "<";
-					} else if (checkSymbol.charAt(propertyValueIndex-2)=='>' && checkSymbol.charAt(propertyValueIndex-1)=='=') {
-						er.property_value_numeric_qualifier = ">=";
-					} else if (checkSymbol.charAt(propertyValueIndex-2)=='<' && checkSymbol.charAt(propertyValueIndex-1)=='=') {
-						er.property_value_numeric_qualifier = "<=";
-					} else if (checkSymbol.charAt(propertyValueIndex-1)=='~') {
-						er.property_value_numeric_qualifier = "~";
-					} 
+					er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
 				}
 			} catch (Exception ex) { }
 		}
@@ -485,22 +475,28 @@ public class Parse {
 					foundNumeric = true;
 					if (propertyValueIndex > 0) {
 						String checkSymbol = propertyValue.replaceAll("\\s","");
-						if (checkSymbol.charAt(propertyValueIndex-1)=='>') {
-							er.property_value_numeric_qualifier = ">";
-						} else if (checkSymbol.charAt(propertyValueIndex-1)=='<') {
-							er.property_value_numeric_qualifier = "<";
-						} else if (checkSymbol.charAt(propertyValueIndex-2)=='>' && checkSymbol.charAt(propertyValueIndex-1)=='=') {
-							er.property_value_numeric_qualifier = ">=";
-						} else if (checkSymbol.charAt(propertyValueIndex-2)=='<' && checkSymbol.charAt(propertyValueIndex-1)=='=') {
-							er.property_value_numeric_qualifier = "<=";
-						} else if (checkSymbol.charAt(propertyValueIndex-1)=='~') {
-							er.property_value_numeric_qualifier = "~";
-						}
+						er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
 					}
 				}
 			} catch (Exception ex) { }
 		}
 		return foundNumeric;
+	}
+	
+	static String getNumericQualifier(String str,int index) {
+		String symbol = "";
+		if (str.charAt(index-1)=='>') {
+			symbol = ">";
+		} else if (str.charAt(index-1)=='<') {
+			symbol = "<";
+		} else if (str.charAt(index-2)=='>' && str.charAt(index-1)=='=') {
+			symbol = ">=";
+		} else if (str.charAt(index-2)=='<' && str.charAt(index-1)=='=') {
+			symbol = "<=";
+		} else if (str.charAt(index-1)=='~' || str.contains("ca.")) {
+			symbol = "~";
+		}
+		return symbol;
 	}
 	
 	static boolean getDensity(ExperimentalRecord er, String propertyValue) {
@@ -575,13 +571,13 @@ public class Parse {
 			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ug/ml")) {
+		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("µg/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ug/l")) {
+		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("µg/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_mL;
