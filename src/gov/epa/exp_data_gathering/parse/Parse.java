@@ -451,6 +451,9 @@ public class Parse {
 					er.property_value_min_original = range[0];
 					er.property_value_max_original = range[1];
 				}
+				if (propertyValue.contains("~") || propertyValue.contains("ca.")) {
+					er.property_value_numeric_qualifier = "~";
+				}
 				foundNumeric = true;
 			} catch (Exception ex) { }
 		}
@@ -462,6 +465,9 @@ public class Parse {
 					er.property_value_min_original = range[0];
 					er.property_value_max_original = range[1];
 				}
+				if (propertyValue.contains("~") || propertyValue.contains("ca.")) {
+					er.property_value_numeric_qualifier = "~";
+				}
 				foundNumeric = true;
 			} catch (Exception ex) { }
 		}
@@ -469,7 +475,12 @@ public class Parse {
 		if (!foundNumeric) {
 			try {
 				double propertyValueAsDouble = Parse.extractDoubleFromString(propertyValue,unitsIndex);
-				int propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
+				int propertyValueIndex = -1;
+				if (propertyValueAsDouble >= 0 && propertyValueAsDouble < 1) {
+					propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf("0");
+				} else {
+					propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
+				}
 				if (!badUnits) {
 					er.property_value_point_estimate_original = propertyValueAsDouble;
 					foundNumeric = true;
@@ -485,16 +496,18 @@ public class Parse {
 	
 	static String getNumericQualifier(String str,int index) {
 		String symbol = "";
-		if (str.charAt(index-1)=='>') {
-			symbol = ">";
-		} else if (str.charAt(index-1)=='<') {
-			symbol = "<";
-		} else if (str.charAt(index-2)=='>' && str.charAt(index-1)=='=') {
-			symbol = ">=";
-		} else if (str.charAt(index-2)=='<' && str.charAt(index-1)=='=') {
-			symbol = "<=";
-		} else if (str.charAt(index-1)=='~' || str.contains("ca.")) {
-			symbol = "~";
+		if (index > 0) {
+			if (str.charAt(index-1)=='>') {
+				symbol = ">";
+			} else if (str.charAt(index-1)=='<') {
+				symbol = "<";
+			} else if (str.charAt(index-2)=='>' && str.charAt(index-1)=='=') {
+				symbol = ">=";
+			} else if (str.charAt(index-2)=='<' && str.charAt(index-1)=='=') {
+				symbol = "<=";
+			} else if (str.charAt(index-1)=='~' || str.contains("ca.")) {
+				symbol = "~";
+			}
 		}
 		return symbol;
 	}
@@ -770,13 +783,16 @@ public class Parse {
 				while (m.find()) { tempStr = m.group(); }
 				if (tempStr.length()!=0) {
 					// Converts to C as needed
-					double tempC = Double.parseDouble(tempStr);
+					double temp = Double.parseDouble(tempStr);
 					switch (units) {
 					case "C":
-						er.temperature_C = tempC;
+						er.temperature_C = temp;
 						break;
 					case "F":
-						er.temperature_C = (tempC-32)*5/9;
+						er.temperature_C = (temp-32)*5/9;
+						break;
+					case "K":
+						er.temperature_C = temp-273.15;
 						break;
 					}
 				}
@@ -792,30 +808,42 @@ public class Parse {
 	 */
 	static void getPressureCondition(ExperimentalRecord er,String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
-		int pressureIndex = propertyValue.indexOf("mm");
-		// If "mm" not found, looks for "torr" instead - a handful of records use this
-		if (pressureIndex == -1) { pressureIndex = propertyValue.indexOf("torr"); }
-		// If either set of pressure units were found, looks for the last number that precedes them
+		int pressureIndex = -1;
+		double conversionFactor = 1.0;
+		if (propertyValue.contains("kpa")) {
+			pressureIndex = propertyValue.toLowerCase().indexOf("kpa");
+		} else if (propertyValue.contains("mmhg") || propertyValue.contains("mm hg")) {
+			pressureIndex = propertyValue.toLowerCase().indexOf("mm");
+			conversionFactor = UnitConverter.mmHg_to_kPa;
+		} else if (propertyValue.contains("atm")) {
+			pressureIndex = propertyValue.toLowerCase().indexOf("atm");
+			conversionFactor = UnitConverter.atm_to_kPa;
+		} else if (propertyValue.contains("hpa")) {
+			pressureIndex = propertyValue.toLowerCase().indexOf("hpa");
+			conversionFactor = 1.0/10.0;
+		} else if (propertyValue.contains("pa")) {
+			pressureIndex = propertyValue.toLowerCase().indexOf("pa");
+			conversionFactor = 1.0/1000.0;
+		} else if (propertyValue.contains("mbar")) {
+			pressureIndex = propertyValue.toLowerCase().indexOf("mb");
+			conversionFactor = 1.0/10.0;
+		} else if (propertyValue.contains("bar")) {
+			pressureIndex = propertyValue.toLowerCase().indexOf("bar");
+			conversionFactor = 100.0;
+		} else if (propertyValue.contains("torr")) {
+			pressureIndex = propertyValue.toLowerCase().indexOf("torr");
+			conversionFactor = UnitConverter.mmHg_to_kPa;
+		} else if (propertyValue.contains("psi")) {
+			pressureIndex = propertyValue.toLowerCase().indexOf("psi");
+			conversionFactor = UnitConverter.psi_to_kPa;
+		} 
+		// If any pressure units were found, looks for the last number that precedes them
 		if (pressureIndex > 0) {
 			try {
 				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
 				String pressure = "";
 				while (m.find()) { pressure = m.group(); }
-				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure)*ExperimentalConstants.mmHg_to_kPa; }
-			} catch (Exception ex) { }
-		} else if ((pressureIndex = propertyValue.indexOf("atm")) > 0) {
-			try {
-				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
-				String pressure = "";
-				while (m.find()) { pressure = m.group(); }
-				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure)*ExperimentalConstants.atm_to_kPa; }
-			} catch (Exception ex) { }
-		} else if ((pressureIndex = propertyValue.toLowerCase().indexOf("kpa")) > 0) {
-			try {
-				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
-				String pressure = "";
-				while (m.find()) { pressure = m.group(); }
-				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure); }
+				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure)*conversionFactor; }
 			} catch (Exception ex) { }
 		}
 	}
@@ -828,7 +856,7 @@ public class Parse {
 	 * @throws IllegalStateException	If no number range is found in the given range
 	 */
 	static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
-		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([-]{1}|to)[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
+		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([-]{1}|to|ca\\.)[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
 		String strMin = anyRangeMatcher.group(1).replace(" ","");
 		String strMax = anyRangeMatcher.group(3).replace(" ","");
