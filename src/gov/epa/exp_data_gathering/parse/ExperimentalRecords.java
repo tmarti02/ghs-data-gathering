@@ -127,14 +127,10 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			Cell recCell = recHeaderRow.createCell(i);
 			recCell.setCellValue(headers[i]);
 			recCell.setCellStyle(style);
-			String col = CellReference.convertNumToColString(i);
-			String subtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(size+3)+")";
-			if (i >= 3) { recSubtotalRow.createCell(i).setCellFormula(subtotal); }
 			if (i < 5) {
 				Cell badCell = badHeaderRow.createCell(i);
 				badCell.setCellValue(headers[i]);
 				badCell.setCellStyle(style);
-				if (i >= 3) { badSubtotalRow.createCell(i).setCellFormula(subtotal); }
 			}
 		}
 		int recCurrentRow = 2;
@@ -166,8 +162,18 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			}
 		}
 		
-		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:O"+recCurrentRow));
+		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:R"+recCurrentRow));
 		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:D"+badCurrentRow));
+		
+		for (int i = 3; i < headers.length; i++) {
+			String col = CellReference.convertNumToColString(i);
+			String recSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(recCurrentRow+1)+")";
+			recSubtotalRow.createCell(i).setCellFormula(recSubtotal);
+			if (i < 5) {
+				String badSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(badCurrentRow+1)+")";
+				badSubtotalRow.createCell(i).setCellFormula(badSubtotal);
+			}
+		}
 		
 		try {
 			OutputStream fos = new FileOutputStream(filePath);

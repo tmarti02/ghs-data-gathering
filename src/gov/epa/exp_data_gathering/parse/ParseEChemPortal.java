@@ -54,6 +54,9 @@ public class ParseEChemPortal extends Parse {
 					er.chemical_name = ecpr.substanceName;
 				}
 				er.url = ecpr.url;
+				if (ecpr.method!=null && !ecpr.method.isBlank()) {
+					er.measurement_method = ecpr.method;
+				}
 				er.property_value_string = ecpr.values.get(i);
 				String propertyValue = ecpr.values.get(i);
 				if (!ecpr.temperature.isEmpty() && ecpr.temperature.get(i)!=null) { 
@@ -144,6 +147,7 @@ public class ParseEChemPortal extends Parse {
 				} else {
 					er.keep = true;
 				}
+				er.updateNote(ecpr.reliability);
 				records.add(er);
 			}
 		}
