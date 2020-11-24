@@ -1,26 +1,15 @@
 package gov.epa.exp_data_gathering.parse;
-import gov.epa.api.AADashboard;
-import gov.epa.api.ExperimentalConstants;
-import gov.epa.api.ParseChemicalBook;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Enumeration;
 import java.util.Vector;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 
 /*experimental records that appear relevant*/
@@ -63,42 +52,21 @@ public class RecordChemicalBook extends Parse {
 		String hazardcodes; 
 		String fileName;
 
-		static final String sourceName="ChemicalBook";
-		
+		static final String sourceName="ChemicalBook";	
 
-		//
-private static void downloadWebpages(String filename, int start, int end) {
-
-	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);	
-	Vector<String> searchurls = getsearchURLsFromDashboardRecords(records,start,end);
-	Vector<String> propertyurls = getpropertyURLfromsearchURL(searchurls);
-	ParseChemicalBook p = new ParseChemicalBook();
-	p.downloadWebpagesToZipFile(propertyurls, sourceName);
-}
-
-private static RecordChemicalBook parseZipWebpage()
-		throws IOException, UnsupportedEncodingException {
 	
-	RecordChemicalBook cbr=new RecordChemicalBook();
-	String mainFolder = AADashboard.dataFolder+File.separator+"Experimental"+ File.separator + sourceName;
-	String zipFilePath = mainFolder + File.separator+"web pages"+".zip"; // will only grab the first
-	ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFilePath));
-	Document doc = Jsoup.parse(zis.getNextEntry().toString(),"UTF-8");
-    parseDocument(doc,cbr);
-    return cbr;
-    }
-	
-
 private static void parseDocument(Document doc, RecordChemicalBook rcb) {
-	Elements gray_elements = doc.getElementsByClass("ProdSupplierGN_ProductA_1");
-	Elements white_elements = doc.getElementsByClass("ProdSupplierGN_ProductA_2");
-	Elements all_elements = new Elements();
-	all_elements.addAll(white_elements);
-	all_elements.addAll(gray_elements);	
-	for (Element all_element:all_elements) {
-		String header = all_element.select("td:nth-of-type(1)").text();
-		String data = all_element.select("td:nth-of-type(2)").text();
-		if (data != null && !data.isBlank()) {
+	Elements table_elements = doc.select("tr.ProdSupplierGN_ProductA_2, tr.ProdSupplierGN_ProductA_1");
+	for (Element table_element:table_elements) {
+		String header = table_element.select("td").first().text();
+		String data = new String();
+		if (!table_element.getElementsByTag("a").text().equals("")) {
+			data = table_element.getElementsByTag("a").text();
+		} else if (!table_element.select("td + td").text().equals("")) {
+			data = table_element.select("td + td").text(); // inconsistent with the other two  but illustrative
+		} else {
+			data = null; // don't want it taking images
+		}
 			if (data != null && !data.isBlank()) {
 				if (header.contains("CAS:") && !header.contains("CAS DataBase Reference")) { rcb.CAS = data; }
 				else if (header.contains("Synonyms:")) { rcb.synonyms = data; }
@@ -136,8 +104,20 @@ private static void parseDocument(Document doc, RecordChemicalBook rcb) {
 
 				}
 			}
-		}
 }
+
+private static RecordChemicalBook parseWebpage(Vector <String> url) {
+	RecordChemicalBook cbr = new RecordChemicalBook();
+	try {
+		Document doc = Jsoup.connect(url.get(4)).get();
+		parseDocument(doc,cbr);
+	} catch (Exception ex) {
+		ex.printStackTrace();
+	}
+	
+	return cbr;
+}
+
 
 private static Vector<String> getsearchURLsFromDashboardRecords(Vector<RecordDashboard> records,int start,int end) {
 	String baseURL = "https://www.chemicalbook.com/Search_EN.aspx?keyword=";
@@ -153,40 +133,36 @@ private static Vector<String> getsearchURLsFromDashboardRecords(Vector<RecordDas
 
 private static Vector<String> getpropertyURLfromsearchURL(Vector<String> url){
 	Vector<String> propertyURL = new Vector<String>();
-	for(int i = 0; i < url.size(); i++) {
-		Document doc;
+	for(int i = 0; i < url.size(); ++i) {
 		try {
-			doc = Jsoup.connect(url.get(i)).get();
+			Document doc = Jsoup.connect(url.get(i)).get();
 			Element importantregion = doc.select("ul.actionspro").first();
 			 propertyURL.add(importantregion.select("a:contains(Chemical)").attr("abs:href").toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.out.println("There's a human verification system that's preventing you from scraping");
 		} 
 	}
 	return propertyURL;
 }
 
-
 public static void main(String args[]) {
-	// TODO Auto-generated method stub	
-	try {
-		RecordChemicalBook cbr = parseZipWebpage();
-		System.out.println(cbr.name);
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-	
-	
-	//downloadWebpages("Data" +"/PFASSTRUCT.xls",1,10);
-	
-	// System.out.println(rcb.BRN.toString());
-	
-
-}
-
-
+	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel("Data" + "/list_chemicals-2020-11-23-09-54-12.xls");
+	Vector<String> searchurls = getsearchURLsFromDashboardRecords(records,1,20);
+	Vector<String> propertyurls = getpropertyURLfromsearchURL(searchurls);
+	System.out.println(searchurls.get(4)); // delete later
+	RecordChemicalBook cbr = parseWebpage(propertyurls);
+	System.out.println("density =" + cbr.density + ", melting point =" + cbr.meltingpoint + ", boiling point = " + cbr.boilingpoint 
+			+ ", solubility" + cbr.solubility + ", henry'slc = " + cbr.henrylc + ", vapor pressure = " + cbr.vaporpressure + ", pka=" + cbr.pka);
+GsonBuilder builder = new GsonBuilder();
+builder.setPrettyPrinting();
+Gson gson = builder.create();
+System.out.println(gson.toJson(cbr));
 
 
 }
+
+
+}
+
