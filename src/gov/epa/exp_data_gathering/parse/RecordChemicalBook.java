@@ -63,14 +63,21 @@ public class RecordChemicalBook extends Parse {
 		static final String sourceName="ChemicalBook";	
 
 	
-
 private static void parseDocument(Document doc, RecordChemicalBook rcb) {
-	Elements table_elements = doc.getElementsByAttributeValueContaining("class","ProdSupplierGN_ProductA_1 ProdSupplierGN_ProductA_2");
+	Elements table_elements = doc.select("tr.ProdSupplierGN_ProductA_2, tr.ProdSupplierGN_ProductA_1");
+	System.out.println(table_elements.text());
 	for (Element table_element:table_elements) {
-		String header = table_element.getElementsByTag("td").text();
-		System.out.println(header);
-		String data = table_element.getElementsByTag("a").first().text();
-		System.out.println(data);
+		String header = table_element.select("td").first().text();
+		String data = new String();
+		if (!table_element.getElementsByTag("a").text().equals("")) {
+			data = table_element.getElementsByTag("a").text();
+		} else if (!table_element.select("td + td").text().equals("")) {
+			data = table_element.select("td + td").text(); // inconsistent with two  but illustrative
+		} else {
+			System.out.println("not quite");
+			break;
+		}
+		System.out.println(header + " " + data);
 			if (data != null && !data.isBlank()) {
 				if (header.contains("CAS:") && !header.contains("CAS DataBase Reference")) { rcb.CAS = data; }
 				else if (header.contains("Synonyms:")) { rcb.synonyms = data; }
@@ -110,20 +117,12 @@ private static void parseDocument(Document doc, RecordChemicalBook rcb) {
 			}
 }
 
-
-private static RecordChemicalBook parseWebpage(String url) {
+private static RecordChemicalBook parseWebpage(Vector <String> url) {
 	RecordChemicalBook cbr = new RecordChemicalBook();
 	
 	try {
-		Document doc = Jsoup.parse(url);
-		
+		Document doc = Jsoup.connect(url.get(1)).get();
 		parseDocument(doc,cbr);
-		/*
-		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting();
-		Gson gson = builder.create();
-		System.out.println(gson.toJson(cbr));
-		*/
 	} catch (Exception ex) {
 		ex.printStackTrace();
 	}
@@ -164,11 +163,9 @@ public static void main(String args[]) {
 	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel("Data" + "/list_chemicals-2020-11-23-09-54-12.xls");
 	Vector<String> searchurls = getsearchURLsFromDashboardRecords(records,1,20);
 	Vector<String> propertyurls = getpropertyURLfromsearchURL(searchurls);
-	RecordChemicalBook cbr = parseWebpage(propertyurls.get(1));
-	System.out.println(cbr.name);
-	System.out.println(cbr.MW);
-	System.out.println(cbr.storagetemp);
-	System.out.println("einecs = " + cbr.EINECS);
+	System.out.println(searchurls.get(1)); // delete later
+	RecordChemicalBook cbr = parseWebpage(propertyurls);
+
 }
 
 
