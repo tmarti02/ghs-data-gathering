@@ -425,6 +425,7 @@ public class Parse {
 	
 	static boolean getNumericalValue(ExperimentalRecord er, String propertyValue, int unitsIndex, boolean badUnits) {
 		if (badUnits) { unitsIndex = propertyValue.length(); }
+		if (propertyValue.contains("±")) { unitsIndex = Math.min(propertyValue.indexOf("±"),unitsIndex); }
 		boolean foundNumeric = false;
 		if (!foundNumeric) {
 			try {
@@ -501,13 +502,14 @@ public class Parse {
 				symbol = ">";
 			} else if (str.charAt(index-1)=='<') {
 				symbol = "<";
-			} else if (str.charAt(index-2)=='>' && str.charAt(index-1)=='=') {
-				symbol = ">=";
-			} else if (str.charAt(index-2)=='<' && str.charAt(index-1)=='=') {
-				symbol = "<=";
 			} else if (str.charAt(index-1)=='~' || str.contains("ca.")) {
 				symbol = "~";
+			} else if (index > 1 && str.charAt(index-2)=='>' && str.charAt(index-1)=='=') {
+				symbol = ">=";
+			} else if (index > 1 && str.charAt(index-2)=='<' && str.charAt(index-1)=='=') {
+				symbol = "<=";
 			}
+			
 		}
 		return symbol;
 	}
@@ -644,7 +646,7 @@ public class Parse {
 		propertyValue = propertyValue.toLowerCase();
 		String solventMatcherStr = "";
 		if (sourceName.equals(ExperimentalConstants.strSourceLookChem)) {
-			solventMatcherStr = "(([a-zA-Z0-9\s-]+)(,|\\.|\\z|[ ]?\\(|;))?";
+			solventMatcherStr = "(([a-zA-Z0-9\s-]+?)(,| and|\\.|\\z|[ ]?\\(|;))?";
 		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| at| and only|\\(|;))?";
 		}
@@ -817,30 +819,30 @@ public class Parse {
 		int pressureIndex = -1;
 		double conversionFactor = 1.0;
 		if (propertyValue.contains("kpa")) {
-			pressureIndex = propertyValue.toLowerCase().indexOf("kpa");
-		} else if (propertyValue.contains("mmhg") || propertyValue.contains("mm hg")) {
-			pressureIndex = propertyValue.toLowerCase().indexOf("mm");
+			pressureIndex = propertyValue.indexOf("kpa");
+		} else if (propertyValue.contains("mmhg") || propertyValue.contains("mm hg") || propertyValue.contains("mm")) {
+			pressureIndex = propertyValue.indexOf("mm");
 			conversionFactor = UnitConverter.mmHg_to_kPa;
 		} else if (propertyValue.contains("atm")) {
-			pressureIndex = propertyValue.toLowerCase().indexOf("atm");
+			pressureIndex = propertyValue.indexOf("atm");
 			conversionFactor = UnitConverter.atm_to_kPa;
 		} else if (propertyValue.contains("hpa")) {
-			pressureIndex = propertyValue.toLowerCase().indexOf("hpa");
+			pressureIndex = propertyValue.indexOf("hpa");
 			conversionFactor = 1.0/10.0;
 		} else if (propertyValue.contains("pa")) {
-			pressureIndex = propertyValue.toLowerCase().indexOf("pa");
+			pressureIndex = propertyValue.indexOf("pa");
 			conversionFactor = 1.0/1000.0;
 		} else if (propertyValue.contains("mbar")) {
-			pressureIndex = propertyValue.toLowerCase().indexOf("mb");
+			pressureIndex = propertyValue.indexOf("mb");
 			conversionFactor = 1.0/10.0;
 		} else if (propertyValue.contains("bar")) {
-			pressureIndex = propertyValue.toLowerCase().indexOf("bar");
+			pressureIndex = propertyValue.indexOf("bar");
 			conversionFactor = 100.0;
 		} else if (propertyValue.contains("torr")) {
-			pressureIndex = propertyValue.toLowerCase().indexOf("torr");
+			pressureIndex = propertyValue.indexOf("torr");
 			conversionFactor = UnitConverter.mmHg_to_kPa;
 		} else if (propertyValue.contains("psi")) {
-			pressureIndex = propertyValue.toLowerCase().indexOf("psi");
+			pressureIndex = propertyValue.indexOf("psi");
 			conversionFactor = UnitConverter.psi_to_kPa;
 		} 
 		// If any pressure units were found, looks for the last number that precedes them

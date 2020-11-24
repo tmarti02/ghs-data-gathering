@@ -120,6 +120,7 @@ public class ParseLookChem extends Parse {
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
 
 		boolean foundNumeric = false;
+		propertyValue = propertyValue.replaceAll(",", ".");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = getDensity(er, propertyValue);
 			getPressureCondition(er,propertyValue);
@@ -162,7 +163,7 @@ public class ParseLookChem extends Parse {
 	
 	public static void main(String[] args) {
 		ParseLookChem p = new ParseLookChem();
-		p.mainFolder = p.mainFolder + File.separator + "General";
+		p.mainFolder = p.mainFolder + File.separator + "LookChem General";
 		p.databaseFolder = p.mainFolder;
 		p.jsonFolder= p.mainFolder;
 		p.createFiles();
