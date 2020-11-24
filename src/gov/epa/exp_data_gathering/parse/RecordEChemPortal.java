@@ -37,7 +37,7 @@ public class RecordEChemPortal {
 		pH = new Vector<String>();
 	}
 	
-	public static Vector<RecordEChemPortal> parseEChemPortalQueryFromExcel() {
+	public static Vector<RecordEChemPortal> parseEChemPortalQueriesFromExcel() {
 		Vector<RecordEChemPortal> records = new Vector<RecordEChemPortal>();
 		String folderNameExcel = "excel files";
 		String mainFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;

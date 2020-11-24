@@ -404,6 +404,7 @@ public class Parse {
 		try {
 			GsonBuilder builder = new GsonBuilder();
 			builder.setPrettyPrinting();
+			builder.disableHtmlEscaping();
 			Gson gson = builder.create();
 			
 			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
@@ -846,12 +847,20 @@ public class Parse {
 			conversionFactor = UnitConverter.psi_to_kPa;
 		} 
 		// If any pressure units were found, looks for the last number that precedes them
+		boolean foundNumeric = false;
 		if (pressureIndex > 0) {
+			if (!foundNumeric) {
+				try {
+					double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,pressureIndex);
+					er.updateNote("pressure_kPa: "+range[0]*conversionFactor+"-"+range[1]*conversionFactor);
+					foundNumeric = true;
+				} catch (Exception ex) { }
+			}
+		}
+		if (!foundNumeric) {
 			try {
-				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,pressureIndex));
-				String pressure = "";
-				while (m.find()) { pressure = m.group(); }
-				if (pressure.length()!=0) { er.pressure_kPa = Double.parseDouble(pressure)*conversionFactor; }
+				er.pressure_kPa = conversionFactor*Parse.extractDoubleFromString(propertyValue,pressureIndex);
+				foundNumeric = true;
 			} catch (Exception ex) { }
 		}
 	}

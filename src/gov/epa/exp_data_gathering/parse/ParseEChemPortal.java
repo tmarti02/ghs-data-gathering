@@ -17,7 +17,7 @@ public class ParseEChemPortal extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordEChemPortal> records = RecordEChemPortal.parseEChemPortalQueryFromExcel();
+		Vector<RecordEChemPortal> records = RecordEChemPortal.parseEChemPortalQueriesFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
