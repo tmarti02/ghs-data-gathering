@@ -646,9 +646,9 @@ public class Parse {
 		if (sourceName.equals(ExperimentalConstants.strSourceLookChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\s-]+)(,|\\.|\\z|[ ]?\\(|;))?";
 		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
-			solventMatcherStr = "(([a-zA-Z0-9\s,-]+)(\\.|\\z| at| and only|\\(|;))?";
+			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| at| and only|\\(|;))?";
 		}
-		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?uble|miscible))( (in|with) )[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
+		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?uble|miscible))( (in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
 		while (solubilityMatcher.find()) {
 			String qualifier = solubilityMatcher.group(1);
 			qualifier = qualifier.equals("souble") ? "soluble" : qualifier;
@@ -680,12 +680,13 @@ public class Parse {
 		
 		String[] qualifiers = {"none","very poor","poor","low","negligible","slight","significant","complete"};
 		for (String qual:qualifiers) {
-			if ((propertyValue.startsWith(qual) || (propertyValue.contains("solubility in water") && propertyValue.contains(qual))) && er.property_value_qualitative==null) {
+			if ((propertyValue.startsWith(qual) || (propertyValue.contains("solubility in water") && propertyValue.contains(qual))) &&
+					(er.property_value_qualitative==null || er.property_value_qualitative.isBlank())) {
 				er.property_value_qualitative = qual;
 			}
 		}
 		
-		if (er.property_value_qualitative!=null) {
+		if (er.property_value_qualitative!=null || er.note!=null) {
 			er.keep = true;
 		}
 	}
@@ -760,7 +761,12 @@ public class Parse {
 
 	// Applicable for LogKow and pKa
 	static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {
-		int unitsIndex = propertyValue.length();
+		int unitsIndex = -1;
+		if (propertyValue.contains("at")) {
+			unitsIndex = propertyValue.indexOf("at");
+		} else {
+			unitsIndex = propertyValue.length();
+		}
 		boolean badUnits = false;
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
