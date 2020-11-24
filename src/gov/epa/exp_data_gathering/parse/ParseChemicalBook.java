@@ -7,3 +7,5 @@ public class ParseChemicalBook extends Parse {
 		this.init();
 	}
 }
+
+// test
