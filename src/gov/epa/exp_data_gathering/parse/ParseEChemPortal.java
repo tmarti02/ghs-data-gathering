@@ -90,7 +90,7 @@ public class ParseEChemPortal extends Parse {
 							}
 						} catch (Exception ex) { }
 					}
-					if (!foundpH && pHStr.contains(",")) {
+					if (!foundpH && pHStr.contains(",") && !pHStr.endsWith(",")) {
 						er.pH = pHStr;
 						foundpH = true;
 					}
