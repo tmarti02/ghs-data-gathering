@@ -47,6 +47,7 @@ public class ParseEChemPortal extends Parse {
 			} else if (ecpr.numberType.equals("EC Number")) { einecs = ecpr.number; }
 			for (int i = 0; i < ecpr.values.size(); i++) {
 				ExperimentalRecord er = new ExperimentalRecord();
+				er.source_name = ExperimentalConstants.strSourceEChem;
 				if (cas.length()!=0 && !cas.equals("unknown")) { er.casrn = cas;
 				} else if (einecs.length()!=0 && !einecs.equals("unknown")) { er.einecs = einecs; }
 				er.chemical_name = ecpr.substanceName.equals("-") ? "" : ecpr.substanceName;

@@ -116,7 +116,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		Row recHeaderRow = recSheet.createRow(1);
 		Row badSubtotalRow = badSheet.createRow(0);
 		Row badHeaderRow = badSheet.createRow(1);
-		String[] headers = ExperimentalRecord.allFieldNames;
+		String[] headers = ExperimentalRecord.outputFieldNames;
 		CellStyle style = wb.createCellStyle();
 		Font font = wb.createFont();
 		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
