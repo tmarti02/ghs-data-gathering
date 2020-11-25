@@ -1,6 +1,11 @@
 package gov.epa.exp_data_gathering.parse;
+import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
+
+import java.io.File;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Vector;
 
 import org.jsoup.Jsoup;
@@ -14,15 +19,15 @@ import com.google.gson.GsonBuilder;
 
 /*experimental records that appear relevant*/
 public class RecordChemicalBook extends Parse {
-		String name;
+		String chemicalName;
 		String synonyms;
 		String CAS; 
 		String MF;
 		String MW; 
 		String EINECS;
 		String molfile; 
-		String meltingpoint; 
-		String boilingpoint;
+		String meltingPoint; 
+		String boilingPoint;
 		String density; 
 		String vapordensity;
 		String vaporpressure; 
@@ -55,7 +60,7 @@ public class RecordChemicalBook extends Parse {
 		static final String sourceName="ChemicalBook";	
 
 	
-private static void parseDocument(Document doc, RecordChemicalBook rcb) {
+private static void parseDocument(RecordChemicalBook rcb, Document doc) {
 	Elements table_elements = doc.select("tr.ProdSupplierGN_ProductA_2, tr.ProdSupplierGN_ProductA_1");
 	for (Element table_element:table_elements) {
 		String header = table_element.select("td").first().text();
@@ -73,7 +78,7 @@ private static void parseDocument(Document doc, RecordChemicalBook rcb) {
 				else if (header.contains("MF")) { rcb.MF = data; }
 				else if (header.contains("EINECS")) { rcb.EINECS = data; }
 				else if (header.contains("Mol File:")) { rcb.molfile = data; }
-				else if (header.contains("Boiling point")) { rcb.boilingpoint = data; }
+				else if (header.contains("Boiling point")) { rcb.boilingPoint = data; }
 				else if (header.contains("density")) { rcb.density = data; }
 				else if (header.contains("refractive index")) { rcb.refractiveindex = data; }
 				else if (header.contains("Fp")) { rcb.FP = data; }
@@ -92,13 +97,14 @@ private static void parseDocument(Document doc, RecordChemicalBook rcb) {
 				else if (header.contains("storage temp.")) { rcb.storagetemp = data; }
 				else if (header.contains("solubility")) { rcb.solubility = data; }
 				else if (header.contains("color")) { rcb.color = data; }
-				else if (header.contains("Melting point")) { rcb.meltingpoint = data; }
+				else if (header.contains("Melting point")) { rcb.meltingPoint = data; }
 				else if (header.contains("vapor density")) { rcb.vapordensity = data; }
 				else if (header.contains("vapor pressure")) { rcb.vaporpressure = data; }
 				else if (header.contains("Relative polarity")) { rcb.relativepolarity = data; }
 				else if (header.contains("Odor Threshold")) { rcb.odorthreshold = data; }
 				else if (header.contains("explosivelimit")) { rcb.explosivelimit = data; }
 				else if (header.contains("Water Solubility")) { rcb.watersolubility = data; }
+				else if (header.contains("")) { rcb.watersolubility = data; }
 				else if (header.contains("max")) { rcb.lambdamax = data; }					
 				else if (header.contains("MW")) { rcb.MW = data;}
 
@@ -106,17 +112,6 @@ private static void parseDocument(Document doc, RecordChemicalBook rcb) {
 			}
 }
 
-private static RecordChemicalBook parseWebpage(Vector <String> url) {
-	RecordChemicalBook cbr = new RecordChemicalBook();
-	try {
-		Document doc = Jsoup.connect(url.get(4)).get();
-		parseDocument(doc,cbr);
-	} catch (Exception ex) {
-		ex.printStackTrace();
-	}
-	
-	return cbr;
-}
 
 
 private static Vector<String> getsearchURLsFromDashboardRecords(Vector<RecordDashboard> records,int start,int end) {
@@ -147,22 +142,74 @@ private static Vector<String> getpropertyURLfromsearchURL(Vector<String> url){
 	return propertyURL;
 }
 
-public static void main(String args[]) {
-	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel("Data" + "/list_chemicals-2020-11-23-09-54-12.xls");
-	Vector<String> searchurls = getsearchURLsFromDashboardRecords(records,1,20);
+public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end,boolean startFresh) {
+	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+	Vector<String> searchurls = getsearchURLsFromDashboardRecords(records,start,end);
 	Vector<String> propertyurls = getpropertyURLfromsearchURL(searchurls);
-	System.out.println(searchurls.get(4)); // delete later
-	RecordChemicalBook cbr = parseWebpage(propertyurls);
-	System.out.println("density =" + cbr.density + ", melting point =" + cbr.meltingpoint + ", boiling point = " + cbr.boilingpoint 
-			+ ", solubility" + cbr.solubility + ", henry'slc = " + cbr.henrylc + ", vapor pressure = " + cbr.vaporpressure + ", pka=" + cbr.pka);
-GsonBuilder builder = new GsonBuilder();
-builder.setPrettyPrinting();
-Gson gson = builder.create();
-System.out.println(gson.toJson(cbr));
+	System.out.println(propertyurls.get(8));
+	ParseChemicalBook p = new ParseChemicalBook();
+	p.mainFolder = p.mainFolder + File.separator + "General";
+	p.databaseFolder = p.mainFolder;
+	p.downloadWebpagesToDatabaseAdaptive(propertyurls,"main_960px",sourceName,startFresh);		
+}
+
+/**
+ * Parses the HTML strings in the raw HTML database to RecordLookChem objects
+ * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
+ */
+public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
+	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
+	String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
+	Vector<RecordChemicalBook> records = new Vector<>();
+
+	try {
+		Statement stat = MySQL_DB.getStatement(databasePath);
+		ResultSet rs = MySQL_DB.getAllRecords(stat, "ChemicalBook");
+		
+		int counter = 1;
+	
+		while (rs.next()) {
+			if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
+			
+			String html = rs.getString("content");
+			String url = rs.getString("url");
+			Document doc = Jsoup.parse(html);
+			
+			RecordChemicalBook rcb=new RecordChemicalBook();
+			rcb.fileName=url.substring(url.lastIndexOf("/")+1, url.length());
+			
+			parseDocument(rcb,doc);
+			
+			if (rcb.CAS != null) {
+				records.add(rcb);
+				counter++;
+			} else {
+				// rs.updateString("html", ExperimentalConstants.strRecordUnavailable);
+				// Updater doesn't work - JDBC version issue?
+			}
+		}
 
 
+		return records;
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+	
+	return null;
+}
+
+public static void main(String args[]) {
+	downloadWebpagesFromExcelToDatabase("Data" + "/list_chemicals-2020-11-23-09-54-12.xls",1,10,true);
+	Vector<RecordChemicalBook> rcb = parseWebpagesInDatabase();
+	for (int i = 0; i < rcb.size(); i++) {
+		GsonBuilder builder = new GsonBuilder();
+		builder.setPrettyPrinting();
+		Gson gson = builder.create();
+		System.out.println(gson.toJson(rcb.get(i)));
+
+	}
+	
 }
 
 
 }
-
