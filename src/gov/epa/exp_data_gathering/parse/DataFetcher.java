@@ -21,7 +21,7 @@ public class DataFetcher {
 			String recordFileName = mainFolder+File.separator+source+" Experimental Records.json";
 			String badRecordFileName = mainFolder+File.separator+source+" Experimental Records-Bad.json";
 			try {
-				System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")));
+				System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")+1));
 				ExperimentalRecords sourceRecords = ExperimentalRecords.loadFromJSON(recordFileName);
 				ExperimentalRecords badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFileName);
 				records.addAll(sourceRecords);
