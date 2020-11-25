@@ -15,13 +15,13 @@ public class DataFetcher {
 	public static final String databasePath = mainFolder+File.separator+"ExperimentalRecords.db";
 	public static final String jsonPath = mainFolder+File.separator+"ExperimentalRecords.json";
 	
-	private ExperimentalRecords getExperimentalRecords() {
+	private ExperimentalRecords getExperimentalRecords(String[] sources) {
 		ExperimentalRecords records = new ExperimentalRecords();
-		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem"};
 		for (String source:sources) {
 			String recordFileName = mainFolder+File.separator+source+" Experimental Records.json";
 			String badRecordFileName = mainFolder+File.separator+source+" Experimental Records-Bad.json";
 			try {
+				System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")));
 				ExperimentalRecords sourceRecords = ExperimentalRecords.loadFromJSON(recordFileName);
 				ExperimentalRecords badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFileName);
 				records.addAll(sourceRecords);
@@ -33,16 +33,17 @@ public class DataFetcher {
 		return records;
 	}
 	
-	public void createExperimentalRecordsDatabase() {
+	public void createExperimentalRecordsDatabase(String[] sources) {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
-		ExperimentalRecords records = getExperimentalRecords();
+		ExperimentalRecords records = getExperimentalRecords(sources);
 		createDatabase(records);
 	}
 	
 	private void createDatabase(ExperimentalRecords records) {
 		String[] fieldNames = ExperimentalRecord.outputFieldNames;
 		String tableName = "records";
+		System.out.println("Creating database at "+databasePath+" with fields:\n"+String.join("\n",fieldNames));
 		try {
 			Connection conn= MySQL_DB.getConnection(databasePath);
 			Statement stat = MySQL_DB.getStatement(conn);			
@@ -50,8 +51,7 @@ public class DataFetcher {
 			stat.executeUpdate("drop table if exists "+tableName+";");
 			stat.executeUpdate("VACUUM;");
 			
-			//Need CAS as the primary key if we are doing lots of searches- otherwise searches will be like 1 second each!
-			MySQL_DB.create_table_key_with_duplicates(stat, tableName, fieldNames,"casrn");//need unique values in the table for key field for this to work!
+			MySQL_DB.create_table_key_with_duplicates(stat, tableName, fieldNames,"casrn");
 			conn.setAutoCommit(false);
 
 			String s = "insert into " + tableName + " values (";
@@ -73,17 +73,16 @@ public class DataFetcher {
 					System.out.println("Wrong number of values: "+list[0]);
 				}
 
-				if (list[0]!=null && !list[0].isBlank()) {
-					counter++;
-					for (int i = 0; i < list.length; i++) {
-						if (list[i]!=null && !list[i].isBlank()) {
-							prep.setString(i + 1, list[i]);
-						} else {
-							prep.setString(i + 1, null);
-						}
+				counter++;
+				
+				for (int i = 0; i < list.length; i++) {
+					if (list[i]!=null && !list[i].isBlank()) {
+						prep.setString(i + 1, list[i]);
+					} else {
+						prep.setString(i + 1, null);
 					}
 				}
-
+				
 				try {
 					prep.addBatch();
 				} catch (Exception ex) {
@@ -102,7 +101,9 @@ public class DataFetcher {
 			conn.setAutoCommit(true);
 						
 			String sqlAddIndex="CREATE INDEX idx_casrn ON "+tableName+" (casrn)";
-			stat.executeUpdate(sqlAddIndex);			
+			stat.executeUpdate(sqlAddIndex);
+			
+			System.out.println("Created database with "+counter+" entries");
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -111,7 +112,8 @@ public class DataFetcher {
 	}
 	
 	public static void main(String[] args) {
+		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem"};
 		DataFetcher d = new DataFetcher();
-		d.createExperimentalRecordsDatabase();
+		d.createExperimentalRecordsDatabase(sources);
 	}
 }
