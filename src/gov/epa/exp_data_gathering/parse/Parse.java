@@ -882,19 +882,12 @@ public class Parse {
 	}
 	
 	public static String formatDouble(double d) {
-        DecimalFormat df = new DecimalFormat("0.00");
-        DecimalFormat df2 = new DecimalFormat("0.0");
-        DecimalFormat dfSci = new DecimalFormat("0.00E00");
-        double roundDown = Math.floor(d);
-        double percentDifference = Math.abs(roundDown - d) / d * 100.0;
+        DecimalFormat df2 = new DecimalFormat("0.##");
+        DecimalFormat dfSci = new DecimalFormat("0.00E0");
         if (d < 0.01) {
         	return dfSci.format(d);
         } else {
-	       if (percentDifference > 0.1) {
-	    	   return df.format(d);
-	       } else {
-	    	   return df2.format(d);
-	       }
+	    	return df2.format(d);
         }
 
 	}

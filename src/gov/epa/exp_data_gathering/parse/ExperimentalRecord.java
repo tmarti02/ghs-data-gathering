@@ -158,9 +158,9 @@ public class ExperimentalRecord {
 	public String[] getValuesForDatabase() {
 		String name = chemical_name==null ? "" : chemical_name.replace("'", "''").replace("[", "'[").replace("]", "']");
 		String pointEstimate = property_value_point_estimate_final==null ? "" : Double.toString(property_value_point_estimate_final);
-		String min = property_value_min_final==null ? "" : Double.toString(property_value_min_final);
-		String max = property_value_max_final==null ? "" : Double.toString(property_value_max_final);
-		String temp = temperature_C==null ? "" : Double.toString(temperature_C);
+		String min = property_value_min_final==null ? "" : Parse.formatDouble(property_value_min_final);
+		String max = property_value_max_final==null ? "" : Parse.formatDouble(property_value_max_final);
+		String temp = temperature_C==null ? "" : Parse.formatDouble(temperature_C);
 		String [] values= {Boolean.toString(keep),casrn,einecs,name.replace("'", "''"),synonyms, smiles,property_name,property_value_string,property_value_numeric_qualifier,
 				pointEstimate,min,max,property_value_units_final,pressure_mmHg,temp,
 				pH,property_value_qualitative,measurement_method,note,Boolean.toString(flag),source_name,url};

@@ -107,7 +107,6 @@ public class ParsePubChem extends Parse {
 		er.property_value_string=propertyValue;
 		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
-		er.keep=true;
 		
 		boolean foundNumeric = false;
 		propertyValue = propertyValue.replaceAll("greater than( or equal to )?", ">");
@@ -138,9 +137,13 @@ public class ParsePubChem extends Parse {
 		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
 			er.updateNote(ExperimentalConstants.str_dec);
 		}
-		if (propertyValue.toLowerCase().contains("est")) { er.updateNote(ExperimentalConstants.str_est); }
+		if (propertyValue.toLowerCase().contains("est")) {
+			er.updateNote(ExperimentalConstants.str_est);
+			er.keep = false;
+			}
 		if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp")) && !propertyValue.toLowerCase().contains("extreme")) {
 			er.updateNote(ExperimentalConstants.str_ext);
+			er.keep = false;
 		}
 		// Warns if there may be a problem with an entry
 		er.flag = false;
