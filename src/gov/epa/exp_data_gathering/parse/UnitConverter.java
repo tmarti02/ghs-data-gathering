@@ -13,11 +13,11 @@ public class UnitConverter {
 	public static final double bar_to_mmHg=750.062;
 	public static final double atm_to_Pa=101325.0;
 	
-	private static double F_to_C(double F) {
+	public static double F_to_C(double F) {
 		return (F-32.0)*5.0/9.0;
 	}
 	
-	private static double K_to_C(double K) {
+	public static double K_to_C(double K) {
 		return K-273.15;
 	}
 	

@@ -25,6 +25,8 @@ public class RecordOChem {
 	String propertyUnit;
 	String temperature;
 	String temperatureUnit;
+	String pressure;
+	String pressureUnit;
 	String pH;
 	String measurementMethod;
 	
@@ -46,29 +48,37 @@ public class RecordOChem {
 					Row headerRow = sheet.getRow(0);
 					int smilesIndex = -1;
 					int casrnIndex = -1;
-					int nameIndex = -1;
+					int nameIndex1 = -1;
+					int nameIndex2 = -1;
 					int propertyValueIndex = -1;
 					int propertyUnitIndex = -1;
 					int temperatureIndex = -1;
 					int temperatureUnitIndex = -1;
+					int pressureIndex = -1;
+					int pressureUnitIndex = -1;
 					int pHIndex = -1;
 					int measurementMethodIndex = -1;
 					String propertyName = "";
 					for (Cell cell:headerRow) {
-						String header = cell.getStringCellValue();
+						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
-						if (header.contains("SMILES")) { smilesIndex = col;
-						} else if (header.contains("CASRN")) { casrnIndex = col;
-						} else if (header.contains("NAME")) { nameIndex = col; // two name fields?
+						if (header.contains("smiles")) { smilesIndex = col;
+						} else if (header.contains("casrn")) { casrnIndex = col;
+						} else if (header.contains("name") && nameIndex1 == -1) {
+							nameIndex1 = col;
+							nameIndex2 = col+1;
 						} else if (header.contains("{measured, converted}")) {
 							propertyName = header.substring(0,header.indexOf("{")).trim();
 							propertyValueIndex = col;
 							propertyUnitIndex = col+1;
-						} else if (header.contains("TEMPERATURE")) {
+						} else if (header.contains("temperature") && !header.contains("unit")) {
 							temperatureIndex = col;
 							temperatureUnitIndex = col+1;
-						} else if (header.contains("measurement method")) { measurementMethodIndex = col;
-						} else if (header.contains("pH")) { pHIndex = col;
+						} else if (header.contains("pressure") && !header.contains("unit") && !header.contains("vapor")) {
+							pressureIndex = col;
+							pressureUnitIndex = col+1;
+						} else if (header.contains("method")) { measurementMethodIndex = col;
+						} else if (header.contains("pH") && !header.contains("unit")) { pHIndex = col;
 						}
 					}
 					int rows = sheet.getLastRowNum();
@@ -78,12 +88,22 @@ public class RecordOChem {
 						RecordOChem ocr = new RecordOChem();
 						ocr.smiles = betterGetCellValue(row,smilesIndex);
 						ocr.casrn = betterGetCellValue(row,casrnIndex);
-						ocr.name = betterGetCellValue(row,nameIndex);
+						String name1 = betterGetCellValue(row,nameIndex1);
+						String name2 = betterGetCellValue(row,nameIndex2);
+						if (name1!=null && !name1.isBlank() && name2!=null && !name2.isBlank()) {
+							ocr.name = name1+"|"+name2;
+						} else if (name1!=null && !name1.isBlank()) {
+							ocr.name = name1;
+						} else if (name2!=null && !name2.isBlank()) {
+							ocr.name = name2;
+						}
 						ocr.propertyName = propertyName;
 						ocr.propertyValue = betterGetCellValue(row,propertyValueIndex);
 						ocr.propertyUnit = betterGetCellValue(row,propertyUnitIndex);
 						ocr.temperature = betterGetCellValue(row,temperatureIndex);
 						ocr.temperatureUnit = betterGetCellValue(row,temperatureUnitIndex);
+						ocr.pressure = betterGetCellValue(row,pressureIndex);
+						ocr.pressureUnit = betterGetCellValue(row,pressureUnitIndex);
 						ocr.measurementMethod = betterGetCellValue(row,measurementMethodIndex);
 						ocr.pH = betterGetCellValue(row,pHIndex);
 						records.add(ocr);
