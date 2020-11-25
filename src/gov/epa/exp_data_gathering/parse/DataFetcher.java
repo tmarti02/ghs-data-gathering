@@ -9,12 +9,14 @@ import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 
 public class DataFetcher {
 	
+	private static ExperimentalRecords records;
+	
 	public static final String mainFolder = "Data"+File.separator+"Experimental";
 	public static final String databasePath = mainFolder+File.separator+"ExperimentalRecords.db";
 	public static final String jsonPath = mainFolder+File.separator+"ExperimentalRecords.json";
 	
-	private ExperimentalRecords getExperimentalRecords(String[] sources) {
-		ExperimentalRecords records = new ExperimentalRecords();
+	public DataFetcher(String[] sources) {
+		records = new ExperimentalRecords();
 		for (String source:sources) {
 			String recordFileName = mainFolder+File.separator+source+" Experimental Records.json";
 			String badRecordFileName = mainFolder+File.separator+source+" Experimental Records-Bad.json";
@@ -28,27 +30,23 @@ public class DataFetcher {
 				ex.printStackTrace();
 			}
 		}
-		return records;
 	}
 	
-	public void createExperimentalRecordsDatabase(String[] sources) {
+	public void createExperimentalRecordsDatabase() {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
-		ExperimentalRecords records = getExperimentalRecords(sources);
 		makeDatabase(records);
 	}
 	
-	public void createExperimentalRecordsJSON(String[] sources) {
+	public void createExperimentalRecordsJSON() {
 		File json = new File(jsonPath);
 		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
-		ExperimentalRecords records = getExperimentalRecords(sources);
 		records.toJSON_File(jsonPath);
 	}
 	
-	private ExperimentalRecords getExperimentalRecordsSubset(String[] sources,String[] cas) {
-		ExperimentalRecords allRecords = getExperimentalRecords(sources);
+	private ExperimentalRecords getExperimentalRecordsSubset(String[] cas) {
 		ExperimentalRecords subsetRecords = new ExperimentalRecords();
-		for (ExperimentalRecord rec:allRecords) {
+		for (ExperimentalRecord rec:records) {
 			String casCheck="";
 			if (rec.casrn!=null) { casCheck = rec.casrn; }
 			boolean inSubset = false;
@@ -62,19 +60,19 @@ public class DataFetcher {
 		return subsetRecords;
 	}
 	
-	public void createExperimentalRecordsSubsetJSON(String[] sources,String[] cas,String filename) {
+	public void createExperimentalRecordsSubsetJSON(String[] cas,String filename) {
 		String path = mainFolder+File.separator+filename;
 		File json = new File(path);
 		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
-		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(sources,cas);
+		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(cas);
 		subsetRecords.toJSON_File(path);
 	}
 	
-	public void createExperimentalRecordsSubsetExcel(String[] sources,String[] cas,String filename) {
+	public void createExperimentalRecordsSubsetExcel(String[] cas,String filename) {
 		String path = mainFolder+File.separator+filename;
 		File json = new File(path);
 		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
-		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(sources,cas);
+		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(cas);
 		subsetRecords.toExcel_File(path);
 	}
 	
@@ -150,12 +148,12 @@ public class DataFetcher {
 	}
 	
 	public static void main(String[] args) {
-		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem"};
-		DataFetcher d = new DataFetcher();
-//		d.createExperimentalRecordsDatabase(sources);
-//		d.createExperimentalRecordsJSON(sources);
+		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem"};
+		DataFetcher d = new DataFetcher(sources);
+		d.createExperimentalRecordsDatabase();
+		d.createExperimentalRecordsJSON();
 		String[] cas = {"335-76-2","3108-42-7","3830-45-3","375-95-1","4149-60-4","307-24-4","355-46-4","3871-99-6","375-22-4","10495-86-0"};
-		d.createExperimentalRecordsSubsetJSON(sources, cas, "ExperimentalRecords_CPHEA_112520.json");
-//		d.createExperimentalRecordsSubsetExcel(sources, cas, "ExperimentalRecords_CPHEA_112520.xlsx");
+		d.createExperimentalRecordsSubsetJSON(cas, "ExperimentalRecords_CPHEA_112520.json");
+		d.createExperimentalRecordsSubsetExcel(cas, "ExperimentalRecords_CPHEA_112520.xlsx");
 	}
 }
