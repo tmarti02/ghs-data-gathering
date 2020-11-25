@@ -1,8 +1,6 @@
 package gov.epa.exp_data_gathering.parse;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -37,10 +35,50 @@ public class DataFetcher {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		ExperimentalRecords records = getExperimentalRecords(sources);
-		createDatabase(records);
+		makeDatabase(records);
 	}
 	
-	private void createDatabase(ExperimentalRecords records) {
+	public void createExperimentalRecordsJSON(String[] sources) {
+		File json = new File(jsonPath);
+		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
+		ExperimentalRecords records = getExperimentalRecords(sources);
+		records.toJSON_File(jsonPath);
+	}
+	
+	private ExperimentalRecords getExperimentalRecordsSubset(String[] sources,String[] cas) {
+		ExperimentalRecords allRecords = getExperimentalRecords(sources);
+		ExperimentalRecords subsetRecords = new ExperimentalRecords();
+		for (ExperimentalRecord rec:allRecords) {
+			String casCheck="";
+			if (rec.casrn!=null) { casCheck = rec.casrn; }
+			boolean inSubset = false;
+			int i = 0;
+			while (!inSubset && i < cas.length) {
+				if (casCheck.contains(cas[i])) { inSubset = true; }
+				i++;
+			}
+			if (inSubset) { subsetRecords.add(rec); }
+		}
+		return subsetRecords;
+	}
+	
+	public void createExperimentalRecordsSubsetJSON(String[] sources,String[] cas,String filename) {
+		String path = mainFolder+File.separator+filename;
+		File json = new File(path);
+		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
+		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(sources,cas);
+		subsetRecords.toJSON_File(path);
+	}
+	
+	public void createExperimentalRecordsSubsetExcel(String[] sources,String[] cas,String filename) {
+		String path = mainFolder+File.separator+filename;
+		File json = new File(path);
+		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
+		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(sources,cas);
+		subsetRecords.toExcel_File(path);
+	}
+	
+	private void makeDatabase(ExperimentalRecords records) {
 		String[] fieldNames = ExperimentalRecord.outputFieldNames;
 		String tableName = "records";
 		System.out.println("Creating database at "+databasePath+" with fields:\n"+String.join("\n",fieldNames));
@@ -114,6 +152,10 @@ public class DataFetcher {
 	public static void main(String[] args) {
 		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem"};
 		DataFetcher d = new DataFetcher();
-		d.createExperimentalRecordsDatabase(sources);
+//		d.createExperimentalRecordsDatabase(sources);
+//		d.createExperimentalRecordsJSON(sources);
+		String[] cas = {"335-76-2","3108-42-7","3830-45-3","375-95-1","4149-60-4","307-24-4","355-46-4","3871-99-6","375-22-4","10495-86-0"};
+		d.createExperimentalRecordsSubsetJSON(sources, cas, "ExperimentalRecords_CPHEA_112520.json");
+//		d.createExperimentalRecordsSubsetExcel(sources, cas, "ExperimentalRecords_CPHEA_112520.xlsx");
 	}
 }

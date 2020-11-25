@@ -93,7 +93,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			file.getParentFile().mkdirs();
 
 			GsonBuilder builder = new GsonBuilder();
-			builder.setPrettyPrinting();
+			builder.setPrettyPrinting().disableHtmlEscaping();
 			Gson gson = builder.create();
 
 			FileWriter fw = new FileWriter(file);
@@ -125,7 +125,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			Cell recCell = recHeaderRow.createCell(i);
 			recCell.setCellValue(headers[i]);
 			recCell.setCellStyle(style);
-			if (i < 5) {
+			if (i < 8) {
 				Cell badCell = badHeaderRow.createCell(i);
 				badCell.setCellValue(headers[i]);
 				badCell.setCellStyle(style);
@@ -148,7 +148,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 				} else {
 					Row badRow = badSheet.createRow(badCurrentRow);
 					badCurrentRow++;
-					for (int i = 0; i < 5; i++) {
+					for (int i = 0; i < 8; i++) {
 						Field field = erClass.getDeclaredField(headers[i]);
 						Object value = field.get(er);
 						if (value!=null && !(value instanceof Double)) { badRow.createCell(i).setCellValue(value.toString());
@@ -160,8 +160,8 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			}
 		}
 		
-		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:R"+recCurrentRow));
-		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:D"+badCurrentRow));
+		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:V"+recCurrentRow));
+		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:H"+badCurrentRow));
 		
 		for (int i = 3; i < headers.length; i++) {
 			String col = CellReference.convertNumToColString(i);

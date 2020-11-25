@@ -107,6 +107,7 @@ public class ParsePubChem extends Parse {
 		er.property_value_string=propertyValue;
 		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
+		er.keep=true;
 		
 		boolean foundNumeric = false;
 		propertyValue = propertyValue.replaceAll("greater than( or equal to )?", ">");
