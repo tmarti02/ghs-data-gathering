@@ -5,9 +5,6 @@ import java.io.FileReader;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.api.ExperimentalRecord;
-import gov.epa.api.ExperimentalRecords;
-
 
 public class ParseChemicalBook extends Parse {
 	
@@ -21,11 +18,11 @@ public class ParseChemicalBook extends Parse {
 		Vector<RecordChemicalBook> records = RecordChemicalBook.parseWebpagesInDatabase();
 		writeOriginalRecordsToFile(records);
 	}
-}
+
 	/**
 	 * Reads the JSON file created by createRecords() and translates it to an ExperimentalRecords object
 	 */
-	/*
+	
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental = new ExperimentalRecords();
@@ -89,8 +86,5 @@ public class ParseChemicalBook extends Parse {
 		p.jsonFolder= p.mainFolder;
 		p.createFiles();
 	}
-
 }
-	
 
-*/
