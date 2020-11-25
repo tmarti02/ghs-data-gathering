@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -815,55 +816,89 @@ public class Parse {
 	 * @param propertyValue	The string to be read
 	 * @return				The pressure condition in kPa
 	 */
-	static void getPressureCondition(ExperimentalRecord er,String propertyValue) {
+	void getPressureCondition(ExperimentalRecord er,String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
 		int pressureIndex = -1;
 		double conversionFactor = 1.0;
 		if (propertyValue.contains("kpa")) {
 			pressureIndex = propertyValue.indexOf("kpa");
+			conversionFactor = UnitConverter.kPa_to_mmHg;
 		} else if (propertyValue.contains("mmhg") || propertyValue.contains("mm hg") || propertyValue.contains("mm")) {
 			pressureIndex = propertyValue.indexOf("mm");
-			conversionFactor = UnitConverter.mmHg_to_kPa;
 		} else if (propertyValue.contains("atm")) {
 			pressureIndex = propertyValue.indexOf("atm");
-			conversionFactor = UnitConverter.atm_to_kPa;
+			conversionFactor = UnitConverter.atm_to_mmHg;
 		} else if (propertyValue.contains("hpa")) {
 			pressureIndex = propertyValue.indexOf("hpa");
-			conversionFactor = 1.0/10.0;
+			conversionFactor = UnitConverter.hPa_to_mmHg;
 		} else if (propertyValue.contains("pa")) {
 			pressureIndex = propertyValue.indexOf("pa");
-			conversionFactor = 1.0/1000.0;
+			conversionFactor = UnitConverter.Pa_to_mmHg;
 		} else if (propertyValue.contains("mbar")) {
 			pressureIndex = propertyValue.indexOf("mb");
-			conversionFactor = 1.0/10.0;
+			conversionFactor = UnitConverter.hPa_to_mmHg;
 		} else if (propertyValue.contains("bar")) {
 			pressureIndex = propertyValue.indexOf("bar");
-			conversionFactor = 100.0;
+			conversionFactor = UnitConverter.bar_to_mmHg;
 		} else if (propertyValue.contains("torr")) {
 			pressureIndex = propertyValue.indexOf("torr");
-			conversionFactor = UnitConverter.mmHg_to_kPa;
 		} else if (propertyValue.contains("psi")) {
 			pressureIndex = propertyValue.indexOf("psi");
-			conversionFactor = UnitConverter.psi_to_kPa;
+			conversionFactor = UnitConverter.psi_to_mmHg;
 		} 
 		// If any pressure units were found, looks for the last number that precedes them
 		boolean foundNumeric = false;
 		if (pressureIndex > 0) {
+			if (sourceName.equals(ExperimentalConstants.strSourceEChem)) {
+				if (!foundNumeric) {
+					try {
+						double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,pressureIndex);
+						String min = formatDouble(range[0]*conversionFactor);
+						String max = formatDouble(range[1]*conversionFactor);
+						er.pressure_mmHg = min+"-"+max;
+						foundNumeric = true;
+					} catch (Exception ex) { }
+				}
+				if (!foundNumeric) {
+					try {
+						Matcher caMatcher = Pattern.compile(".*?(ca. )?([-]?[ ]?[0-9]*\\.?[0-9]+)( ca. )([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(propertyValue.substring(0,pressureIndex));
+						if (caMatcher.find()) {
+							String numQual = caMatcher.group(1).isBlank() ? "" : "~";
+							String min = formatDouble(Double.parseDouble(caMatcher.group(2)));
+							String max = formatDouble(Double.parseDouble(caMatcher.group(4)));
+							er.pressure_mmHg = numQual+min+"~"+max;
+							foundNumeric = true;
+						}
+					} catch (Exception ex) { }
+				}
+			}
 			if (!foundNumeric) {
 				try {
-					double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,pressureIndex);
-					er.updateNote("pressure_kPa: "+range[0]*conversionFactor+"-"+range[1]*conversionFactor);
+					er.pressure_mmHg = formatDouble(conversionFactor*Parse.extractDoubleFromString(propertyValue,pressureIndex));
 					foundNumeric = true;
 				} catch (Exception ex) { }
 			}
 		}
-		if (!foundNumeric) {
-			try {
-				er.pressure_kPa = conversionFactor*Parse.extractDoubleFromString(propertyValue,pressureIndex);
-				foundNumeric = true;
-			} catch (Exception ex) { }
-		}
 	}
+	
+	public static String formatDouble(double d) {
+        DecimalFormat df = new DecimalFormat("0.00");
+        DecimalFormat df2 = new DecimalFormat("0.0");
+        DecimalFormat dfSci = new DecimalFormat("0.00E00");
+        double roundDown = Math.floor(d);
+        double percentDifference = Math.abs(roundDown - d) / d * 100.0;
+        if (d < 0.01) {
+        	return dfSci.format(d);
+        } else {
+	       if (percentDifference > 0.1) {
+	    	   return df.format(d);
+	       } else {
+	    	   return df2.format(d);
+	       }
+        }
+
+	}
+
 
 	/**
 	 * Extracts the first range of numbers before a given index in a string

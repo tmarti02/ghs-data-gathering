@@ -116,9 +116,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		Row recHeaderRow = recSheet.createRow(1);
 		Row badSubtotalRow = badSheet.createRow(0);
 		Row badHeaderRow = badSheet.createRow(1);
-		String[] headers = {"casrn","einecs","chemical_name","property_name","property_value_string","property_value_numeric_qualifier",
-				"property_value_point_estimate_final","property_value_min_final","property_value_max_final","property_value_units_final","pressure_kPa","temperature_C",
-				"pH","property_value_qualitative","measurement_method","note","flag","url"};
+		String[] headers = ExperimentalRecord.allFieldNames;
 		CellStyle style = wb.createCellStyle();
 		Font font = wb.createFont();
 		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
@@ -192,8 +190,9 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 
 			File file = new File(jsonFilePath);
 
-			if (!file.exists())
+			if (!file.exists()) {
 				return null;
+			}
 
 			ExperimentalRecords chemicals = gson.fromJson(new FileReader(jsonFilePath), ExperimentalRecords.class);			
 			return chemicals;

@@ -1,9 +1,11 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.Objects;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 
 public class ExperimentalRecord {
 
@@ -23,7 +25,7 @@ public class ExperimentalRecord {
 	String property_value_units_final;//The units for the property value (convert to defined values in ExperimentalConstants class)
 	String property_value_qualitative;// Valid qualitative data: solubility descriptor, appearance
 	Double temperature_C;//The temperature in C that the property is measured at (vapor pressure might be given at 23 C for example)
-	Double pressure_kPa;//The pressure in kPa that the property is measured at (important for boiling points for example)
+	String pressure_mmHg;//The pressure in kPa that the property is measured at (important for boiling points for example)
 	String pH;
 	String measurement_method;//	The experimental method used to measure the property
 	String note;//	Any additional note
@@ -45,9 +47,9 @@ public class ExperimentalRecord {
 	
 	//TODO do we need parent url too? sometimes there are several urls we have to follow along the way to get to the final url
 
-	public final static String [] allFieldNames= {"casrn","chemical_name","synonyms","smiles","property_name",
-			"property_value_min","property_value_max","property_value_point_estimate","property_value_units",
-			"temperature_C","pressure_kPa","measurement_method","note","url","source_name","date_accessed"};
+	public final static String [] allFieldNames= {"casrn","einecs","chemical_name","property_name","property_value_string","property_value_numeric_qualifier",
+			"property_value_point_estimate_final","property_value_min_final","property_value_max_final","property_value_units_final","pressure_mmHg","temperature_C",
+			"pH","property_value_qualitative","measurement_method","note","flag","source_name","url"};
 
 	public void finalizeUnits() {
 		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
@@ -153,5 +155,16 @@ public class ExperimentalRecord {
 		note = Objects.isNull(note) ? str : note+"; "+str;
 	}
 
-
+	public void addRecordToDatabase(String tableName,Connection conn) {
+		String name = chemical_name==null ? "" : chemical_name.replace("'", "''").replace("[", "'[").replace("]", "']");
+		String pointEstimate = property_value_point_estimate_final==null ? "" : Double.toString(property_value_point_estimate_final);
+		String min = property_value_min_final==null ? "" : Double.toString(property_value_min_final);
+		String max = property_value_max_final==null ? "" : Double.toString(property_value_max_final);
+		String temp = temperature_C==null ? "" : Double.toString(temperature_C);
+		String [] values= {casrn,einecs,name.replace("'", "''"),property_name,property_value_string,property_value_numeric_qualifier,
+				pointEstimate,min,max,
+				property_value_units_final,pressure_mmHg,temp,
+				pH,property_value_qualitative,measurement_method,note,Boolean.toString(flag),source_name,url};
+		CreateGHS_Database.addDataToTable(tableName, allFieldNames, values, conn);
+	}
 }

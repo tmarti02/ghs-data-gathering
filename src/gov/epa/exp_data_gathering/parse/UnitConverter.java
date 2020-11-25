@@ -5,10 +5,13 @@ import gov.epa.api.ExperimentalConstants;
 public class UnitConverter {
 	
 	public static final double airDensitySTP = 1.2041/1000.0;
-	public static final double mmHg_to_kPa=0.133322;
-	public static final double atm_to_kPa=101.325;
+	public static final double kPa_to_mmHg=7.50062;
+	public static final double atm_to_mmHg=760.0;
+	public static final double psi_to_mmHg=51.7149;
+	public static final double hPa_to_mmHg=0.750061;
+	public static final double Pa_to_mmHg=0.00750062;
+	public static final double bar_to_mmHg=750.062;
 	public static final double atm_to_Pa=101325.0;
-	public static final double psi_to_kPa=6.89476;
 	
 	private static double F_to_C(double F) {
 		return (F-32.0)*5.0/9.0;
@@ -53,22 +56,24 @@ public class UnitConverter {
 	public static void convertPressure(ExperimentalRecord er) {
 		double conversionFactor = 1.0;
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_mmHg) || er.property_value_units_original.equals(ExperimentalConstants.str_torr)) {
-			conversionFactor = UnitConverter.mmHg_to_kPa;
+			conversionFactor = 1.0;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_atm)) {
-			conversionFactor = UnitConverter.atm_to_kPa;
+			conversionFactor = UnitConverter.atm_to_mmHg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_hpa) || er.property_value_units_original.equals(ExperimentalConstants.str_mbar)) {
-			conversionFactor = 1.0/10.0;
+			conversionFactor = UnitConverter.hPa_to_mmHg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pa)) {
-			conversionFactor = 1.0/1000.0;
+			conversionFactor = UnitConverter.Pa_to_mmHg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_bar)) {
-			conversionFactor = 100.0;
+			conversionFactor = UnitConverter.bar_to_mmHg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_psi)) {
-			conversionFactor = UnitConverter.psi_to_kPa;
+			conversionFactor = UnitConverter.psi_to_mmHg;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_kpa)) {
+			conversionFactor = UnitConverter.kPa_to_mmHg;
 		}
 		if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
 		if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
 		if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
-		er.property_value_units_final = ExperimentalConstants.str_kpa;
+		er.property_value_units_final = ExperimentalConstants.str_mmHg;
 	}
 	
 	public static void convertSolubility(ExperimentalRecord er) {

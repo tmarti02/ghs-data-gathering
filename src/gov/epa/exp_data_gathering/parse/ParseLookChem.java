@@ -147,7 +147,7 @@ public class ParseLookChem extends Parse {
 			if (propertyName.contains("?")) { er.flag = true; }
 		} else {
 			er.property_value_units_original = null;
-			er.pressure_kPa = null;
+			er.pressure_mmHg = null;
 			er.temperature_C = null;
 		}
 		
@@ -163,7 +163,7 @@ public class ParseLookChem extends Parse {
 	
 	public static void main(String[] args) {
 		ParseLookChem p = new ParseLookChem();
-		p.mainFolder = p.mainFolder + File.separator + "LookChem General";
+		p.mainFolder = p.mainFolder + File.separator + "LookChem PFAS";
 		p.databaseFolder = p.mainFolder;
 		p.jsonFolder= p.mainFolder;
 		p.createFiles();
