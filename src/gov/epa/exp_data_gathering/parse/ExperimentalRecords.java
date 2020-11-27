@@ -163,11 +163,11 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:V"+recCurrentRow));
 		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:H"+badCurrentRow));
 		
-		for (int i = 3; i < headers.length; i++) {
+		for (int i = 0; i < headers.length; i++) {
 			String col = CellReference.convertNumToColString(i);
 			String recSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(recCurrentRow+1)+")";
 			recSubtotalRow.createCell(i).setCellFormula(recSubtotal);
-			if (i < 5) {
+			if (i < 8) {
 				String badSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(badCurrentRow+1)+")";
 				badSubtotalRow.createCell(i).setCellFormula(badSubtotal);
 			}

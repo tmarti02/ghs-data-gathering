@@ -494,11 +494,11 @@ public class Parse {
 				if (!badUnits) {
 					er.property_value_min_original = range[0];
 					er.property_value_max_original = range[1];
+					foundNumeric = true;
 				}
 				if (propertyValue.contains("~") || propertyValue.contains("ca.")) {
 					er.property_value_numeric_qualifier = "~";
 				}
-				foundNumeric = true;
 			} catch (Exception ex) { }
 		}
 		
@@ -508,11 +508,11 @@ public class Parse {
 				if (!badUnits) {
 					er.property_value_min_original = range[0];
 					er.property_value_max_original = range[1];
+					foundNumeric = true;
 				}
 				if (propertyValue.contains("~") || propertyValue.contains("ca.")) {
 					er.property_value_numeric_qualifier = "~";
 				}
-				foundNumeric = true;
 			} catch (Exception ex) { }
 		}
 		
@@ -521,7 +521,7 @@ public class Parse {
 				double propertyValueAsDouble = Parse.extractDoubleFromString(propertyValue,unitsIndex);
 				int propertyValueIndex = -1;
 				if (propertyValueAsDouble >= 0 && propertyValueAsDouble < 1) {
-					propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf("0");
+					propertyValueIndex = Math.min(propertyValue.replaceAll("\\s","").indexOf("0"),propertyValue.replaceAll("\\s","").indexOf("."));
 				} else {
 					propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
 				}
