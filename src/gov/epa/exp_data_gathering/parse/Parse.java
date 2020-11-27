@@ -177,7 +177,7 @@ public class Parse {
 	 * @param tableName		The name of the table to store the data in, i.e., the source name
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String htmlClass,String tableName,boolean startFresh) {
+	public void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String css,String tableName,boolean startFresh) {
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
@@ -204,7 +204,7 @@ public class Parse {
 						long endTime=System.currentTimeMillis();
 						delay=endTime-startTime;
 						Document doc = Jsoup.parse(html);
-						Element table=doc.select("."+htmlClass).first();
+						Element table=doc.select(css).first();
 						if (table!=null) {
 							rec.content=table.outerHtml();
 							rec.addRecordToDatabase(tableName, conn);

@@ -73,7 +73,7 @@ public class RecordLookChem {
 		ParseLookChem p = new ParseLookChem();
 		p.mainFolder = p.mainFolder + File.separator + "LookChem PFAS";
 		p.databaseFolder = p.mainFolder;
-		p.downloadWebpagesToDatabaseAdaptive(urls,"reir_l_info_table",sourceName,startFresh);		
+		p.downloadWebpagesToDatabaseAdaptive(urls,".reir_l_info_table",sourceName,startFresh);		
 	}
 	
 	/**
