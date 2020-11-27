@@ -60,9 +60,6 @@ public class ExperimentalConstants {
 	public static final String strSourcePubChem="PubChem";
 	public static final String strSourceEChem="eChemPortal";
 	public static final String strSourceOChem="OChem";
-	
-	//Conversion factors:
-	public static final double mmHg_to_kPa=0.133322;
-	public static final double atm_to_kPa=101.325;
+	public static final String strSourceOFMPub="OFMPub";
 	
 }

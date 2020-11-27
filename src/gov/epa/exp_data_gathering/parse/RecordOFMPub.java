@@ -1,5 +1,9 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.io.File;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -9,15 +13,31 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import gov.epa.api.ExperimentalConstants;
+import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+
 public class RecordOFMPub {
-	String cas;
-	String name;
-	String submissionID;
-	Vector<String> meltingPoint;
-	Vector<String> boilingPoint;
-	Vector<String> vaporPressure;
-	Vector<String> partitionCoefficient;
-	Vector<String> waterSolubility;
+	String endpoint;
+	String categoryChemicalCAS;
+	String categoryChemicalName;
+	String testSubstanceCAS;
+	String testSubstanceName;
+	String testSubstanceComments;
+	String categoryChemicalResultType;
+	String testSubstanceResultType;
+	String indicator;
+	String value;
+	// pH and pKa fields are present in the table but only 1/7077 records has a value for them
+	// and it isn't clear what pH and pKa measurements exactly they refer to
+//	String pH;
+//	String pKa;
+	String resultRemarks;
+	String reference;
+	String reliability;
+	String reliabilityRemarks;
+	String url;
+	
+	static final String sourceName=ExperimentalConstants.strSourceOFMPub;
 	
 	private static Vector<String> getSubmissionIDs() {
 		String indexURL = "https://ofmpub.epa.gov/oppthpv/hpv_hc_characterization.get_report_by_cas?doctype=2";
@@ -32,7 +52,8 @@ public class RecordOFMPub {
 				String lastCellContent = lastCell.html();
 				Matcher matchSubmissionID = Pattern.compile("submission_id=([0-9]+)").matcher(lastCellContent);
 				if (matchSubmissionID.find()) {
-					ids.add(matchSubmissionID.group(1));
+					String newID = matchSubmissionID.group(1);
+					if (!ids.contains(newID)) { ids.add(newID); }
 				}
 			}
 		} catch (Exception ex) {
@@ -52,7 +73,7 @@ public class RecordOFMPub {
 		return urls;
 	}
 	
-	public static void downloadWebpagesToDatabase() {
+	public static void downloadWebpagesToDatabaseFromIndex(boolean startFresh) {
 		Vector<String> ids = getSubmissionIDs();
 		Vector<String> urls = new Vector<String>();
 		for (String id:ids) {
@@ -61,9 +82,102 @@ public class RecordOFMPub {
 				urls.add(idURLs[i]);
 			}
 		}
+		
+		ParseOFMPub p = new ParseOFMPub();
+		p.downloadWebpagesToDatabaseAdaptiveNonUnicode(urls,sourceName,startFresh);
+	}
+	
+	public static void downloadWebpagesToDatabaseFromIndex(boolean startFresh,int start,int end) {
+		Vector<String> ids = getSubmissionIDs();
+		Vector<String> urls = new Vector<String>();
+		for (String id:ids) {
+			String[] idURLs = constructURLs(id);
+			for (int i = 0; i < idURLs.length; i++) {
+				urls.add(idURLs[i]);
+			}
+		}
+		
+		List<String> urlListSubset = urls.subList(start, end);
+		Vector<String> urlSubset = new Vector<String>(urlListSubset);
+		ParseOFMPub p = new ParseOFMPub();
+		p.downloadWebpagesToDatabaseAdaptiveNonUnicode(urlSubset,sourceName,startFresh);
+	}
+	
+	public static Vector<RecordOFMPub> parseWebpagesInDatabase() {
+		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
+		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
+		Vector<RecordOFMPub> records = new Vector<>();
+
+		try {
+			Statement stat = MySQL_DB.getStatement(databasePath);
+			ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceOFMPub);
+
+			int counter = 1;
+			while (rs.next()) {
+				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
+				
+				String html = rs.getString("content");
+				String url = rs.getString("url");
+				Document doc = Jsoup.parse(html);
+
+				parseDocument(records,doc,url);
+
+				counter++;
+			}
+			
+			System.out.println("Parsed "+(counter-1)+" pages");
+			return records;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	private static void parseDocument(Vector<RecordOFMPub> records,Document doc,String url) {
+		Elements tables = doc.select("table.RedTableCopy");
+		for (Element table:tables) {
+			RecordOFMPub opr = new RecordOFMPub();
+			opr.url = url;
+			Elements rows = table.getElementsByTag("tr");
+			for (Element row:rows) {
+				Elements cells = row.getElementsByTag("td");
+				String headerClass = cells.get(0).className();
+				String header = cells.get(0).text();
+				if (headerClass.equals("tableHeaderDkBlue")) { opr.endpoint = header; }
+				if (cells.size() > 1) {
+					String data = cells.get(1).text();
+					if (header.contains("Category Chemical") && !header.contains("Result Type")) {
+						Matcher matchCASandName = Pattern.compile("\\(([0-9-]+)\\)[ ]?(.+)").matcher(data);
+						if (matchCASandName.find()) {
+							opr.categoryChemicalCAS = matchCASandName.group(1);
+							opr.categoryChemicalName = matchCASandName.group(2);
+						}
+					} else if (header.contains("Test Substance") && !header.contains("Result Type") && !header.contains("Comments")) {
+						Matcher matchCASandName = Pattern.compile("\\(([0-9-]+)\\)?[ ]?(.*)").matcher(data);
+						if (matchCASandName.find()) {
+							opr.testSubstanceCAS = matchCASandName.group(1);
+							opr.testSubstanceName = matchCASandName.group(2);
+						}
+					} else if (header.contains("Test Substance Comments")) { opr.testSubstanceComments = data;
+					} else if (header.contains("Category Chemical Result Type")) { opr.categoryChemicalResultType = data;
+					} else if (header.contains("Test Substance Result Type")) { opr.testSubstanceResultType = data;
+					} else if (header.contains("Indicator") && !header.contains("Study")) { opr.indicator = data;
+					} else if (header.contains("Value/Range")) { opr.value = data;
+//					} else if (header.contains("pH Value")) { opr.pH = data;
+//					} else if (header.contains("pKa")) { opr.pKa = data;
+					} else if (header.contains("Results Remarks")) { opr.resultRemarks = data;
+					} else if (header.contains("Study Reference")) { opr.reference = data;
+					} else if (header.contains("Reliability") && !header.contains("Remarks")) { opr.reliability = data;
+					} else if (header.contains("Reliability Remarks")) { opr.reliabilityRemarks = data;
+					}
+				}
+			}
+			records.add(opr);
+		}
 	}
 	
 	public static void main(String[] args) {
-		// TODO
+		downloadWebpagesToDatabaseFromIndex(true);
 	}
 }

@@ -28,6 +28,7 @@ public class ExperimentalRecord {
 	String pressure_mmHg;//The pressure in kPa that the property is measured at (important for boiling points for example)
 	String pH;
 	String measurement_method;//	The experimental method used to measure the property
+	String reliability;
 	String note;//	Any additional note
 
 	String property_value_string;//Store original string from source for checking later
@@ -38,8 +39,6 @@ public class ExperimentalRecord {
 	
 	String url;
 	String source_name;//use Experimental constants
-	String original_source_name;
-	String original_source_reference;
 	String date_accessed;//use Experimental constants
 	
 	boolean keep;//Does the record contain useful data?

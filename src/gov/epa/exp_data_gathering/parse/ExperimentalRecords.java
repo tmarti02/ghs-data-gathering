@@ -93,7 +93,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			file.getParentFile().mkdirs();
 
 			GsonBuilder builder = new GsonBuilder();
-			builder.setPrettyPrinting().disableHtmlEscaping();
+			builder.setPrettyPrinting();
 			Gson gson = builder.create();
 
 			FileWriter fw = new FileWriter(file);

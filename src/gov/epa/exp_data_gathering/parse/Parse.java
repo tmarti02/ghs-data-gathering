@@ -90,7 +90,6 @@ public class Parse {
 	 */
 	public void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String tableName, boolean startFresh) {
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
-		System.out.println(databasePath);
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
@@ -98,8 +97,9 @@ public class Parse {
 		Random rand = new Random();
 		
 		try {
-			int counter = 1;
-			for (String url:urls) {
+			int counter = 0;
+			for (int i = 0; i < urls.size(); i++) {
+				String url = urls.get(i);
 				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 				Date date = new Date();  
 				String strDate=formatter.format(date);
@@ -111,6 +111,47 @@ public class Parse {
 					try {
 						long startTime=System.currentTimeMillis();
 						rec.content=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						long endTime=System.currentTimeMillis();
+						delay = endTime-startTime;
+						rec.addRecordToDatabase(tableName, conn);
+						counter++;
+						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+					} catch (Exception ex) {
+						System.out.println("Failed to download "+url);
+					}
+					Thread.sleep((long) (delay*(1+rand.nextDouble())));
+				}
+			}
+			
+			System.out.println("Downloaded "+counter+" pages");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void downloadWebpagesToDatabaseAdaptiveNonUnicode(Vector<String> urls,String tableName, boolean startFresh) {
+		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
+		File db = new File(databasePath);
+		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
+		
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
+		Random rand = new Random();
+		
+		try {
+			int counter = 0;
+			for (int i = 0; i < urls.size(); i++) {
+				String url = urls.get(i);
+				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+				Date date = new Date();  
+				String strDate=formatter.format(date);
+				
+				RawDataRecord rec=new RawDataRecord(strDate, url, "");
+				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
+				if (!haveRecord || startFresh) {
+					long delay = 0;
+					try {
+						long startTime=System.currentTimeMillis();
+						rec.content=FileUtilities.getText(url).replace("'", "''"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay = endTime-startTime;
 						rec.addRecordToDatabase(tableName, conn);
@@ -504,7 +545,7 @@ public class Parse {
 				symbol = ">";
 			} else if (str.charAt(index-1)=='<') {
 				symbol = "<";
-			} else if (str.charAt(index-1)=='~' || str.contains("ca.")) {
+			} else if (str.charAt(index-1)=='~' || str.contains("ca.") || str.contains("circa")) {
 				symbol = "~";
 			} else if (index > 1 && str.charAt(index-2)=='>' && str.charAt(index-1)=='=') {
 				symbol = ">=";
@@ -576,7 +617,7 @@ public class Parse {
 		return foundNumeric;
 	}
 	
-	static boolean getWaterSolubility(ExperimentalRecord er,String propertyValue) {
+	boolean getWaterSolubility(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
@@ -632,7 +673,7 @@ public class Parse {
 			}
 		} 
 		
-		if (unitsIndex < propertyValue.indexOf(":")) {
+		if (er.source_name!=ExperimentalConstants.strSourceOFMPub && unitsIndex < propertyValue.indexOf(":")) {
 			unitsIndex = propertyValue.length();
 		}
 		
@@ -695,7 +736,7 @@ public class Parse {
 		}
 	}
 
-	static boolean getVaporPressure(ExperimentalRecord er,String propertyValue) {
+	boolean getVaporPressure(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
@@ -739,7 +780,7 @@ public class Parse {
 			er.property_value_qualitative = ExperimentalConstants.str_negl;
 		}
 		
-		if (propertyValue.contains(":")) {
+		if (er.source_name!=ExperimentalConstants.strSourceOFMPub && propertyValue.contains(":")) {
 			unitsIndex = propertyValue.length();
 		}
 

@@ -148,7 +148,7 @@ public class ParseEChemPortal extends Parse {
 				} else {
 					er.keep = true;
 				}
-				er.updateNote(ecpr.reliability);
+				er.reliability = ecpr.reliability;
 				records.add(er);
 			}
 		}
