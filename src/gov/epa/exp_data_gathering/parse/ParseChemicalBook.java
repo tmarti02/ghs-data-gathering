@@ -1,10 +1,23 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Random;
 import java.util.Vector;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
+import com.google.gson.GsonBuilder;
+
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.api.RawDataRecord;
+import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 
 public class ParseChemicalBook extends Parse {
 	
@@ -25,13 +38,12 @@ public class ParseChemicalBook extends Parse {
 	
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
-		ExperimentalRecords recordsExperimental = new ExperimentalRecords();
+		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
 			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
-			
-			RecordChemicalBook[] recordsChemicalBook = gson.fromJson(new FileReader(jsonFile), RecordChemicalBook[].class);
-			System.out.println(recordsChemicalBook[2]);
+			FileReader originalsource = new FileReader(jsonFile);
+			RecordChemicalBook[] recordsChemicalBook = gson.fromJson(originalsource, RecordChemicalBook[].class);
 			
 			for (int i = 0; i < recordsChemicalBook.length; i++) {
 				RecordChemicalBook r = recordsChemicalBook[i];
@@ -61,9 +73,7 @@ public class ParseChemicalBook extends Parse {
          
 	}
 
-
 	private void addNewExperimentalRecord(RecordChemicalBook cbr, String propertyName, String propertyValue, ExperimentalRecords recordsExperimental) {
-		// TODO Auto-generated method stub
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.casrn=cbr.CAS;
 		er.einecs=cbr.EINECS;
@@ -76,6 +86,50 @@ public class ParseChemicalBook extends Parse {
 		
 		recordsExperimental.add(er);
 		
+		
+		// Adds measurement methods and notes to valid records
+		// Clears all numerical fields if property value was not obtainable
+		boolean foundNumeric = false;
+		
+		propertyValue = propertyValue.replaceAll(",", ".");
+		if (propertyName==ExperimentalConstants.strDensity) {
+			foundNumeric = getDensity(er, propertyValue);
+			getPressureCondition(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
+		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
+				propertyName==ExperimentalConstants.strFlashPoint) {
+			foundNumeric = getTemperatureProperty(er,propertyValue);
+			getPressureCondition(er,propertyValue);
+		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
+			foundNumeric = getWaterSolubility(er, propertyValue);
+			getTemperatureCondition(er,propertyValue);
+			// getQualitativeSolubility(er, propertyValue);
+		}
+		
+		if (foundNumeric) {
+			er.finalizeUnits();
+			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
+			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
+			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
+			// Warns if there may be a problem with an entry
+			er.flag = false;
+			if (propertyName.contains("?")) { er.flag = true; }
+		} else {
+			er.property_value_units_original = null;
+			er.pressure_mmHg = null;
+			er.temperature_C = null;
+		}
+		
+		if (!(er.property_value_string.toLowerCase().contains("predicted"))) {
+			er.keep = false;
+		}
+		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
+				&& (er.property_value_units_original!=null || er.property_value_qualitative!=null || er.note!=null)) {
+			er.keep = true;
+		} else {
+			er.keep = false;
+		}
+		
 	}
 	
 	
@@ -86,5 +140,89 @@ public class ParseChemicalBook extends Parse {
 		p.jsonFolder= p.mainFolder;
 		p.createFiles();
 	}
-}
+	
+	public void downloadPropertyLinksToDatabase(Vector<String> urls,String tableName, int start, int end, boolean startFresh) {
+		String databasePath = databaseFolder+File.separator+"search_property"+"_raw_html.db";
+		File db = new File(databasePath);
+		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
+		
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
+		Random rand = new Random();
+		
+		try {
+			int counter = 0;
+			for (int i = start; i < end; i++) {
+				String url = urls.get(i);
+				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+				Date date = new Date();  
+				String strDate=formatter.format(date);
+				
+				RawDataRecord rec=new RawDataRecord(strDate, url, "");
+				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
+				if (!haveRecord || startFresh) {
+					long delay = 0;
+					try {
+						long startTime=System.currentTimeMillis();
+						rec.content= getSearchURLAndVerificationCheck(urls.get(i));
+						if (!(rec.content == null)) {
+						long endTime=System.currentTimeMillis();
+						delay = endTime-startTime;
+						rec.addRecordToDatabase(tableName, conn);
+						counter++;
+						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+						}
+						else {
+							System.out.println("index of search url where break occurred: " + i);
+							break;
+						}
+					} catch (Exception ex) {
+						System.out.println("Failed to download "+url);
+					}
+					Thread.sleep((long) (delay*(1+rand.nextDouble())));
+				}
+			}
+			
+			System.out.println("Downloaded "+counter+" pages");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
+
+	public static String getSearchURLAndVerificationCheck(String url) {
+		try {
+			Document doc = Jsoup.connect(url).get();
+			Element resultsHeader = doc.select("#ContentPlaceHolder1_LabelSummary").first(); // reveals if there are results for the search
+			if (resultsHeader == null) {
+				Element emptysearchcheck = doc.select(".SearchEmpty").first();
+				System.out.println(emptysearchcheck.outerHtml());
+				return emptysearchcheck.toString();
+			}
+			else {
+			String resultsFound = resultsHeader.text().toString();
+			if (resultsFound.matches("No results found")) {
+					return resultsFound; // reveals if there are no results found, second way the search can come back empty
+				}
+			else if (resultsFound.isEmpty()) {
+				System.out.println("javascript preventing any further checking. open website and spin wheel at " + url);
+				return null;
+			}
+			else {
+				Element propertiesBox = doc.select(".actionspro").first();
+					if (!(propertiesBox == null)) {
+						String propertiesLink = propertiesBox.select("a:contains(Chemical)").attr("abs:href").toString();
+						return propertiesLink;
+					}
+					else {
+						return null;
+					}
+			}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+}

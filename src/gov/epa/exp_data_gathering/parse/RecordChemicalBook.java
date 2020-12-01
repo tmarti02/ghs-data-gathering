@@ -1,11 +1,17 @@
 package gov.epa.exp_data_gathering.parse;
+import gov.epa.api.RawDataRecord;
+import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
+import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Random;
 import java.util.Vector;
 
 import org.jsoup.Jsoup;
@@ -61,7 +67,8 @@ public class RecordChemicalBook extends Parse {
 
 	
 private static void parseDocument(RecordChemicalBook rcb, Document doc) {
-	Elements table_elements = doc.select("tr.ProdSupplierGN_ProductA_2, tr.ProdSupplierGN_ProductA_1");
+	Elements table_elements = doc.select("tr.ProdSupplierGN_ProductA_2");
+	Elements table_elements1 = doc.select("tr.ProdSupplierGN_ProductA_1");
 	for (Element table_element:table_elements) {
 		String header = table_element.select("td").first().text();
 		String data = new String();
@@ -69,6 +76,55 @@ private static void parseDocument(RecordChemicalBook rcb, Document doc) {
 			data = table_element.getElementsByTag("a").text();
 		} else if (!table_element.select("td + td").text().equals("")) {
 			data = table_element.select("td + td").text(); // inconsistent with the other two  but illustrative
+		} else {
+			data = null; // don't want it taking images
+		}
+			if (data != null && !data.isBlank()) {
+				if (header.contains("CAS:") && !header.contains("CAS DataBase Reference")) { rcb.CAS = data; }
+				else if (header.contains("Synonyms:")) { rcb.synonyms = data; }
+				else if (header.contains("MF")) { rcb.MF = data; }
+				else if (header.contains("EINECS")) { rcb.EINECS = data; }
+				else if (header.contains("Mol File:")) { rcb.molfile = data; }
+				else if (header.contains("Boiling point")) { rcb.boilingPoint = data; }
+				else if (header.contains("density")) { rcb.density = data; }
+				else if (header.contains("refractive index")) { rcb.refractiveindex = data; }
+				else if (header.contains("Fp")) { rcb.FP = data; }
+				else if (header.contains("form:")) { rcb.form = data; }
+				else if (header.contains("Merck")) { rcb.merck = data; }
+				else if (header.contains("BRN")) { rcb.BRN = data; }
+				else if (header.contains("Henry's Law Constant")) { rcb.henrylc = data; }
+				else if (header.contains("Exposure limits")) { rcb.exposurelimits = data; }
+				else if (header.contains("Stability")) { rcb.stability = data; }
+				else if (header.contains("InCHlKey")) { rcb.InCHlKey = data; }
+				else if (header.contains("CAS DataBase")) { rcb.CASreference = data; }
+				else if (header.contains("IARC")) { rcb.IARC = data; }
+				else if (header.contains("NIST Chemistry")) { rcb.NISTchemref = data; }
+				else if (header.contains("EPA")) { rcb.EPAsrs = data; }
+				else if (header.contains("Hazard Codes")) { rcb.hazardcodes = data; }
+				else if (header.contains("storage temp.")) { rcb.storagetemp = data; }
+				else if (header.contains("solubility")) { rcb.solubility = data; }
+				else if (header.contains("color")) { rcb.color = data; }
+				else if (header.contains("Melting point")) { rcb.meltingPoint = data; }
+				else if (header.contains("vapor density")) { rcb.vapordensity = data; }
+				else if (header.contains("vapor pressure")) { rcb.vaporpressure = data; }
+				else if (header.contains("Relative polarity")) { rcb.relativepolarity = data; }
+				else if (header.contains("Odor Threshold")) { rcb.odorthreshold = data; }
+				else if (header.contains("explosivelimit")) { rcb.explosivelimit = data; }
+				else if (header.contains("Water Solubility")) { rcb.watersolubility = data; }
+				else if (header.contains("Product Name:")) { rcb.chemicalName = data; }
+				else if (header.contains("max")) { rcb.lambdamax = data; }					
+				else if (header.contains("MW")) { rcb.MW = data;}
+
+				}
+	}
+	
+	for (Element table_element1:table_elements1) {
+		String header = table_element1.select("td").first().text();
+		String data = new String();
+		if (!table_element1.getElementsByTag("a").text().equals("")) {
+			data = table_element1.getElementsByTag("a").text();
+		} else if (!table_element1.select("td + td").text().equals("")) {
+			data = table_element1.select("td + td").text(); // inconsistent with the other two  but illustrative
 		} else {
 			data = null; // don't want it taking images
 		}
@@ -112,46 +168,19 @@ private static void parseDocument(RecordChemicalBook rcb, Document doc) {
 			}
 }
 
-
-
-private static Vector<String> getsearchURLsFromDashboardRecords(Vector<RecordDashboard> records,int start,int end) {
+private static Vector<String> getSearchURLsFromDashboardRecords (Vector<RecordDashboard> records,int start,int end) {
 	String baseURL = "https://www.chemicalbook.com/Search_EN.aspx?keyword=";
 	Vector<String> urls = new Vector<String>();
 	for (int i = start; i < end; i++) {
 		String CAS = records.get(i).CASRN;
 		if (!CAS.startsWith("NOCAS")) {
 			urls.add(baseURL+CAS);
+			// System.out.println(urls.get(i - start)); let's think of a better way of doing this
 		}
 	}
 	return urls;
 }
 
-private static Vector<String> getpropertyURLfromsearchURL(Vector<String> url){
-	Vector<String> propertyURL = new Vector<String>();
-	for(int i = 0; i < url.size(); ++i) {
-		try {
-			Document doc = Jsoup.connect(url.get(i)).get();
-			Element importantregion = doc.select("ul.actionspro").first();
-			 propertyURL.add(importantregion.select("a:contains(Chemical)").attr("abs:href").toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.out.println("There's a human verification system that's preventing you from scraping");
-		} 
-	}
-	return propertyURL;
-}
-
-public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end,boolean startFresh) {
-	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
-	Vector<String> searchurls = getsearchURLsFromDashboardRecords(records,start,end);
-	Vector<String> propertyurls = getpropertyURLfromsearchURL(searchurls);
-	System.out.println(propertyurls.get(8));
-	ParseChemicalBook p = new ParseChemicalBook();
-	p.mainFolder = p.mainFolder + File.separator + "General";
-	p.databaseFolder = p.mainFolder;
-	p.downloadWebpagesToDatabaseAdaptive(propertyurls,"main_960px",sourceName,startFresh);		
-}
 
 /**
  * Parses the HTML strings in the raw HTML database to RecordLookChem objects
@@ -198,18 +227,18 @@ public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 	return null;
 }
 
-public static void main(String args[]) {
-	downloadWebpagesFromExcelToDatabase("Data" + "/list_chemicals-2020-11-23-09-54-12.xls",1,10,true);
-	Vector<RecordChemicalBook> rcb = parseWebpagesInDatabase();
-	for (int i = 0; i < rcb.size(); i++) {
-		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting();
-		Gson gson = builder.create();
-		System.out.println(gson.toJson(rcb.get(i)));
+public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end, int excelFinalRecord, boolean startFresh) {
+	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+	Vector<String> searchURLs = getSearchURLsFromDashboardRecords(records,1,excelFinalRecord);
+	ParseChemicalBook p = new ParseChemicalBook();
+	p.mainFolder = p.mainFolder + File.separator + "General";
+	p.databaseFolder = p.mainFolder;
+	p.downloadPropertyLinksToDatabase(searchURLs,"searchAndPropertyLinks", start, end, startFresh);
+	// p.downloadWebpagesToDatabaseAdaptive(propertyurls,"main_960px",sourceName,startFresh);		
+}
 
+public static void main(String[] args) {
+	downloadWebpagesFromExcelToDatabase("Data" + "/PFASSTRUCT.xlsx",3701,3900,8164,false);
 	}
-	
 }
 
-
-}
