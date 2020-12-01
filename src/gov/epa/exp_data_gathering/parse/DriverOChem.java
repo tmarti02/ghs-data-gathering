@@ -51,16 +51,18 @@ public class DriverOChem {
 				selectAll.click();
 				Thread.sleep(20000);
 				
-				WebElement pageInput = driver.findElement(By.id("pageInput"));
-				pageInput.click();
-				Thread.sleep(2000);
-				
-				pageInput.sendKeys(""+Keys.DELETE+Keys.DELETE+Keys.BACK_SPACE+Keys.BACK_SPACE);
-				Thread.sleep(2000);
-				
-				String nextPage = String.valueOf(i+1);
-				pageInput.sendKeys(Keys.DELETE+nextPage+Keys.ENTER);
-				Thread.sleep(15000);
+				if (i < endIndex) {
+					WebElement pageInput = driver.findElement(By.id("pageInput"));
+					pageInput.click();
+					Thread.sleep(2000);
+					
+					pageInput.sendKeys(""+Keys.DELETE+Keys.DELETE+Keys.BACK_SPACE+Keys.BACK_SPACE);
+					Thread.sleep(2000);
+					
+					String nextPage = String.valueOf(i+1);
+					pageInput.sendKeys(Keys.DELETE+nextPage+Keys.ENTER);
+					Thread.sleep(15000);
+				}
 			}
 			
 			driver.navigate().to("https://ochem.eu/basket/show.do");
@@ -75,9 +77,8 @@ public class DriverOChem {
 			exportBasket.click();
 			Thread.sleep(2000);
 			
-			// Past here doesn't work just yet
-			
-			driver.switchTo().frame(1);
+			driver.switchTo().defaultContent();
+			driver.switchTo().frame(3);
 			
 			WebElement externalID = driver.findElement(By.name("EXTERNAL_ID"));
 			externalID.click();
@@ -92,6 +93,7 @@ public class DriverOChem {
 			
 			WebElement getXLS = driver.findElement(By.cssSelector("[format=\"xls\"]"));
 			getXLS.click();
+			Thread.sleep(30000);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
