@@ -50,8 +50,7 @@ public class ParseEChemPortal extends Parse {
 				er.source_name = ExperimentalConstants.strSourceEChem;
 				if (cas.length()!=0 && !cas.equals("unknown")) { er.casrn = cas;
 				} else if (einecs.length()!=0 && !einecs.equals("unknown")) { er.einecs = einecs; }
-				er.chemical_name = ecpr.substanceName.equals("-") ? "" : ecpr.substanceName;
-				if (ecpr.substanceName!=null && !ecpr.substanceName.equals("-") && !ecpr.substanceName.equals("unnamed []")) {
+				if (ecpr.substanceName!=null && !ecpr.substanceName.equals("-") && !ecpr.substanceName.contains("unnamed")) {
 					er.chemical_name = ecpr.substanceName;
 				}
 				er.url = ecpr.url;

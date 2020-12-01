@@ -97,7 +97,7 @@ public class ParseOFMPub extends Parse {
 				getPressureCondition(er,opr.resultRemarks);
 			}
 			if (opr.indicator.contains("Decomposes") || (remarks.contains("decomposition: yes")
-					&& !remarks.contains("no [x"))) {
+					&& !(remarks.contains("no [x") || remarks.contains("no [ x")))) {
 				er.updateNote(ExperimentalConstants.str_dec);
 			}
 			if (opr.indicator.contains("Sublimes") || (remarks.contains("sublimation: yes")

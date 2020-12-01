@@ -108,6 +108,18 @@
 			<artifactId>unirest-java</artifactId>
 			<version>1.4.9</version>
 		</dependency>
+		
+		<dependency>
+		  <groupId>org.seleniumhq.selenium</groupId>
+		  <artifactId>selenium-java</artifactId>
+		  <version>3.14.0</version>
+		</dependency>
+		
+		<dependency>
+		  <groupId>org.seleniumhq.selenium</groupId>
+		  <artifactId>selenium-chrome-driver</artifactId>
+		  <version>3.14.0</version>
+		</dependency>
 
 </dependencies>
 
