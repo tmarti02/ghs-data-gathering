@@ -98,7 +98,13 @@ public class ParseOChem extends Parse {
 		er.property_value_point_estimate_final = Double.parseDouble(ocr.propertyValue);
 		if (ocr.temperature!=null && !ocr.temperature.isBlank()) {
 			er.property_value_string = er.property_value_string + ";" + ocr.temperature + " " + ocr.temperatureUnit;
-			double temp = Double.parseDouble(ocr.temperature.replaceAll("[^0-9.,E]",""));
+			String cleanTemp = ocr.temperature.replaceAll("[^0-9.,E]","");
+			double temp = 0.0;
+			try {
+				temp = Double.parseDouble(cleanTemp);
+			} catch (NumberFormatException ex) {
+				ocr.temperatureUnit = "";
+			}
 			if (ocr.temperatureUnit.contains("C")) {
 				er.temperature_C = temp;
 			} else if (ocr.temperatureUnit.contains("K")) {

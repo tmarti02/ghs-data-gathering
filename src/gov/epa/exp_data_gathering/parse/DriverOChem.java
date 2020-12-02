@@ -1,7 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.io.FileWriter;
 import java.util.List;
-import java.util.Random;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -120,7 +120,7 @@ public class DriverOChem {
 				// Wait for records to reload after selecting
 				new WebDriverWait(driver,30000).until(ExpectedConditions.presenceOfElementLocated(By.className("browser-item")));
 				
-				// Double-check popup is gone before proceeding - order of loading seems to get messed up sometimes
+				// Double-check popup is gone before proceeding - order of loading gets messed up sometimes
 				new WebDriverWait(driver,30000).until(ExpectedConditions.attributeContains(By.id("waitingDialog_mask"),"style","display: none"));
 				
 				// Navigate to next page by typing page number into box (Charlie says this is most reliable)
@@ -163,13 +163,21 @@ public class DriverOChem {
 			selectUnits.click();
 			selectUnits.sendKeys(desiredUnits+Keys.ENTER);
 			
-			// Download!
+			// Go to download page
 			WebElement getXLS = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.cssSelector("[format=\"xls\"]")));
 			getXLS.click();
+			
+			// Wait for basket to process and download button to appear
 			WebElement downloadButton = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.className("fancy-button")));
+			
+			// Add the basket URL to a TXT file
 			String basketURL = downloadButton.getAttribute("href");
-			System.out.println(basketURL);
-			Thread.sleep(60000);
+			String basketURLPath = "Data\\Experimental\\OChem\\excel files\\OChem_BasketURLs.txt";
+			FileWriter fw = new FileWriter(basketURLPath,true);
+			fw.write(propertyName+": "+basketURL+"\n");
+			fw.close();
+
+			Thread.sleep(300000);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
@@ -178,7 +186,7 @@ public class DriverOChem {
 	}
 	
 	public static void main(String[] args) {
-		scrapeOChem(ExperimentalConstants.strHenrysLawConstant,0,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
+		scrapeOChem(ExperimentalConstants.strLogKow,0,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
 	}
 	
 }
