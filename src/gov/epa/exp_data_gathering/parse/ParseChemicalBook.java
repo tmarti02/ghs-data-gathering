@@ -32,10 +32,6 @@ public class ParseChemicalBook extends Parse {
 		writeOriginalRecordsToFile(records);
 	}
 
-	/**
-	 * Reads the JSON file created by createRecords() and translates it to an ExperimentalRecords object
-	 */
-	
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
@@ -82,10 +78,7 @@ public class ParseChemicalBook extends Parse {
 		er.property_name=propertyName;
 		er.property_value_string=propertyValue;
 		er.source_name= "Chemical Book";
-		er.url = "https://www.chemicalbook.com/" + cbr.fileName;
-		
-		recordsExperimental.add(er);
-		
+		er.url = "https://www.chemicalbook.com/" + cbr.fileName;		
 		
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
@@ -113,15 +106,15 @@ public class ParseChemicalBook extends Parse {
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
 			// Warns if there may be a problem with an entry
 			er.flag = false;
-			if (propertyName.contains("?")) { er.flag = true; }
+			if (propertyName.contains("?")) { er.keep = true; }
 		} else {
 			er.property_value_units_original = null;
 			er.pressure_mmHg = null;
 			er.temperature_C = null;
 		}
 		
-		if (!(er.property_value_string.toLowerCase().contains("predicted"))) {
-			er.keep = false;
+		if (propertyValue.contains("Predicted")) {
+			er.flag = true;
 		}
 		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
 				&& (er.property_value_units_original!=null || er.property_value_qualitative!=null || er.note!=null)) {
@@ -129,7 +122,8 @@ public class ParseChemicalBook extends Parse {
 		} else {
 			er.keep = false;
 		}
-		
+		recordsExperimental.add(er);
+	
 	}
 	
 	

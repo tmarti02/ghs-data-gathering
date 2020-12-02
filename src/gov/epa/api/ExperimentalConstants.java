@@ -62,5 +62,7 @@ public class ExperimentalConstants {
 	public static final String strSourceOChem="OChem";
 	public static final String strSourceOFMPub="OFMPub";
 	public static final String strSourceSigmaAldrich="Sigma-Aldrich";
+	public static final String strSourceChemicalBook="ChemicalBook";
+	public static final String strSourceSander="Sander";
 	
 }

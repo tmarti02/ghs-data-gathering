@@ -68,7 +68,8 @@ public class RecordChemicalBook extends Parse {
 	
 private static void parseDocument(RecordChemicalBook rcb, Document doc) {
 	Elements table_elements = doc.select("tr.ProdSupplierGN_ProductA_2");
-	Elements table_elements1 = doc.select("tr.ProdSupplierGN_ProductA_1");
+	Elements table_elements2 = doc.select("tr.ProdSupplierGN_ProductA_1");
+	table_elements.addAll(table_elements2);
 	for (Element table_element:table_elements) {
 		String header = table_element.select("td").first().text();
 		String data = new String();
@@ -116,55 +117,7 @@ private static void parseDocument(RecordChemicalBook rcb, Document doc) {
 				else if (header.contains("MW")) { rcb.MW = data;}
 
 				}
-	}
 	
-	for (Element table_element1:table_elements1) {
-		String header = table_element1.select("td").first().text();
-		String data = new String();
-		if (!table_element1.getElementsByTag("a").text().equals("")) {
-			data = table_element1.getElementsByTag("a").text();
-		} else if (!table_element1.select("td + td").text().equals("")) {
-			data = table_element1.select("td + td").text(); // inconsistent with the other two  but illustrative
-		} else {
-			data = null; // don't want it taking images
-		}
-			if (data != null && !data.isBlank()) {
-				if (header.contains("CAS:") && !header.contains("CAS DataBase Reference")) { rcb.CAS = data; }
-				else if (header.contains("Synonyms:")) { rcb.synonyms = data; }
-				else if (header.contains("MF")) { rcb.MF = data; }
-				else if (header.contains("EINECS")) { rcb.EINECS = data; }
-				else if (header.contains("Mol File:")) { rcb.molfile = data; }
-				else if (header.contains("Boiling point")) { rcb.boilingPoint = data; }
-				else if (header.contains("density")) { rcb.density = data; }
-				else if (header.contains("refractive index")) { rcb.refractiveindex = data; }
-				else if (header.contains("Fp")) { rcb.FP = data; }
-				else if (header.contains("form:")) { rcb.form = data; }
-				else if (header.contains("Merck")) { rcb.merck = data; }
-				else if (header.contains("BRN")) { rcb.BRN = data; }
-				else if (header.contains("Henry's Law Constant")) { rcb.henrylc = data; }
-				else if (header.contains("Exposure limits")) { rcb.exposurelimits = data; }
-				else if (header.contains("Stability")) { rcb.stability = data; }
-				else if (header.contains("InCHlKey")) { rcb.InCHlKey = data; }
-				else if (header.contains("CAS DataBase")) { rcb.CASreference = data; }
-				else if (header.contains("IARC")) { rcb.IARC = data; }
-				else if (header.contains("NIST Chemistry")) { rcb.NISTchemref = data; }
-				else if (header.contains("EPA")) { rcb.EPAsrs = data; }
-				else if (header.contains("Hazard Codes")) { rcb.hazardcodes = data; }
-				else if (header.contains("storage temp.")) { rcb.storagetemp = data; }
-				else if (header.contains("solubility")) { rcb.solubility = data; }
-				else if (header.contains("color")) { rcb.color = data; }
-				else if (header.contains("Melting point")) { rcb.meltingPoint = data; }
-				else if (header.contains("vapor density")) { rcb.vapordensity = data; }
-				else if (header.contains("vapor pressure")) { rcb.vaporpressure = data; }
-				else if (header.contains("Relative polarity")) { rcb.relativepolarity = data; }
-				else if (header.contains("Odor Threshold")) { rcb.odorthreshold = data; }
-				else if (header.contains("explosivelimit")) { rcb.explosivelimit = data; }
-				else if (header.contains("Water Solubility")) { rcb.watersolubility = data; }
-				else if (header.contains("")) { rcb.watersolubility = data; }
-				else if (header.contains("max")) { rcb.lambdamax = data; }					
-				else if (header.contains("MW")) { rcb.MW = data;}
-
-				}
 			}
 }
 
@@ -227,18 +180,63 @@ public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 	return null;
 }
 
+
+public static Vector<String> parsePropertyLinksInDatabase() {
+	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
+	String databasePath = databaseFolder+File.separator+"search_property_raw_html.db";
+	Vector<String> records = new Vector<>();
+
+	try {
+		Statement stat = MySQL_DB.getStatement(databasePath);
+		ResultSet rs = MySQL_DB.getAllRecords(stat, "searchAndPropertyLinks"); //hardcoded for now
+		
+		int counter = 1;
+	
+		while (rs.next()) {
+			if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
+			
+			String propertylink = rs.getString("content");
+			records.add(propertylink);
+		}
+
+
+		return records;
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+	
+	return null;
+}
+
 public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end, int excelFinalRecord, boolean startFresh) {
 	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
 	Vector<String> searchURLs = getSearchURLsFromDashboardRecords(records,1,excelFinalRecord);
 	ParseChemicalBook p = new ParseChemicalBook();
 	p.mainFolder = p.mainFolder + File.separator + "General";
 	p.databaseFolder = p.mainFolder;
-	p.downloadPropertyLinksToDatabase(searchURLs,"searchAndPropertyLinks", start, end, startFresh);
-	// p.downloadWebpagesToDatabaseAdaptive(propertyurls,"main_960px",sourceName,startFresh);		
+	// p.downloadPropertyLinksToDatabase(searchURLs,"searchAndPropertyLinks", start, end, startFresh);
+	Vector<String> propertyURLs = parsePropertyLinksInDatabase();
+	Vector<String> downloadedURLs = new Vector<String>();
+	for (int i = 1001; i < 3000; i++) {
+		downloadedURLs.add(propertyURLs.get(i));
+	}
+	p.downloadWebpagesToDatabaseAdaptive(downloadedURLs,"div.RFQbox ~ table",sourceName,false);		
 }
 
 public static void main(String[] args) {
-	downloadWebpagesFromExcelToDatabase("Data" + "/PFASSTRUCT.xlsx",3701,3900,8164,false);
+	downloadWebpagesFromExcelToDatabase("Data" + "/PFASSTRUCT.xlsx",8060,8160,8164,false);
+	// testing();
 	}
+
+
+
+private static void testing() {
+	Vector<String> propertyURLs = parsePropertyLinksInDatabase();
+	String url = propertyURLs.get(5);
+	String html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+	Document doc = Jsoup.parse(html);
+	System.out.println(doc.select("div.RFQbox ~ table").first());
 }
 
+
+}

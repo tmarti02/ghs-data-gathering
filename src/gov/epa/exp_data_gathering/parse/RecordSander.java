@@ -1,5 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
@@ -15,35 +17,47 @@ import org.jsoup.select.Elements;
 public class RecordSander {
 	
 	String reference;
+	static final String sourceName="Sander";	
+
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		ObtainWebpages();
-
+		downloadWebpagesHTML();
 	}
+	
+	
+public static void downloadWebpagesHTML() {
+	Vector<String> urls = ObtainWebpages();
+	for (int i = 0; i < urls.size(); i++) {
+		System.out.println(urls);
+	}
+	ParseSander p = new ParseSander();
+	p.mainFolder = p.mainFolder + File.separator + "General";
+	p.databaseFolder = p.mainFolder;
+	p.downloadWebpagesToDatabaseAdaptive(urls,"tbody", sourceName,true);
+}
 
-private static void ObtainWebpages() {
+
+private static Vector<String> ObtainWebpages() {
 	String baseSearchLink = "http://satellite.mpic.de/henry/search_identifier.html?csrfmiddlewaretoken=eNhrzlz52Jf3pHHxhPPvsFfi0jCmhStqaIIF7xXrsctaPEuHMIgkdjAkRyUDvPQm&x=0&y=0&search=";
-	Set<String> allLinks = new HashSet<String>();
-	for (int j = 0; j < 10; j++) {
-	String searchLink = baseSearchLink + j;
+	Vector<String> allLinks = new Vector<String>();
 	try {
-		Document doc = Jsoup.connect(searchLink).get();
+		Document doc = Jsoup.connect(baseSearchLink).get();
 		Elements rows = doc.select("td[width=60%] > table > tbody > tr");
 		for (int i = 1; i < rows.size(); i++) {
 			allLinks.add(rows.get(i).select("td ~ td > a").attr("abs:href").toString());
-
 		}
+	return allLinks;
 	}
 	catch (IOException e) {
 		e.printStackTrace();
 	}
-	}
+	return null;
 }
 
-private static void Parsewebpage() {
+private static void Parsewebpage(String url) {
 	try {
-		Document doc = Jsoup.connect("http://satellite.mpic.de/henry/casrn/678-39-7").get();
+		Document doc = Jsoup.connect("").get();
 		Element table = doc.select("td[width=60%] > table ~ table[width=100%] > tbody").first();
 		Elements tableData = table.select("tr");
 		for (int i = 0; i < tableData.size(); i++) {
