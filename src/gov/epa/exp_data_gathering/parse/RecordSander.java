@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.sql.RowSetListener;
 
@@ -45,6 +47,7 @@ public class RecordSander {
 	}
 	
 	
+	
 public static void downloadWebpagesHTML() {
 	// Vector<String> urls = ObtainWebpages();
 	ParseSander p = new ParseSander();
@@ -54,6 +57,19 @@ public static void downloadWebpagesHTML() {
 	testingfunction();
 }
 
+
+public static void Gabrieldemo() {
+	String Referenceshort = "Mackay and Shiu 1981";
+	String Referencelong = "Mackay, D. and Shiu, W. Y.: A critical review of Henry's law constants for chemicals of environmental interest, J. Phys. Chem. Ref. Data, 10, 1175-1199, doi:10.1063/1.555654, 1981.";
+	Pattern p = Pattern.compile("(([^ ]+) .*)([^\\s]+$)");
+	// could also 
+	Matcher m = p.matcher(Referenceshort);
+	m.find();
+	String s = m.group(2);
+	System.out.println(s + " " + m.group(3));
+}
+
+
 private static void testingfunction() {
 	Vector<String> html = parsePropertyLinksInDatabase();
 	String example = html.get(3949);
@@ -62,7 +78,8 @@ private static void testingfunction() {
 	Vector <Vector<String>> ExperimentalTable = getExperimentalTable(doc);
 	Vector <String> references = getReferences(doc);
 	RecordSander rs = new RecordSander();
-	matchReferences(ExperimentalTable, references);
+	// matchReferences(ExperimentalTable, references);
+	Gabrieldemo();
 }
 
 private static void matchReferences(Vector <Vector<String>> table, Vector <String> ref) {
@@ -137,7 +154,7 @@ private static Vector <String> getReferences(Document doc) {
 }
 
 
-private static Vector <Vector<String>> getExperimentalTable(Document doc, RecordSander rs) {
+private static Vector <Vector<String>> getExperimentalTable(Document doc) {
 		Vector <Vector<String>> experimentInfo = new Vector <Vector<String>>();
 		Vector <String> experimentalFields = new Vector<String>();
 		Element table = doc.select("td[width=60%] > table ~ table[width=100%] > tbody").first();
@@ -150,8 +167,9 @@ private static Vector <Vector<String>> getExperimentalTable(Document doc, Record
 			experimentInfo.add(i,experimentalFields);
 			
 		}
+		
+		 //annoying print statement that I don't want to erase yet
 		/*
-		 * annoying print statement that I don't want to erase yet
 		for (int j = 0; j < experimentInfo.size(); j++) {
 			for (int p = 0; p < experimentalFields.size(); p++) {
                 System.out.println(experimentInfo.get(j).get(p));
