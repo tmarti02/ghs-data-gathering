@@ -64,5 +64,6 @@ public class ExperimentalConstants {
 	public static final String strSourceSigmaAldrich="Sigma-Aldrich";
 	public static final String strSourceChemicalBook="ChemicalBook";
 	public static final String strSourceSander="Sander";
+	public static final String strSourceQSARDB="QSARDB";
 	
 }

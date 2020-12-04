@@ -265,13 +265,13 @@ public class DataFetcher {
 	}
 	
 	public static void main(String[] args) {
-		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub"};
+		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub","QSARDB\\QSARDB"};
 		DataFetcher d = new DataFetcher(sources);
 		d.createExperimentalRecordsDatabase();
 		d.createExperimentalRecordsJSON();
-		String[] cas = {"335-76-2","3108-42-7","3830-45-3","375-95-1","4149-60-4","307-24-4","355-46-4","3871-99-6","375-22-4","10495-86-0"};
-		d.createExperimentalRecordsSubsetJSON(cas, "ExperimentalRecords_CPHEA_120220.json");
-		d.createExperimentalRecordsSubsetExcel(cas, "ExperimentalRecords_CPHEA_120220.xlsx");
+//		String[] cas = {"335-76-2","3108-42-7","3830-45-3","375-95-1","4149-60-4","307-24-4","355-46-4","3871-99-6","375-22-4","10495-86-0"};
+//		d.createExperimentalRecordsSubsetJSON(cas, "ExperimentalRecords_CPHEA_120220.json");
+//		d.createExperimentalRecordsSubsetExcel(cas, "ExperimentalRecords_CPHEA_120220.xlsx");
 //		d.createUniqueIdentifiersExcel("eChemPortal");
 	}
 }

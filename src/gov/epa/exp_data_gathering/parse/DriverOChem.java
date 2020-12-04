@@ -1,13 +1,17 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.io.FileWriter;
+import java.util.HashMap;
 import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -19,10 +23,11 @@ public class DriverOChem {
 	 * Bulk selects and downloads records from OChem automatically
 	 * 
 	 * @param propertyName Use ExperimentalConstants
+	 * @param startIndex What page to start download from
 	 * @param endIndex How many pages (100 records each) to download; 0 to automatically download all
 	 * @param chromeDriverPath Path to your chromedriver.exe file
 	 */
-	public static void scrapeOChem(String propertyName,int endIndex,String chromeDriverPath) {
+	public static void scrapeOChem(String propertyName,int startIndex,int endIndex,String chromeDriverPath) {
 		int propertyNumber = 0;
 		String desiredUnits = "";
 		switch (propertyName) {
@@ -65,6 +70,7 @@ public class DriverOChem {
 		}
 		
 		// Open new driver and connect to the OChem website
+		long defaultWait = 30; // in seconds
 		System.setProperty("webdriver.chrome.driver", chromeDriverPath);
 		WebDriver driver = new ChromeDriver();
 		driver.get("https://ochem.eu/");
@@ -73,17 +79,17 @@ public class DriverOChem {
 		try {
 			try {
 				// Click login button
-				WebElement login = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.linkText("log in")));
+				WebElement login = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.linkText("log in")));
 				login.click();
 				
-				new WebDriverWait(driver,30000).until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(2));
+				new WebDriverWait(driver,defaultWait).until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(2));
 				
 				// Log in as guest
-				WebElement button1 = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.className("button-link")));
+				WebElement button1 = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.className("button-link")));
 				button1.click();
 				
 				// Accept terms
-				WebElement button2 = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.className("button-link")));
+				WebElement button2 = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.className("button-link")));
 				button2.click();
 			} catch (Exception ex) {
 				System.out.println("Already logged in!");
@@ -93,15 +99,15 @@ public class DriverOChem {
 			String url = "https://ochem.eu/epbrowser/show.do?property="+propertyNumber;
 			driver.navigate().to(url);
 			
-			new WebDriverWait(driver,30000).until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(2));
+			new WebDriverWait(driver,defaultWait).until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(2));
 			
 			// Display 100 records per page instead of default (5)
-			WebElement displayCount = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.name("pagesize")));
+			WebElement displayCount = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("pagesize")));
 			displayCount.click();
 			displayCount.sendKeys("100" + Keys.ENTER);
 			
 			// Wait for records to load
-			new WebDriverWait(driver,30000).until(ExpectedConditions.presenceOfElementLocated(By.className("browser-item")));
+			new WebDriverWait(driver,defaultWait).until(ExpectedConditions.presenceOfElementLocated(By.className("browser-item")));
 			
 			// Scrape end index if not provided
 			if (endIndex==0) {
@@ -111,64 +117,89 @@ public class DriverOChem {
 				endIndex = autoEndIndex;
 			}
 			
-			for (int i = 1; i <= endIndex; i++) {				
+			// Go to start page if not 1
+			if (startIndex > 1) {	
+				WebElement pageInput = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.id("pageInput")));
+				pageInput.click();
+				pageInput.clear();
+				String nextPage = String.valueOf(startIndex);
+				pageInput.sendKeys(nextPage+Keys.ENTER);
+				
+				// Wait for records to load
+				new WebDriverWait(driver,defaultWait).until(ExpectedConditions.presenceOfElementLocated(By.className("browser-item")));
+			}
+			
+			pageLoop:
+			for (int i = startIndex; i <= endIndex; i++) {				
 				// Select all records
-				WebElement selectAll = new WebDriverWait(driver,30000)
+				WebElement selectAll = new WebDriverWait(driver,defaultWait)
 						.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[title=\"Select records on currently visible page\"]")));
 				selectAll.click();
 				
 				// Wait for records to reload after selecting
-				new WebDriverWait(driver,30000).until(ExpectedConditions.presenceOfElementLocated(By.className("browser-item")));
+				new WebDriverWait(driver,defaultWait).until(ExpectedConditions.presenceOfElementLocated(By.className("browser-item")));
 				
 				// Double-check popup is gone before proceeding - order of loading gets messed up sometimes
-				new WebDriverWait(driver,30000).until(ExpectedConditions.attributeContains(By.id("waitingDialog_mask"),"style","display: none"));
+				new WebDriverWait(driver,defaultWait).until(ExpectedConditions.attributeContains(By.id("waitingDialog_mask"),"style","display: none"));
 				
 				// Navigate to next page by typing page number into box (Charlie says this is most reliable)
 				if (i < endIndex) {	
-					WebElement pageInput = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.id("pageInput")));
+					WebElement pageInput = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.id("pageInput")));
 					pageInput.click();
 					pageInput.clear();
 					String nextPage = String.valueOf(i+1);
 					pageInput.sendKeys(nextPage+Keys.ENTER);
 					
 					// Wait for records to load
-					new WebDriverWait(driver,30000).until(ExpectedConditions.presenceOfElementLocated(By.className("browser-item")));
+					try {
+						new WebDriverWait(driver,defaultWait).until(ExpectedConditions.presenceOfElementLocated(By.className("browser-item")));
+					} catch (TimeoutException ex) {
+						System.out.println("Timed out. Downloading pages "+startIndex+"-"+i+".");
+						break pageLoop;
+					}
 				}
 			}
 			
 			// Go to basket static page
 			driver.navigate().to("https://ochem.eu/basket/show.do");
 			
-			new WebDriverWait(driver,30000).until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(2));
+			try {
+				new WebDriverWait(driver,defaultWait).until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(2));
+			} catch (TimeoutException ex) {
+				// May encounter an error page when breaking out of pageLoop above
+				// Just refresh and it should go through with basket intact
+				driver.navigate().refresh();
+				new WebDriverWait(driver,defaultWait).until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(2));
+			}
 			
 			// Open record download menu and click export
-			WebElement recordMenu = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.cssSelector("[src=\"img/icons/xls.gif\"]")));
+			WebElement recordMenu = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.cssSelector("[src=\"img/icons/xls.gif\"]")));
 			recordMenu.click();
-			WebElement exportBasket = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.cssSelector("[action=\"basket\"]")));
+			WebElement exportBasket = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.cssSelector("[action=\"basket\"]")));
 			exportBasket.click();
 			
 			driver.switchTo().defaultContent();
-			new WebDriverWait(driver,30000).until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(3));
+			new WebDriverWait(driver,defaultWait).until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(3));
 			
 			// Select export options
-			WebElement externalID = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.name("EXTERNAL_ID")));
+			WebElement externalID = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("EXTERNAL_ID")));
 			externalID.click();
-			WebElement articleN = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.name("N")));
+			WebElement articleN = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("N")));
 			articleN.click();
-			WebElement pubID = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.name("ARTICLE")));
+			WebElement pubID = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("ARTICLE")));
 			pubID.click();
-			WebElement comments = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.name("COMMENTS")));
+			WebElement comments = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("COMMENTS")));
 			comments.click();
-			WebElement selectUnits = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.name("unit-"+propertyNumber)));
+			WebElement selectUnits = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("unit-"+propertyNumber)));
 			selectUnits.click();
 			selectUnits.sendKeys(desiredUnits+Keys.ENTER);
 			
 			// Go to download page
-			WebElement getXLS = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.cssSelector("[format=\"xls\"]")));
+			WebElement getXLS = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.cssSelector("[format=\"xls\"]")));
 			getXLS.click();
 			
 			// Wait for basket to process and download button to appear
-			WebElement downloadButton = new WebDriverWait(driver,30000).until(ExpectedConditions.elementToBeClickable(By.className("fancy-button")));
+			WebElement downloadButton = new WebDriverWait(driver,20*defaultWait).until(ExpectedConditions.elementToBeClickable(By.className("fancy-button")));
 			
 			// Add the basket URL to a TXT file
 			String basketURL = downloadButton.getAttribute("href");
@@ -186,7 +217,7 @@ public class DriverOChem {
 	}
 	
 	public static void main(String[] args) {
-		scrapeOChem(ExperimentalConstants.strLogKow,0,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
+		scrapeOChem(ExperimentalConstants.strLogKow,1,0,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
 	}
 	
 }
