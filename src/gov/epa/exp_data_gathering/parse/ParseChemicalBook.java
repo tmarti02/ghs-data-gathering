@@ -113,7 +113,7 @@ public class ParseChemicalBook extends Parse {
 			er.temperature_C = null;
 		}
 		
-		if (propertyValue.contains("Predicted")) {
+		if (propertyValue.contains("Predicted") || propertyValue.contains("estimate")) {
 			er.flag = true;
 		}
 		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
@@ -219,4 +219,82 @@ public class ParseChemicalBook extends Parse {
 		return null;
 	}
 
+	@Override
+	boolean getWaterSolubility(ExperimentalRecord er,String propertyValue) {
+		boolean badUnits = true;
+		int unitsIndex = -1;
+		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
+		if (propertyValue.toLowerCase().contains("mg/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_L;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mg/ml")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("µg/ml")) {
+			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("µg/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_ug_L;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("g/ml")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("g/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_L;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mg/100")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_100mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mg/ml")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_L;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("g/100")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("% w/w") || propertyValue.toLowerCase().contains("wt%")) {
+			er.property_value_units_original = ExperimentalConstants.str_pctWt;
+			unitsIndex = propertyValue.indexOf("%");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("%")) {
+			er.property_value_units_original = ExperimentalConstants.str_pct;
+			unitsIndex = propertyValue.indexOf("%");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ppm")) {
+			er.property_value_units_original = ExperimentalConstants.str_ppm;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
+			badUnits = false;
+		} else if (propertyValue.contains("M")) {
+			unitsIndex = propertyValue.indexOf("M");
+			if (unitsIndex>0) {
+				er.property_value_units_original = ExperimentalConstants.str_M;
+				badUnits = false;
+			}
+		} 
+		
+		if (er.source_name!=ExperimentalConstants.strSourceOFMPub && unitsIndex < propertyValue.indexOf(":")) {
+			unitsIndex = propertyValue.length();
+		}
+		
+		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.contains("water") || propertyValue.contains("h2o"))) {
+			er.keep = false;
+		}
+		
+		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
+		return foundNumeric;
+	}
+
+
+
 }
+	
+	
+

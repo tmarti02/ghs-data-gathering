@@ -217,7 +217,7 @@ public static void downloadWebpagesFromExcelToDatabase(String filename,int start
 	// p.downloadPropertyLinksToDatabase(searchURLs,"searchAndPropertyLinks", start, end, startFresh);
 	Vector<String> propertyURLs = parsePropertyLinksInDatabase();
 	Vector<String> downloadedURLs = new Vector<String>();
-	for (int i = 1001; i < 3000; i++) {
+	for (int i = 3001; i < 5000; i++) {
 		downloadedURLs.add(propertyURLs.get(i));
 	}
 	p.downloadWebpagesToDatabaseAdaptive(downloadedURLs,"div.RFQbox ~ table",sourceName,false);		
