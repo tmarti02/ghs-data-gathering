@@ -6,15 +6,15 @@ import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
 
-public class ParseADDoPT extends Parse {
-	public ParseADDoPT() {
-		sourceName = ExperimentalConstants.strSourceADDoPT;
+public class ParseAqSolDB extends Parse {
+	public ParseAqSolDB() {
+		sourceName = ExperimentalConstants.strSourceAqSolDB;
 		this.init();
 	}
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordADDoPT> records = RecordADDoPT.parseADDoPTRecordsFromExcel();
+		Vector<RecordAqSolDB> records = RecordAqSolDB.parseAqSolDBRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -24,10 +24,10 @@ public class ParseADDoPT extends Parse {
 		try {
 			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
 			
-			RecordADDoPT[] recordsADDoPT = gson.fromJson(new FileReader(jsonFile), RecordADDoPT[].class);
+			RecordAqSolDB[] recordsAqSolDB = gson.fromJson(new FileReader(jsonFile), RecordAqSolDB[].class);
 			
-			for (int i = 0; i < recordsADDoPT.length; i++) {
-				RecordADDoPT rec = recordsADDoPT[i];
+			for (int i = 0; i < recordsAqSolDB.length; i++) {
+				RecordAqSolDB rec = recordsAqSolDB[i];
 				addExperimentalRecords(rec,recordsExperimental);
 			}
 		} catch (Exception ex) {
@@ -36,16 +36,15 @@ public class ParseADDoPT extends Parse {
 		return recordsExperimental;
 	}
 	
-	private void addExperimentalRecords(RecordADDoPT ar,ExperimentalRecords records) {
-		if (ar.value!=null && !ar.value.isBlank()) {
+	private void addExperimentalRecords(RecordAqSolDB ar,ExperimentalRecords records) {
+		if (ar.solubility!=null && !ar.solubility.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
-			er.source_name = ExperimentalConstants.strSourceADDoPT;
+			er.source_name = ExperimentalConstants.strSourceAqSolDB;
 			er.chemical_name = ar.name;
-			er.casrn = ar.cas;
+			er.smiles = ar.smiles;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			er.property_value_point_estimate_original = Math.pow(10.0,  Double.parseDouble(ar.value));
+			er.property_value_point_estimate_original = Math.pow(10.0,  Double.parseDouble(ar.solubility));
 			er.property_value_units_original = ExperimentalConstants.str_M;
-			er.temperature_C = Double.parseDouble(ar.temp);
 			er.finalizeUnits();
 			er.keep = true;
 			er.flag = false;
@@ -54,7 +53,7 @@ public class ParseADDoPT extends Parse {
 	}
 	
 	public static void main(String[] args) {
-		ParseADDoPT p = new ParseADDoPT();
+		ParseAqSolDB p = new ParseAqSolDB();
 		p.createFiles();
 	}
 }
