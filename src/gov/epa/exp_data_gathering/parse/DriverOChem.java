@@ -1,7 +1,6 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.io.FileWriter;
-import java.util.HashMap;
 import java.util.List;
 
 import org.openqa.selenium.By;
@@ -10,8 +9,6 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -208,7 +205,8 @@ public class DriverOChem {
 			fw.write(propertyName+": "+basketURL+"\n");
 			fw.close();
 
-			Thread.sleep(300000);
+			// Ten minutes to manually complete download if it gets stuck
+			Thread.sleep(600000);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
@@ -217,7 +215,7 @@ public class DriverOChem {
 	}
 	
 	public static void main(String[] args) {
-		scrapeOChem(ExperimentalConstants.strLogKow,1,0,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
+		scrapeOChem(ExperimentalConstants.strLogKow,601,0,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
 	}
 	
 }
