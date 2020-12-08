@@ -20,6 +20,7 @@ public class RecordQSARDB {
 	String mLogP;
 	String vp;
 	String units;
+	String reference;
 	
 	static final String sourceName = ExperimentalConstants.strSourceQSARDB;
 
@@ -66,6 +67,7 @@ public class RecordQSARDB {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordQSARDB qr = new RecordQSARDB();
+						qr.reference = filename.substring(0,filename.indexOf("."));
 						qr.name = row.getCell(nameIndex).getStringCellValue();
 						qr.casrn = row.getCell(casrnIndex).getStringCellValue();
 						if (logSIndex >= 0) { qr.logS = row.getCell(logSIndex).getStringCellValue(); }
