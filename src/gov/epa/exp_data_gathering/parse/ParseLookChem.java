@@ -90,7 +90,7 @@ public class ParseLookChem extends Parse {
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
 		
 		er.keep = true;
-		er.reason_omitted = null;
+		er.reason = null;
 		er.flag = false;
 		
 		records.add(er);
@@ -147,7 +147,7 @@ public class ParseLookChem extends Parse {
 			er.flag = false;
 			if (propertyName.contains("?")) {
 				er.flag = true;
-				er.reason_omitted = "Question mark";
+				er.reason = "Question mark";
 			}
 		} else {
 			er.property_value_units_original = null;
@@ -158,10 +158,10 @@ public class ParseLookChem extends Parse {
 		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
 				&& (er.property_value_units_original!=null || er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
-			er.reason_omitted = null;
+			er.reason = null;
 		} else {
 			er.keep = false;
-			er.reason_omitted = "Bad data or units";
+			er.reason = "Bad data or units";
 		}
 		
 		recordsExperimental.add(er);

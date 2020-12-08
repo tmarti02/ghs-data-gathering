@@ -132,14 +132,14 @@ public class ParseOChem extends Parse {
 		if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
 				(er.chemical_name==null || er.chemical_name.isBlank())) {
 			er.keep = false;
-			er.reason_omitted = "No identifiers";
+			er.reason = "No identifiers";
 		} else if (er.measurement_method!=null && er.measurement_method.contains("est")) {
 			er.updateNote(ExperimentalConstants.str_est);
 			er.keep = false;
-			er.reason_omitted = "Estimated";
+			er.reason = "Estimated";
 		} else {
 			er.keep = true;
-			er.reason_omitted = null;
+			er.reason = null;
 		}
 		records.add(er);
 	}

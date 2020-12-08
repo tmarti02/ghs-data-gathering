@@ -3,6 +3,7 @@ package gov.epa.exp_data_gathering.parse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.Vector;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -103,10 +104,13 @@ public class DataAnalyzer {
 					System.out.println("Comparing "+sourceI+" to "+sourceJ+"...");
 					int total = recordsI.size();
 					int redundant = 0;
-					for (ExperimentalRecord recI:recordsI) {
+					Iterator<ExperimentalRecord> itI = recordsI.iterator();
+					while (itI.hasNext()) {
+						ExperimentalRecord recI = itI.next();
 						boolean found = false;
-						for (int k = 0; k < recordsJ.size() && !found; k++) {
-							if (isSameRecord(recI,recordsJ.get(k))) {
+						Iterator<ExperimentalRecord> itJ = recordsJ.iterator();
+						while (itJ.hasNext() && !found) {
+							if (isSameRecord(recI,itJ.next())) {
 								redundant++;
 								found = true;
 							}

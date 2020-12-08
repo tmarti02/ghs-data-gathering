@@ -678,9 +678,10 @@ public class Parse {
 		}
 		
 		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.contains("water") || propertyValue.contains("h2o")) &&
-				!(propertyValue.startsWith("ca") || propertyValue.startsWith("circa"))) {
+				!(propertyValue.contains("ca") || propertyValue.contains("circa") || propertyValue.contains(">") ||
+						propertyValue.contains("<") || propertyValue.contains("=") || propertyValue.contains("~"))) {
 			er.keep = false;
-			er.reason_omitted = "Non-aqueous solubility";
+			er.reason = "Non-aqueous solubility";
 		}
 		
 		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
@@ -735,7 +736,7 @@ public class Parse {
 		
 		if (er.property_value_qualitative!=null || er.note!=null) {
 			er.keep = true;
-			er.reason_omitted = null;
+			er.reason = null;
 		}
 	}
 

@@ -40,7 +40,8 @@ public class ParseQSARDB extends Parse {
 	private void addExperimentalRecords(RecordQSARDB qr,ExperimentalRecords records) {
 		if (qr.logS!=null && !qr.logS.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
-			er.source_name = ExperimentalConstants.strSourceQSARDB+":"+qr.reference;
+			er.source_name = ExperimentalConstants.strSourceQSARDB;
+			er.original_source_name = qr.reference;
 			er.chemical_name = qr.name;
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
@@ -56,7 +57,8 @@ public class ParseQSARDB extends Parse {
 		}
 		if (qr.mp!=null && !qr.mp.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
-			er.source_name = ExperimentalConstants.strSourceQSARDB+":"+qr.reference;
+			er.source_name = ExperimentalConstants.strSourceQSARDB;
+			er.original_source_name = qr.reference;
 			er.chemical_name = qr.name;
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strMeltingPoint;
@@ -69,7 +71,8 @@ public class ParseQSARDB extends Parse {
 		}
 		if (qr.mLogP!=null && !qr.mLogP.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
-			er.source_name = ExperimentalConstants.strSourceQSARDB+":"+qr.reference;
+			er.source_name = ExperimentalConstants.strSourceQSARDB;
+			er.original_source_name = qr.reference;
 			er.chemical_name = qr.name;
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strLogKow;
@@ -81,7 +84,8 @@ public class ParseQSARDB extends Parse {
 		}
 		if (qr.vp!=null && !qr.vp.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
-			er.source_name = ExperimentalConstants.strSourceQSARDB+":"+qr.reference;
+			er.source_name = ExperimentalConstants.strSourceQSARDB;
+			er.original_source_name = qr.reference;
 			er.chemical_name = qr.name;
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strVaporPressure;

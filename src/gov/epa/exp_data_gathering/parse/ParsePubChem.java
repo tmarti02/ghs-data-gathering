@@ -90,7 +90,7 @@ public class ParsePubChem extends Parse {
 		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
 		er.keep = true;
-		er.reason_omitted = null;
+		er.reason = null;
 		er.flag = false;
 		
 		records.add(er);
@@ -109,7 +109,7 @@ public class ParsePubChem extends Parse {
 		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
 		er.keep=true;
-		er.reason_omitted = null;
+		er.reason = null;
 		
 		boolean foundNumeric = false;
 		propertyValue = propertyValue.replaceAll("greater than( or equal to )?", ">");
@@ -143,27 +143,27 @@ public class ParsePubChem extends Parse {
 		if (propertyValue.toLowerCase().contains("est")) {
 			er.updateNote(ExperimentalConstants.str_est);
 			er.keep = false;
-			er.reason_omitted = "Estimated";
+			er.reason = "Estimated";
 			}
 		if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp")) && !propertyValue.toLowerCase().contains("extreme")) {
 			er.updateNote(ExperimentalConstants.str_ext);
 			er.keep = false;
-			er.reason_omitted = "Estimated";
+			er.reason = "Estimated";
 		}
 		// Warns if there may be a problem with an entry
 		er.flag = false;
 		if (propertyValue.contains("?")) {
 			er.flag = true;
-			er.reason_omitted = "Question mark";
+			er.reason = "Question mark";
 		}
 		
 		if (foundNumeric) { er.finalizeUnits(); }
 		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep!=false) {
 			er.keep = true;
-			er.reason_omitted = null;
+			er.reason = null;
 		} else {
 			er.keep = false;
-			er.reason_omitted = "Bad data or units";
+			er.reason = "Bad data or units";
 		}
 		
 		recordsExperimental.add(er);

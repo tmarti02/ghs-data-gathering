@@ -48,6 +48,7 @@ public class ParseEChemPortal extends Parse {
 			for (int i = 0; i < ecpr.values.size(); i++) {
 				ExperimentalRecord er = new ExperimentalRecord();
 				er.source_name = ExperimentalConstants.strSourceEChem;
+				er.original_source_name = ecpr.participant;
 				if (cas.length()!=0 && !cas.equals("unknown")) { er.casrn = cas;
 				} else if (einecs.length()!=0 && !einecs.equals("unknown")) { er.einecs = einecs; }
 				if (ecpr.substanceName!=null && !ecpr.substanceName.equals("-") && !ecpr.substanceName.contains("unnamed")) {
@@ -144,10 +145,10 @@ public class ParseEChemPortal extends Parse {
 				if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
 						(er.chemical_name==null || er.chemical_name.isBlank())) {
 					er.keep = false;
-					er.reason_omitted = "No identifiers";
+					er.reason = "No identifiers";
 				} else {
 					er.keep = true;
-					er.reason_omitted = null;
+					er.reason = null;
 				}
 				er.reliability = ecpr.reliability;
 				records.add(er);

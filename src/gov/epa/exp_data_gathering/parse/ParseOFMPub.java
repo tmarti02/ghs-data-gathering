@@ -49,7 +49,7 @@ public class ParseOFMPub extends Parse {
 		er.url = opr.url;
 		er.reliability = opr.reliability;
 		er.keep = true;
-		er.reason_omitted = null;
+		er.reason = null;
 		er.flag = false;
 		if (opr.testSubstanceName!=null && !opr.testSubstanceName.isBlank() && opr.testSubstanceCAS!=null && !opr.testSubstanceCAS.isBlank()) {
 			er.casrn = opr.testSubstanceCAS;
@@ -64,11 +64,11 @@ public class ParseOFMPub extends Parse {
 				er.chemical_name = matchCASandName.group(2);
 			} else {
 				er.keep = false;
-				er.reason_omitted = "No identifiers";
+				er.reason = "No identifiers";
 			}
 		} else {
 			er.keep = false;
-			er.reason_omitted = "No identifiers";
+			er.reason = "No identifiers";
 		}
 		
 		switch (opr.endpoint) {
@@ -139,19 +139,70 @@ public class ParseOFMPub extends Parse {
 				opr.categoryChemicalResultType.contains("Derived"))) || (opr.testSubstanceResultType!=null && opr.testSubstanceResultType.contains("Estimated")) ||
 				(opr.testSubstanceComments!=null && opr.testSubstanceComments.contains("Read-Across"))) {
 			er.keep = false;
-			er.reason_omitted = "Estimated";
+			er.reason = "Estimated";
 		}
 		
 		if (!foundNumeric && (er.property_value_units_original==null || er.property_value_units_original.isBlank()) && 
 				!((er.property_value_qualitative!=null && !er.property_value_qualitative.isBlank()) || (er.note!=null && !er.note.isBlank()))) {
 			er.keep = false;
-			er.reason_omitted = "Bad data or units";
+			er.reason = "Bad data or units";
 		}
 		
-		if (remarks.contains("adequately characterized") || remarks.contains("estimated") || remarks.contains("extrapolated") || 
-				remarks.contains("calculated") || remarks.contains("model")) {
-			er.flag = true;
-			er.reason_omitted = "Remarks field suggests value may be predicted";
+		if (remarks.contains("calculated") && !remarks.contains("measured") && !remarks.contains("good correlation") && !remarks.contains("limit") &&
+				!remarks.contains("hplc")) {
+			er.keep = false;
+			er.reason = "Remarks field suggests calculated value";
+		}
+		
+		if (remarks.contains("estimated") && !remarks.contains("quality: estimated") && !remarks.contains("estimated to be reliable") &&
+				!remarks.contains("consistent")) {
+			Matcher expDataMatcher = Pattern.compile("experimental database match = ([-]?[0-9.]+)").matcher(remarks);
+			if (expDataMatcher.find()) {
+				er.property_value_point_estimate_original = Double.parseDouble(expDataMatcher.group(1));
+				er.property_value_units_original = ExperimentalConstants.str_C;
+				er.keep = true;
+				er.flag = true;
+				er.reason = "Experimental data extracted from model output in remarks field";
+			} else {
+				er.keep = false;
+				er.reason = "Remarks field suggests estimated value";
+			}
+		}
+		
+		if (remarks.contains("extrapolated") && !remarks.contains("eluted")) {
+			er.keep = false;
+			er.reason = "Remarks field suggests extrapolated value";
+		}
+		
+		if (remarks.contains("following are the results from the model")) {
+			if (remarks.contains("experimental database") && er.property_name.equals(ExperimentalConstants.strBoilingPoint)) {
+				Matcher bpMatcher = Pattern.compile("exp bp \\(deg c\\): ([0-9.]+)").matcher(remarks);
+				if (bpMatcher.find()) {
+					er.property_value_point_estimate_original = Double.parseDouble(bpMatcher.group(1));
+					er.property_value_units_original = ExperimentalConstants.str_C;
+					er.keep = true;
+					er.flag = true;
+					er.reason = "Experimental data extracted from model output in remarks field";
+				} else {
+					er.keep = false;
+					er.reason = "Model output without experimental database match";
+				}
+			} else if (remarks.contains("experimental database") && er.property_name.equals(ExperimentalConstants.strMeltingPoint)) {
+				Matcher mpMatcher = Pattern.compile("exp mp \\(deg c\\): ([0-9.]+)").matcher(remarks);
+				if (mpMatcher.find()) {
+					er.property_value_point_estimate_original = Double.parseDouble(mpMatcher.group(1));
+					er.property_value_units_original = ExperimentalConstants.str_C;
+					er.keep = true;
+					er.flag = true;
+					er.reason = "Experimental data extracted from model output in remarks field";
+				} else {
+					er.keep = false;
+					er.reason = "Model output without experimental database match";
+				}
+			} else {
+				er.keep = false;
+				er.reason = "Model output without experimental database match";
+			}
 		}
 		
 		er.finalizeUnits();
