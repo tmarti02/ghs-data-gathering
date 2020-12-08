@@ -49,6 +49,7 @@ public class ParseOFMPub extends Parse {
 		er.url = opr.url;
 		er.reliability = opr.reliability;
 		er.keep = true;
+		er.reason_omitted = null;
 		er.flag = false;
 		if (opr.testSubstanceName!=null && !opr.testSubstanceName.isBlank() && opr.testSubstanceCAS!=null && !opr.testSubstanceCAS.isBlank()) {
 			er.casrn = opr.testSubstanceCAS;
@@ -61,8 +62,14 @@ public class ParseOFMPub extends Parse {
 			if (matchCASandName.find()) {
 				er.casrn = matchCASandName.group(1);
 				er.chemical_name = matchCASandName.group(2);
-			} else { er.keep = false; }
-		} else { er.keep = false; }
+			} else {
+				er.keep = false;
+				er.reason_omitted = "No identifiers";
+			}
+		} else {
+			er.keep = false;
+			er.reason_omitted = "No identifiers";
+		}
 		
 		switch (opr.endpoint) {
 		case "Melting Point":
@@ -132,16 +139,19 @@ public class ParseOFMPub extends Parse {
 				opr.categoryChemicalResultType.contains("Derived"))) || (opr.testSubstanceResultType!=null && opr.testSubstanceResultType.contains("Estimated")) ||
 				(opr.testSubstanceComments!=null && opr.testSubstanceComments.contains("Read-Across"))) {
 			er.keep = false;
+			er.reason_omitted = "Estimated";
 		}
 		
 		if (!foundNumeric && (er.property_value_units_original==null || er.property_value_units_original.isBlank()) && 
 				!((er.property_value_qualitative!=null && !er.property_value_qualitative.isBlank()) || (er.note!=null && !er.note.isBlank()))) {
 			er.keep = false;
+			er.reason_omitted = "Bad data or units";
 		}
 		
 		if (remarks.contains("adequately characterized") || remarks.contains("estimated") || remarks.contains("extrapolated") || 
 				remarks.contains("calculated") || remarks.contains("model")) {
 			er.flag = true;
+			er.reason_omitted = "Remarks field suggests value may be predicted";
 		}
 		
 		er.finalizeUnits();

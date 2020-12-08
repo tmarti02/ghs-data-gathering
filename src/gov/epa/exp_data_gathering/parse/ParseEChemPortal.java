@@ -144,8 +144,10 @@ public class ParseEChemPortal extends Parse {
 				if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
 						(er.chemical_name==null || er.chemical_name.isBlank())) {
 					er.keep = false;
+					er.reason_omitted = "No identifiers";
 				} else {
 					er.keep = true;
+					er.reason_omitted = null;
 				}
 				er.reliability = ecpr.reliability;
 				records.add(er);

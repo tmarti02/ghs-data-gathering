@@ -42,11 +42,12 @@ public class ExperimentalRecord {
 	String date_accessed;//use Experimental constants
 	
 	boolean keep;//Does the record contain useful data?
+	String reason_omitted;//If keep=false, why?
 	boolean flag;
 	
 	//TODO do we need parent url too? sometimes there are several urls we have to follow along the way to get to the final url
 
-	public final static String [] outputFieldNames= {"keep","casrn","einecs","chemical_name","synonyms","smiles","property_name","property_value_string",
+	public final static String [] outputFieldNames= {"keep","reason_omitted","casrn","einecs","chemical_name","synonyms","smiles","property_name","property_value_string",
 			"property_value_numeric_qualifier","property_value_point_estimate_final","property_value_min_final","property_value_max_final",
 			"property_value_units_final","pressure_mmHg","temperature_C","pH","property_value_qualitative","measurement_method","note","flag","source_name","url"};
 
@@ -160,7 +161,7 @@ public class ExperimentalRecord {
 		String min = property_value_min_final==null ? "" : Parse.formatDouble(property_value_min_final);
 		String max = property_value_max_final==null ? "" : Parse.formatDouble(property_value_max_final);
 		String temp = temperature_C==null ? "" : Parse.formatDouble(temperature_C);
-		String [] values= {Boolean.toString(keep),casrn,einecs,name.replace("'", "''"),synonyms, smiles,property_name,property_value_string,property_value_numeric_qualifier,
+		String [] values= {Boolean.toString(keep),reason_omitted,casrn,einecs,name.replace("'", "''"),synonyms, smiles,property_name,property_value_string,property_value_numeric_qualifier,
 				pointEstimate,min,max,property_value_units_final,pressure_mmHg,temp,
 				pH,property_value_qualitative,measurement_method,note,Boolean.toString(flag),source_name,url};
 		return values;
