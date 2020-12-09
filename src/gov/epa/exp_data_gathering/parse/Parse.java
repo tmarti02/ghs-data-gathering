@@ -748,7 +748,7 @@ public class Parse {
 			er.property_value_units_original = ExperimentalConstants.str_kpa;
 			unitsIndex = propertyValue.toLowerCase().indexOf("kpa");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mmhg") || propertyValue.toLowerCase().contains("mm hg")) {
+		} else if (propertyValue.toLowerCase().contains("mm")) {
 			er.property_value_units_original = ExperimentalConstants.str_mmHg;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mm");
 			badUnits = false;

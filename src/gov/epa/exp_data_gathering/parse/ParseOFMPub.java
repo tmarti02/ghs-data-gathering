@@ -123,6 +123,9 @@ public class ParseOFMPub extends Parse {
 			er.property_value_qualitative = opr.indicator.toLowerCase();
 		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
 			foundNumeric = getVaporPressure(er,propertyValue);
+			if (!foundNumeric && opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) {
+				foundNumeric = getVaporPressure(er, opr.resultRemarks);
+			}
 			getTemperatureCondition(er,propertyValue);
 			if (er.temperature_C==null && remarks.contains("temperature:")) {
 				getTemperatureCondition(er,opr.resultRemarks);
