@@ -677,8 +677,11 @@ public class Parse {
 			unitsIndex = propertyValue.length();
 		}
 		
-		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.contains("water") || propertyValue.contains("h2o"))) {
+		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.contains("water") || propertyValue.contains("h2o")) &&
+				!(propertyValue.contains("ca") || propertyValue.contains("circa") || propertyValue.contains(">") ||
+						propertyValue.contains("<") || propertyValue.contains("=") || propertyValue.contains("~"))) {
 			er.keep = false;
+			er.reason = "Non-aqueous solubility";
 		}
 		
 		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
@@ -733,6 +736,7 @@ public class Parse {
 		
 		if (er.property_value_qualitative!=null || er.note!=null) {
 			er.keep = true;
+			er.reason = null;
 		}
 	}
 
@@ -1022,6 +1026,19 @@ public class Parse {
 		str=str.replace("\u03B1", "&alpha;");//alpha
 
 		return str;
+	}
+	
+	public static void main(String[] args) {
+		ParseADDoPT.main(null);
+		ParseAqSolDB.main(null);
+		ParseBradley.main(null);
+		ParseEChemPortal.main(null);
+		ParseLookChem.main(null);
+		ParseOChem.main(null);
+		ParseOFMPub.main(null);
+		ParsePubChem.main(null);
+		ParseQSARDB.main(null);
+		DataFetcher.main(null);
 	}
 }
 

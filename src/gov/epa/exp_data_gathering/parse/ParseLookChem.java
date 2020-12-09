@@ -90,6 +90,7 @@ public class ParseLookChem extends Parse {
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
 		
 		er.keep = true;
+		er.reason = null;
 		er.flag = false;
 		
 		records.add(er);
@@ -144,7 +145,10 @@ public class ParseLookChem extends Parse {
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
 			// Warns if there may be a problem with an entry
 			er.flag = false;
-			if (propertyName.contains("?")) { er.flag = true; }
+			if (propertyName.contains("?")) {
+				er.flag = true;
+				er.reason = "Question mark";
+			}
 		} else {
 			er.property_value_units_original = null;
 			er.pressure_mmHg = null;
@@ -154,8 +158,10 @@ public class ParseLookChem extends Parse {
 		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
 				&& (er.property_value_units_original!=null || er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
+			er.reason = null;
 		} else {
 			er.keep = false;
+			er.reason = "Bad data or units";
 		}
 		
 		recordsExperimental.add(er);

@@ -20,6 +20,7 @@ public class RecordQSARDB {
 	String mLogP;
 	String vp;
 	String units;
+	String reference;
 	
 	static final String sourceName = ExperimentalConstants.strSourceQSARDB;
 
@@ -36,7 +37,7 @@ public class RecordQSARDB {
 					FileInputStream fis = new FileInputStream(new File(excelFilePath+File.separator+filename));
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
-					Row headerRow = sheet.getRow(0);
+					Row headerRow = sheet.getRow(1);
 					int nameIndex = -1;
 					int casrnIndex = -1;
 					int logSIndex = -1;
@@ -44,6 +45,7 @@ public class RecordQSARDB {
 					int mLogPIndex = -1;
 					int vpIndex = -1;
 					String getUnits = "";
+					String getReference = sheet.getRow(0).getCell(0).getStringCellValue();
 					for (Cell cell:headerRow) {
 						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
@@ -62,10 +64,11 @@ public class RecordQSARDB {
 						}
 					}
 					int rows = sheet.getLastRowNum();
-					for (int i = 1; i < rows; i++) {
+					for (int i = 2; i < rows; i++) {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordQSARDB qr = new RecordQSARDB();
+						qr.reference = getReference;
 						qr.name = row.getCell(nameIndex).getStringCellValue();
 						qr.casrn = row.getCell(casrnIndex).getStringCellValue();
 						if (logSIndex >= 0) { qr.logS = row.getCell(logSIndex).getStringCellValue(); }
