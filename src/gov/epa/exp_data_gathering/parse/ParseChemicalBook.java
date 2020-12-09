@@ -113,14 +113,15 @@ public class ParseChemicalBook extends Parse {
 			er.temperature_C = null;
 		}
 		
-		if (propertyValue.contains("Predicted") || propertyValue.contains("estimate")) {
-			er.flag = true;
-		}
 		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
 				&& (er.property_value_units_original!=null || er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
 		} else {
 			er.keep = false;
+		}
+		if ((er.property_value_string.toLowerCase().contains("predicted") || (er.property_value_string.toLowerCase().contains("estimate")))) {
+			er.keep = false;
+			er.note = "predicted or estimated value";
 		}
 		recordsExperimental.add(er);
 	
@@ -218,7 +219,6 @@ public class ParseChemicalBook extends Parse {
 		}
 		return null;
 	}
-
 	@Override
 	boolean getWaterSolubility(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
@@ -252,10 +252,6 @@ public class ParseChemicalBook extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_mg_100mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/ml")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/100")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
@@ -284,7 +280,8 @@ public class ParseChemicalBook extends Parse {
 			unitsIndex = propertyValue.length();
 		}
 		
-		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.contains("water") || propertyValue.contains("h2o"))) {
+		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.toLowerCase().contains("water") || propertyValue.toLowerCase().contains("h2o"))) {
+			er.note = "water";
 			er.keep = false;
 		}
 		

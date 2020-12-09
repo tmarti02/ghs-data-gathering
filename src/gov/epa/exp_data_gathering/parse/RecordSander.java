@@ -33,6 +33,7 @@ public class RecordSander {
 	Vector<String> type;
 	Vector<String> referenceFull; //unsorted, don't align with referencesAbbreviated, regular expression code needs to be refined to do so
 	String url;
+	int recordCount;
 	String fileName;
 	
 	
@@ -153,19 +154,22 @@ private static void getExperimentalTable(Document doc, RecordSander rs) {
 		Vector<String> Notes = new Vector <String>();
 		Element table = doc.select("td[width=60%] > table ~ table[width=100%] > tbody").first();
 		Elements tableRecords = table.select("tr:gt(1)");
+		int recordno = 0;
 		for (Element tableRecord:tableRecords) {
 			Elements tableFields = tableRecord.select("td");
 			hcp.add(tableFields.get(0).text()); // 0 is the first column, the Hcp
-			hcp.add(tableFields.get(1).text()); // 1 is the second column, the d ln Hcp / d (1/T) [K]
-			hcp.add(tableFields.get(2).text()); // 2 is the third column, the reference
-			hcp.add(tableFields.get(3).text()); // 3 is the fourth column, the type
+			dln.add(tableFields.get(1).text()); // 1 is the second column, the d ln Hcp / d (1/T) [K]
+			reference.add(tableFields.get(2).text()); // 2 is the third column, the reference
+			Type.add(tableFields.get(3).text()); // 3 is the fourth column, the type
 												// 4 is the fifth column, the notes
+			recordno++;
 		}
 		
 		rs.hcp = hcp;
 		rs.d_ln_Hcp_over_d = dln;
 		rs.referenceAbbreviated = reference;
 		rs.type = Type;
+		rs.recordCount = recordno;
 		
 }
 
@@ -213,7 +217,5 @@ public static Vector<RecordSander> parseWebpagesInDatabase() {
 	
 	return null;
 }
-
-
 
 }
