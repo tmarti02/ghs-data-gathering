@@ -215,7 +215,7 @@ public class DriverOChem {
 	}
 	
 	public static void main(String[] args) {
-		scrapeOChem(ExperimentalConstants.strMeltingPoint,301,500,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
+		scrapeOChem(ExperimentalConstants.strMeltingPoint,1501,2000,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
 	}
 	
 }

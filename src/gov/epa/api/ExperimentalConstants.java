@@ -68,5 +68,6 @@ public class ExperimentalConstants {
 	public static final String strSourceBradley="Bradley";
 	public static final String strSourceADDoPT="ADDoPT";
 	public static final String strSourceAqSolDB="AqSolDB";
+	public static final String strSourceChemBL="ChemBL";
 	
 }
