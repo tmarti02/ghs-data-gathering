@@ -87,7 +87,7 @@ private static void parseDocument(RecordChemicalBook rcb, Document doc) {
 				else if (header.contains("EINECS")) { rcb.EINECS = data; }
 				else if (header.contains("Mol File:")) { rcb.molfile = data; }
 				else if (header.contains("Boiling point")) { rcb.boilingPoint = data; }
-				else if (header.contains("density")) { rcb.density = data; }
+				else if (header.contains("density") && (!(header.contains("vapor density")))) { rcb.density = data; }
 				else if (header.contains("refractive index")) { rcb.refractiveindex = data; }
 				else if (header.contains("Fp")) { rcb.FP = data; }
 				else if (header.contains("form:")) { rcb.form = data; }

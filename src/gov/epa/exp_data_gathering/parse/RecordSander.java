@@ -70,7 +70,9 @@ private static void parseDocument(RecordSander rs, Document doc) {
 	getExperimentalTable(doc, rs);
 	getIdentifiers(doc, rs);
 	getReferences(doc,rs);
-	// System.out.println(rs.chemicalName + " " + rs.CASRN + " " + rs.hcp + " " + rs.referenceAbbreviated);
+}
+private static void parseURL(RecordSander rs, String url) {
+	rs.url = url;	
 }
 
 	//assigns a chemical name, cas number, and inchi key to the recordSander object
@@ -131,6 +133,7 @@ public static Vector<String> parsePropertyLinksInDatabase() {
 	}	
 	return null;
 }
+
 
 	// gets the full references for the Sander site
 private static void getReferences(Document doc, RecordSander rs) {
@@ -199,6 +202,7 @@ public static Vector<RecordSander> parseWebpagesInDatabase() {
 			rsand.fileName=url.substring(url.lastIndexOf("/")+1, url.length());
 			
 			parseDocument(rsand,doc);
+			parseURL(rsand,url);
 			
 			if (rsand.CASRN != null) {
 				records.add(rsand);

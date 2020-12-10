@@ -37,28 +37,27 @@ public class ParseSander extends Parse{
 		}
 		return recordsExperimental;
 	}
-	
+	// get the names right
 	private void addExperimentalRecords(RecordSander rs,ExperimentalRecords records) {
 			String CAS = rs.CASRN;
 			String inchikey = rs.inchiKey;
 			for (int i = 0; i < rs.recordCount; i++) {
 				if (!(rs.hcp.get(i).isBlank())) {
 				ExperimentalRecord er = new ExperimentalRecord();
+				er.url = rs.url;
 				er.casrn = CAS;
-				er.chemical_name = rs.chemicalName;
+				er.chemical_name = rs.chemicalName.replace("? ? ? ", "");
 				er.property_name = ExperimentalConstants.strHenrysLawConstant;
 				er.property_value_string = rs.hcp.get(i);
 				String propertyValue = er.property_value_string;
-				er.property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
+				er.property_value_units_final = ExperimentalConstants.str_mol_m3_Pa; // change to original, convert later
 				getnumericalhcp(er, propertyValue);
 				getnotes(er,rs.type.get(i));
-				// the notes not working for some reason
 				er.keep = true;
 				er.source_name = rs.referenceAbbreviated.get(i);
 				records.add(er);
 				}
 			}
-	
 	}
 	
 	static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
@@ -78,8 +77,6 @@ public class ParseSander extends Parse{
 	}
 
 	
-
-	
 	public static void main(String[] args) {
 		ParseSander p = new ParseSander();
 		p.mainFolder = p.mainFolder + File.separator + "General";
@@ -93,18 +90,25 @@ public class ParseSander extends Parse{
 		Matcher sanderhcpMatcher = Pattern.compile("([0-9]*\\.?[0-9]+)(\\×10(\\?)?([0-9]+))?").matcher(propertyValue);
 		if (sanderhcpMatcher.find()) {
 		String strMantissa = sanderhcpMatcher.group(1);
+		String strNegMagnitude = sanderhcpMatcher.group(3);
 		String strMagnitude = sanderhcpMatcher.group(4);
 		if (!(strMagnitude == null)){
-		Double mantissa = Double.parseDouble(strMantissa.replaceAll("\\s",""));
-		Double magnitude =  Double.parseDouble(strMagnitude.replaceAll("\\s","").replaceAll("\\+", ""));
-		er.property_value_point_estimate_final = mantissa*Math.pow(10, magnitude);
+			if (!(strNegMagnitude == null)) { // ? corresponds to negative magnitude (e.g. 3.4 * 10^-4), otherwise positive
+				Double mantissa = Double.parseDouble(strMantissa.replaceAll("\\s",""));
+				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll("\\s","").replaceAll("\\+", ""));
+				er.property_value_point_estimate_final = mantissa*Math.pow(10, (-1)*magnitude);
+			} else {
+				Double mantissa = Double.parseDouble(strMantissa.replaceAll("\\s",""));
+				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll("\\s","").replaceAll("\\+", ""));
+				er.property_value_point_estimate_final = mantissa*Math.pow(10, magnitude);
+			}
 		}
 		else {
 			er.property_value_point_estimate_final = Double.parseDouble(strMantissa.replaceAll("\\s",""));
 		}
 		}
 	}
-	
+
 	public static void getnotes(ExperimentalRecord er, String type) {
 		if (type.contains("L")) {
 			er.note = "literature review";
