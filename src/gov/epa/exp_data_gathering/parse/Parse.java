@@ -266,7 +266,7 @@ public class Parse {
 					Thread.sleep(200);
 				}
 			}
-			System.out.println("Attempted "+counterTotal+"pages, downloaded "+counterSuccess+" pages");
+			System.out.println("Attempted "+counterTotal+" pages, downloaded "+counterSuccess+" pages");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
