@@ -46,8 +46,11 @@ public class ParseChemBL extends Parse {
 		er.chemical_name = cbr.moleculePrefName;
 		er.smiles = cbr.canonicalSmiles;
 		er.measurement_method = cbr.assayDescription;
+		er.url = cbr.url;
 		er.property_value_string = cbr.standardRelation + cbr.standardValue + (cbr.standardUnits==null ? "" : (" "+cbr.standardUnits));
-		if (cbr.standardType.toLowerCase().equals("tm")) {
+		if (!cbr.assayType.equals("P")) {
+			return;
+		} else if (cbr.standardType.toLowerCase().equals("tm")) {
 			er.property_name = ExperimentalConstants.strMeltingPoint;
 			if (cbr.standardRelation!=null && !cbr.standardRelation.isBlank() && !cbr.standardRelation.equals("=")) {
 				er.property_value_numeric_qualifier = cbr.standardRelation;
@@ -101,9 +104,9 @@ public class ParseChemBL extends Parse {
 				er.property_value_point_estimate_original = Double.parseDouble(cbr.standardValue);
 			}
 		} else {
-			// Can't handle other endpoints yet
 			return;
 		}
+		
 		er.original_source_name = cbr.documentJournal + " " + cbr.documentYear;
 		if (er.keep && (er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
 			er.keep = false;

@@ -45,6 +45,16 @@ public class DataFetcher {
 			try {
 				System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")+1));
 				ExperimentalRecords sourceRecords = ExperimentalRecords.loadFromJSON(recordFileName);
+				if (sourceRecords==null) {
+					sourceRecords = new ExperimentalRecords();
+					int i = 1;
+					ExperimentalRecords temp = new ExperimentalRecords();
+					while (temp!=null) {
+						temp = ExperimentalRecords.loadFromJSON(mainFolder+File.separator+source+" Experimental Records "+i+".json");
+						sourceRecords.addAll(temp);
+						i++;
+					}
+				}
 				ExperimentalRecords badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFileName);
 				records.addAll(sourceRecords);
 				records.addAll(badSourceRecords);
@@ -266,7 +276,7 @@ public class DataFetcher {
 	
 	public static void main(String[] args) {
 		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub","QSARDB\\QSARDB",
-				"Bradley\\Bradley","ADDoPT\\ADDoPT","AqSolDB\\AqSolDB"};
+				"Bradley\\Bradley","ADDoPT\\ADDoPT","AqSolDB\\AqSolDB","ChemBL\\ChemBL"};
 		DataFetcher d = new DataFetcher(sources);
 		d.createExperimentalRecordsDatabase();
 		d.createExperimentalRecordsJSON();

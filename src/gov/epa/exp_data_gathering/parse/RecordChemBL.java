@@ -110,6 +110,7 @@ public class RecordChemBL {
 	@SerializedName("value")
 	public String value;
 	
+	public String url;
 	public static final String sourceName = ExperimentalConstants.strSourceChemBL;
 
 	private static void downloadAllJSONsToDatabase(boolean startFresh) {
@@ -190,6 +191,7 @@ public class RecordChemBL {
 				String url = rs.getString("url");
 				ActivityData data = gson.fromJson(json,ActivityData.class);
 				for (RecordChemBL cbr:data.activities) {
+					cbr.url = url;
 					records.add(cbr);
 					counter++;
 				}

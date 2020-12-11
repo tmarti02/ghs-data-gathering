@@ -14,6 +14,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import gov.epa.api.ExperimentalConstants;
 
 public class RecordAqSolDB {
+	String id;
 	String name;
 	String smiles;
 	String solubility;
@@ -34,6 +35,7 @@ public class RecordAqSolDB {
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					Row headerRow = sheet.getRow(0);
+					int idIndex = -1;
 					int nameIndex = -1;
 					int smilesIndex = -1;
 					int solIndex = -1;
@@ -42,7 +44,8 @@ public class RecordAqSolDB {
 						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
 						
-						if (header.equals("name")) { nameIndex = col;
+						if (header.equals("id")) { idIndex = col;	
+						} else if (header.equals("name")) { nameIndex = col;
 						} else if (header.equals("smiles")) { smilesIndex = col;
 						} else if (header.equals("solubility")) { solIndex = col;
 						}
@@ -52,6 +55,7 @@ public class RecordAqSolDB {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordAqSolDB ar = new RecordAqSolDB();
+						ar.id = row.getCell(idIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.name = row.getCell(nameIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.smiles = row.getCell(smilesIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.solubility = row.getCell(solIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();

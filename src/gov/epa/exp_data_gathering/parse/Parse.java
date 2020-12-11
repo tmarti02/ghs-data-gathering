@@ -423,7 +423,25 @@ public class Parse {
 			ExperimentalRecords merge = new ExperimentalRecords();
 			merge.addAll(records);
 			merge.addAll(recordsBad);
-			merge.toExcel_File(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+			if (merge.size() <= 100000) {
+				merge.toExcel_File(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+			} else {
+				ExperimentalRecords temp = new ExperimentalRecords();
+				Iterator<ExperimentalRecord> it = merge.iterator();
+				int i = 0;
+				int batch = 0;
+				while (it.hasNext()) {
+					temp.add(it.next());
+					i++;
+					if (i!=0 && i%100000==0) {
+						batch++;
+						temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
+						temp.removeAllElements();
+					}
+				}
+				batch++;
+				temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
+			}
 		}
 		
 		System.out.println("done\n");
@@ -1038,6 +1056,7 @@ public class Parse {
 		ParseOFMPub.main(null);
 		ParsePubChem.main(null);
 		ParseQSARDB.main(null);
+		ParseChemBL.main(null);
 		DataFetcher.main(null);
 	}
 }
