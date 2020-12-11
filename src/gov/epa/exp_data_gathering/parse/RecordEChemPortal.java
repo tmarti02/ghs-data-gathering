@@ -67,7 +67,7 @@ public class RecordEChemPortal {
 						if (urlCheck.add(url)) {
 							RecordEChemPortal ecpr = new RecordEChemPortal();
 							ecpr.url = url;
-							ecpr.substanceName = new String(row.getCell(0).getStringCellValue().trim().getBytes("UTF-8"));
+							ecpr.substanceName = row.getCell(0).getStringCellValue().trim();
 							ecpr.nameType = row.getCell(1).getStringCellValue().trim();
 							ecpr.number = row.getCell(2).getStringCellValue().trim();
 							ecpr.numberType = row.getCell(3).getStringCellValue().trim();
@@ -75,7 +75,7 @@ public class RecordEChemPortal {
 							ecpr.participant = row.getCell(5).getStringCellValue().trim();
 							ecpr.section = row.getCell(6).getStringCellValue().trim();
 							if (ecpr.section.equals("Melting point / freezing point")) { ecpr.section = "Melting / freezing point"; }
-							ecpr.getValues(new String(row.getCell(7).getStringCellValue().trim().getBytes("UTF-8")));
+							ecpr.getValues(row.getCell(7).getStringCellValue().trim());
 							records.add(ecpr);
 						} else { countDuplicates++; }
 					}

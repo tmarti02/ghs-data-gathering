@@ -133,7 +133,7 @@ public class RecordChemBL {
 		try {
 			int counter = 0;
 			System.out.println("Querying "+standardType);
-			String firstJSON = FileUtilities.getText_UTF8(firstURL).replace("'", "''");
+			String firstJSON = FileUtilities.getText_UTF8(firstURL).replaceAll("'", "\'");
 			SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 			Date date = new Date();  
 			String strDate=formatter.format(date);
@@ -157,7 +157,7 @@ public class RecordChemBL {
 				haveRecord=rec.haveRecordInDatabase(databasePath,sourceName,conn);
 				if (!haveRecord || startFresh) {
 					try {
-						rec.content = FileUtilities.getText_UTF8(url+urlTail).replace("'", "''");
+						rec.content = FileUtilities.getText_UTF8(url+urlTail).replaceAll("'", "\'");
 						if (rec.content!=null) {
 							rec.addRecordToDatabase(sourceName, conn);
 							counter++;
