@@ -40,9 +40,12 @@ public class ParseBradley extends Parse {
 		if (br.concentration!=null && !br.concentration.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.source_name = ExperimentalConstants.strSourceBradley;
+			er.original_source_name = br.citation;
+			er.url = br.refURL;
 			er.chemical_name = br.solute;
 			er.smiles = br.soluteSMILES;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
+			er.property_value_string = "Concentration (M): "+br.concentration;
 			getNumericalValue(er,br.concentration,br.concentration.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_M;
 			if (br.notes!=null && !br.notes.isBlank()) { getTemperatureCondition(er,br.notes); }

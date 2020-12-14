@@ -179,7 +179,7 @@ public class ExperimentalRecord {
 	}
 
 	public String[] getValuesForDatabase() {
-		String name = chemical_name==null ? "" : chemical_name.replace("'", "''").replace("[", "'[").replace("]", "']");
+		String name = chemical_name==null ? "" : chemical_name.replaceAll("(?<!\\\\)'", "\'");
 		String pointEstimate = property_value_point_estimate_final==null ? "" : Double.toString(property_value_point_estimate_final);
 		String min = property_value_min_final==null ? "" : Parse.formatDouble(property_value_min_final);
 		String max = property_value_max_final==null ? "" : Parse.formatDouble(property_value_max_final);
@@ -188,7 +188,7 @@ public class ExperimentalRecord {
 				reason,
 				casrn,
 				einecs,
-				name.replace("'", "''"),
+				name,
 				synonyms,
 				smiles,
 				source_name,

@@ -151,7 +151,7 @@ public class RecordPubChem {
 				if (!haveRecord || startFresh) {
 					boolean keepLooking = true;
 					try {
-						rec.experimental=FileUtilities.getText_UTF8(experimentalURL).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.experimental=FileUtilities.getText_UTF8(experimentalURL).replaceAll("'", "\'");
 					} catch (Exception ex) { 
 						counterMissingExpData++;
 						keepLooking = false;
@@ -159,15 +159,15 @@ public class RecordPubChem {
 					Thread.sleep(200);
 					if (keepLooking) {
 						try {
-							rec.cas=FileUtilities.getText_UTF8(casURL).replace("'", "''");
+							rec.cas=FileUtilities.getText_UTF8(casURL).replaceAll("'", "\'");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 						try {
-							rec.identifiers=FileUtilities.getText_UTF8(idURL).replace("'", "''");
+							rec.identifiers=FileUtilities.getText_UTF8(idURL).replaceAll("'", "\'");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 						try {
-							rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replace("'", "''");
+							rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replaceAll("'", "\'");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 					}

@@ -110,7 +110,7 @@ public class Parse {
 					long delay = 0;
 					try {
 						long startTime=System.currentTimeMillis();
-						rec.content=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText_UTF8(url).replaceAll("'", "\'"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay = endTime-startTime;
 						rec.addRecordToDatabase(tableName, conn);
@@ -151,7 +151,7 @@ public class Parse {
 					long delay = 0;
 					try {
 						long startTime=System.currentTimeMillis();
-						rec.content=FileUtilities.getText(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText(url).replaceAll("'", "\'"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay = endTime-startTime;
 						rec.addRecordToDatabase(tableName, conn);
@@ -200,7 +200,7 @@ public class Parse {
 					long delay=0;
 					try {
 						long startTime=System.currentTimeMillis();
-						html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						html=FileUtilities.getText_UTF8(url).replaceAll("'", "\'"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay=endTime-startTime;
 						Document doc = Jsoup.parse(html);
@@ -253,7 +253,7 @@ public class Parse {
 				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
 				if (!haveRecord || startFresh) {
 					try {
-						rec.content=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText_UTF8(url).replaceAll("'", "\'"); //single quotes mess with the SQL insert later
 						if (rec.content!=null) { 
 							rec.addRecordToDatabase(tableName, conn);
 							counterSuccess++;
@@ -423,7 +423,25 @@ public class Parse {
 			ExperimentalRecords merge = new ExperimentalRecords();
 			merge.addAll(records);
 			merge.addAll(recordsBad);
-			merge.toExcel_File(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+			if (merge.size() <= 100000) {
+				merge.toExcel_File(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+			} else {
+				ExperimentalRecords temp = new ExperimentalRecords();
+				Iterator<ExperimentalRecord> it = merge.iterator();
+				int i = 0;
+				int batch = 0;
+				while (it.hasNext()) {
+					temp.add(it.next());
+					i++;
+					if (i!=0 && i%100000==0) {
+						batch++;
+						temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
+						temp.removeAllElements();
+					}
+				}
+				batch++;
+				temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
+			}
 		}
 		
 		System.out.println("done\n");
@@ -445,8 +463,7 @@ public class Parse {
 	protected void writeOriginalRecordsToFile(Vector<?> records) {
 		try {
 			GsonBuilder builder = new GsonBuilder();
-			builder.setPrettyPrinting();
-			builder.disableHtmlEscaping();
+			builder.setPrettyPrinting().disableHtmlEscaping();
 			Gson gson = builder.create();
 			
 			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
@@ -1022,8 +1039,8 @@ public class Parse {
 		str=str.replace("\u0009", " ");//blank
 		str=str.replace("\u300c", "");// ã€Œ
 		str=str.replace("\u300d", "");// ã€�
-		str=str.replace("\u2264", "&le;");// <=  for some reason Gson messes this up so need to convert to html so code doesnt get mangled into weird symbol
-		str=str.replace("\u03B1", "&alpha;");//alpha
+		// str=str.replace("\u2264", "&le;");// <=  for some reason Gson messes this up so need to convert to html so code doesnt get mangled into weird symbol
+		// str=str.replace("\u03B1", "&alpha;");//alpha
 
 		return str;
 	}
@@ -1038,6 +1055,7 @@ public class Parse {
 		ParseOFMPub.main(null);
 		ParsePubChem.main(null);
 		ParseQSARDB.main(null);
+		// ParseChemBL.main(null);
 		DataFetcher.main(null);
 	}
 }
