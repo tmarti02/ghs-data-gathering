@@ -72,8 +72,8 @@ public class ParseAqSolDB extends Parse {
 			er.smiles = ar.smiles;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 			er.property_value_string = "LogS: "+ar.solubility;
-			er.property_value_point_estimate_original = Math.pow(10.0,  Double.parseDouble(ar.solubility));
-			er.property_value_units_original = ExperimentalConstants.str_M;
+			er.property_value_point_estimate_original = Double.parseDouble(ar.solubility);
+			er.property_value_units_original = ExperimentalConstants.str_log_M;
 			er.finalizeUnits();
 			er.keep = true;
 			er.flag = false;

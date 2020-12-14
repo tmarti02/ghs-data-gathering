@@ -48,9 +48,9 @@ public class ParseQSARDB extends Parse {
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 			er.property_value_string = "LogS: "+qr.logS;
 			getNumericalValue(er,qr.logS,qr.logS.length(),false);
-			er.property_value_point_estimate_original = Math.pow(10.0, er.property_value_point_estimate_original);
-			if (qr.units.contains("mgL")) { er.property_value_units_original = ExperimentalConstants.str_mg_L;
-			} else if (qr.units.contains("M")) { er.property_value_units_original = ExperimentalConstants.str_M;
+			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
+			if (qr.units.contains("mgL")) { er.property_value_units_original = ExperimentalConstants.str_log_mg_L;
+			} else if (qr.units.contains("M")) { er.property_value_units_original = ExperimentalConstants.str_log_M;
 			}
 			er.finalizeUnits();
 			er.keep = true;
@@ -65,7 +65,7 @@ public class ParseQSARDB extends Parse {
 			er.chemical_name = qr.name;
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strMeltingPoint;
-			er.property_value_string = "MP: "+qr.mp;
+			er.property_value_string = "MP (C): "+qr.mp;
 			getNumericalValue(er,qr.mp,qr.mp.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_C;
 			er.finalizeUnits();
@@ -98,8 +98,8 @@ public class ParseQSARDB extends Parse {
 			er.property_name = ExperimentalConstants.strVaporPressure;
 			er.property_value_string = "LogVP: "+qr.vp;
 			getNumericalValue(er,qr.vp,qr.vp.length(),false);
-			er.property_value_point_estimate_original = Math.pow(10.0, er.property_value_point_estimate_original);
-			er.property_value_units_original = ExperimentalConstants.str_mmHg;
+			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
+			er.property_value_units_original = ExperimentalConstants.str_log_mmHg;
 			er.finalizeUnits();
 			er.keep = true;
 			er.flag = false;

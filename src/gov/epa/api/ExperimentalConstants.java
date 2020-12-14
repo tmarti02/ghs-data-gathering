@@ -43,6 +43,9 @@ public class ExperimentalConstants {
 	public static final String str_torr="Torr";
 	public static final String str_psi="psi";
 	public static final String str_M="M";
+	public static final String str_log_M="log10(M)";
+	public static final String str_log_mg_L="log10(mg/L)";
+	public static final String str_log_mmHg="log10(mmHg)";
 	
 	//Other:
 	public static final String str_dec="decomposes";

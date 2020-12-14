@@ -45,7 +45,7 @@ public class ParseBradley extends Parse {
 			er.chemical_name = br.solute;
 			er.smiles = br.soluteSMILES;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			er.property_value_string = "Concentration: "+br.concentration;
+			er.property_value_string = "Concentration (M): "+br.concentration;
 			getNumericalValue(er,br.concentration,br.concentration.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_M;
 			if (br.notes!=null && !br.notes.isBlank()) { getTemperatureCondition(er,br.notes); }

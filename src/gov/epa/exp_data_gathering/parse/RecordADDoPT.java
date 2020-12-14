@@ -14,9 +14,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import gov.epa.api.ExperimentalConstants;
 
 public class RecordADDoPT {
-	String name;
 	String cas;
-	String value;
+	String solubility;
 	String temp;
 	
 	public static final String sourceName = ExperimentalConstants.strSourceADDoPT;
@@ -35,8 +34,7 @@ public class RecordADDoPT {
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					Row headerRow = sheet.getRow(0);
-					int valueIndex = -1;
-					int nameIndex = -1;
+					int solubilityIndex = -1;
 					int casIndex = -1;
 					int tempIndex = -1;
 					for (Cell cell:headerRow) {
@@ -44,11 +42,9 @@ public class RecordADDoPT {
 						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
 						
-						if (header.equals("value")) { valueIndex = col;
-						} else if (header.equals("name")) {
-							nameIndex = col;
-							casIndex = col+1;
-						} else if (header.equals("temperature: value")) { tempIndex = col;
+						if (header.contains("observed solubility")) { solubilityIndex = col;
+						} else if (header.equals("cas number")) { casIndex = col;
+						} else if (header.equals("t")) { tempIndex = col;
 						}
 					}
 					int rows = sheet.getLastRowNum();
@@ -56,9 +52,8 @@ public class RecordADDoPT {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordADDoPT ar = new RecordADDoPT();
-						ar.name = row.getCell(nameIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.cas = row.getCell(casIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-						ar.value = row.getCell(valueIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+						ar.solubility = row.getCell(solubilityIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.temp = row.getCell(tempIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						records.add(ar);
 					}
