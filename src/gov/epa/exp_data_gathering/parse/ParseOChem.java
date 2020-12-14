@@ -130,7 +130,7 @@ public class ParseOChem extends Parse {
 		}
 		er.flag = false;
 		if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
-				(er.chemical_name==null || er.chemical_name.isBlank())) {
+				(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
 			er.keep = false;
 			er.reason = "No identifiers";
 		} else if (er.measurement_method!=null && er.measurement_method.contains("est")) {
