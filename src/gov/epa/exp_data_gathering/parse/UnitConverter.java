@@ -87,21 +87,39 @@ public class UnitConverter {
 	}
 	
 	public static void convertSolubility(ExperimentalRecord er) {
-		boolean isLog = false;
+		boolean isConvertible = true;
 		double conversionFactor = 1.0;
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_log_mg_L)) {
-			isLog = true;
+			isConvertible = false;
 			if (er.property_value_point_estimate_original!=null) { 
 				er.property_value_point_estimate_final = Math.pow(10.0,er.property_value_point_estimate_original)*1.0/1000.0; }
 			if (er.property_value_min_original!=null) { er.property_value_min_final = Math.pow(10.0,er.property_value_min_original)*1.0/1000.0; }
 			if (er.property_value_max_original!=null) { er.property_value_max_final = Math.pow(10.0,er.property_value_max_original)*1.0/1000.0; }
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_log_M)) {
-			isLog = true;
+			isConvertible = false;
 			if (er.property_value_point_estimate_original!=null) { 
 				er.property_value_point_estimate_final = Math.pow(10.0,er.property_value_point_estimate_original); }
 			if (er.property_value_min_original!=null) { er.property_value_min_final = Math.pow(10.0,er.property_value_min_original); }
 			if (er.property_value_max_original!=null) { er.property_value_max_final = Math.pow(10.0,er.property_value_max_original); }
+			er.property_value_units_final = ExperimentalConstants.str_M;
+			er.flag = true;
+			er.updateNote("conversion to g/L not possible");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mM)) {
+			isConvertible = false;
+			conversionFactor = 1.0/1000.0;
+			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
+			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
+			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
+			er.property_value_units_final = ExperimentalConstants.str_M;
+			er.flag = true;
+			er.updateNote("conversion to g/L not possible");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_nM)) {
+			isConvertible = false;
+			conversionFactor = 1.0/1000000000.0;
+			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
+			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
+			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
 			er.updateNote("conversion to g/L not possible");
@@ -117,16 +135,18 @@ public class UnitConverter {
 			conversionFactor = 1.0/100.0;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_mL)) {
 			conversionFactor = 1000.0;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppb)) {
+			conversionFactor = 1.0/1000000.0;
 		} else if (!er.property_value_units_original.equals(ExperimentalConstants.str_g_L) && !er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL)) {
 			er.flag = true;
 			er.updateNote("conversion to g/L not possible");
 		}
-		if (!er.flag && !isLog) {
+		if (!er.flag && isConvertible) {
 			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
 			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
 			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
-		} else if (!isLog) {
+		} else if (isConvertible) {
 			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original; }
 			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original; }
 			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original; }

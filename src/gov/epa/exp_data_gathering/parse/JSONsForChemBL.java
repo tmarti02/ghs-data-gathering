@@ -1,6 +1,5 @@
 package gov.epa.exp_data_gathering.parse;
 
-import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.annotations.SerializedName;
 

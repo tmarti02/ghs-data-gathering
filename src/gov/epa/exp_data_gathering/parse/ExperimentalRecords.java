@@ -161,7 +161,9 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		}
 		
 		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:X"+recCurrentRow));
+		recSheet.createFreezePane(0, 2);
 		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:J"+badCurrentRow));
+		badSheet.createFreezePane(0, 2);
 		
 		for (int i = 0; i < headers.length; i++) {
 			String col = CellReference.convertNumToColString(i);
