@@ -85,8 +85,11 @@ public class ParseChemicalBook extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		boolean foundNumeric = false;
-		
+		// propertyValue = propertyValue.replaceAll("\\&le;", "\\<"); //
+		// propertyValue = propertyValue.replace("<", "&lt;").replace(">", "&gt;");
 		propertyValue = propertyValue.replaceAll(",", ".");
+		propertyValue = propertyValue.replaceAll("\\?", "-"); // negatives often not displaying properly, long dash vs. short dash issue
+
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = getDensity(er, propertyValue);
 			getPressureCondition(er,propertyValue);
@@ -94,6 +97,20 @@ public class ParseChemicalBook extends Parse {
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ) {
 			foundNumeric = getTemperatureProperty(er,propertyValue);
 			getPressureCondition(er,propertyValue);
+			// performs the missing temperature check
+			getTemperatureCondition(er,propertyValue);
+			String temp = getTemperatureUnits(propertyValue);
+			if (temp.matches("")) {
+				er.reason = "missing temperature units";
+			}
+			// hard coded bits. I don't see how they can be avoided
+			if (propertyValue.contains("<")) {
+				er.property_value_numeric_qualifier = "<"; // CAS 15538-93-9 has a problem of alternative less than sign not registering.
+			}
+			else if (er.casrn.contains("216299-76-2")) { // appears to be a bugged less than or equal to. will change to proper less than or equal to if we decide to change encoding to handle "<="
+				er.property_value_numeric_qualifier = "<";
+			}
+			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			foundNumeric = getWaterSolubility(er, propertyValue);
 			getTemperatureCondition(er,propertyValue);
@@ -130,11 +147,10 @@ public class ParseChemicalBook extends Parse {
 		if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			checkWaterSolubilities(er, propertyValue);
 		}
-		/*
 		if (propertyName==ExperimentalConstants.strBoilingPoint){
-			getAveragePressureFromRange(er,propertyValue);
+			getPressureRange(er,propertyValue);
 		}
-		*/
+		
 		recordsExperimental.add(er);
 	}
 	
@@ -144,8 +160,7 @@ public class ParseChemicalBook extends Parse {
 		p.databaseFolder = p.mainFolder;
 		p.jsonFolder= p.mainFolder;
 		p.createFiles();
-		String s1 = "92 °C(Press: 732 Torr)";
-		String s2 = "133-136 °C(Press: 0.22-0.25 Torr)";
+		String s1 = "?26.5 °C(lit.)";
 	}
 	
 	public void downloadPropertyLinksToDatabase(Vector<String> urls,String tableName, int start, int end, boolean startFresh) {
@@ -195,7 +210,7 @@ public class ParseChemicalBook extends Parse {
 		}
 	}
 
-
+// this is related to recordChemicalBook
 	public static String getSearchURLAndVerificationCheck(String url) {
 		try {
 			Document doc = Jsoup.connect(url).get();
@@ -250,6 +265,9 @@ public class ParseChemicalBook extends Parse {
 			er.keep = false;
 			er.reason = "no information about water solubility";
 		}
+		if (er.keep == true) {
+			er.reason = ""; // for the moment I am hesitant to edit Parse class or override getWSaterSolubility, this is an inelegant solution
+		}
 		
 	}
 
@@ -303,11 +321,12 @@ public class ParseChemicalBook extends Parse {
 			er.reason = null;
 		}
 	}
-	public static void getAveragePressureFromRange(ExperimentalRecord er, String propertyValue) throws IllegalStateException {
+	public static void getPressureRange(ExperimentalRecord er, String propertyValue) {
 	// public static void getAveragePressureFromRange(String propertyValue) throws IllegalStateException {
 		if (propertyValue.toLowerCase().contains("press")){
+			try {
 		Matcher afterPressMatcher = Pattern.compile("(Press:)(\\s)?([0-9]*\\.?[0-9]+)(\\-)?([0-9]*\\.?[0-9]+)").matcher(propertyValue);
-		afterPressMatcher.find();
+		if (afterPressMatcher.find()) {
 		if (!(afterPressMatcher.group(1) == null)) {
 		String lowerPressure = afterPressMatcher.group(3);
 		String rangeCheck = afterPressMatcher.group(4);
@@ -315,29 +334,16 @@ public class ParseChemicalBook extends Parse {
 		if (!(rangeCheck == null)) {
 			double min = Double.parseDouble(lowerPressure);
 			double max = Double.parseDouble(higherPressure);
-			double average = (min + max)/2;
-			er.pressure_mmHg = formatDouble(average);
+			er.pressure_mmHg = min+"~"+max;
 		}
 		}
-	}
-	}
-	
-	static double[] extractSecondDoubleRangeFromString(String str,int end) throws IllegalStateException {
-		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([-]{1}|to|ca\\.)[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
-		anyRangeMatcher.find();
-		String strMin = anyRangeMatcher.group(1).replace(" ","");
-		String strMax = anyRangeMatcher.group(3).replace(" ","");
-		double min = Double.parseDouble(strMin);
-		double max = Double.parseDouble(strMax);
-		if (min >= max) {
-			int digits = strMax.length();
-			strMax = strMin.substring(0,strMin.length()-digits)+strMax;
-			max = Double.parseDouble(strMax);
 		}
-		double[] range = {min, max};
-		return range;
+	} catch (IllegalStateException e) {
+		e.printStackTrace();
 	}
 
+		}
+	}
 
 }
 	

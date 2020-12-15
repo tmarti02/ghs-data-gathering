@@ -50,32 +50,19 @@ public class ParseSander extends Parse{
 				er.property_name = ExperimentalConstants.strHenrysLawConstant;
 				er.property_value_string = rs.hcp.get(i);
 				String propertyValue = er.property_value_string;
-				er.property_value_units_final = ExperimentalConstants.str_mol_m3_Pa; // change to original, convert later
+				er.property_value_units_original = "mol/m3-Pa";
+				er.property_value_units_final = ExperimentalConstants.str_atm_m3_mol;
 				getnumericalhcp(er, propertyValue);
+				er.property_value_point_estimate_final = 1/(er.property_value_point_estimate_original*101325);
 				getnotes(er,rs.type.get(i));
 				er.keep = true;
+				er.temperature_C = (double)25;
+				er.pressure_mmHg = "760";
 				er.source_name = rs.referenceAbbreviated.get(i);
 				records.add(er);
 				}
 			}
 	}
-	
-	static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
-		boolean badUnits = true;
-		int unitsIndex = -1;
-		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol")) {
-			er.property_value_units_original = ExperimentalConstants.str_atm_m3_mol;
-			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("pa m³/mol")) {
-			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
-			unitsIndex = propertyValue.toLowerCase().indexOf("pa");
-			badUnits = false;
-		}
-		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
-		return foundNumeric;
-	}
-
 	
 	public static void main(String[] args) {
 		ParseSander p = new ParseSander();
@@ -96,15 +83,15 @@ public class ParseSander extends Parse{
 			if (!(strNegMagnitude == null)) { // ? corresponds to negative magnitude (e.g. 3.4 * 10^-4), otherwise positive
 				Double mantissa = Double.parseDouble(strMantissa.replaceAll("\\s",""));
 				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll("\\s","").replaceAll("\\+", ""));
-				er.property_value_point_estimate_final = mantissa*Math.pow(10, (-1)*magnitude);
+				er.property_value_point_estimate_original = mantissa*Math.pow(10, (-1)*magnitude);
 			} else {
 				Double mantissa = Double.parseDouble(strMantissa.replaceAll("\\s",""));
 				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll("\\s","").replaceAll("\\+", ""));
-				er.property_value_point_estimate_final = mantissa*Math.pow(10, magnitude);
+				er.property_value_point_estimate_original = mantissa*Math.pow(10, magnitude);
 			}
 		}
 		else {
-			er.property_value_point_estimate_final = Double.parseDouble(strMantissa.replaceAll("\\s",""));
+			er.property_value_point_estimate_original = Double.parseDouble(strMantissa.replaceAll("\\s",""));
 		}
 		}
 	}

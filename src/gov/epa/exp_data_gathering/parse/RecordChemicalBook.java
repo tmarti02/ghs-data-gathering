@@ -225,18 +225,7 @@ public static void downloadWebpagesFromExcelToDatabase(String filename,int start
 
 public static void main(String[] args) {
 	downloadWebpagesFromExcelToDatabase("Data" + "/PFASSTRUCT.xlsx",8060,8160,8164,false);
-	// testing();
 	}
-
-
-
-private static void testing() {
-	Vector<String> propertyURLs = parsePropertyLinksInDatabase();
-	String url = propertyURLs.get(5);
-	String html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
-	Document doc = Jsoup.parse(html);
-	System.out.println(doc.select("div.RFQbox ~ table").first());
-}
 
 
 }
