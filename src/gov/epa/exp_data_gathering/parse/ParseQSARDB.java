@@ -40,6 +40,7 @@ public class ParseQSARDB extends Parse {
 	private void addExperimentalRecords(RecordQSARDB qr,ExperimentalRecords records) {
 		if (qr.logS!=null && !qr.logS.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
+			er.date_accessed = qr.date_accessed;
 			er.source_name = ExperimentalConstants.strSourceQSARDB;
 			er.original_source_name = qr.reference;
 			er.url = qr.url;
@@ -59,6 +60,7 @@ public class ParseQSARDB extends Parse {
 		}
 		if (qr.mp!=null && !qr.mp.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
+			er.date_accessed = qr.date_accessed;
 			er.source_name = ExperimentalConstants.strSourceQSARDB;
 			er.original_source_name = qr.reference;
 			er.url = qr.url;
@@ -75,6 +77,7 @@ public class ParseQSARDB extends Parse {
 		}
 		if (qr.mLogP!=null && !qr.mLogP.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
+			er.date_accessed = qr.date_accessed;
 			er.source_name = ExperimentalConstants.strSourceQSARDB;
 			er.original_source_name = qr.reference;
 			er.url = qr.url;
@@ -90,6 +93,7 @@ public class ParseQSARDB extends Parse {
 		}
 		if (qr.vp!=null && !qr.vp.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
+			er.date_accessed = qr.date_accessed;
 			er.source_name = ExperimentalConstants.strSourceQSARDB;
 			er.original_source_name = qr.reference;
 			er.url = qr.url;

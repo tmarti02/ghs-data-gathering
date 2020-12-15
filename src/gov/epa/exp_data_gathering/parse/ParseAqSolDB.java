@@ -39,6 +39,7 @@ public class ParseAqSolDB extends Parse {
 	private void addExperimentalRecords(RecordAqSolDB ar,ExperimentalRecords records) {
 		if (ar.solubility!=null && !ar.solubility.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
+			er.date_accessed = ar.date_accessed;
 			er.source_name = ExperimentalConstants.strSourceAqSolDB;
 			if (ar.id.contains("A")) { 
 				er.original_source_name = ExperimentalConstants.strSourceEChem;

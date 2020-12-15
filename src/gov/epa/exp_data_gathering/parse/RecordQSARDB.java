@@ -2,6 +2,7 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Date;
 import java.util.Vector;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -22,6 +23,7 @@ public class RecordQSARDB {
 	String units;
 	String reference;
 	String url;
+	String date_accessed;
 	
 	static final String sourceName = ExperimentalConstants.strSourceQSARDB;
 
@@ -35,7 +37,8 @@ public class RecordQSARDB {
 		for (String filename:filenames) {
 			if (filename.endsWith(".xlsx")) {
 				try {
-					FileInputStream fis = new FileInputStream(new File(excelFilePath+File.separator+filename));
+					String filepath = excelFilePath+File.separator+filename;
+					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					Row headerRow = sheet.getRow(1);
@@ -48,6 +51,7 @@ public class RecordQSARDB {
 					String getUnits = "";
 					String getReference = sheet.getRow(0).getCell(0).getStringCellValue();
 					String getURL = sheet.getRow(0).getCell(0).getHyperlink().getAddress();
+					String date = Parse.getStringCreationDate(filepath);
 					for (Cell cell:headerRow) {
 						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
@@ -70,6 +74,7 @@ public class RecordQSARDB {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordQSARDB qr = new RecordQSARDB();
+						qr.date_accessed = date;
 						qr.reference = getReference;
 						qr.url = getURL;
 						qr.name = row.getCell(nameIndex).getStringCellValue().replaceAll("′", "'");

@@ -27,6 +27,7 @@ public class RecordEChemPortal {
 	Vector<String> pressure;
 	Vector<String> temperature;
 	Vector<String> pH;
+	String date_accessed;
 	
 	static final String sourceName = ExperimentalConstants.strSourceEChem;
 	
@@ -57,7 +58,9 @@ public class RecordEChemPortal {
 		for (String filename:filenamesSorted) {
 			if (filename.endsWith(".xls")) {
 				try {
-					FileInputStream fis = new FileInputStream(new File(excelFilePath+File.separator+filename));
+					String filepath = excelFilePath+File.separator+filename;
+					String date = Parse.getStringCreationDate(filepath);
+					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new HSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					int rows = sheet.getLastRowNum();
@@ -66,6 +69,7 @@ public class RecordEChemPortal {
 						String url = row.getCell(6).getHyperlink().getAddress();
 						if (urlCheck.add(url)) {
 							RecordEChemPortal ecpr = new RecordEChemPortal();
+							ecpr.date_accessed = date;
 							ecpr.url = url;
 							ecpr.substanceName = row.getCell(0).getStringCellValue().trim();
 							ecpr.nameType = row.getCell(1).getStringCellValue().trim();

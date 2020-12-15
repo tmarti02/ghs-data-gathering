@@ -4,6 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -367,6 +372,22 @@ public class Parse {
 		
 		return records;
 		
+	}
+	
+	// Gets the creation date of any file as a string
+	public static String getStringCreationDate(String filepath) {
+		Path path = Paths.get(filepath);
+		try {
+			BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
+			FileTime createdAt = attrs.creationTime();
+			Date creationDate = new Date(createdAt.toMillis());
+			SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");  
+			String strCreationDate=formatter.format(creationDate);
+			return strCreationDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return null;
 	}
 	
 	/**

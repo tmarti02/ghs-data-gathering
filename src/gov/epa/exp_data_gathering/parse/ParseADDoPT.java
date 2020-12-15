@@ -40,6 +40,7 @@ public class ParseADDoPT extends Parse {
 		if (ar.solubility!=null && !ar.solubility.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.source_name = ExperimentalConstants.strSourceADDoPT;
+			er.date_accessed = ar.date_accessed;
 			er.original_source_name = "Yalchowsky & He 2003";
 			er.url = "https://doi.org/10.1002/jcc.24424";
 			er.casrn = ar.cas;

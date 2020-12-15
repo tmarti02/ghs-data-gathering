@@ -39,6 +39,7 @@ public class ParseBradley extends Parse {
 	private void addExperimentalRecords(RecordBradley br,ExperimentalRecords records) {
 		if (br.concentration!=null && !br.concentration.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
+			er.date_accessed = br.date_accessed;
 			er.source_name = ExperimentalConstants.strSourceBradley;
 			er.original_source_name = br.citation;
 			er.url = br.refURL;

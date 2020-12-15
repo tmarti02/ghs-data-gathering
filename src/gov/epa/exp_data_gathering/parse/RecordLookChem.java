@@ -40,6 +40,7 @@ public class RecordLookChem {
 	String safety;
 	String transportInformation;
 	String fileName;
+	String date_accessed;
 	
 	static final String sourceName=ExperimentalConstants.strSourceLookChem;
 
@@ -206,10 +207,12 @@ public class RecordLookChem {
 				
 				String html = rs.getString("content");
 				String url = rs.getString("url");
+				String date = rs.getString("date");
 				Document doc = Jsoup.parse(html);
 				
 				RecordLookChem lcr=new RecordLookChem();
 				lcr.fileName=url.substring(url.lastIndexOf("/")+1, url.length());
+				lcr.date_accessed = date.substring(0,date.indexOf(" "));
 				
 				parseDocument(lcr,doc);
 

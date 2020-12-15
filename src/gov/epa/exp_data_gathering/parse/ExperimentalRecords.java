@@ -160,7 +160,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			}
 		}
 		
-		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:X"+recCurrentRow));
+		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:Y"+recCurrentRow));
 		recSheet.createFreezePane(0, 2);
 		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:J"+badCurrentRow));
 		badSheet.createFreezePane(0, 2);

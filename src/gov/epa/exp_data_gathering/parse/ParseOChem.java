@@ -39,6 +39,7 @@ public class ParseOChem extends Parse {
 	
 	private void addExperimentalRecords(RecordOChem ocr,ExperimentalRecords records) {
 		ExperimentalRecord er = new ExperimentalRecord();
+		er.date_accessed = ocr.date_accessed;
 		er.casrn = ocr.casrn;
 		er.smiles = ocr.smiles;
 		er.chemical_name = ocr.name;

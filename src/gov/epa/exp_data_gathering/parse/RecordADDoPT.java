@@ -17,6 +17,7 @@ public class RecordADDoPT {
 	String cas;
 	String solubility;
 	String temp;
+	String date_accessed;
 	
 	public static final String sourceName = ExperimentalConstants.strSourceADDoPT;
 	
@@ -30,13 +31,15 @@ public class RecordADDoPT {
 		for (String filename:filenames) {
 			if (filename.endsWith(".xlsx")) {
 				try {
-					FileInputStream fis = new FileInputStream(new File(excelFilePath+File.separator+filename));
+					String filepath = excelFilePath+File.separator+filename;
+					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					Row headerRow = sheet.getRow(0);
 					int solubilityIndex = -1;
 					int casIndex = -1;
 					int tempIndex = -1;
+					String date = Parse.getStringCreationDate(filepath);
 					for (Cell cell:headerRow) {
 						cell.setCellType(Cell.CELL_TYPE_STRING);
 						String header = cell.getStringCellValue().toLowerCase();
@@ -52,6 +55,7 @@ public class RecordADDoPT {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordADDoPT ar = new RecordADDoPT();
+						ar.date_accessed = date;
 						ar.cas = row.getCell(casIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.solubility = row.getCell(solubilityIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.temp = row.getCell(tempIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();

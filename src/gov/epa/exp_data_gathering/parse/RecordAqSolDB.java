@@ -18,6 +18,7 @@ public class RecordAqSolDB {
 	String name;
 	String smiles;
 	String solubility;
+	String date_accessed;
 	
 	public static final String sourceName = ExperimentalConstants.strSourceAqSolDB;
 	
@@ -31,7 +32,8 @@ public class RecordAqSolDB {
 		for (String filename:filenames) {
 			if (filename.endsWith(".xlsx")) {
 				try {
-					FileInputStream fis = new FileInputStream(new File(excelFilePath+File.separator+filename));
+					String filepath = excelFilePath+File.separator+filename;
+					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					Row headerRow = sheet.getRow(0);
@@ -39,6 +41,7 @@ public class RecordAqSolDB {
 					int nameIndex = -1;
 					int smilesIndex = -1;
 					int solIndex = -1;
+					String date = Parse.getStringCreationDate(filepath);
 					for (Cell cell:headerRow) {
 						cell.setCellType(Cell.CELL_TYPE_STRING);
 						String header = cell.getStringCellValue().toLowerCase();
@@ -55,6 +58,7 @@ public class RecordAqSolDB {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordAqSolDB ar = new RecordAqSolDB();
+						ar.date_accessed = date;
 						ar.id = row.getCell(idIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.name = row.getCell(nameIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.smiles = row.getCell(smilesIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();

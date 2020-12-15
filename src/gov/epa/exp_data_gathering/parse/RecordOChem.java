@@ -2,6 +2,13 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -29,6 +36,7 @@ public class RecordOChem {
 	String pressureUnit;
 	String pH;
 	String measurementMethod;
+	String date_accessed;
 	
 	static final String sourceName = ExperimentalConstants.strSourceOChem;
 	
@@ -42,7 +50,8 @@ public class RecordOChem {
 		for (String filename:filenames) {
 			if (filename.endsWith(".xls")) {
 				try {
-					FileInputStream fis = new FileInputStream(new File(excelFilePath+File.separator+filename));
+					String filepath = excelFilePath+File.separator+filename;
+					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new HSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					Row headerRow = sheet.getRow(0);
@@ -59,6 +68,7 @@ public class RecordOChem {
 					int pHIndex = -1;
 					int measurementMethodIndex = -1;
 					String propertyName = "";
+					String date = Parse.getStringCreationDate(filepath);
 					for (Cell cell:headerRow) {
 						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
@@ -86,6 +96,7 @@ public class RecordOChem {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordOChem ocr = new RecordOChem();
+						ocr.date_accessed = date;
 						ocr.smiles = betterGetCellValue(row,smilesIndex);
 						ocr.casrn = betterGetCellValue(row,casrnIndex);
 						String name1 = betterGetCellValue(row,nameIndex1);

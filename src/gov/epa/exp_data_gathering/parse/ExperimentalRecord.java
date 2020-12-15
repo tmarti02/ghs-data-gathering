@@ -72,7 +72,8 @@ public class ExperimentalRecord {
 			"note",
 			"flag",
 			"original_source_name",
-			"url"};
+			"url",
+			"date_accessed"};
 
 	public void finalizeUnits() {
 		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
@@ -207,7 +208,8 @@ public class ExperimentalRecord {
 				note,
 				Boolean.toString(flag),
 				original_source_name,
-				url};
+				url,
+				date_accessed};
 		return values;
 	}
 }

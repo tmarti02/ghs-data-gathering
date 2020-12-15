@@ -41,6 +41,7 @@ public class ParseChemBL extends Parse {
 	
 	private void addExperimentalRecords(RecordChemBL cbr,ExperimentalRecords records) {
 		ExperimentalRecord er = new ExperimentalRecord();
+		er.date_accessed = cbr.date_accessed;
 		er.keep = true;
 		er.source_name = ExperimentalConstants.strSourceChemBL;
 		er.chemical_name = cbr.moleculePrefName;

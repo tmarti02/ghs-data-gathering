@@ -37,6 +37,7 @@ public class RecordPubChem {
 	Vector<String> henrysLawConstant;
 	Vector<String> logP;
 	Vector<String> pKa;
+	String date_accessed;
 	
 	static final String sourceName=ExperimentalConstants.strSourcePubChem;
 	
@@ -203,9 +204,11 @@ public class RecordPubChem {
 			Statement stat = MySQL_DB.getStatement(databasePath);
 			ResultSet rs = MySQL_DB.getAllRecords(stat,sourceName);
 			while (rs.next()) {
+				String date = rs.getString("date");
 				String experimental = rs.getString("experimental");
 				Data experimentalData = gson.fromJson(experimental,Data.class);
 				RecordPubChem pcr = new RecordPubChem();
+				pcr.date_accessed = date.substring(0,date.indexOf(" "));
 				pcr.cid = experimentalData.record.recordNumber;
 				List<Section> experimentalProperties = experimentalData.record.section.get(0).section.get(0).section;
 				pcr.getExperimentalData(experimentalProperties);

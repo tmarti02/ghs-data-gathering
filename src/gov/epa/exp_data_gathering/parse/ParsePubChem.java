@@ -81,6 +81,7 @@ public class ParsePubChem extends Parse {
 	
 	private static void addAppearanceRecord(RecordPubChem pcr,String physicalDescription,ExperimentalRecords records) {
 		ExperimentalRecord er=new ExperimentalRecord();
+		er.date_accessed = pcr.date_accessed;
 		er.casrn=String.join("|", pcr.cas);
 		er.chemical_name=pcr.iupacName;
 		if (pcr.synonyms != null) { er.synonyms=pcr.synonyms; }
@@ -100,6 +101,7 @@ public class ParsePubChem extends Parse {
 		if (propertyValue==null) { return; }
 		// Creates a new ExperimentalRecord object and sets all the fields that do not require advanced parsing
 		ExperimentalRecord er=new ExperimentalRecord();
+		er.date_accessed = pcr.date_accessed;
 		er.casrn = String.join("|", pcr.cas);
 		er.chemical_name=pcr.iupacName;
 		er.smiles=pcr.smiles;
