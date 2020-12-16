@@ -17,6 +17,11 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
+/**
+ * Builds and runs queries on the eChemPortal API
+ * @author GSINCL01
+ *
+ */
 public class QueryHandler {
 	private Gson gson = null;
 	private Gson prettyGson = null;
@@ -26,11 +31,16 @@ public class QueryHandler {
 		gson = new GsonBuilder().create();
 		prettyGson = new GsonBuilder().setPrettyPrinting().create();
 		logger = (Logger) LoggerFactory.getLogger("org.apache.http");
-		// Adjust debug logging as desired
+		// Can adjust debug logging as desired
     	logger.setLevel(Level.WARN);
     	logger.setAdditive(false);
 	}
 	
+	/**
+	 * Translates our endpoint identifiers to eChemPortal's
+	 * @param propertyName	Endpoint to query from ExperimentalConstants
+	 * @return				eChemPortal's corresponding endpoint identifier
+	 */
 	private static String getEndpointKind(String propertyName) {
 		String endpointKind = "";
 		switch (propertyName) {
@@ -65,6 +75,23 @@ public class QueryHandler {
 		return endpointKind;
 	}
 	
+	/**
+	 * Creates an API query with indicated options
+	 * @param propertyName				Endpoint to query from ExperimentalConstants
+	 * @param maxReliabilityLevel		Maximum reliability to return (1 = most reliable, 4 = least; 2 recommended)
+	 * @param endpointMin				Minimum value for endpoint (may be null)
+	 * @param endpointMax				Maximum value for endpoint (may be null)
+	 * @param endpointUnits				Endpoint units from ExperimentalConstants
+	 * @param pressureOpOrLower			Operator (ex. "GT_EQUALS") or minimum value for pressure condition // TODO handle this more cleanly
+	 * @param pressureValueOrUpper		Value or maximum value for pressure condition // TODO handle this more cleanly
+	 * @param pressureUnits				Pressure condition units from ExperimentalConstants
+	 * @param temperatureOpOrLower		Operator (ex. "GT_EQUALS") or minimum value for temperature condition // TODO handle this more cleanly
+	 * @param temperatureValueOrUpper	Value or maximum value for temperature condition // TODO handle this more cleanly
+	 * @param temperatureUnits			Temperature condition units from ExperimentalConstants
+	 * @param pHMin						Minimum value for pH condition
+	 * @param pHMax						Maximum value for pH condition
+	 * @return							A QueryData object with the indicated options
+	 */
 	private static QueryData generateQueryData(String propertyName,int maxReliabilityLevel,
 			String endpointMin,String endpointMax,String endpointUnits,
 			String pressureOpOrLower,String pressureValueOrUpper,String pressureUnits,
@@ -128,6 +155,11 @@ public class QueryHandler {
 		return query;
 	}
 	
+	/**
+	 * Runs the API query described by a QueryData object
+	 * @param query	API query to run
+	 * @return		Results as a vector of ResultsData objects
+	 */
 	private Vector<ResultsData> runQuery(QueryData query) {
 		Vector<ResultsData> results = new Vector<ResultsData>();
 		Unirest.setTimeouts(0, 0);

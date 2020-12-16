@@ -61,9 +61,8 @@ public class QueryBlock {
 	}
 
 	/**
-	 * Adds a QueryField to guarantee results with reliability <= maxReliabilityLevel
-	 * NOTE: Higher reliability level = more results, less reliable (2 recommended)
-	 * @param minReliability	1 = reliable w/o restrictions, 2 = reliable w/ restrictions, 3 = not reliable, 4 = not assignable
+	 * Adds a QueryField to guarantee results with reliability <= maxReliabilityLevel (2 recommended)
+	 * @param maxReliabilityLevel	1 = reliable w/o restrictions, 2 = reliable w/ restrictions, 3 = not reliable, 4 = not assignable
 	 */
 	public void addReliabilityField(int maxReliabilityLevel) {
 		List<Value> reliabilityValues = new ArrayList<Value>();

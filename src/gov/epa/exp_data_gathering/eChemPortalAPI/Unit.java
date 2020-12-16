@@ -13,7 +13,10 @@ public class Unit {
 	@Expose
 	public String phraseId;
 	
-	// Translates units from ExperimentalConstants to eChemPortal's numerical codes
+	/**
+	 * Translates our unit identifiers to eChemPortal's
+	 * @param desiredUnit	Desired unit from ExperimentalConstants
+	 */
 	public Unit(String desiredUnit) {
 		switch (desiredUnit) {
 		case "":
