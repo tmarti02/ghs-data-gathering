@@ -29,6 +29,7 @@ public class ExperimentalConstants {
 	public static final String str_F="F";
 	public static final String str_K="K";
 	public static final String str_pctWt="%w";
+	public static final String str_pctVol="%v";
 	public static final String str_pct="%";
 	public static final String str_ppm="ppm";
 	public static final String str_ppb="ppb";
@@ -49,6 +50,8 @@ public class ExperimentalConstants {
 	public static final String str_log_M="log10(M)";
 	public static final String str_log_mg_L="log10(mg/L)";
 	public static final String str_log_mmHg="log10(mmHg)";
+	public static final String str_dimensionless_H="dimensionless H";
+	public static final String str_dimensionless_H_vol="dimensionless H (volumetric)";
 	
 	//Other:
 	public static final String str_dec="decomposes";
