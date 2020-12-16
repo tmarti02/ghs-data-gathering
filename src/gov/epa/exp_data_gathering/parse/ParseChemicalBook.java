@@ -74,6 +74,7 @@ public class ParseChemicalBook extends Parse {
 	private void addNewExperimentalRecord(RecordChemicalBook cbr, String propertyName, String propertyValue, ExperimentalRecords recordsExperimental) {
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.casrn=cbr.CAS;
+		er.date_accessed = cbr.date_accessed;
 		er.einecs=cbr.EINECS;
 		er.chemical_name=cbr.chemicalName;
 		if (cbr.synonyms != null) { er.synonyms=cbr.synonyms.replace(';','|'); }
@@ -88,7 +89,7 @@ public class ParseChemicalBook extends Parse {
 		// propertyValue = propertyValue.replaceAll("\\&le;", "\\<"); //
 		// propertyValue = propertyValue.replace("<", "&lt;").replace(">", "&gt;");
 		propertyValue = propertyValue.replaceAll(",", ".");
-		propertyValue = propertyValue.replaceAll("\\?", "-"); // negatives often not displaying properly, long dash vs. short dash issue
+		// propertyValue = propertyValue.replaceAll("\\?", "-"); // negatives often not displaying properly, long dash vs. short dash issue
 
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = getDensity(er, propertyValue);
@@ -106,9 +107,6 @@ public class ParseChemicalBook extends Parse {
 			// hard coded bits. I don't see how they can be avoided
 			if (propertyValue.contains("<")) {
 				er.property_value_numeric_qualifier = "<"; // CAS 15538-93-9 has a problem of alternative less than sign not registering.
-			}
-			else if (er.casrn.contains("216299-76-2")) { // appears to be a bugged less than or equal to. will change to proper less than or equal to if we decide to change encoding to handle "<="
-				er.property_value_numeric_qualifier = "<";
 			}
 			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {

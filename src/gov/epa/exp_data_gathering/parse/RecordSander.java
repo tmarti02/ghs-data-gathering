@@ -35,24 +35,24 @@ public class RecordSander {
 	String url;
 	int recordCount;
 	String fileName;
+	String date_accessed;
 	
 	
 	static final String sourceName="Sander";	
 
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		downloadWebpagesHTML();
 	}
 	// as the name implies, only related to the webpage download process
 public static void downloadWebpagesHTML() {
-	// Vector<String> urls = ObtainWebpages();
+	Vector<String> urls = ObtainWebpages();
 	ParseSander p = new ParseSander();
+	Vector<String> subset = new Vector<String>();
 	p.mainFolder = p.mainFolder + File.separator + "General";
 	p.databaseFolder = p.mainFolder;
-	Vector<String> html = parsePropertyLinksInDatabase();
-	// p.downloadWebpagesToDatabaseAdaptive(urls,"tbody", sourceName,true);
-	// p.downloadWebpagesToDatabaseAdaptive(downloadedURLs,"div.RFQbox ~ table",sourceName,false);		
+	// Vector<String> html = parsePropertyLinksInDatabase();
+	p.downloadWebpagesToDatabaseAdaptive(urls,"tbody", sourceName,false);
 
 }
 	// regex, to be used later depending on whether Todd wants full reference list
@@ -178,7 +178,7 @@ private static void getExperimentalTable(Document doc, RecordSander rs) {
 
 /**
  * Parses the HTML strings in the raw HTML database to RecordSander objects
- * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
+ * @return	A vector of RecordSander objects containing the data from the raw HTML database
  */
 public static Vector<RecordSander> parseWebpagesInDatabase() {
 	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
@@ -195,12 +195,15 @@ public static Vector<RecordSander> parseWebpagesInDatabase() {
 			if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 			
 			String html = rs.getString("content");
+			html = html.replaceAll("\\u2212", "-"); // there are some minus signs rather than "-" <- wanted, "eN" dash, and "eM" dashes
 			String url = rs.getString("url");
+			String date = rs.getString("date");
 			Document doc = Jsoup.parse(html);
 			
 			RecordSander rsand=new RecordSander();
 			rsand.fileName=url.substring(url.lastIndexOf("/")+1, url.length());
-			
+			rsand.date_accessed = date.substring(0,date.indexOf(" "));
+
 			parseDocument(rsand,doc);
 			parseURL(rsand,url);
 			

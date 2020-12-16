@@ -62,6 +62,7 @@ public class RecordChemicalBook extends Parse {
 		String EPAsrs;
 		String hazardcodes; 
 		String fileName;
+		String date_accessed;
 
 		static final String sourceName="ChemicalBook";	
 
@@ -154,10 +155,15 @@ public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 			if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 			
 			String html = rs.getString("content");
+			html = html.replaceAll("\\u2212", "-"); // there are some minus signs rather than "-" <- wanted, "eN" dash, and "eM" dashes
+			html = html.replaceAll("\\u2264", "<="); // removes less than or equal to sign
 			String url = rs.getString("url");
+			String date = rs.getString("date");
 			Document doc = Jsoup.parse(html);
 			
 			RecordChemicalBook rcb=new RecordChemicalBook();
+			rcb.date_accessed = date.substring(0,date.indexOf(" "));
+
 			rcb.fileName=url.substring(url.lastIndexOf("/")+1, url.length());
 			
 			parseDocument(rcb,doc);

@@ -6,6 +6,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import gov.epa.api.Chemical;
 import gov.epa.api.ExperimentalConstants;
 
 public class ParseSander extends Parse{
@@ -44,21 +45,25 @@ public class ParseSander extends Parse{
 			for (int i = 0; i < rs.recordCount; i++) {
 				if (!(rs.hcp.get(i).isBlank())) {
 				ExperimentalRecord er = new ExperimentalRecord();
+				er.date_accessed = rs.date_accessed;
+				er.keep = true;
 				er.url = rs.url;
 				er.casrn = CAS;
+				if (er.casrn.contains("???")) {
+					er.casrn = "";
+				}
+				er.property_value_string = rs.hcp.get(i);
 				er.chemical_name = rs.chemicalName.replace("? ? ? ", "");
 				er.property_name = ExperimentalConstants.strHenrysLawConstant;
-				er.property_value_string = rs.hcp.get(i);
-				String propertyValue = er.property_value_string;
+				String propertyValue = rs.hcp.get(i);
 				er.property_value_units_original = "mol/m3-Pa";
 				er.property_value_units_final = ExperimentalConstants.str_atm_m3_mol;
 				getnumericalhcp(er, propertyValue);
 				er.property_value_point_estimate_final = 1/(er.property_value_point_estimate_original*101325);
-				getnotes(er,rs.type.get(i));
-				er.keep = true;
 				er.temperature_C = (double)25;
 				er.pressure_mmHg = "760";
 				er.source_name = rs.referenceAbbreviated.get(i);
+				getnotes(er,rs.type.get(i));
 				records.add(er);
 				}
 			}
@@ -74,7 +79,7 @@ public class ParseSander extends Parse{
 	
 	
 	public static void getnumericalhcp(ExperimentalRecord er, String propertyValue) {
-		Matcher sanderhcpMatcher = Pattern.compile("([0-9]*\\.?[0-9]+)(\\×10(\\?)?([0-9]+))?").matcher(propertyValue);
+		Matcher sanderhcpMatcher = Pattern.compile("([0-9]*\\.?[0-9]+)(\\×10(\\-)?([0-9]+))?").matcher(propertyValue);
 		if (sanderhcpMatcher.find()) {
 		String strMantissa = sanderhcpMatcher.group(1);
 		String strNegMagnitude = sanderhcpMatcher.group(3);
@@ -95,6 +100,8 @@ public class ParseSander extends Parse{
 		}
 		}
 	}
+	
+	
 
 	public static void getnotes(ExperimentalRecord er, String type) {
 		if (type.contains("L")) {
@@ -102,37 +109,56 @@ public class ParseSander extends Parse{
 		}
 		else if (type.contains("M")) {
 			er.note = "measured";
+			er.keep = true;
 		}
 		else if (type.contains("V")) {
 			er.note = "VP/AS = vapor pressure/aqueous solubility";
+			er.keep = true;
 		}
 		else if (type.contains("R")) {
 			er.note = "recalculation";
+			er.keep = true;
 		}
-		else if (type.contains("")) {
+		else if (type.contains("T")) {
 			er.note = "thermodynamical calculation";
+			er.keep = true;
 		}
 		else if (type.contains("X")) {
-			er.note = "original paper not available";
+			er.reason = "original paper not available";
+			er.keep = true;
 		}
 		else if (type.contains("C")) {
 			er.note = "citation";
+			er.keep = true;
 		}
 		else if (type.contains("Q")) {
-			er.note = "QSPR";
+			er.note="QSPR";
+			er.reason = "QSPR";
+			er.keep = false;
 		}
 		else if (type.contains("E")) {
-			er.note = "estimate";
+			er.note="estimate";
+			er.reason = "estimate";
+			er.keep=false;
 		}
 		else if (type.contains("?")) {
 			er.note = "unknown";
+			er.reason = "unknown";
+			er.keep=false;
 		}
 		else if (type.contains("W")) {
 			er.note = "wrong";
+			er.reason = "wrong";
+			er.keep=false;
 		}
 		else {
 			er.note = "";
 		}
 	}
 
+	
+	// 
+	// ??1
+	// ?-1
+	// &lte?1
 }
