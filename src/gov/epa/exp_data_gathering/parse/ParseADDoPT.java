@@ -6,7 +6,13 @@ import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Parses data from ADDoPT, accessible at: https://onlinelibrary.wiley.com/doi/epdf/10.1002/jcc.24424 (supplementary info table 1)
+ * @author GSINCL01
+ *
+ */
 public class ParseADDoPT extends Parse {
+
 	public ParseADDoPT() {
 		sourceName = ExperimentalConstants.strSourceADDoPT;
 		this.init();
@@ -40,7 +46,7 @@ public class ParseADDoPT extends Parse {
 		if (ar.solubility!=null && !ar.solubility.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.source_name = ExperimentalConstants.strSourceADDoPT;
-			er.date_accessed = ar.date_accessed;
+			er.date_accessed = RecordADDoPT.lastUpdated;
 			er.original_source_name = "Yalchowsky & He 2003";
 			er.url = "https://doi.org/10.1002/jcc.24424";
 			er.casrn = ar.cas;

@@ -8,6 +8,11 @@ import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Parses data from echemportal.org
+ * @author GSINCL01
+ *
+ */
 public class ParseEChemPortal extends Parse {
 
 	public ParseEChemPortal() {
@@ -47,7 +52,7 @@ public class ParseEChemPortal extends Parse {
 			} else if (ecpr.numberType.equals("EC Number")) { einecs = ecpr.number; }
 			for (int i = 0; i < ecpr.values.size(); i++) {
 				ExperimentalRecord er = new ExperimentalRecord();
-				er.date_accessed = ecpr.date_accessed;
+				er.date_accessed = RecordEChemPortal.lastUpdated;
 				er.source_name = ExperimentalConstants.strSourceEChem;
 				er.original_source_name = ecpr.participant;
 				if (cas.length()!=0 && !cas.equals("unknown")) { er.casrn = cas;

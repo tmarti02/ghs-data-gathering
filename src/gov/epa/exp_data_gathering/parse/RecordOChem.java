@@ -23,6 +23,11 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Stores data from ochem.eu
+ * @author GSINCL01
+ *
+ */
 public class RecordOChem {
 	String smiles;
 	String casrn;
@@ -36,8 +41,8 @@ public class RecordOChem {
 	String pressureUnit;
 	String pH;
 	String measurementMethod;
-	String date_accessed;
 	
+	static final String lastUpdated = "12/14/2020";
 	static final String sourceName = ExperimentalConstants.strSourceOChem;
 	
 	public static Vector<RecordOChem> parseOChemQueriesFromExcel() {
@@ -51,6 +56,10 @@ public class RecordOChem {
 			if (filename.endsWith(".xls")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
+					String date = Parse.getStringCreationDate(filepath);
+					if (!date.equals(lastUpdated)) {
+						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
+					}
 					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new HSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
@@ -68,7 +77,6 @@ public class RecordOChem {
 					int pHIndex = -1;
 					int measurementMethodIndex = -1;
 					String propertyName = "";
-					String date = Parse.getStringCreationDate(filepath);
 					for (Cell cell:headerRow) {
 						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
@@ -96,7 +104,6 @@ public class RecordOChem {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordOChem ocr = new RecordOChem();
-						ocr.date_accessed = date;
 						ocr.smiles = betterGetCellValue(row,smilesIndex);
 						ocr.casrn = betterGetCellValue(row,casrnIndex);
 						String name1 = betterGetCellValue(row,nameIndex1);

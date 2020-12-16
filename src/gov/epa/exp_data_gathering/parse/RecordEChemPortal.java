@@ -12,6 +12,11 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Stores data from echemportal.org
+ * @author GSINCL01
+ *
+ */
 public class RecordEChemPortal {
 	String substanceName;
 	String nameType;
@@ -27,8 +32,8 @@ public class RecordEChemPortal {
 	Vector<String> pressure;
 	Vector<String> temperature;
 	Vector<String> pH;
-	String date_accessed;
 	
+	static final String lastUpdated = "11/23/2020";
 	static final String sourceName = ExperimentalConstants.strSourceEChem;
 	
 	private RecordEChemPortal() {
@@ -60,6 +65,9 @@ public class RecordEChemPortal {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
 					String date = Parse.getStringCreationDate(filepath);
+					if (!date.equals(lastUpdated)) {
+						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
+					}
 					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new HSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
@@ -69,7 +77,6 @@ public class RecordEChemPortal {
 						String url = row.getCell(6).getHyperlink().getAddress();
 						if (urlCheck.add(url)) {
 							RecordEChemPortal ecpr = new RecordEChemPortal();
-							ecpr.date_accessed = date;
 							ecpr.url = url;
 							ecpr.substanceName = row.getCell(0).getStringCellValue().trim();
 							ecpr.nameType = row.getCell(1).getStringCellValue().trim();

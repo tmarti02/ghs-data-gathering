@@ -13,12 +13,17 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Stores data from ADDoPT, accessible at: https://onlinelibrary.wiley.com/doi/epdf/10.1002/jcc.24424 (supplementary info table 1)
+ * @author GSINCL01
+ *
+ */
 public class RecordADDoPT {
 	String cas;
 	String solubility;
 	String temp;
-	String date_accessed;
 	
+	public static final String lastUpdated = "12/14/2020";
 	public static final String sourceName = ExperimentalConstants.strSourceADDoPT;
 	
 	public static Vector<RecordADDoPT> parseADDoPTRecordsFromExcel() {
@@ -32,6 +37,10 @@ public class RecordADDoPT {
 			if (filename.endsWith(".xlsx")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
+					String date = Parse.getStringCreationDate(filepath);
+					if (!date.equals(lastUpdated)) {
+						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
+					}
 					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
@@ -39,7 +48,6 @@ public class RecordADDoPT {
 					int solubilityIndex = -1;
 					int casIndex = -1;
 					int tempIndex = -1;
-					String date = Parse.getStringCreationDate(filepath);
 					for (Cell cell:headerRow) {
 						cell.setCellType(Cell.CELL_TYPE_STRING);
 						String header = cell.getStringCellValue().toLowerCase();
@@ -55,7 +63,6 @@ public class RecordADDoPT {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordADDoPT ar = new RecordADDoPT();
-						ar.date_accessed = date;
 						ar.cas = row.getCell(casIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.solubility = row.getCell(solubilityIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.temp = row.getCell(tempIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();

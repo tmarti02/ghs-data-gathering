@@ -6,6 +6,11 @@ import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Parses data from ochem.eu
+ * @author GSINCL01
+ *
+ */
 public class ParseOChem extends Parse {
 
 	public ParseOChem() {
@@ -39,7 +44,7 @@ public class ParseOChem extends Parse {
 	
 	private void addExperimentalRecords(RecordOChem ocr,ExperimentalRecords records) {
 		ExperimentalRecord er = new ExperimentalRecord();
-		er.date_accessed = ocr.date_accessed;
+		er.date_accessed = RecordOChem.lastUpdated;
 		er.casrn = ocr.casrn;
 		er.smiles = ocr.smiles;
 		er.chemical_name = ocr.name;

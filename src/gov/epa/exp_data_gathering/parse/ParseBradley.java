@@ -6,7 +6,13 @@ import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Parses data from Bradley, accessible at: https://www.nature.com/articles/npre.2010.4243.3
+ * @author GSINCL01
+ *
+ */
 public class ParseBradley extends Parse {
+	
 	public ParseBradley() {
 		sourceName = ExperimentalConstants.strSourceBradley;
 		this.init();
@@ -39,7 +45,7 @@ public class ParseBradley extends Parse {
 	private void addExperimentalRecords(RecordBradley br,ExperimentalRecords records) {
 		if (br.concentration!=null && !br.concentration.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
-			er.date_accessed = br.date_accessed;
+			er.date_accessed = RecordBradley.lastUpdated;
 			er.source_name = ExperimentalConstants.strSourceBradley;
 			er.original_source_name = br.citation;
 			er.url = br.refURL;

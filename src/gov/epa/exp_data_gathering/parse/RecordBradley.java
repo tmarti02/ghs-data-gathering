@@ -13,6 +13,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Stores data from Bradley, accessible at: https://www.nature.com/articles/npre.2010.4243.3
+ * @author GSINCL01
+ *
+ */
 public class RecordBradley {
 	String solute;
 	String soluteSMILES;
@@ -20,8 +25,8 @@ public class RecordBradley {
 	String notes;
 	String citation;
 	String refURL;
-	String date_accessed;
 	
+	public static final String lastUpdated = "12/04/2020";
 	public static final String sourceName = ExperimentalConstants.strSourceBradley;
 	
 	public static Vector<RecordBradley> parseBradleyRecordsFromExcel() {
@@ -35,6 +40,10 @@ public class RecordBradley {
 			if (filename.endsWith(".xlsx")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
+					String date = Parse.getStringCreationDate(filepath);
+					if (!date.equals(lastUpdated)) {
+						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
+					}
 					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
@@ -45,7 +54,6 @@ public class RecordBradley {
 					int soluteSMILESIndex = -1;
 					int concIndex = -1;
 					int notesIndex = -1;
-					String date = Parse.getStringCreationDate(filepath);
 					for (Cell cell:headerRow) {
 						cell.setCellType(Cell.CELL_TYPE_STRING);
 						String header = cell.getStringCellValue().toLowerCase();
@@ -65,7 +73,6 @@ public class RecordBradley {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordBradley br = new RecordBradley();
-						br.date_accessed = date;
 						br.solute = row.getCell(soluteIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						br.citation = row.getCell(citationIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						br.refURL = row.getCell(refIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();

@@ -13,6 +13,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Stores data from qsardb.org
+ * @author GSINCL01
+ *
+ */
 public class RecordQSARDB {
 	String name;
 	String casrn;
@@ -23,8 +28,8 @@ public class RecordQSARDB {
 	String units;
 	String reference;
 	String url;
-	String date_accessed;
 	
+	static final String lastUpdated = "12/04/2020";
 	static final String sourceName = ExperimentalConstants.strSourceQSARDB;
 
 	public static Vector<RecordQSARDB> parseQSARDBRecordsFromExcel() {
@@ -38,6 +43,10 @@ public class RecordQSARDB {
 			if (filename.endsWith(".xlsx")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
+					String date = Parse.getStringCreationDate(filepath);
+					if (!date.equals(lastUpdated)) {
+						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
+					}
 					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
@@ -51,7 +60,6 @@ public class RecordQSARDB {
 					String getUnits = "";
 					String getReference = sheet.getRow(0).getCell(0).getStringCellValue();
 					String getURL = sheet.getRow(0).getCell(0).getHyperlink().getAddress();
-					String date = Parse.getStringCreationDate(filepath);
 					for (Cell cell:headerRow) {
 						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
@@ -74,7 +82,6 @@ public class RecordQSARDB {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordQSARDB qr = new RecordQSARDB();
-						qr.date_accessed = date;
 						qr.reference = getReference;
 						qr.url = getURL;
 						qr.name = row.getCell(nameIndex).getStringCellValue().replaceAll("′", "'");
