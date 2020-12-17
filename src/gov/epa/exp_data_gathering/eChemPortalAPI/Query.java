@@ -24,16 +24,16 @@ public class Query {
 	@Expose
 	public List<Integer> participants = null;
 	
-	public Query(PropertyBlock setPropertyBlock) {
+	public Query(PropertyBlock setPropertyBlock,int limit) {
 		propertyBlocks = new ArrayList<PropertyBlock>();
 		propertyBlocks.add(setPropertyBlock);
-		paging = new Paging(0,100);
+		paging = new Paging(0,limit);
 		// filtering & sorting not needed for query
 		Integer[] participantsArray = {101,140,580,60,1};
 		participants = Arrays.asList(participantsArray);
 	}
 	
-	public void updateOffset(int newOffset) {
-		paging.offset = newOffset;
+	public void updateOffset() {
+		paging.offset += paging.limit;
 	}
 }

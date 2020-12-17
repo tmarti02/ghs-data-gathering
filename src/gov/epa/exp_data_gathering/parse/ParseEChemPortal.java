@@ -16,7 +16,7 @@ import gov.epa.api.ExperimentalConstants;
 public class ParseEChemPortal extends Parse {
 
 	public ParseEChemPortal() {
-		sourceName = ExperimentalConstants.strSourceEChem;
+		sourceName = ExperimentalConstants.strSourceEChemPortal;
 		this.init();
 	}
 	
@@ -53,7 +53,7 @@ public class ParseEChemPortal extends Parse {
 			for (int i = 0; i < ecpr.values.size(); i++) {
 				ExperimentalRecord er = new ExperimentalRecord();
 				er.date_accessed = RecordEChemPortal.lastUpdated;
-				er.source_name = ExperimentalConstants.strSourceEChem;
+				er.source_name = ExperimentalConstants.strSourceEChemPortal;
 				er.original_source_name = ecpr.participant;
 				if (cas.length()!=0 && !cas.equals("unknown")) { er.casrn = cas;
 				} else if (einecs.length()!=0 && !einecs.equals("unknown")) { er.einecs = einecs; }

@@ -18,7 +18,7 @@ import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.NestedBlock;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.OriginalValue;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Result;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
+import gov.epa.exp_data_gathering.parse.ParsePubChem;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 
 public class RecordEChemPortalAPI {
@@ -45,57 +45,12 @@ public class RecordEChemPortalAPI {
 	String numberType;
 	String dateAccessed;
 	
-	private static final String sourceName = "eChemPortal API";
-	private static final String databaseFolder = "Data\\Experimental\\"+sourceName;
+	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 	
-	private static void downloadResultsToDatabase(Query query,boolean startFresh) {
-		String databasePath = databaseFolder+"\\eChemPortalAPI_raw_json.db";
-		String tableName = "results";
-		File db = new File(databasePath);
-		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
-		java.sql.Connection conn = CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataEChemPortalAPI.fieldNames, startFresh);
-		QueryHandler qh = new QueryHandler();
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
-		
-		try {
-			Date date = new Date();  
-			String strDate=formatter.format(date);
-			
-			String strQuery = qh.prettyGson.toJson(query);
-			
-			ResultsPage page = qh.getResultsPage(query);
-			String strPage = qh.prettyGson.toJson(page);
-			
-			RawDataEChemPortalAPI data = new RawDataEChemPortalAPI(strDate,strQuery,strPage);
-			data.addRecordToDatabase(conn);
-			
-			int totalResults = page.pageInfo.totalElements;
-			System.out.println("Found "+totalResults+" results. Downloading to eChemPortalAPI_raw_json.db...");
-			
-			int offset = 100;
-			while (offset < totalResults) {
-				date = new Date();  
-				strDate=formatter.format(date);
-				
-				query.updateOffset(offset);
-				strQuery = qh.prettyGson.toJson(query);
-				
-				data = new RawDataEChemPortalAPI(strDate,strQuery,"");
-				page = qh.getResultsPage(query);
-				strPage = qh.prettyGson.toJson(page);
-				data.content = strPage;
-				data.addRecordToDatabase(conn);
-				
-				offset += 100;
-			}
-			System.out.println("Done!");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	private static Vector<RecordEChemPortalAPI> parseResultsInDatabase() {
-		String databasePath = databaseFolder+"\\eChemPortalAPI_raw_json.db";
+	public static Vector<RecordEChemPortalAPI> parseResultsInDatabase() {
+		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
+		String databaseName = p.sourceName+"_raw_json.db";
+		String databasePath = p.databaseFolder+File.separator+databaseName;
 		Vector<RecordEChemPortalAPI> records = new Vector<RecordEChemPortalAPI>();
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		
@@ -160,29 +115,12 @@ public class RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
-		Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
-		Query query = QueryHandler.generateQuery(ExperimentalConstants.strWaterSolubility,2,
-				"0","1",ExperimentalConstants.str_g_L,
+		QueryHandler handler = new QueryHandler(5000);
+		Query query = handler.generateQuery(ExperimentalConstants.strMeltingPoint,2,
+				"0","400",ExperimentalConstants.str_K,
+				"0",null,ExperimentalConstants.str_mmHg,
 				null,null,null,
-				null,"20",ExperimentalConstants.str_C,
-				"0","7");
-		downloadResultsToDatabase(query,true);
-		Vector<RecordEChemPortalAPI> results = parseResultsInDatabase();
-		try {
-
-			System.out.println("Writing to eChemPortalAPI Original Records.json...");
-			File file = new File(databaseFolder+"\\eChemPortalAPI Original Records.json");
-			file.getParentFile().mkdirs();
-
-			FileWriter fw = new FileWriter(file);
-			fw.write(prettyGson.toJson(results));
-			fw.flush();
-			fw.close();
-			
-			System.out.println("Done!");
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+				null,null);
+		handler.downloadQueryResultsToDatabase(query,true);
 	}
 }

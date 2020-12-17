@@ -66,7 +66,7 @@ public class Parse {
 	public static boolean writeJsonExperimentalRecordsFile=true;//all data converted to final format stored as Json file
 	public static boolean writeExcelExperimentalRecordsFile=true;//all data converted to final format stored as xlsx file
 	
-	Gson gson=null;
+	protected Gson gson=null;
 
 	public void init() {
 		fileNameJSON_Records = sourceName +" Original Records.json";
@@ -584,7 +584,7 @@ public class Parse {
 		return foundNumeric;
 	}
 	
-	static String getNumericQualifier(String str,int index) {
+	protected static String getNumericQualifier(String str,int index) {
 		String symbol = "";
 		if (index > 0) {
 			if (str.charAt(index-1)=='>') {
@@ -603,7 +603,7 @@ public class Parse {
 		return symbol;
 	}
 	
-	static boolean getDensity(ExperimentalRecord er, String propertyValue) {
+	protected static boolean getDensity(ExperimentalRecord er, String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
@@ -650,7 +650,7 @@ public class Parse {
 	}
 	
 	// Applicable for melting point, boiling point, and flash point
-	static boolean getTemperatureProperty(ExperimentalRecord er,String propertyValue) {
+	protected static boolean getTemperatureProperty(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		String units = Parse.getTemperatureUnits(propertyValue);
@@ -663,7 +663,7 @@ public class Parse {
 		return foundNumeric;
 	}
 	
-	boolean getWaterSolubility(ExperimentalRecord er,String propertyValue) {
+	protected boolean getWaterSolubility(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
@@ -786,7 +786,7 @@ public class Parse {
 		}
 	}
 
-	boolean getVaporPressure(ExperimentalRecord er,String propertyValue) {
+	protected boolean getVaporPressure(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
@@ -838,7 +838,7 @@ public class Parse {
 		return foundNumeric;
 	}
 
-	static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
+	protected static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol")) {
@@ -855,7 +855,7 @@ public class Parse {
 	}
 
 	// Applicable for LogKow and pKa
-	static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {
+	protected static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {
 		int unitsIndex = -1;
 		if (propertyValue.contains("at")) {
 			unitsIndex = propertyValue.indexOf("at");
@@ -873,7 +873,7 @@ public class Parse {
 	 * @param propertyValue	The string to be read
 	 * @return				The temperature condition in C
 	 */
-	static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
+	protected static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
 		String units = getTemperatureUnits(propertyValue);
 		int tempIndex = propertyValue.indexOf(units);
 		// If temperature units were found, looks for the last number that precedes them
@@ -907,7 +907,7 @@ public class Parse {
 	 * @param propertyValue	The string to be read
 	 * @return				The pressure condition in kPa
 	 */
-	void getPressureCondition(ExperimentalRecord er,String propertyValue) {
+	protected void getPressureCondition(ExperimentalRecord er,String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
 		int pressureIndex = -1;
 		double conversionFactor = 1.0;
@@ -940,7 +940,7 @@ public class Parse {
 		// If any pressure units were found, looks for the last number that precedes them
 		boolean foundNumeric = false;
 		if (pressureIndex > 0) {
-			if (sourceName.equals(ExperimentalConstants.strSourceEChem)) {
+			if (sourceName.equals(ExperimentalConstants.strSourceEChemPortal)) {
 				if (!foundNumeric) {
 					try {
 						double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,pressureIndex);
@@ -991,7 +991,7 @@ public class Parse {
 	 * @return		The range found as a double[2]
 	 * @throws IllegalStateException	If no number range is found in the given range
 	 */
-	static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
+	protected static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
 		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([-]{1}|to|ca\\.)[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
 		String strMin = anyRangeMatcher.group(1).replace(" ","");
@@ -1015,7 +1015,7 @@ public class Parse {
 		return range;
 	}
 	
-	static double[] extractAltFormatRangeFromString(String str,int end) throws IllegalStateException {
+	protected static double[] extractAltFormatRangeFromString(String str,int end) throws IllegalStateException {
 		Matcher anyRangeMatcher = Pattern.compile(">[=]?[ ]?([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?<[=]?[ ]?([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
 		String strMin = anyRangeMatcher.group(1).replace(" ","");
@@ -1046,7 +1046,7 @@ public class Parse {
 	 * @return		The number found as a double
 	 * @throws IllegalStateException	If no number is found in the given range
 	 */
-	static double extractDoubleFromString(String str,int end) throws IllegalStateException, NumberFormatException {
+	protected static double extractDoubleFromString(String str,int end) throws IllegalStateException, NumberFormatException {
 		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
 		String strDouble = "";
 		while (numberMatcher.find()) { strDouble = numberMatcher.group(); }

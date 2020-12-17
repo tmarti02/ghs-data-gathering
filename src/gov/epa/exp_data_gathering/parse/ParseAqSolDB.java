@@ -48,7 +48,7 @@ public class ParseAqSolDB extends Parse {
 			er.date_accessed = RecordAqSolDB.lastUpdated;
 			er.source_name = ExperimentalConstants.strSourceAqSolDB;
 			if (ar.id.contains("A")) { 
-				er.original_source_name = ExperimentalConstants.strSourceEChem;
+				er.original_source_name = ExperimentalConstants.strSourceEChemPortal;
 				er.url = "https://www.echemportal.org/echemportal/property-search";
 			} else if (ar.id.contains("B")) { 
 				er.original_source_name = "EPI Suite Data 1995";

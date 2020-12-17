@@ -34,7 +34,7 @@ public class RecordEChemPortal {
 	Vector<String> pH;
 	
 	static final String lastUpdated = "11/23/2020";
-	static final String sourceName = ExperimentalConstants.strSourceEChem;
+	static final String sourceName = ExperimentalConstants.strSourceEChemPortal;
 	
 	private RecordEChemPortal() {
 		values = new Vector<String>();

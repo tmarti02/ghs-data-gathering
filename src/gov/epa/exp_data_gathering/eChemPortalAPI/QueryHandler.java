@@ -3,6 +3,9 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.sql.Connection;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
 import com.google.gson.Gson;
@@ -12,6 +15,7 @@ import com.mashape.unirest.http.Unirest;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
+import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
@@ -26,8 +30,14 @@ public class QueryHandler {
 	public Gson gson = null;
 	public Gson prettyGson = null;
 	private Logger logger = null;
+	private int limit;
 	
-	public QueryHandler() {
+	/**
+	 * Creates a QueryHandler with a given page limit
+	 * Optimal page limit seems to be ~5000, but may change with internet connection
+	 * @param limit		Page limit
+	 */
+	public QueryHandler(int limit) {
 		gson = new GsonBuilder().create();
 		prettyGson = new GsonBuilder().setPrettyPrinting().create();
 		logger = (Logger) LoggerFactory.getLogger("org.apache.http");
@@ -35,6 +45,7 @@ public class QueryHandler {
     	logger.setLevel(Level.WARN);
     	logger.setAdditive(false);
     	Unirest.setTimeouts(0, 0);
+    	this.limit = limit;
 	}
 	
 	/**
@@ -93,7 +104,7 @@ public class QueryHandler {
 	 * @param pHMax						Maximum (inclusive) value for pH condition (may be null)
 	 * @return							A Query object with the indicated options
 	 */
-	public static Query generateQuery(String propertyName,int maxReliabilityLevel,
+	public Query generateQuery(String propertyName,int maxReliabilityLevel,
 			String endpointMin,String endpointMax,String endpointUnits,
 			String pressureMin,String pressureMax,String pressureUnits,
 			String temperatureMin,String temperatureMax,String temperatureUnits,
@@ -154,11 +165,16 @@ public class QueryHandler {
 		}
 		
 		PropertyBlock propertyBlock = new PropertyBlock(0,"property",queryBlock);
-		Query query = new Query(propertyBlock);
+		Query query = new Query(propertyBlock,limit);
 		return query;
 	}
 	
-	public ResultsPage getResultsPage(Query query) {
+	/**
+	 * Gets a single page of query results
+	 * @param query		The query to get results for
+	 * @return			A page of query results as a ResultsPage object
+	 */
+	private ResultsPage getResultsPage(Query query) {
 		ResultsPage page = null;
 		String bodyString = gson.toJson(query);
 		try {	
@@ -181,47 +197,84 @@ public class QueryHandler {
 	 * @param query	API query to run
 	 * @return		Results as a vector of ResultsPage objects
 	 */
-	public Vector<ResultsPage> runQuery(Query query) {
+	private Vector<ResultsPage> getQueryResults(Query query) {
 		Vector<ResultsPage> results = new Vector<ResultsPage>();
-		ResultsPage page = getResultsPage(query);
-		int totalResults = page.pageInfo.totalElements;
+		int totalResults = getQueryTotalResults(query);
 		System.out.println("Found "+totalResults+" results. Downloading...");
-		int offset = 100;
-		while (offset < totalResults) {
-			query.updateOffset(offset);
-			page = getResultsPage(query);
+		while (query.paging.offset < totalResults) {
+			ResultsPage page = getResultsPage(query);
 			results.add(page);
-			offset += 100;
+			query.updateOffset();
 		}
 		return results;
 	}
-
-	public static void main(String[] args) {
-		QueryHandler qh = new QueryHandler();
-		Query query = generateQuery(ExperimentalConstants.strHenrysLawConstant,2,
-				"0","100",ExperimentalConstants.str_atm_m3_mol,
-				null,"760",ExperimentalConstants.str_mmHg,
-				"0",null,ExperimentalConstants.str_K,
-				null,null);
-		System.out.println(qh.prettyGson.toJson(query));
-		Vector<ResultsPage> results = qh.runQuery(query);
-		System.out.println("Done! Writing to JSON...");
-		String filePath = "Data" + File.separator + "Experimental" + File.separator + ExperimentalConstants.strSourceEChem + File.separator +
-				ExperimentalConstants.strSourceEChem + " API Records.json";
+	
+	/**
+	 * Downloads a single page of query results to a database
+	 * @param query		The query to get results for
+	 * @param conn		The Connection to the desired database
+	 */
+	private void downloadResultsPageToDatabase(Query query,Connection conn) {
+		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  	
 		try {
-
-			File file = new File(filePath);
-			file.getParentFile().mkdirs();
-
-			FileWriter fw = new FileWriter(file);
-			fw.write(qh.prettyGson.toJson(results));
-			fw.flush();
-			fw.close();
+			Date date = new Date();  
+			String strDate=formatter.format(date);
 			
-			System.out.println("Done!");
-
+			String strQuery = prettyGson.toJson(query);
+			
+			ResultsPage page = getResultsPage(query);
+			String strPage = prettyGson.toJson(page).replaceAll("—","-");
+			
+			RawDataEChemPortalAPI data = new RawDataEChemPortalAPI(strDate,strQuery,strPage);
+			data.addRecordToDatabase(conn);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Runs the API query described by a Query object and downloads results to a database
+	 * @param query			API query to run
+	 * @param startFresh	True to rebuild database, false to append to existing database
+	 */
+	public void downloadQueryResultsToDatabase(Query query,boolean startFresh) {
+		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
+		String databaseName = p.sourceName+"_raw_json.db";
+		String databasePath = p.databaseFolder+File.separator+databaseName;
+		String tableName = "results";
+		File db = new File(databasePath);
+		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
+		java.sql.Connection conn = CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataEChemPortalAPI.fieldNames, startFresh);
+		
+		try {
+			int totalResults = getQueryTotalResults(query);
+			System.out.println("Found "+totalResults+" results. Downloading to eChemPortalAPI_raw_json.db...");
+			
+			while (query.paging.offset < totalResults) {
+				downloadResultsPageToDatabase(query,conn);
+				query.updateOffset();
+			}
+			System.out.println("Done!");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Runs a tiny version of the query to get total results as fast as possible
+	 * @param query		The query to find results for
+	 * @return			The total number of results returned by the query
+	 */
+	public int getQueryTotalResults(Query query) {
+		int originalLimit = query.paging.limit;
+		query.paging.limit = 1;
+		ResultsPage page = getResultsPage(query);
+		int totalResults = page.pageInfo.totalElements;
+		query.paging.limit = originalLimit;
+		return totalResults;
+	}
+
+	public static void main(String[] args) {
+		// TODO
 	}
 }

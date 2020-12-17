@@ -67,7 +67,8 @@ public class ExperimentalConstants {
 	//Add list of source names here:
 	public static final String strSourceLookChem="LookChem";
 	public static final String strSourcePubChem="PubChem";
-	public static final String strSourceEChem="eChemPortal";
+	public static final String strSourceEChemPortal="eChemPortal";
+	public static final String strSourceEChemPortalAPI="eChemPortalAPI";
 	public static final String strSourceOChem="OChem";
 	public static final String strSourceOFMPub="OFMPub";
 	public static final String strSourceSigmaAldrich="Sigma-Aldrich";
