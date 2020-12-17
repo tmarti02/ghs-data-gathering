@@ -47,11 +47,15 @@ public class RecordSander {
 	// as the name implies, only related to the webpage download process
 public static void downloadWebpagesHTML() {
 	Vector<String> urls = ObtainWebpages();
-	ParseSander p = new ParseSander();
 	Vector<String> subset = new Vector<String>();
+	for (int i = 0; i < 10; i++) {
+		subset.add(urls.get(i));
+	}
+	System.out.println(urls.size());
+	ParseSander p = new ParseSander();
 	p.mainFolder = p.mainFolder + File.separator + "General";
 	p.databaseFolder = p.mainFolder;
-	// Vector<String> html = parsePropertyLinksInDatabase();
+	Vector<String> html = parsePropertyLinksInDatabase();
 	p.downloadWebpagesToDatabaseAdaptive(urls,"tbody", sourceName,false);
 
 }
@@ -89,7 +93,7 @@ private static void getIdentifiers(Document doc, RecordSander rs) {
 }
 	// scrapes the 'Sander - full' page to obtain the links for all chemicals on the site
 private static Vector<String> ObtainWebpages() {
-	String baseSearchLink = "http://satellite.mpic.de/henry/search_identifier.html?csrfmiddlewaretoken=eNhrzlz52Jf3pHHxhPPvsFfi0jCmhStqaIIF7xXrsctaPEuHMIgkdjAkRyUDvPQm&x=0&y=0&search=";
+	String baseSearchLink = "http://satellite.mpic.de/henry/search_identifier.html?csrfmiddlewaretoken=ZaAV0nh7GWRmm5Z5UDshScMxM4OujgEpC2Ywh1iSPfqDh6CCafT9iHkx0lrIIfgc&x=0&y=0&search=";
 	Vector<String> allLinks = new Vector<String>();
 	try {
 		Document doc = Jsoup.connect(baseSearchLink).get();

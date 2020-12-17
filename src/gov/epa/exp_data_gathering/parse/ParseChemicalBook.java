@@ -86,27 +86,27 @@ public class ParseChemicalBook extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		boolean foundNumeric = false;
-		// propertyValue = propertyValue.replaceAll("\\&le;", "\\<"); //
-		// propertyValue = propertyValue.replace("<", "&lt;").replace(">", "&gt;");
 		propertyValue = propertyValue.replaceAll(",", ".");
-		// propertyValue = propertyValue.replaceAll("\\?", "-"); // negatives often not displaying properly, long dash vs. short dash issue
 
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = getDensity(er, propertyValue);
 			getPressureCondition(er,propertyValue);
 			getTemperatureCondition(er,propertyValue);
+			if (propertyValue.contains("±")) {
+				getUncertaintyRange(er,propertyValue);
+			}
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ) {
 			foundNumeric = getTemperatureProperty(er,propertyValue);
 			getPressureCondition(er,propertyValue);
 			// performs the missing temperature check
-			getTemperatureCondition(er,propertyValue);
+			getTemperatureProperty(er,propertyValue);
 			String temp = getTemperatureUnits(propertyValue);
 			if (temp.matches("")) {
 				er.reason = "missing temperature units";
 			}
 			// hard coded bits. I don't see how they can be avoided
-			if (propertyValue.contains("<")) {
-				er.property_value_numeric_qualifier = "<"; // CAS 15538-93-9 has a problem of alternative less than sign not registering.
+			if (propertyValue.contains("<=")) {
+				er.property_value_numeric_qualifier = "<="; // CAS 15538-93-9 has a problem of alternative less than sign not registering.
 			}
 			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
@@ -158,7 +158,23 @@ public class ParseChemicalBook extends Parse {
 		p.databaseFolder = p.mainFolder;
 		p.jsonFolder= p.mainFolder;
 		p.createFiles();
-		String s1 = "?26.5 °C(lit.)";
+	}
+	
+	
+	public static void getUncertaintyRange(ExperimentalRecord er, String propertyValue) {
+		Matcher solubilityMatcher = Pattern.compile("([0-9]*\\.?[0-9]+)(\\u00B1)?([0-9]*\\.?[0-9]+)").matcher(propertyValue);
+		if (solubilityMatcher.find()) {
+			String pointEst = solubilityMatcher.group(1);
+			String uncertainty = solubilityMatcher.group(3);
+			if (!(solubilityMatcher.group(2) == null)) {
+				double center = Double.parseDouble(pointEst);
+				double upperval = center + Double.parseDouble(uncertainty);
+				double lowerval = center - Double.parseDouble(uncertainty);
+				er.property_value_max_original = upperval;
+				er.property_value_min_original = lowerval;
+			}
+		}
+
 	}
 	
 	public void downloadPropertyLinksToDatabase(Vector<String> urls,String tableName, int start, int end, boolean startFresh) {
@@ -289,22 +305,16 @@ public class ParseChemicalBook extends Parse {
 				er.updateNote(qualifier + prep + solvent);
 			}
 		}
+	
 		
-		if (propertyValue.contains("reacts") || propertyValue.contains("reaction")) {
+		if (propertyValue.contains("reacts") || propertyValue.contains("reaction"))
 			er.property_value_qualitative = "reaction";
-		}
-		
-		if (propertyValue.contains("hydrolysis") || propertyValue.contains("hydrolyse") || propertyValue.contains("hydrolyze")) {
+		if (propertyValue.contains("hydrolysis") || propertyValue.contains("hydrolyse") || propertyValue.contains("hydrolyze"))
 			er.property_value_qualitative = "hydrolysis";
-		}
-		
-		if (propertyValue.contains("decompos")) {
+		if (propertyValue.contains("decompos"))
 			er.property_value_qualitative = "decomposes";
-		}
-		
-		if (propertyValue.contains("autoignition")) {
+		if (propertyValue.contains("autoignition"))
 			er.property_value_qualitative = "autoignition";
-		}
 		
 		String[] qualifiers = {"none","very poor","poor","low","negligible","slight","significant","complete"};
 		for (String qual:qualifiers) {

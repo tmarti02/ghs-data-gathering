@@ -121,7 +121,8 @@ public class ParseSander extends Parse{
 		}
 		else if (type.contains("T")) {
 			er.note = "thermodynamical calculation";
-			er.keep = true;
+			er.keep = false;
+			er.reason= "thermodynamical calculation";
 		}
 		else if (type.contains("X")) {
 			er.reason = "original paper not available";
