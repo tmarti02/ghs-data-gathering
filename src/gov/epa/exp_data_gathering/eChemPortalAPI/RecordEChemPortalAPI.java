@@ -161,11 +161,11 @@ public class RecordEChemPortalAPI {
 	
 	public static void main(String[] args) {
 		Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
-		Query query = QueryHandler.generateQuery(ExperimentalConstants.strMeltingPoint,2,
-				"250","260",ExperimentalConstants.str_K,
-				"0",null,ExperimentalConstants.str_mmHg,
-				null,null,ExperimentalConstants.str_K,
-				null,null);
+		Query query = QueryHandler.generateQuery(ExperimentalConstants.strWaterSolubility,2,
+				"0","1",ExperimentalConstants.str_g_L,
+				null,null,null,
+				null,"20",ExperimentalConstants.str_C,
+				"0","7");
 		downloadResultsToDatabase(query,true);
 		Vector<RecordEChemPortalAPI> results = parseResultsInDatabase();
 		try {
