@@ -294,7 +294,7 @@ public class JapanRecord {
 
 		try {
 
-			Connection conn=CreateGHS_Database.createDatabaseTable(Parse.pathRawHTMLDatabase, tableName, RawDataRecord.fieldNames);
+			Connection conn=CreateGHS_Database.createDatabaseTable(Parse.pathRawHTMLDatabase, tableName, RawDataRecord.fieldNames,true);
 			
 			Document doc = Jsoup.parse(indexFile, "utf-8");
 			Element table = doc.select("table.tblghs02").first();

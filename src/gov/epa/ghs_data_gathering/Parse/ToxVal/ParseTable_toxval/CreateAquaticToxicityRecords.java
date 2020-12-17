@@ -48,7 +48,7 @@ public class CreateAquaticToxicityRecords {
 		} else if (tr.study_duration_units.contentEquals("-")) {
 			return;
 		} else {
-			System.out.println("unknown units="+tr.study_duration_units);
+//			System.out.println("unknown units="+tr.study_duration_units);
 			return;
 		}
 
