@@ -559,7 +559,15 @@ public class Parse {
 				double propertyValueAsDouble = Parse.extractDoubleFromString(propertyValue,unitsIndex);
 				int propertyValueIndex = -1;
 				if (propertyValueAsDouble >= 0 && propertyValueAsDouble < 1) {
-					propertyValueIndex = Math.min(propertyValue.replaceAll("\\s","").indexOf("0"),propertyValue.replaceAll("\\s","").indexOf("."));
+					// Bug fix for zeroes, 12/17/2020 - This if statement is new; previous was just the contents of the "else" clause
+					if (!propertyValue.contains(".")) {
+						// If property value is the integer 0, sets start index to the location of the 0
+						propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf("0");
+					} else {
+						// Otherwise, sets start index to the location of the 0 (if present) or the . (if formatted .xx instead of 0.xx)
+						// Without the above "if", if an entry contains just the integer 0, the Math.min will select -1 as the index since it can't find a .
+						propertyValueIndex = Math.min(propertyValue.replaceAll("\\s","").indexOf("0"),propertyValue.replaceAll("\\s","").indexOf("."));
+					}
 				} else {
 					propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
 				}
@@ -992,8 +1000,16 @@ public class Parse {
 		double max = Double.parseDouble(strMax);
 		if (min >= max) {
 			int digits = strMax.length();
-			strMax = strMin.substring(0,strMin.length()-digits)+strMax;
-			max = Double.parseDouble(strMax);
+			if (digits > strMin.length()) {
+				// If max value is smaller but digitwise longer, swaps the values
+				double temp = min;
+				min = max;
+				max = temp;
+			} else {
+				// Otherwise replaces substring
+				strMax = strMin.substring(0,strMin.length()-digits)+strMax;
+				max = Double.parseDouble(strMax);
+			}
 		}
 		double[] range = {min, max};
 		return range;
@@ -1008,8 +1024,16 @@ public class Parse {
 		double max = Double.parseDouble(strMax);
 		if (min >= max) {
 			int digits = strMax.length();
-			strMax = strMin.substring(0,strMin.length()-digits)+strMax;
-			max = Double.parseDouble(strMax);
+			if (digits > strMin.length()) {
+				// If max value is smaller but digitwise longer, swaps the values
+				double temp = min;
+				min = max;
+				max = temp;
+			} else {
+				// Otherwise replaces substring
+				strMax = strMin.substring(0,strMin.length()-digits)+strMax;
+				max = Double.parseDouble(strMax);
+			}
 		}
 		double[] range = {min, max};
 		return range;
