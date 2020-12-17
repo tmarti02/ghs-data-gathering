@@ -56,7 +56,7 @@ public class QueryBlock {
 	 */
 	public void addInfoTypeField() {
 		Value infoTypeValue = new Value("EQUALS","experimental study");
-		QueryField infoType = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".AdministrativeData.StudyResultType","string",infoTypeValue);
+		QueryField infoType = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".AdministrativeData.StudyResultType","string","InfoType",infoTypeValue);
 		queryFields.add(infoType);
 	}
 
@@ -74,41 +74,36 @@ public class QueryBlock {
 		for (int i = 0; i < maxReliabilityLevel; i++) {
 			reliabilityValues.add(reliabilityValuesArray[i]);
 		}
-		QueryField reliability = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".AdministrativeData.Reliability","string",reliabilityValues);
+		QueryField reliability = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".AdministrativeData.Reliability","string","Reliability",reliabilityValues);
 		queryFields.add(reliability);
 	}
 	
-	public void addAtmPressureField(String opOrLower,String valueOrUpper,String desiredUnit) {
+	public void addAtmPressureField(String lower,String upper,String desiredUnit) {
 		String fieldName = "";
-		String type = "";
 		if (endpointKind.equals("Melting") || endpointKind.equals("BoilingPoint")) {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".Pressure";
-			type = "range";
 		} else if (endpointKind.equals("FlashPoint")) {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".AtmPressure";
-			type = "range";
 		} else if (endpointKind.equals("HenrysLawConstant")) {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".AtmPressure";
-			type = "numeric";
 		}
-		Value atmPressureValue = new Value(type,opOrLower,valueOrUpper,new Unit(desiredUnit));
-		QueryField atmPressure = new QueryField(fieldName,type,atmPressureValue);
+		String type = "range";
+		Value atmPressureValue = new Value(type,lower,upper,new Unit(desiredUnit));
+		QueryField atmPressure = new QueryField(fieldName,type,"Pressure",atmPressureValue);
 		queryFields.add(atmPressure);
 	}
 	
-	public void addTemperatureField(String opOrLower,String valueOrUpper,String desiredUnit) {
+	public void addTemperatureField(String lower,String upper,String desiredUnit) {
 		String fieldName = "";
-		String type = "";
 		if (endpointKind.equals("Density") || endpointKind.equals("Partition") || endpointKind.equals("WaterSolubility") || endpointKind.equals("DissociationConstant") ||
 				endpointKind.equals("HenrysLawConstant")) {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".Temp";
-			type = "numeric";
 		} else if (endpointKind.equals("Vapour")) {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".TempQualifier";
-			type = "range";
 		}
-		Value temperatureValue = new Value(type,opOrLower,valueOrUpper,new Unit(desiredUnit));
-		QueryField temperature = new QueryField(fieldName,type,temperatureValue);
+		String type = "range";
+		Value temperatureValue = new Value(type,lower,upper,new Unit(desiredUnit));
+		QueryField temperature = new QueryField(fieldName,type,"Temperature",temperatureValue);
 		queryFields.add(temperature);
 	}
 	
@@ -116,7 +111,7 @@ public class QueryBlock {
 		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".Ph";
 		String type = "range";
 		Value pHValue = new Value(type,lower,upper,new Unit(""));
-		QueryField pH = new QueryField(fieldName,type,pHValue);
+		QueryField pH = new QueryField(fieldName,type,"pH",pHValue);
 		queryFields.add(pH);
 	}
 	
@@ -124,22 +119,22 @@ public class QueryBlock {
 		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+"."+endpointKind3;
 		String type = "range";
 		Value endpointValue = new Value(type,lower,upper,new Unit(desiredUnit));
-		QueryField endpoint = new QueryField(fieldName,type,endpointValue);
+		QueryField endpoint = new QueryField(fieldName,type,"Value",endpointValue);
 		queryFields.add(endpoint);
 	}
 	
 	public void addPartitionCoefficientFields() {
 		Value type1Value = new Value("EQUALS","octanol-water");
 		Value type2Value = new Value("EQUALS","log Pow");
-		QueryField type1 = new QueryField("ENDPOINT_STUDY_RECORD.Partition.MaterialsAndMethods.PartitionCoefficientType","string",type1Value);
-		QueryField type2 = new QueryField("ENDPOINT_STUDY_RECORD.Partition.ResultsAndDiscussion.Partcoeff.Type","string",type2Value);
+		QueryField type1 = new QueryField("ENDPOINT_STUDY_RECORD.Partition.MaterialsAndMethods.PartitionCoefficientType","string","Type",type1Value);
+		QueryField type2 = new QueryField("ENDPOINT_STUDY_RECORD.Partition.ResultsAndDiscussion.Partcoeff.Type","string","isLog",type2Value);
 		queryFields.add(type1);
 		queryFields.add(type2);
 	}
 	
 	public void addWaterSolubilityFields() {
 		Value typeValue = new Value("EQUALS","water solubility");
-		QueryField type = new QueryField("ENDPOINT_STUDY_RECORD.WaterSolubility.AdministrativeData.Endpoint","string",typeValue);
+		QueryField type = new QueryField("ENDPOINT_STUDY_RECORD.WaterSolubility.AdministrativeData.Endpoint","string","Solvent",typeValue);
 		queryFields.add(type);
 	}
 }

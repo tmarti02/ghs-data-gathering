@@ -11,7 +11,7 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsData;
+import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
 
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
@@ -23,8 +23,8 @@ import ch.qos.logback.classic.Logger;
  *
  */
 public class QueryHandler {
-	private Gson gson = null;
-	private Gson prettyGson = null;
+	public Gson gson = null;
+	public Gson prettyGson = null;
 	private Logger logger = null;
 	
 	public QueryHandler() {
@@ -34,6 +34,7 @@ public class QueryHandler {
 		// Can adjust debug logging as desired
     	logger.setLevel(Level.WARN);
     	logger.setAdditive(false);
+    	Unirest.setTimeouts(0, 0);
 	}
 	
 	/**
@@ -79,23 +80,23 @@ public class QueryHandler {
 	 * Creates an API query with indicated options
 	 * @param propertyName				Endpoint to query from ExperimentalConstants
 	 * @param maxReliabilityLevel		Maximum reliability to return (1 = most reliable, 4 = least; 2 recommended)
-	 * @param endpointMin				Minimum value for endpoint (may be null)
-	 * @param endpointMax				Maximum value for endpoint (may be null)
+	 * @param endpointMin				Minimum (inclusive) value for endpoint (may be null)
+	 * @param endpointMax				Maximum (inclusive) value for endpoint (may be null)
 	 * @param endpointUnits				Endpoint units from ExperimentalConstants
-	 * @param pressureOpOrLower			Operator (ex. "GT_EQUALS") or minimum value for pressure condition // TODO handle this more cleanly
-	 * @param pressureValueOrUpper		Value or maximum value for pressure condition // TODO handle this more cleanly
+	 * @param pressureMin				Minimum (inclusive) value for pressure condition (may be null)
+	 * @param pressureMax				Maximum (inclusive) value for pressure condition (may be null)
 	 * @param pressureUnits				Pressure condition units from ExperimentalConstants
-	 * @param temperatureOpOrLower		Operator (ex. "GT_EQUALS") or minimum value for temperature condition // TODO handle this more cleanly
-	 * @param temperatureValueOrUpper	Value or maximum value for temperature condition // TODO handle this more cleanly
+	 * @param temperatureMin			Minimum (inclusive) value for temperature condition (may be null)
+	 * @param temperatureMax			Maximum (inclusive) value for temperature condition (may be null)
 	 * @param temperatureUnits			Temperature condition units from ExperimentalConstants
-	 * @param pHMin						Minimum value for pH condition
-	 * @param pHMax						Maximum value for pH condition
-	 * @return							A QueryData object with the indicated options
+	 * @param pHMin						Minimum (inclusive) value for pH condition (may be null)
+	 * @param pHMax						Maximum (inclusive) value for pH condition (may be null)
+	 * @return							A Query object with the indicated options
 	 */
-	private static QueryData generateQueryData(String propertyName,int maxReliabilityLevel,
+	public static Query generateQuery(String propertyName,int maxReliabilityLevel,
 			String endpointMin,String endpointMax,String endpointUnits,
-			String pressureOpOrLower,String pressureValueOrUpper,String pressureUnits,
-			String temperatureOpOrLower,String temperatureValueOrUpper,String temperatureUnits,
+			String pressureMin,String pressureMax,String pressureUnits,
+			String temperatureMin,String temperatureMax,String temperatureUnits,
 			String pHMin,String pHMax) {
 		String endpointKind = getEndpointKind(propertyName);
 		QueryBlock queryBlock = new QueryBlock(endpointKind);
@@ -122,22 +123,24 @@ public class QueryHandler {
 		queryBlock.addEndpointField(endpointMin,endpointMax,endpointUnits);
 		
 		// Pressure condition
-		if (endpointKind.equals("Melting") || endpointKind.equals("BoilingPoint") || endpointKind.equals("FlashPoint") || endpointKind.equals("HenrysLawConstant")) {
-			queryBlock.addAtmPressureField(pressureOpOrLower,pressureValueOrUpper,pressureUnits);
-		} else if (pressureOpOrLower!=null || pressureValueOrUpper!=null || pressureUnits!=null) {
+		if ((endpointKind.equals("Melting") || endpointKind.equals("BoilingPoint") || endpointKind.equals("FlashPoint") || endpointKind.equals("HenrysLawConstant"))
+				&& (pressureMin!=null || pressureMax!=null || pressureUnits!=null)) {
+			queryBlock.addAtmPressureField(pressureMin,pressureMax,pressureUnits);
+		} else if (pressureMin!=null || pressureMax!=null || pressureUnits!=null) {
 			System.out.println("Warning: Pressure conditions not supported for "+propertyName+". Non-null values ignored.");
 		}
 		
 		// Temperature condition
-		if (endpointKind.equals("Density") || endpointKind.equals("Vapour") || endpointKind.equals("Partition") || endpointKind.equals("WaterSolubility") ||
-				endpointKind.equals("DissociationConstant") || endpointKind.equals("HenrysLawConstant")) {
-			queryBlock.addTemperatureField(temperatureOpOrLower,temperatureValueOrUpper,temperatureUnits);
-		} else if (temperatureOpOrLower!=null || temperatureValueOrUpper!=null || temperatureUnits!=null) {
+		if ((endpointKind.equals("Density") || endpointKind.equals("Vapour") || endpointKind.equals("Partition") || 
+				endpointKind.equals("WaterSolubility") || endpointKind.equals("DissociationConstant") || endpointKind.equals("HenrysLawConstant"))
+				&& (temperatureMin!=null || temperatureMax!=null || temperatureUnits!=null)) {
+			queryBlock.addTemperatureField(temperatureMin,temperatureMax,temperatureUnits);
+		} else if (temperatureMin!=null || temperatureMax!=null || temperatureUnits!=null) {
 			System.out.println("Warning: Temperature conditions not supported for "+propertyName+". Non-null values ignored.");
 		}
 		
 		// pH condition
-		if (endpointKind.equals("Partition") || endpointKind.equals("WaterSolubility")) {
+		if ((endpointKind.equals("Partition") || endpointKind.equals("WaterSolubility")) && (pHMin!=null || pHMax!=null)) {
 			queryBlock.addpHField(pHMin,pHMax);
 		} else if (pHMin!=null || pHMax!=null) {
 			System.out.println("Warning: pH conditions not supported for "+propertyName+". Non-null values ignored.");
@@ -151,18 +154,12 @@ public class QueryHandler {
 		}
 		
 		PropertyBlock propertyBlock = new PropertyBlock(0,"property",queryBlock);
-		QueryData query = new QueryData(propertyBlock);
+		Query query = new Query(propertyBlock);
 		return query;
 	}
 	
-	/**
-	 * Runs the API query described by a QueryData object
-	 * @param query	API query to run
-	 * @return		Results as a vector of ResultsData objects
-	 */
-	private Vector<ResultsData> runQuery(QueryData query) {
-		Vector<ResultsData> results = new Vector<ResultsData>();
-		Unirest.setTimeouts(0, 0);
+	public ResultsPage getResultsPage(Query query) {
+		ResultsPage page = null;
 		String bodyString = gson.toJson(query);
 		try {	
 			HttpResponse<String> response = Unirest.post("https://www.echemportal.org/echemportal/api/property-search")
@@ -171,43 +168,43 @@ public class QueryHandler {
 			  .body(bodyString)
 			  .asString();
 			Thread.sleep(500);
-			String json=response.getBody();
-			ResultsData data=gson.fromJson(json, ResultsData.class);
-			results.add(data);
-			
-			int totalResults = data.pageInfo.totalElements;
-			System.out.println("Found "+totalResults+" results. Downloading...");
-			int offset = 100;
-			while (offset < totalResults) {
-				query.updateOffset(offset);
-				bodyString = gson.toJson(query);
-				response = Unirest.post("https://www.echemportal.org/echemportal/api/property-search")
-						  .header("Content-Type", "application/json")
-						  .header("Accept", "application/json")
-						  .body(bodyString)
-						  .asString();
-				Thread.sleep(500);
-				json = response.getBody();
-				data = gson.fromJson(json, ResultsData.class);
-				results.add(data);
-				offset += 100;
-			}
-			return results;
-		} catch (Exception e) {
-			e.printStackTrace();
+			String json = response.getBody();
+			page = gson.fromJson(json, ResultsPage.class);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
-		return null;
+		return page;
+	}
+	
+	/**
+	 * Runs the API query described by a Query object and gets results as a vector of ResultsPage objects
+	 * @param query	API query to run
+	 * @return		Results as a vector of ResultsPage objects
+	 */
+	public Vector<ResultsPage> runQuery(Query query) {
+		Vector<ResultsPage> results = new Vector<ResultsPage>();
+		ResultsPage page = getResultsPage(query);
+		int totalResults = page.pageInfo.totalElements;
+		System.out.println("Found "+totalResults+" results. Downloading...");
+		int offset = 100;
+		while (offset < totalResults) {
+			query.updateOffset(offset);
+			page = getResultsPage(query);
+			results.add(page);
+			offset += 100;
+		}
+		return results;
 	}
 
 	public static void main(String[] args) {
 		QueryHandler qh = new QueryHandler();
-		QueryData query = generateQueryData(ExperimentalConstants.strHenrysLawConstant,2,
+		Query query = generateQuery(ExperimentalConstants.strHenrysLawConstant,2,
 				"0","100",ExperimentalConstants.str_atm_m3_mol,
-				"GT_EQUALS","0",ExperimentalConstants.str_pa,
-				"GT_EQUALS","0",ExperimentalConstants.str_K,
+				null,"760",ExperimentalConstants.str_mmHg,
+				"0",null,ExperimentalConstants.str_K,
 				null,null);
 		System.out.println(qh.prettyGson.toJson(query));
-		Vector<ResultsData> results = qh.runQuery(query);
+		Vector<ResultsPage> results = qh.runQuery(query);
 		System.out.println("Done! Writing to JSON...");
 		String filePath = "Data" + File.separator + "Experimental" + File.separator + ExperimentalConstants.strSourceEChem + File.separator +
 				ExperimentalConstants.strSourceEChem + " API Records.json";

@@ -36,6 +36,7 @@ public class Value {
 			unit = setUnit;
 			break;
 		case "numeric":
+			// This turns out to be unnecessary for physchem data, but leaving the code in case it is useful for tox data
 			op = opOrLower;
 			searchValue = valueOrUpper;
 			unit = setUnit;

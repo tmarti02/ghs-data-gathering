@@ -6,7 +6,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class ResultsJSONs {
-	public class ResultsData {
+	public class ResultsPage {
 		@SerializedName("results")
 		@Expose
 		public List<Result> results = null;
@@ -48,7 +48,7 @@ public class ResultsJSONs {
 		public List<Block> blocks = null;
 		@SerializedName("participant_id")
 		@Expose
-		public Integer participantId;
+		public String participantId;
 		@SerializedName("participant_acronym")
 		@Expose
 		public String participantAcronym;
