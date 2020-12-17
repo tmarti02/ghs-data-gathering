@@ -7,7 +7,7 @@ import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class QueryData {
+public class Query {
 	@SerializedName("property_blocks")
 	@Expose
 	public List<PropertyBlock> propertyBlocks = null;
@@ -24,7 +24,7 @@ public class QueryData {
 	@Expose
 	public List<Integer> participants = null;
 	
-	public QueryData(PropertyBlock setPropertyBlock) {
+	public Query(PropertyBlock setPropertyBlock) {
 		propertyBlocks = new ArrayList<PropertyBlock>();
 		propertyBlocks.add(setPropertyBlock);
 		paging = new Paging(0,100);
