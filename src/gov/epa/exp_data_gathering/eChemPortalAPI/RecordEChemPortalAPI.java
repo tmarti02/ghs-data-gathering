@@ -1,12 +1,12 @@
 package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Vector;
 
 import com.google.gson.Gson;
@@ -46,6 +46,10 @@ public class RecordEChemPortalAPI {
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 	
+	public static void downloadResultsToDatabase() {
+		// TODO
+	}
+	
 	public static Vector<RecordEChemPortalAPI> parseResultsInDatabase() {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		String databaseName = p.sourceName+"_raw_json.db";
@@ -54,6 +58,8 @@ public class RecordEChemPortalAPI {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		
 		try {
+			int countEliminated = 0;
+			HashSet<String> urlCheck = new HashSet<String>();
 			Statement stat = MySQL_DB.getStatement(databasePath);
 			ResultSet rs = MySQL_DB.getAllRecords(stat,"results");
 			while (rs.next()) {
@@ -102,10 +108,31 @@ public class RecordEChemPortalAPI {
 								break;
 							}
 						}
-						records.add(rec);
+						if (urlCheck.add(rec.endpointURL)) {
+							records.add(rec);
+						} else {
+							boolean haveRecord = false;
+							Iterator<RecordEChemPortalAPI> it = records.iterator();
+							while (it.hasNext() && !haveRecord) {
+								RecordEChemPortalAPI existingRec = it.next();
+								if (Objects.equals(rec.endpointURL, existingRec.endpointURL) && Objects.equals(rec.name, existingRec.name) &&
+										Objects.equals(rec.number, existingRec.number) && Objects.equals(rec.reliability, existingRec.reliability) &&
+										Objects.equals(rec.value, existingRec.value) && Objects.equals(rec.pressure, existingRec.pressure) &&
+										Objects.equals(rec.temperature, existingRec.temperature) && Objects.equals(rec.pH, existingRec.pH) &&
+										Objects.equals(rec.endpointKind, existingRec.endpointKind)) {
+									haveRecord = true;
+								}
+							}
+							if (!haveRecord) {
+								records.add(rec);
+							} else {
+								countEliminated++;
+							}
+						}
 					}
 				}
 			}
+			System.out.println("Eliminated "+countEliminated+" duplicate records.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -114,12 +141,6 @@ public class RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
-		QueryHandler handler = new QueryHandler(5000);
-		Query query = handler.generateQuery(ExperimentalConstants.strWaterSolubility,2,
-				0.0,5.0,ExperimentalConstants.str_mg_L,
-				null,null,false,
-				-273.15,null,true,
-				0.0,7.0,false);
-		handler.downloadQueryResultsToDatabase(query,true);
+		// TODO
 	}
 }

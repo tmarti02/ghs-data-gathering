@@ -1,11 +1,8 @@
 package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 
 public class RawDataEChemPortalAPI {
 	
