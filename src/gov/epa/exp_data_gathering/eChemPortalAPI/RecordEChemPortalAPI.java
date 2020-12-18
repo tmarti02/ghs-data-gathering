@@ -18,7 +18,6 @@ import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.NestedBlock;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.OriginalValue;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Result;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
-import gov.epa.exp_data_gathering.parse.ParsePubChem;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 
 public class RecordEChemPortalAPI {
@@ -116,11 +115,11 @@ public class RecordEChemPortalAPI {
 	
 	public static void main(String[] args) {
 		QueryHandler handler = new QueryHandler(5000);
-		Query query = handler.generateQuery(ExperimentalConstants.strMeltingPoint,2,
-				"0","400",ExperimentalConstants.str_K,
-				"0",null,ExperimentalConstants.str_mmHg,
-				null,null,null,
-				null,null);
+		Query query = handler.generateQuery(ExperimentalConstants.strWaterSolubility,2,
+				0.0,5.0,ExperimentalConstants.str_mg_L,
+				null,null,false,
+				-273.15,null,true,
+				0.0,7.0,false);
 		handler.downloadQueryResultsToDatabase(query,true);
 	}
 }

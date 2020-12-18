@@ -10,8 +10,6 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
-import gov.epa.exp_data_gathering.parse.ParsePubChem;
-import gov.epa.exp_data_gathering.parse.RecordPubChem;
 
 public class ParseEChemPortalAPI extends Parse {
 	
@@ -114,18 +112,22 @@ public class ParseEChemPortalAPI extends Parse {
 			break;
 		}
 		
-		er.property_value_string = r.value;
+		er.property_value_string = "Value: "+r.value;
 		if (r.pressure!=null) {
 			getPressureCondition(er,r.pressure);
-			er.property_value_string = er.property_value_string + ";" + r.pressure;
+			er.property_value_string = er.property_value_string + ";Pressure: " + r.pressure;
 		}
 		if (r.temperature!=null) {
-			getTemperatureCondition(er,r.pressure);
-			er.property_value_string = er.property_value_string + ";" + r.temperature;
+			try {
+				er.temperature_C = Double.parseDouble(r.temperature);
+			} catch (NumberFormatException ex) {
+				getTemperatureCondition(er,r.temperature);
+			}
+			er.property_value_string = er.property_value_string + ";Temperature: " + r.temperature;
 		}
 		if (r.pH!=null) {
 			String pHStr = r.pH;
-			er.property_value_string = er.property_value_string + ";" + pHStr;
+			er.property_value_string = er.property_value_string + ";pH: " + pHStr;
 			boolean foundpH = false;
 			try {
 				double[] range = Parse.extractFirstDoubleRangeFromString(pHStr,pHStr.length());

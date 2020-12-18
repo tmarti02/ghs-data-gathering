@@ -28,10 +28,18 @@ public class PropertyBlock {
 		queryBlock = setQueryBlock;
 	}
 	
+	// Property search block - simplified
+	public PropertyBlock(QueryBlock setQueryBlock) {
+		// id not needed for query
+		level = 0;
+		type = "property";
+		queryBlock = setQueryBlock;
+	}
+	
 	// Operator block
-	public PropertyBlock(String setBlockOperator,int setLevel,String setType) {
+	public PropertyBlock(String setBlockOperator,int setLevel) {
 		blockOperator = setBlockOperator;
 		level = setLevel;
-		type = setType;
+		type = "operator";
 	}
 }
