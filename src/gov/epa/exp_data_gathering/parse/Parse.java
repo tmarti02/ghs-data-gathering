@@ -973,8 +973,8 @@ public class Parse {
 	}
 	
 	public static String formatDouble(double d) {
-        DecimalFormat df2 = new DecimalFormat("0.##");
-        DecimalFormat dfSci = new DecimalFormat("0.00E0");
+        DecimalFormat df2 = new DecimalFormat("0.###");
+        DecimalFormat dfSci = new DecimalFormat("0.0##E0");
         if (d < 0.01) {
         	return dfSci.format(d);
         } else {

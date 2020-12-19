@@ -10,3 +10,7 @@ target/*
 *.zip
 Data/
 debug.log
+/data/
+/OCHEM/
+/databases/
+/src Python/
