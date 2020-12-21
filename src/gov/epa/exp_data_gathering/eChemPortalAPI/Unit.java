@@ -5,6 +5,11 @@ import com.google.gson.annotations.SerializedName;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Replicates the Unit object of an eChemPortal API search query JSON
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
 public class Unit {
 	@SerializedName("phraseGroupId")
 	@Expose
@@ -14,11 +19,11 @@ public class Unit {
 	public String phraseId;
 	
 	/**
-	 * Translates our unit identifiers to eChemPortal's
-	 * @param desiredUnit	Desired unit from ExperimentalConstants
+	 * Translates our unit identifiers to eChemPortal's Unit objects
+	 * @param unit	Desired unit from ExperimentalConstants
 	 */
-	public Unit(String desiredUnit) {
-		switch (desiredUnit) {
+	public Unit(String unit) {
+		switch (unit) {
 		case "":
 			// For partition coefficient, pH, pKa
 			phraseId = null;

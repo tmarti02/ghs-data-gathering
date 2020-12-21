@@ -11,6 +11,11 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 
+/**
+ * Parses downloaded results from eChemPortal API into RecordEChemPortal API objects and translates them to ExperimentalRecords
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
 public class ParseEChemPortalAPI extends Parse {
 	
 	public ParseEChemPortalAPI() {
@@ -51,12 +56,18 @@ public class ParseEChemPortalAPI extends Parse {
 		return recordsExperimental;
 	}
 	
+	/**
+	 * Creates and adds the ExperimentalRecord corresponding to a given RecordEChemPortalAPI object
+	 * @param r			The RecordEChemPortalAPI object to translate
+	 * @param records	The ExperimentalRecords to add created record to
+	 */
 	private void addExperimentalRecords(RecordEChemPortalAPI r, ExperimentalRecords records) {
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.source_name = sourceName;
 		er.url = r.endpointURL;
 		er.original_source_name = r.participantAcronym;
 		er.date_accessed = r.dateAccessed;
+		er.reliability = r.reliability;
 		
 		if (!r.name.equals("-") && !r.name.contains("unnamed")) {
 			er.chemical_name = r.name;
@@ -111,12 +122,13 @@ public class ParseEChemPortalAPI extends Parse {
 			getHenrysLawConstant(er,r.value);
 			break;
 		}
-		
 		er.property_value_string = "Value: "+r.value;
+		
 		if (r.pressure!=null) {
 			getPressureCondition(er,r.pressure);
 			er.property_value_string = er.property_value_string + ";Pressure: " + r.pressure;
 		}
+		
 		if (r.temperature!=null) {
 			try {
 				er.temperature_C = Double.parseDouble(r.temperature);
@@ -125,6 +137,8 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 			er.property_value_string = er.property_value_string + ";Temperature: " + r.temperature;
 		}
+		
+		// Handles all kinds of weird pH formatting
 		if (r.pH!=null) {
 			String pHStr = r.pH;
 			er.property_value_string = er.property_value_string + ";pH: " + pHStr;
@@ -151,6 +165,7 @@ public class ParseEChemPortalAPI extends Parse {
 					}
 				} catch (Exception ex) { }
 			}
+			// Handles J-CHECK entries with multiple discrete pH values
 			if (!foundpH && pHStr.contains(",") && !pHStr.endsWith(",")) {
 				er.pH = pHStr;
 				foundpH = true;
@@ -172,6 +187,7 @@ public class ParseEChemPortalAPI extends Parse {
 		}
 		
 		er.finalizeUnits();
+		
 		if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
 				(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
 			er.keep = false;
@@ -181,7 +197,6 @@ public class ParseEChemPortalAPI extends Parse {
 			er.reason = null;
 		}
 		
-		er.reliability = r.reliability;
 		records.add(er);
 	}
 

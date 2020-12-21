@@ -4,6 +4,11 @@ import java.sql.Connection;
 
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 
+/**
+ * Stores raw data (date accessed, JSON search query, and JSON search result) for the eChemPortal API
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
 public class RawDataEChemPortalAPI {
 	
 	public String date;
@@ -12,8 +17,9 @@ public class RawDataEChemPortalAPI {
 	
 	public static final String[] fieldNames = {"date","query","content"};
 	
-	public RawDataEChemPortalAPI (String date,String query,String content) {
+	public RawDataEChemPortalAPI(String date,String query,String content) {
 		this.date=date;
+		// Fixes single quotes causing SQL insert problems
 		this.query=query.replaceAll("'", "\'");
 		this.content=content.replaceAll("'", "\'");
 	}

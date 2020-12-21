@@ -5,6 +5,11 @@ import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Replicates the various objects of an eChemPortal search result JSON
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
 public class ResultsJSONs {
 	public class ResultsPage {
 		@SerializedName("results")

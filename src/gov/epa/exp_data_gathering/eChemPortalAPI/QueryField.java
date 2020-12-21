@@ -6,6 +6,11 @@ import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Replicates the QueryField object of an eChemPortal API search query JSON
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
 public class QueryField {
 	@SerializedName("fieldName")
 	@Expose
@@ -20,18 +25,20 @@ public class QueryField {
 	@Expose
 	public List<Value> values = null;
 	
-	public QueryField(String setFieldName,String setType,String setLabel,Value setValue) {
-		fieldName = setFieldName;
-		type = setType;
-		label = setLabel;
-		values = new ArrayList<Value>();
-		values.add(setValue);
+	// Constructor for a single value
+	public QueryField(String fieldName,String type,String label,Value value) {
+		this.fieldName = fieldName;
+		this.type = type;
+		this.label = label;
+		this.values = new ArrayList<Value>();
+		this.values.add(value);
 	}
 	
-	public QueryField(String setFieldName,String setType,String setLabel,List<Value> setValues) {
-		fieldName = setFieldName;
-		type = setType;
-		label = setLabel;
-		values = setValues;
+	// Constructor for multiple values
+	public QueryField(String fieldName,String type,String label,List<Value> values) {
+		this.fieldName = fieldName;
+		this.type = type;
+		this.label = label;
+		this.values = values;
 	}
 }

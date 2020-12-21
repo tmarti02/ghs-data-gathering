@@ -21,7 +21,7 @@ import ch.qos.logback.classic.Logger;
 
 /**
  * Runs queries on the eChemPortal API
- * @author GSINCL01
+ * @author GSINCL01 (Gabriel Sinclair)
  *
  */
 public class QueryHandler {
@@ -29,12 +29,15 @@ public class QueryHandler {
 	public Gson prettyGson = null;
 	private Logger logger = null;
 	
-	public QueryHandler() {
+	/**
+	 * Creates a new QueryHandler with the specified debug logging level
+	 * @param loggerLevel	Debug logging level (Level.WARN recommended - org.apache.http generates a huge amount of logging output otherwise)
+	 */
+	public QueryHandler(Level loggerLevel) {
 		gson = new GsonBuilder().create();
 		prettyGson = new GsonBuilder().setPrettyPrinting().create();
 		logger = (Logger) LoggerFactory.getLogger("org.apache.http");
-		// Can adjust debug logging as desired
-    	logger.setLevel(Level.WARN);
+    	logger.setLevel(loggerLevel);
     	logger.setAdditive(false);
     	Unirest.setTimeouts(0, 0);
 	}
@@ -47,26 +50,32 @@ public class QueryHandler {
 	private ResultsPage getResultsPage(Query query) {
 		ResultsPage page = null;
 		String bodyString = gson.toJson(query);
+		// Random rand = new Random();
 		try {	
+			long startTime = System.currentTimeMillis();
 			HttpResponse<String> response = Unirest.post("https://www.echemportal.org/echemportal/api/property-search")
 			  .header("Content-Type", "application/json")
 			  .header("Accept", "application/json")
 			  .body(bodyString)
 			  .asString();
-			Thread.sleep(500);
+			long endTime = System.currentTimeMillis();
+			// Waits as long as it took for the previous query to return
+			Thread.sleep((long) (10*(endTime-startTime)));
 			String json = response.getBody();
 			page = gson.fromJson(json, ResultsPage.class);
+			return page;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		return page;
+		return null;
 	}
 	
 	/**
-	 * Runs the API query described by a Query object and gets results as a vector of ResultsPage objects
+	 * Runs a full API query with paging and gets results as a vector of ResultsPage objects
 	 * @param query	API query to run
 	 * @return		Results as a vector of ResultsPage objects
 	 */
+	@SuppressWarnings("unused") // Previously used for testing, leaving in case needed in the future
 	private Vector<ResultsPage> getQueryResults(Query query) {
 		Vector<ResultsPage> results = new Vector<ResultsPage>();
 		int totalResults = getQuerySize(query);
@@ -103,7 +112,7 @@ public class QueryHandler {
 	}
 	
 	/**
-	 * Runs the API query described by a Query object and downloads results to a database
+	 * Runs a full API query with paging and downloads results to a database
 	 * @param query			API query to run
 	 * @param startFresh	True to rebuild database, false to append to existing database
 	 */
@@ -132,7 +141,7 @@ public class QueryHandler {
 	}
 	
 	/**
-	 * Runs a tiny version of the query to get total results as fast as possible
+	 * Runs an empty version of a query to get total results as fast as possible
 	 * @param query		The query to find results for
 	 * @return			The total number of results returned by the query
 	 */

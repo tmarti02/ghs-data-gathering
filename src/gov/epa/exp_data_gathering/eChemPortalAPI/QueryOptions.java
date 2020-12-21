@@ -3,12 +3,18 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 import java.util.Iterator;
 import java.util.Vector;
 
+import ch.qos.logback.classic.Level;
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Defines options for an eChemPortal API query
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
 public class QueryOptions {
-	int limit = 5000;
+	int limit = 5000; // Most efficient page limit in most tests
 	String propertyName = null;
-	int maxReliabilityLevel = 2;
+	int maxReliabilityLevel = 2; // Recommended
 	String endpointMin = null;
 	String endpointMax = null;
 	String endpointUnits = null;
@@ -24,9 +30,7 @@ public class QueryOptions {
 	String pHMax = null;
 	boolean includeNullpH = false;
 	
-	static final double absMin = -2147483648.0;
-	static final double absMax = 2147483647.0;
-	
+	// Default null constructor
 	QueryOptions() {
 		limit = 5000;
 		propertyName = null;
@@ -47,6 +51,7 @@ public class QueryOptions {
 		includeNullpH = false;
 	}
 	
+	// Duplicate constructor
 	QueryOptions(QueryOptions options) {
 		limit = options.limit;
 		propertyName = options.propertyName;
@@ -67,67 +72,82 @@ public class QueryOptions {
 		includeNullpH = options.includeNullpH;
 	}
 	
+	/**
+	 * Creates a default set of options that will download all available records for a single property
+	 * @param propertyName		Desired property from ExperimentalConstants
+	 */
 	QueryOptions(String propertyName) {
 		this.propertyName = propertyName;
 		if (propertyName.equals(ExperimentalConstants.strMeltingPoint) || propertyName.equals(ExperimentalConstants.strBoilingPoint) || 
 				propertyName.equals(ExperimentalConstants.strFlashPoint)) {
 			endpointMin = "0";
+			endpointMax = "10000.0";
 			endpointUnits = ExperimentalConstants.str_K;
 			pressureMin = "0";
 			pressureUnits = ExperimentalConstants.str_pa;
 			includeNullPressure = true;
 		} else if (propertyName.equals(ExperimentalConstants.strDensity)) {
 			endpointMin = "0";
+			endpointMax = "1000.0";
 			endpointUnits = ExperimentalConstants.str_g_cm3;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.strVaporPressure)) {
 			endpointMin = "0";
+			endpointMax = "10000000.0";
 			endpointUnits = ExperimentalConstants.str_pa;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.str_pKA)) {
-			endpointMin = String.valueOf(absMin);
+			endpointMin = "-1000.0";
+			endpointMax = "1000.0";
 			endpointUnits = "";
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.strLogKow)) {
-			endpointMin = String.valueOf(absMin);
+			endpointMin = "-1000.0";
+			endpointMax = "1000.0";
 			endpointUnits = "";
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
-			pHMin = String.valueOf(absMin);
+			pHMin = "-1000.0";
 			includeNullpH = true;
 		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility)) {
 			endpointMin = "0";
+			endpointMax = "10000.0";
 			endpointUnits = ExperimentalConstants.str_g_L;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
-			pHMin = String.valueOf(absMin);
+			pHMin = "-1000.0";
 			includeNullpH = true;
 		} else if (propertyName.equals(ExperimentalConstants.strHenrysLawConstant)) {
-			endpointMin = String.valueOf(absMin);
-			endpointUnits = ExperimentalConstants.str_atm_m3_mol;
+			endpointMin = "-10000000.0";
+			endpointMax = "10000000.0";
+			endpointUnits = ExperimentalConstants.str_Pa_m3_mol;
 			pressureMin = "0";
 			pressureUnits = ExperimentalConstants.str_pa;
-			includeNullTemperature = true;
+			includeNullPressure = true;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		}
 	}
 	
+	/**
+	 * Splits the QueryOptions object at the range midpoint to reduce query size
+	 * @return		Two QueryOptions objects that jointly cover the same range as the original
+	 */
 	private Vector<QueryOptions> generateSplitOptions() {
 		Vector<QueryOptions> splitOptions = new Vector<QueryOptions>();
 		QueryOptions lowerSplitOptions = new QueryOptions(this);
 		QueryOptions upperSplitOptions = new QueryOptions(this);
-		double min = endpointMin==null ? absMin : Double.parseDouble(endpointMin);
-		double max = endpointMax==null ? absMax : Double.parseDouble(endpointMax);
+		double min = endpointMin==null ? -1*Double.MAX_VALUE : Double.parseDouble(endpointMin);
+		double max = endpointMax==null ? Double.MAX_VALUE : Double.parseDouble(endpointMax);
 		double midpoint = Math.floor(min + (max - min)/2.0);
 		lowerSplitOptions.endpointMax = String.valueOf(midpoint);
 		upperSplitOptions.endpointMin = String.valueOf(midpoint);
@@ -137,15 +157,24 @@ public class QueryOptions {
 		return splitOptions;
 	}
 	
+	/**
+	 * Gets the maximum size of the query corresponding to the given options (i.e. with no conditions specified)
+	 * @return
+	 */
 	private int getQueryMaxSize() {
 		Query query = new Query(limit);
 		QueryBlock queryBlock = generateQueryBlock(true,true,true);
 		query.addPropertyBlock(queryBlock);
-		QueryHandler handler = new QueryHandler();
+		QueryHandler handler = new QueryHandler(Level.WARN);
 		int size = handler.getQuerySize(query);
 		return size;
 	}
 	
+	/**
+	 * Recursively splits a vector of QueryOptions until all queries have size < 10000
+	 * @param options	Vector of QueryOptions to be resized
+	 * @return			Vector of QueryOptions of permitted size
+	 */
 	private static Vector<QueryOptions> resizeAll(Vector<QueryOptions> options) {
 		Vector<QueryOptions> newOptions = new Vector<QueryOptions>();
 		for (QueryOptions o:options) {
@@ -161,6 +190,10 @@ public class QueryOptions {
 		return newOptions;
 	}
 	
+	/**
+	 * If QueryOptions specify a query too large for the API (limit 10000 results), splits it into a vector of permitted query size
+	 * @return		Vector of QueryOptions of permitted size
+	 */
 	public Vector<QueryOptions> resize() {
 		Vector<QueryOptions> options = new Vector<QueryOptions>();
 		options.add(this);
@@ -169,32 +202,50 @@ public class QueryOptions {
 			options = resizeAll(options);
 			System.out.println("Split into "+options.size()+" queries.");
 			Iterator<QueryOptions> it = options.iterator();
-			Vector<Integer> sizes = new Vector<Integer>();
+			// eChemPortal API handles > in a silly way that results in lots of duplication
+			// This loop removes queries that return 1) no results, or 2) only duplicate results
+			// There will still be some duplication from < entries not handled by this - eliminated in parseResultsInDatabase()
+			int convergesTo = 0;
+			int convergesAt = -1;
+			int i = 0;
 			while (it.hasNext()) {
 				QueryOptions o = it.next();
 				int size = o.getQueryMaxSize();
 				if (size==0) {
 					it.remove();
 				} else {
-					sizes.add(size);
+					if (size!=convergesTo) {
+						convergesTo = size;
+						convergesAt = i;
+						i++;
+					}
 				}
 			}
-			int convergesTo = 0;
-			int convergesAt = sizes.size();
-			for (int i = 0; i < sizes.size(); i++) {
-				if (!sizes.get(i).equals(convergesTo)) {
-					convergesTo = sizes.get(i);
-					convergesAt = i;
-				}
-			}
+//			int convergesTo = 0;
+//			int convergesAt = sizes.size();
+//			int i = 0;
+//			for (int i = 0; i < sizes.size(); i++) {
+//				int iSize = sizes.get(i);
+//				if (iSize!=convergesTo) {
+//					convergesTo = iSize;
+//					convergesAt = i;
+//				}
+//			}
 			options = new Vector<QueryOptions>(options.subList(0, convergesAt+1));
-			System.out.println("Removed empty & convergent queries. "+options.size()+" queries to run.");
+			System.out.println("Removed empty & duplicate queries; "+options.size()+" queries to run.");
 		} else {
 			System.out.println("No resizing needed.");
 		}
 		return options;
 	}
 	
+	/**
+	 * Creates the QueryBlock object corresponding to the given options
+	 * @param removePressureField		Ignore pressure condition
+	 * @param removeTemperatureField	Ignore temperature condition
+	 * @param removepHField				Ignore pH condition
+	 * @return		The desired QueryBlock
+	 */
 	public QueryBlock generateQueryBlock(boolean removePressureField,boolean removeTemperatureField,boolean removepHField) {
 		String endpointKind = getEndpointKind(propertyName);
 		QueryBlock queryBlock = new QueryBlock(endpointKind);
@@ -217,7 +268,7 @@ public class QueryOptions {
 			}
 		}
 		
-		// Endpoint range
+		// Endpoint value
 		queryBlock.addEndpointField(endpointMin,endpointMax,endpointUnits);
 		
 		// Pressure condition
@@ -246,7 +297,7 @@ public class QueryOptions {
 			System.out.println("Warning: pH condition not supported for "+propertyName+". Non-null values ignored.");
 		}
 		
-		// Endpoint-specific necessary fields
+		// Endpoint-specific conditions
 		if (endpointKind.equals("Partition")) {
 			queryBlock.addPartitionCoefficientFields();
 		} else if (endpointKind.equals("WaterSolubility")) {
@@ -256,6 +307,10 @@ public class QueryOptions {
 		return queryBlock;
 	}
 	
+	/**
+	 * Creates the Query object corresponding to the given options
+	 * @return		The desired Query
+	 */
 	public Query generateQuery() {
 		boolean hasPressureCondition = pressureMin!=null || pressureMax!=null;
 		boolean hasTemperatureCondition = temperatureMin!=null || temperatureMax!=null;
@@ -300,9 +355,13 @@ public class QueryOptions {
 		return query;
 	}
 
+	/**
+	 * Downloads the results of the given query to the results database
+	 * @param startFresh	True to rebuild the database from scratch, false otherwise
+	 */
 	public void runDownload(boolean startFresh) {
 		Vector<QueryOptions> splitOptions = resize();
-		QueryHandler handler = new QueryHandler();
+		QueryHandler handler = new QueryHandler(Level.WARN);
 		Query query = splitOptions.get(0).generateQuery();
 		handler.downloadQueryResultsToDatabase(query,startFresh);
 		for (int i = 1; i < splitOptions.size(); i++) {

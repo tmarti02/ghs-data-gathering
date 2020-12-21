@@ -3,6 +3,11 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Replicates the Value object of an eChemPortal API search query JSON
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
 public class Value {
 	@SerializedName("op")
 	@Expose
@@ -26,27 +31,27 @@ public class Value {
 	@Expose
 	public Unit unit;
 	
-	// Range or numeric search
-	public Value(String type,String opOrLower,String valueOrUpper,Unit setUnit) {
+	// Constructor for range or numeric search
+	public Value(String type,String opOrLower,String valueOrUpper,Unit unit) {
 		switch (type) {
 		case "range":
 			matchMode = "OVERLAPPING";
 			searchValueLower = opOrLower;
 			searchValueUpper = valueOrUpper;
-			unit = setUnit;
+			this.unit = unit;
 			break;
 		case "numeric":
 			// This turns out to be unnecessary for physchem data, but leaving the code in case it is useful for tox data
-			op = opOrLower;
+			this.op = opOrLower;
 			searchValue = valueOrUpper;
-			unit = setUnit;
+			this.unit = unit;
 			break;
 		}
 	}
 	
-	// String expression search
-	public Value(String setOp,String setSearchExpression) {
-		op = setOp;
-		searchExpression = setSearchExpression;
+	// Constructor for string expression search
+	public Value(String op,String searchExpression) {
+		this.op = op;
+		this.searchExpression = searchExpression;
 	}
 }
