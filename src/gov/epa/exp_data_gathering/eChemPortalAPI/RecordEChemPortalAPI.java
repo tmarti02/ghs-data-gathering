@@ -52,16 +52,7 @@ public class RecordEChemPortalAPI {
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 	
 	public static void downloadAllResultsToDatabase(boolean startFresh) {
-		Vector<QueryOptions> allOptions = new Vector<QueryOptions>();
-		allOptions.add(new QueryOptions(ExperimentalConstants.strMeltingPoint));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strBoilingPoint));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strFlashPoint));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strDensity));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strVaporPressure));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strLogKow));
-		allOptions.add(new QueryOptions(ExperimentalConstants.str_pKA));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant));
+		Vector<QueryOptions> allOptions = QueryOptions.generateAllQueryOptions();
 		int counter = 0;
 		for (QueryOptions options:allOptions) {
 			if (counter==0) {
@@ -85,6 +76,7 @@ public class RecordEChemPortalAPI {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		
 		try {
+			int count = 0;
 			int countEliminated = 0;
 			// Uses a HashSet to speed up duplicate checking by URL
 			HashSet<String> urlCheck = new HashSet<String>();
@@ -136,40 +128,67 @@ public class RecordEChemPortalAPI {
 								break;
 							}
 						}
+						RecordEChemPortalAPI lastDuplicateRec = null;
 						if (urlCheck.add(rec.endpointURL)) {
 							// If URL not seen before, adds the record immediately and moves on
 							records.add(rec);
+							count++;
+						} else if (rec.recordEquals(lastDuplicateRec)) {
+							// If URL seen before, checks last duplicate record deeply for equivalence (duplicates tend to repeat)
+							countEliminated++;
 						} else {
-							// If URL seen before, checks records deeply for equivalence, adding only non-duplicates
+							// Otherwise, iterates through and checks all records deeply for equivalence, adding only non-duplicates
 							boolean haveRecord = false;
 							Iterator<RecordEChemPortalAPI> it = records.iterator();
 							while (it.hasNext() && !haveRecord) {
 								RecordEChemPortalAPI existingRec = it.next();
-								if (Objects.equals(rec.endpointURL, existingRec.endpointURL) && Objects.equals(rec.name, existingRec.name) &&
-										Objects.equals(rec.number, existingRec.number) && Objects.equals(rec.reliability, existingRec.reliability) &&
-										Objects.equals(rec.value, existingRec.value) && Objects.equals(rec.pressure, existingRec.pressure) &&
-										Objects.equals(rec.temperature, existingRec.temperature) && Objects.equals(rec.pH, existingRec.pH) &&
-										Objects.equals(rec.endpointKind, existingRec.endpointKind) &&
-										Objects.equals(rec.participantAcronym, existingRec.participantAcronym)) {
+								if (rec.recordEquals(existingRec)) {
 									haveRecord = true;
+									lastDuplicateRec = existingRec;
 								}
 							}
 							if (!haveRecord) {
 								records.add(rec);
+								count++;
 							} else {
 								// Counts the number of records eliminated
 								countEliminated++;
 							}
 						}
+						if (count % 1000==0) { System.out.println("Added "+count+" records."); }
 					}
 				}
 			}
+			System.out.println("Added "+count+" records.");
 			System.out.println("Eliminated "+countEliminated+" duplicate records.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		
 		return records;
+	}
+	
+	private boolean recordEquals(RecordEChemPortalAPI rec) {
+		if (rec==null) {
+			return false;
+		} else if (Objects.equals(this.baseURL, rec.baseURL) &&
+				Objects.equals(this.chapter, rec.chapter) &&
+				Objects.equals(this.endpointKey, rec.endpointKey) &&
+				Objects.equals(this.endpointKind, rec.endpointKind) &&
+				Objects.equals(this.endpointURL, rec.endpointURL) &&
+				Objects.equals(this.memberOfCategory, rec.memberOfCategory) &&
+				Objects.equals(this.infoType, rec.infoType) &&
+				Objects.equals(this.reliability, rec.reliability) &&
+				Objects.equals(this.value, rec.value) &&
+				Objects.equals(this.pressure, rec.pressure) &&
+				Objects.equals(this.temperature, rec.temperature) &&
+				Objects.equals(this.pH, rec.pH) &&
+				Objects.equals(this.participantID, rec.participantID) &&
+				Objects.equals(this.substanceID, rec.substanceID)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	public static void main(String[] args) {

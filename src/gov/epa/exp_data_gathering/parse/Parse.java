@@ -687,9 +687,17 @@ public class Parse {
 			er.property_value_units_original = ExperimentalConstants.str_g_mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
 			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("g/cm")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("kg/m")) {
+			er.property_value_units_original = ExperimentalConstants.str_kg_m3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("kg/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("mg/100")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_100mL;
@@ -703,6 +711,10 @@ public class Parse {
 			er.property_value_units_original = ExperimentalConstants.str_pctWt;
 			unitsIndex = propertyValue.indexOf("%");
 			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("vol%")) {
+			er.property_value_units_original = ExperimentalConstants.str_pctVol;
+			unitsIndex = propertyValue.indexOf("vol");
+			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("%")) {
 			er.property_value_units_original = ExperimentalConstants.str_pct;
 			unitsIndex = propertyValue.indexOf("%");
@@ -710,6 +722,10 @@ public class Parse {
 		} else if (propertyValue.toLowerCase().contains("ppm")) {
 			er.property_value_units_original = ExperimentalConstants.str_ppm;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ppb")) {
+			er.property_value_units_original = ExperimentalConstants.str_ppb;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ppb");
 			badUnits = false;
 		} else if (propertyValue.contains("M")) {
 			unitsIndex = propertyValue.indexOf("M");
@@ -848,6 +864,18 @@ public class Parse {
 		} else if (propertyValue.toLowerCase().contains("pa m³/mol")) {
 			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("pa");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("dimensionless - vol")) {
+			er.property_value_units_original = ExperimentalConstants.str_dimensionless_H_vol;
+			unitsIndex = propertyValue.toLowerCase().indexOf("dim");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("dimensionless")) {
+			er.property_value_units_original = ExperimentalConstants.str_dimensionless_H;
+			unitsIndex = propertyValue.toLowerCase().indexOf("dim");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("atm") && !propertyValue.toLowerCase().contains("mol")) {
+			er.property_value_units_original = ExperimentalConstants.str_atm;
+			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
 			badUnits = false;
 		}
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);

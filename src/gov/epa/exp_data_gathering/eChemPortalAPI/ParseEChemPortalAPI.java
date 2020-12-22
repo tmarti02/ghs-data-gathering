@@ -21,7 +21,9 @@ public class ParseEChemPortalAPI extends Parse {
 	public ParseEChemPortalAPI() {
 		sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 		this.init();
+		fileNameSourceExcel=null;
 		folderNameWebpages=null;
+		folderNameExcel=null;
 	}
 	
 	/**

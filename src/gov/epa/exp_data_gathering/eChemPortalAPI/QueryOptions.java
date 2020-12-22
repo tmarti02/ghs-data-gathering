@@ -3,7 +3,6 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 import java.util.Iterator;
 import java.util.Vector;
 
-import ch.qos.logback.classic.Level;
 import gov.epa.api.ExperimentalConstants;
 
 /**
@@ -81,53 +80,93 @@ public class QueryOptions {
 		if (propertyName.equals(ExperimentalConstants.strMeltingPoint) || propertyName.equals(ExperimentalConstants.strBoilingPoint) || 
 				propertyName.equals(ExperimentalConstants.strFlashPoint)) {
 			endpointMin = "0";
-			endpointMax = "10000.0";
+			endpointMax = "10000";
 			endpointUnits = ExperimentalConstants.str_K;
 			pressureMin = "0";
 			pressureUnits = ExperimentalConstants.str_pa;
 			includeNullPressure = true;
 		} else if (propertyName.equals(ExperimentalConstants.strDensity)) {
 			endpointMin = "0";
-			endpointMax = "1000.0";
+			endpointMax = "1000";
 			endpointUnits = ExperimentalConstants.str_g_cm3;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.strVaporPressure)) {
 			endpointMin = "0";
-			endpointMax = "10000000.0";
+			endpointMax = "5000000";
 			endpointUnits = ExperimentalConstants.str_pa;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.str_pKA)) {
-			endpointMin = "-1000.0";
-			endpointMax = "1000.0";
+			endpointMin = "-1000";
+			endpointMax = "1000";
 			endpointUnits = "";
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.strLogKow)) {
-			endpointMin = "-1000.0";
-			endpointMax = "1000.0";
+			endpointMin = "-1000";
+			endpointMax = "1000";
 			endpointUnits = "";
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
-			pHMin = "-1000.0";
+			pHMin = "-1000";
 			includeNullpH = true;
 		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility)) {
 			endpointMin = "0";
-			endpointMax = "10000.0";
+			endpointMax = "5000";
 			endpointUnits = ExperimentalConstants.str_g_L;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
-			pHMin = "-1000.0";
+			pHMin = "-1000";
+			includeNullpH = true;
+		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility+"_g_cm3")) {
+			this.propertyName = ExperimentalConstants.strWaterSolubility;
+			endpointMin = "0";
+			endpointMax = "1000";
+			endpointUnits = ExperimentalConstants.str_g_cm3;
+			temperatureMin = "0";
+			temperatureUnits = ExperimentalConstants.str_K;
+			includeNullTemperature = true;
+			pHMin = "-1000";
+			includeNullpH = true;
+		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility+"_kg_m3")) {
+			this.propertyName = ExperimentalConstants.strWaterSolubility;
+			endpointMin = "0";
+			endpointMax = "500";
+			endpointUnits = ExperimentalConstants.str_kg_m3;
+			temperatureMin = "0";
+			temperatureUnits = ExperimentalConstants.str_K;
+			includeNullTemperature = true;
+			pHMin = "-1000";
+			includeNullpH = true;
+		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility+"_ppb")) {
+			this.propertyName = ExperimentalConstants.strWaterSolubility;
+			endpointMin = "0";
+			endpointMax = "2000";
+			endpointUnits = ExperimentalConstants.str_ppb;
+			temperatureMin = "0";
+			temperatureUnits = ExperimentalConstants.str_K;
+			includeNullTemperature = true;
+			pHMin = "-1000";
+			includeNullpH = true;
+		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility+"_%v")) {
+			this.propertyName = ExperimentalConstants.strWaterSolubility;
+			endpointMin = "0";
+			endpointMax = "500";
+			endpointUnits = ExperimentalConstants.str_pctVol;
+			temperatureMin = "0";
+			temperatureUnits = ExperimentalConstants.str_K;
+			includeNullTemperature = true;
+			pHMin = "-1000";
 			includeNullpH = true;
 		} else if (propertyName.equals(ExperimentalConstants.strHenrysLawConstant)) {
-			endpointMin = "-10000000.0";
-			endpointMax = "10000000.0";
+			this.propertyName = ExperimentalConstants.strHenrysLawConstant;
+			endpointMin = String.valueOf(Integer.MIN_VALUE);
 			endpointUnits = ExperimentalConstants.str_Pa_m3_mol;
 			pressureMin = "0";
 			pressureUnits = ExperimentalConstants.str_pa;
@@ -135,7 +174,58 @@ public class QueryOptions {
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
+		} else if (propertyName.equals(ExperimentalConstants.strHenrysLawConstant+"_dimensionless")) {
+			this.propertyName = ExperimentalConstants.strHenrysLawConstant;
+			endpointMin = String.valueOf(Integer.MIN_VALUE);
+			endpointUnits = ExperimentalConstants.str_dimensionless_H;
+			pressureMin = "0";
+			pressureUnits = ExperimentalConstants.str_pa;
+			includeNullPressure = true;
+			temperatureMin = "0";
+			temperatureUnits = ExperimentalConstants.str_K;
+			includeNullTemperature = true;
+		} else if (propertyName.equals(ExperimentalConstants.strHenrysLawConstant+"_dimensionless_vol")) {
+			this.propertyName = ExperimentalConstants.strHenrysLawConstant;
+			endpointMin = String.valueOf(Integer.MIN_VALUE);
+			endpointUnits = ExperimentalConstants.str_dimensionless_H_vol;
+			pressureMin = "0";
+			pressureUnits = ExperimentalConstants.str_pa;
+			includeNullPressure = true;
+			temperatureMin = "0";
+			temperatureUnits = ExperimentalConstants.str_K;
+			includeNullTemperature = true;
+		} else if (propertyName.equals(ExperimentalConstants.strHenrysLawConstant+"_atm")) {
+			this.propertyName = ExperimentalConstants.strHenrysLawConstant;
+			endpointMin = String.valueOf(Integer.MIN_VALUE);
+			endpointUnits = ExperimentalConstants.str_atm;
+			pressureMin = "0";
+			pressureUnits = ExperimentalConstants.str_pa;
+			includeNullPressure = true;
+			temperatureMin = "0";
+			temperatureUnits = ExperimentalConstants.str_K;
+			includeNullTemperature = true;
 		}
+	}
+	
+	public static Vector<QueryOptions> generateAllQueryOptions() {
+		Vector<QueryOptions> allOptions = new Vector<QueryOptions>();
+		allOptions.add(new QueryOptions(ExperimentalConstants.strMeltingPoint));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strBoilingPoint));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strFlashPoint));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strDensity));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strVaporPressure));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_g_cm3"));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_kg_m3"));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_ppb"));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_%v"));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strLogKow));
+		allOptions.add(new QueryOptions(ExperimentalConstants.str_pKA));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant+"_dimensionless"));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant+"_dimensionless_vol"));
+		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant+"_atm"));
+		return allOptions;
 	}
 	
 	/**
@@ -146,8 +236,8 @@ public class QueryOptions {
 		Vector<QueryOptions> splitOptions = new Vector<QueryOptions>();
 		QueryOptions lowerSplitOptions = new QueryOptions(this);
 		QueryOptions upperSplitOptions = new QueryOptions(this);
-		double min = endpointMin==null ? -1*Double.MAX_VALUE : Double.parseDouble(endpointMin);
-		double max = endpointMax==null ? Double.MAX_VALUE : Double.parseDouble(endpointMax);
+		double min = endpointMin==null ? Integer.MIN_VALUE : Double.parseDouble(endpointMin);
+		double max = endpointMax==null ? Integer.MAX_VALUE : Double.parseDouble(endpointMax);
 		double midpoint = min + (max - min)/2.0;
 		lowerSplitOptions.endpointMax = String.valueOf(midpoint);
 		upperSplitOptions.endpointMin = String.valueOf(midpoint);
@@ -165,7 +255,7 @@ public class QueryOptions {
 		Query query = new Query(limit);
 		QueryBlock queryBlock = generateQueryBlock(true,true,true);
 		query.addPropertyBlock(queryBlock);
-		QueryHandler handler = new QueryHandler(5000,10);
+		QueryHandler handler = new QueryHandler(1000,10);
 		int size = handler.getQuerySize(query);
 		return size;
 	}
@@ -352,7 +442,7 @@ public class QueryOptions {
 	public void runDownload(boolean startFresh) {
 		System.out.println("Querying "+propertyName+" results.");
 		Vector<QueryOptions> splitOptions = resize();
-		QueryHandler handler = new QueryHandler(5000,10);
+		QueryHandler handler = new QueryHandler(1000,10);
 		int counter = 0;
 		for (QueryOptions options:splitOptions) {
 			Query query = options.generateQuery();

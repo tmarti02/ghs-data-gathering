@@ -96,11 +96,19 @@ public class ExperimentalRecord {
 			double conversionFactor = 1.0;
 			if (property_value_units_original.equals(ExperimentalConstants.str_atm_m3_mol)) {
 				conversionFactor = UnitConverter.atm_to_Pa;
+				property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
+			} else if (property_value_units_original.equals(ExperimentalConstants.str_atm)) {
+				conversionFactor = UnitConverter.atm_to_mmHg;
+				property_value_units_final = ExperimentalConstants.str_mmHg;
+				updateNote("conversion to Pa-m3/mol not possible");
+			} else if (property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H) ||
+					property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H_vol)) {
+				property_value_units_final = property_value_units_original;
+				updateNote("conversion to Pa-m3/mol not possible");
 			}
 			if (property_value_point_estimate_original!=null) { property_value_point_estimate_final = property_value_point_estimate_original*conversionFactor; }
 			if (property_value_min_original!=null) { property_value_min_final = property_value_min_original*conversionFactor; }
 			if (property_value_max_original!=null) { property_value_max_final = property_value_max_original*conversionFactor; }
-			property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
 		} else if (property_name.equals(ExperimentalConstants.strWaterSolubility) && property_value_units_original!=null) {
 			UnitConverter.convertSolubility(this);
 		}

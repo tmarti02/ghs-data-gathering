@@ -133,11 +133,12 @@ public class UnitConverter {
 			conversionFactor = 10.0;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_100mL)) {
 			conversionFactor = 1.0/100.0;
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_mL)) {
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_mL) || er.property_value_units_original.equals(ExperimentalConstants.str_g_cm3)) {
 			conversionFactor = 1000.0;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppb)) {
 			conversionFactor = 1.0/1000000.0;
-		} else if (!er.property_value_units_original.equals(ExperimentalConstants.str_g_L) && !er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL)) {
+		} else if (!er.property_value_units_original.equals(ExperimentalConstants.str_g_L) && !er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL) &&
+				!er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)) {
 			er.flag = true;
 			er.updateNote("conversion to g/L not possible");
 		}
