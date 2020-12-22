@@ -16,7 +16,10 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.ExperimentalConstants;
 
 /**
- * See OPERA article, Mansouri, 2018: https://doi.org/10.1186/s13321-018-0263-1
+ * See OPERA articles:
+ * Mansouri, 2018: https://doi.org/10.1186/s13321-018-0263-1
+ * Mansouri, 2019: https://doi.org/10.1186/s13321-019-0384-1
+ * 
  * See OPERA repo for zip file: https://github.com/NIEHS/OPERA/blob/master/OPERA_Data.zip
  * 
  * TODO: Need to get data for BP, HL, LogP, MP, pKA, VP, and WS
