@@ -24,6 +24,10 @@ import com.google.gson.GsonBuilder;
 
 
 /*experimental records that appear relevant*/
+/**
+ * @author CRAMSLAN
+ *
+ */
 public class RecordChemicalBook extends Parse {
 		String chemicalName;
 		String synonyms;
@@ -67,6 +71,11 @@ public class RecordChemicalBook extends Parse {
 		static final String sourceName="ChemicalBook";	
 
 	
+/**
+ * Parses the jsoup document and occupies the RecordchemicalBook fields with the correct values.
+ * @param rcb
+ * @param doc
+ */
 private static void parseDocument(RecordChemicalBook rcb, Document doc) {
 	Elements table_elements = doc.select("tr.ProdSupplierGN_ProductA_2");
 	Elements table_elements2 = doc.select("tr.ProdSupplierGN_ProductA_1");
@@ -138,7 +147,7 @@ private static Vector<String> getSearchURLsFromDashboardRecords (Vector<RecordDa
 
 /**
  * Parses the HTML strings in the raw HTML database to RecordLookChem objects
- * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
+ * @return	A vector of RecordChemicalBook objects containing the data from the raw HTML database
  */
 public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
@@ -187,6 +196,10 @@ public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 }
 
 
+/**
+ * this is used to parse the search database, not the html one
+ * @return
+ */
 public static Vector<String> parsePropertyLinksInDatabase() {
 	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
 	String databasePath = databaseFolder+File.separator+"search_property_raw_html.db";

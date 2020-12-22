@@ -21,6 +21,11 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 
+/**
+ * @author CRAMSLAN
+ *
+ */
+
 public class ParseChemicalBook extends Parse {
 	
 	public ParseChemicalBook() {
@@ -55,6 +60,12 @@ public class ParseChemicalBook extends Parse {
 	}
 	
 	
+	/**
+	 * This is the first part of what is essentially one addExperimentalRecord method for the parse class of other data sources<br> 
+	 * does the 
+	 * @param cbr
+	 * @param recordsExperimental
+	 */
 	private void addExperimentalRecords(RecordChemicalBook cbr,ExperimentalRecords recordsExperimental) {
 		if (cbr.density != null && !cbr.density.isBlank()) {
 			addNewExperimentalRecord(cbr,ExperimentalConstants.strDensity,cbr.density,recordsExperimental);
@@ -71,6 +82,14 @@ public class ParseChemicalBook extends Parse {
          
 	}
 
+	/**
+	 * This is the second part of what is essentially one addExperimentalRecord method for the parse class of other data sources<br>
+	 * populates fields of experimentalRecord objects with data from RecordChemicalBook objects
+	 * @param cbr
+	 * @param propertyName
+	 * @param propertyValue
+	 * @param recordsExperimental
+	 */
 	private void addNewExperimentalRecord(RecordChemicalBook cbr, String propertyName, String propertyValue, ExperimentalRecords recordsExperimental) {
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.casrn=cbr.CAS;
@@ -161,6 +180,11 @@ public class ParseChemicalBook extends Parse {
 	}
 	
 	
+	/**
+	 * obtains a range of values from a string of the form 3.2 - 4.5 (units trimmed earlier), where the "-" is a minus sign.
+	 * @param er
+	 * @param propertyValue
+	 */
 	public static void getUncertaintyRange(ExperimentalRecord er, String propertyValue) {
 		Matcher solubilityMatcher = Pattern.compile("([0-9]*\\.?[0-9]+)(\\u00B1)?([0-9]*\\.?[0-9]+)").matcher(propertyValue);
 		if (solubilityMatcher.find()) {
@@ -224,7 +248,13 @@ public class ParseChemicalBook extends Parse {
 		}
 	}
 
-// this is related to recordChemicalBook
+
+	/**
+	 * related to the results page when a particular CAS is searched. Essentially finds out whether a properties link exists  <br> 
+	 * This method really belongs in recordchemicalbook class but I put it here because it started out as non static or something.
+	 * @param url
+	 * @return
+	 */
 	public static String getSearchURLAndVerificationCheck(String url) {
 		try {
 			Document doc = Jsoup.connect(url).get();
@@ -261,6 +291,11 @@ public class ParseChemicalBook extends Parse {
 		return null;
 	}
 	
+	/**
+	 * Determines whether "solv" is contained in the string. Nonsensically structured.
+	 * @param er
+	 * @param propertyValue
+	 */
 	void meltingSolventCheck(ExperimentalRecord er, String propertyValue) {
 		if (propertyValue.toLowerCase().contains("solv")){
 			er.keep = false;
@@ -268,6 +303,11 @@ public class ParseChemicalBook extends Parse {
 		}
 	}
 	
+	/**
+	 * Parses water solubility records and removes the ones with bad features. Similarly nonsensically structured.
+	 * @param er
+	 * @param propertyValue
+	 */
 	void checkWaterSolubilities(ExperimentalRecord er, String propertyValue) {
 		if (propertyValue.toLowerCase().contains("%")) {
 			er.keep = false;
@@ -284,12 +324,17 @@ public class ParseChemicalBook extends Parse {
 		}
 		
 	}
-
+	
+	/**
+	 * guarantees that qualitative solubility descriptions are parsed properly.
+	 * @param er
+	 * @param propertyValue
+	 */
 	@Override
 	void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
 		String solventMatcherStr = "";
-		if (sourceName.equals(ExperimentalConstants.strSourceChemicalBook)) {
+		if (sourceName.equals(ExperimentalConstants.strSourceChemicalBook)) { // this is the only thing I changed
 			solventMatcherStr = "(([a-zA-Z0-9\s-]+?)(,| and|\\.|\\z|[ ]?\\(|;))?";
 		} 
 		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?uble|miscible))( (in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
@@ -305,8 +350,6 @@ public class ParseChemicalBook extends Parse {
 				er.updateNote(qualifier + prep + solvent);
 			}
 		}
-	
-		
 		if (propertyValue.contains("reacts") || propertyValue.contains("reaction"))
 			er.property_value_qualitative = "reaction";
 		if (propertyValue.contains("hydrolysis") || propertyValue.contains("hydrolyse") || propertyValue.contains("hydrolyze"))
@@ -329,6 +372,13 @@ public class ParseChemicalBook extends Parse {
 			er.reason = null;
 		}
 	}
+	
+	/**
+	 * populates the pressure condition field of experimental record when the pressure is given as a range.<br>
+	 * only applicable when the data comes in as Press: 760 or Press: 38.0 - 47.8
+	 * @param er
+	 * @param propertyValue
+	 */
 	public static void getPressureRange(ExperimentalRecord er, String propertyValue) {
 	// public static void getAveragePressureFromRange(String propertyValue) throws IllegalStateException {
 		if (propertyValue.toLowerCase().contains("press")){

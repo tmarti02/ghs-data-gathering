@@ -39,6 +39,11 @@ public class ParseChemBL extends Parse {
 		return recordsExperimental;
 	}
 	
+	/**
+	 * The most important method of the ParseChemBL class, populates fields of experimentalRecord objects with data from RecordChemBL objects
+	 * @param cbr
+	 * @param records
+	 */
 	private void addExperimentalRecords(RecordChemBL cbr,ExperimentalRecords records) {
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.date_accessed = cbr.date_accessed;
@@ -74,7 +79,10 @@ public class ParseChemBL extends Parse {
 			if (cbr.standardValue!=null && !cbr.standardValue.isBlank()) {
 				er.property_value_point_estimate_original = Double.parseDouble(cbr.standardValue);
 			}
-		} else if (cbr.standardType.toLowerCase().equals("solubility") && (desc.contains("water") || desc.contains("aq")) && cbr.standardUnits!=null &&
+			sensiblePkaCheck(cbr.standardValue, er); // puts records with pka outside the -10 to 25 range into bad
+		}	
+			
+			else if (cbr.standardType.toLowerCase().equals("solubility") && (desc.contains("water") || desc.contains("aq")) && cbr.standardUnits!=null &&
 				!cbr.standardUnits.isBlank() && !desc.contains("buffer") && !desc.contains("acetate") && !desc.contains("dextrose") && !desc.contains("dmso")
 				&& !desc.contains("octanol") && !desc.contains("glycine") && !desc.contains("arginine") && !desc.contains("acid") && !desc.contains("pbs")
 				&& !desc.contains("hcl") && !desc.contains("intestinal") && !desc.contains("triethanolamine") && !desc.contains("cyclodextrin")) {
@@ -147,7 +155,12 @@ public class ParseChemBL extends Parse {
 		} else if (desc.contains("estimat")) {
 			er.keep = false;
 			er.reason = "Estimated";
-		} else if (desc.contains("extrapolat")) {
+		}
+			else if (desc.contains("regression")) {
+			er.keep = false;
+			er.reason = "Regression calculation";
+		}
+			else if (desc.contains("extrapolat")) {
 			er.keep = false;
 			er.reason = "Extrapolated";
 		}
@@ -159,6 +172,15 @@ public class ParseChemBL extends Parse {
 	public static void main(String[] args) {
 		ParseChemBL p = new ParseChemBL();
 		p.createFiles();
+	}
+
+	public static void sensiblePkaCheck(String standardVal, ExperimentalRecord er) {
+		if ((!(standardVal == null)) && !standardVal.isBlank()) {
+		if ((Double.parseDouble(standardVal) > 25 || Double.parseDouble(standardVal) < -10) ) {
+			er.keep = false;
+			er.reason = "nonsensical pka value";
+		}
+		}
 	}
 	
 }

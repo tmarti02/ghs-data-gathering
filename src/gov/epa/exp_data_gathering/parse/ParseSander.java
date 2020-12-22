@@ -39,9 +39,13 @@ public class ParseSander extends Parse{
 		return recordsExperimental;
 	}
 	// get the names right
+	/**
+	 * populates experimentalrecord fields with data from the recordSander object.
+	 * @param rs
+	 * @param records
+	 */
 	private void addExperimentalRecords(RecordSander rs,ExperimentalRecords records) {
 			String CAS = rs.CASRN;
-			String inchikey = rs.inchiKey;
 			for (int i = 0; i < rs.recordCount; i++) {
 				if (!(rs.hcp.get(i).isBlank())) {
 				ExperimentalRecord er = new ExperimentalRecord();
@@ -59,7 +63,10 @@ public class ParseSander extends Parse{
 				er.property_value_units_original = "mol/m3-Pa";
 				er.property_value_units_final = ExperimentalConstants.str_atm_m3_mol;
 				getnumericalhcp(er, propertyValue);
+				// below converts Sander's weird inverted units to atm*m3/mol
+				if (!(er.property_value_point_estimate_original == null)) {
 				er.property_value_point_estimate_final = 1/(er.property_value_point_estimate_original*101325);
+				}
 				er.temperature_C = (double)25;
 				er.pressure_mmHg = "760";
 				er.source_name = rs.referenceAbbreviated.get(i);
@@ -78,6 +85,11 @@ public class ParseSander extends Parse{
 	}
 	
 	
+	/**
+	 * converts strings of the form 5.8×10-4 to the correct value as a double.
+	 * @param er
+	 * @param propertyValue
+	 */
 	public static void getnumericalhcp(ExperimentalRecord er, String propertyValue) {
 		Matcher sanderhcpMatcher = Pattern.compile("([0-9]*\\.?[0-9]+)(\\×10(\\-)?([0-9]+))?").matcher(propertyValue);
 		if (sanderhcpMatcher.find()) {
@@ -101,8 +113,11 @@ public class ParseSander extends Parse{
 		}
 	}
 	
-	
-
+	/**
+	 * Keeps the Henry's law constants that were derived by measurement, VP/AS, literature, or citation.
+	 * @param er
+	 * @param type
+	 */
 	public static void getnotes(ExperimentalRecord er, String type) {
 		if (type.contains("L")) {
 			er.note = "literature review";
@@ -117,7 +132,8 @@ public class ParseSander extends Parse{
 		}
 		else if (type.contains("R")) {
 			er.note = "recalculation";
-			er.keep = true;
+			er.keep = false;
+			er.reason = "recalculation";
 		}
 		else if (type.contains("T")) {
 			er.note = "thermodynamical calculation";
@@ -156,10 +172,5 @@ public class ParseSander extends Parse{
 			er.note = "";
 		}
 	}
-
 	
-	// 
-	// ??1
-	// ?-1
-	// &lte?1
 }
