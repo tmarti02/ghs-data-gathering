@@ -173,7 +173,6 @@ public class RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
-		QueryOptions options = new QueryOptions(ExperimentalConstants.strMeltingPoint);
-		options.runDownload(true);
+		downloadAllResultsToDatabase(true);
 	}
 }

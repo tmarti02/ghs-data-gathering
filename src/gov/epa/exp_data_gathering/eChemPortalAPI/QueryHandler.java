@@ -28,16 +28,22 @@ public class QueryHandler {
 	public Gson gson = null;
 	public Gson prettyGson = null;
 	private Logger logger = null;
+	long wait;
+	int retryLimit;
 	
 	/**
-	 * Creates a new QueryHandler with the specified debug logging level
-	 * @param loggerLevel	Debug logging level (Level.WARN recommended - org.apache.http generates a huge amount of logging output otherwise)
+	 * Creates a new QueryHandler with the specified wait time and retry limit
+	 * @param wait			How long to wait between queries
+	 * @param retryLimit	How many times to retry failed queries
 	 */
-	public QueryHandler(Level loggerLevel) {
+	public QueryHandler(long wait, int retryLimit) {
+		this.wait = wait;
+		this.retryLimit = retryLimit;
 		gson = new GsonBuilder().create();
 		prettyGson = new GsonBuilder().setPrettyPrinting().create();
 		logger = (Logger) LoggerFactory.getLogger("org.apache.http");
-    	logger.setLevel(loggerLevel);
+		// org.apache.http generates a huge amount of debug logging output if level is not set to WARN or below
+    	logger.setLevel(Level.WARN);
     	logger.setAdditive(false);
     	Unirest.setTimeouts(0, 0);
 	}
@@ -50,17 +56,34 @@ public class QueryHandler {
 	private ResultsPage getResultsPage(Query query) {
 		ResultsPage page = null;
 		String bodyString = gson.toJson(query);
-		// Random rand = new Random();
-		try {	
-			long startTime = System.currentTimeMillis();
-			HttpResponse<String> response = Unirest.post("https://www.echemportal.org/echemportal/api/property-search")
-			  .header("Content-Type", "application/json")
-			  .header("Accept", "application/json")
-			  .body(bodyString)
-			  .asString();
-			long endTime = System.currentTimeMillis();
-			// Waits as long as it took for the previous query to return
-			Thread.sleep((long) (10*(endTime-startTime)));
+		HttpResponse<String> response = null;
+		try {
+			boolean downloaded = false;
+			int retryCount = 0;
+			while (retryCount < retryLimit && (!downloaded || response==null)) {
+				try {
+				response = Unirest.post("https://www.echemportal.org/echemportal/api/property-search")
+						.header("Accept", "application/json, text/plain")
+						.header("Accept-Encoding", "gzip, deflate, br")
+						.header("Accept-Language", "en-US,en;q=0.9")
+						.header("Connection", "keep-alive")
+						.header("Content-Type", "application/json")
+						.header("Host", "www.echemportal.org")
+						.header("Origin", "https://www.echemportal.org")
+						.header("Referer", "https://www.echemportal.org/echemportal/property-search")
+						.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
+						.body(bodyString)
+						.asString();
+				downloaded = true;
+				Thread.sleep(wait);
+				} catch (Exception ex) {
+					wait += wait; // Increments default wait time every time a download fails
+					System.out.println("Download failed! Waiting "+wait+" ms to try again...");
+					Thread.sleep(wait);
+					System.out.println("Trying again...");
+				}
+				retryCount++;
+			}
 			String json = response.getBody();
 			page = gson.fromJson(json, ResultsPage.class);
 			return page;

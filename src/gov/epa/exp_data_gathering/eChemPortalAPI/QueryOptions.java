@@ -148,7 +148,7 @@ public class QueryOptions {
 		QueryOptions upperSplitOptions = new QueryOptions(this);
 		double min = endpointMin==null ? -1*Double.MAX_VALUE : Double.parseDouble(endpointMin);
 		double max = endpointMax==null ? Double.MAX_VALUE : Double.parseDouble(endpointMax);
-		double midpoint = Math.floor(min + (max - min)/2.0);
+		double midpoint = min + (max - min)/2.0;
 		lowerSplitOptions.endpointMax = String.valueOf(midpoint);
 		upperSplitOptions.endpointMin = String.valueOf(midpoint);
 		splitOptions.add(lowerSplitOptions);
@@ -165,7 +165,7 @@ public class QueryOptions {
 		Query query = new Query(limit);
 		QueryBlock queryBlock = generateQueryBlock(true,true,true);
 		query.addPropertyBlock(queryBlock);
-		QueryHandler handler = new QueryHandler(Level.WARN);
+		QueryHandler handler = new QueryHandler(5000,10);
 		int size = handler.getQuerySize(query);
 		return size;
 	}
@@ -217,20 +217,10 @@ public class QueryOptions {
 					if (size!=convergesTo) {
 						convergesTo = size;
 						convergesAt = i;
-						i++;
 					}
+					i++;
 				}
 			}
-//			int convergesTo = 0;
-//			int convergesAt = sizes.size();
-//			int i = 0;
-//			for (int i = 0; i < sizes.size(); i++) {
-//				int iSize = sizes.get(i);
-//				if (iSize!=convergesTo) {
-//					convergesTo = iSize;
-//					convergesAt = i;
-//				}
-//			}
 			options = new Vector<QueryOptions>(options.subList(0, convergesAt+1));
 			System.out.println("Removed empty & duplicate queries; "+options.size()+" queries to run.");
 		} else {
@@ -360,13 +350,18 @@ public class QueryOptions {
 	 * @param startFresh	True to rebuild the database from scratch, false otherwise
 	 */
 	public void runDownload(boolean startFresh) {
+		System.out.println("Querying "+propertyName+" results.");
 		Vector<QueryOptions> splitOptions = resize();
-		QueryHandler handler = new QueryHandler(Level.WARN);
-		Query query = splitOptions.get(0).generateQuery();
-		handler.downloadQueryResultsToDatabase(query,startFresh);
-		for (int i = 1; i < splitOptions.size(); i++) {
-			query = splitOptions.get(i).generateQuery();
-			handler.downloadQueryResultsToDatabase(query,false);
+		QueryHandler handler = new QueryHandler(5000,10);
+		int counter = 0;
+		for (QueryOptions options:splitOptions) {
+			Query query = options.generateQuery();
+			if (counter==0) {
+				handler.downloadQueryResultsToDatabase(query,startFresh);
+			} else {
+				handler.downloadQueryResultsToDatabase(query,false);
+			}
+			counter++;
 		}
 	}
 	
