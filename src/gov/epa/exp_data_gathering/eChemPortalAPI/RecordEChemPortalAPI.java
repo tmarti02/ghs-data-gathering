@@ -3,11 +3,11 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 import java.io.File;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Vector;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -51,14 +51,14 @@ public class RecordEChemPortalAPI {
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 	
-	public static void downloadAllResultsToDatabase(boolean startFresh) {
-		Vector<QueryOptions> allOptions = QueryOptions.generateAllQueryOptions();
+	public static void downloadAllResultsToDatabase(boolean startFresh,boolean sortingOn) {
+		List<QueryOptions> allOptions = QueryOptions.generateAllQueryOptions();
 		int counter = 0;
 		for (QueryOptions options:allOptions) {
 			if (counter==0) {
-				options.runDownload(startFresh);
+				options.runDownload(startFresh,sortingOn);
 			} else {
-				options.runDownload(false);
+				options.runDownload(false,sortingOn);
 			}
 			counter++;
 		}
@@ -68,11 +68,11 @@ public class RecordEChemPortalAPI {
 	 * Parses raw JSON search results from a database into a vector of RecordEChemPortalAPI objects
 	 * @return		The search results as RecordEChemPortalAPI objects
 	 */
-	public static Vector<RecordEChemPortalAPI> parseResultsInDatabase() {
+	public static List<RecordEChemPortalAPI> parseResultsInDatabase(boolean lastDuplicateRecOn) {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		String databaseName = sourceName+"_raw_json.db";
 		String databasePath = p.databaseFolder+File.separator+databaseName;
-		Vector<RecordEChemPortalAPI> records = new Vector<RecordEChemPortalAPI>();
+		List<RecordEChemPortalAPI> records = new ArrayList<RecordEChemPortalAPI>();
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		
 		try {
@@ -133,7 +133,7 @@ public class RecordEChemPortalAPI {
 							// If URL not seen before, adds the record immediately and moves on
 							records.add(rec);
 							count++;
-						} else if (rec.recordEquals(lastDuplicateRec)) {
+						} else if (lastDuplicateRecOn && rec.recordEquals(lastDuplicateRec)) {
 							// If URL seen before, checks last duplicate record deeply for equivalence (duplicates tend to repeat)
 							countEliminated++;
 						} else {
@@ -144,7 +144,7 @@ public class RecordEChemPortalAPI {
 								RecordEChemPortalAPI existingRec = it.next();
 								if (rec.recordEquals(existingRec)) {
 									haveRecord = true;
-									lastDuplicateRec = existingRec;
+									if (lastDuplicateRecOn) { lastDuplicateRec = existingRec; }
 								}
 							}
 							if (!haveRecord) {
@@ -192,6 +192,6 @@ public class RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
-		downloadAllResultsToDatabase(true);
+		downloadAllResultsToDatabase(true,true);
 	}
 }

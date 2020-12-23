@@ -1,7 +1,8 @@
 package gov.epa.exp_data_gathering.eChemPortalAPI;
 
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 import gov.epa.api.ExperimentalConstants;
 
@@ -207,8 +208,8 @@ public class QueryOptions {
 		}
 	}
 	
-	public static Vector<QueryOptions> generateAllQueryOptions() {
-		Vector<QueryOptions> allOptions = new Vector<QueryOptions>();
+	public static List<QueryOptions> generateAllQueryOptions() {
+		List<QueryOptions> allOptions = new ArrayList<QueryOptions>();
 		allOptions.add(new QueryOptions(ExperimentalConstants.strMeltingPoint));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strBoilingPoint));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strFlashPoint));
@@ -232,8 +233,8 @@ public class QueryOptions {
 	 * Splits the QueryOptions object at the range midpoint to reduce query size
 	 * @return		Two QueryOptions objects that jointly cover the same range as the original
 	 */
-	private Vector<QueryOptions> generateSplitOptions() {
-		Vector<QueryOptions> splitOptions = new Vector<QueryOptions>();
+	private List<QueryOptions> generateSplitOptions() {
+		List<QueryOptions> splitOptions = new ArrayList<QueryOptions>();
 		QueryOptions lowerSplitOptions = new QueryOptions(this);
 		QueryOptions upperSplitOptions = new QueryOptions(this);
 		double min = endpointMin==null ? Integer.MIN_VALUE : Double.parseDouble(endpointMin);
@@ -243,8 +244,25 @@ public class QueryOptions {
 		upperSplitOptions.endpointMin = String.valueOf(midpoint);
 		splitOptions.add(lowerSplitOptions);
 		splitOptions.add(upperSplitOptions);
-		System.out.println("Query from "+min+" to "+max+" split at "+midpoint+".");
 		return splitOptions;
+	}
+	
+	/**
+	 * Merges the endpoint range of another QueryOptions object into the current QueryOptions
+	 * @param options	The QueryOptions object to merge
+	 */
+	private void mergeOptions(QueryOptions options) {
+		if (this.propertyName==options.propertyName) {
+			if (this.endpointMax.equals(options.endpointMin)) {
+				this.endpointMax = options.endpointMax;
+			} else if (this.endpointMin.equals(options.endpointMax)) {
+				this.endpointMin = options.endpointMin;
+			} else {
+				System.out.println("Could not complete merge.");
+			}
+		} else {
+			System.out.println("Could not complete merge.");
+		}
 	}
 	
 	/**
@@ -252,7 +270,7 @@ public class QueryOptions {
 	 * @return
 	 */
 	private int getQueryMaxSize() {
-		Query query = new Query(limit);
+		Query query = new Query(limit,false);
 		QueryBlock queryBlock = generateQueryBlock(true,true,true);
 		query.addPropertyBlock(queryBlock);
 		QueryHandler handler = new QueryHandler(1000,10);
@@ -265,12 +283,12 @@ public class QueryOptions {
 	 * @param options	Vector of QueryOptions to be resized
 	 * @return			Vector of QueryOptions of permitted size
 	 */
-	private static Vector<QueryOptions> resizeAll(Vector<QueryOptions> options) {
-		Vector<QueryOptions> newOptions = new Vector<QueryOptions>();
+	private static List<QueryOptions> resizeAll(List<QueryOptions> options) {
+		List<QueryOptions> newOptions = new ArrayList<QueryOptions>();
 		for (QueryOptions o:options) {
 			int size = o.getQueryMaxSize();
 			if (size >= 10000) {
-				Vector<QueryOptions> splitOptions = o.generateSplitOptions();
+				List<QueryOptions> splitOptions = o.generateSplitOptions();
 				splitOptions = resizeAll(splitOptions);
 				newOptions.addAll(splitOptions);
 			} else {
@@ -284,35 +302,30 @@ public class QueryOptions {
 	 * If QueryOptions specify a query too large for the API (limit 10000 results), splits it into a vector of permitted query size
 	 * @return		Vector of QueryOptions of permitted size
 	 */
-	public Vector<QueryOptions> resize() {
-		Vector<QueryOptions> options = new Vector<QueryOptions>();
+	public List<QueryOptions> resize() {
+		List<QueryOptions> options = new ArrayList<QueryOptions>();
 		options.add(this);
 		if (getQueryMaxSize() >= 10000) {
 			System.out.println("Query too large. Resizing...");
 			options = resizeAll(options);
-			System.out.println("Split into "+options.size()+" queries.");
-			Iterator<QueryOptions> it = options.iterator();
-			// eChemPortal API handles > in a silly way that results in lots of duplication
-			// This loop removes queries that return 1) no results, or 2) only duplicate results
-			// There will still be some duplication from < entries not handled by this - eliminated in parseResultsInDatabase()
-			int convergesTo = 0;
-			int convergesAt = -1;
-			int i = 0;
+			System.out.println("Split into "+options.size()+" queries. Optimizing...");
+			ListIterator<QueryOptions> it = options.listIterator();
+			int lastSize = 0;
 			while (it.hasNext()) {
-				QueryOptions o = it.next();
-				int size = o.getQueryMaxSize();
-				if (size==0) {
+				QueryOptions currentOptions = it.next();
+				int size = currentOptions.getQueryMaxSize();
+				if (it.previousIndex() > 0 && size + lastSize < 10000) {
 					it.remove();
+					QueryOptions lastOptions = it.previous();
+					lastOptions.mergeOptions(currentOptions);
+					it.set(lastOptions);
+					lastSize = lastOptions.getQueryMaxSize();
+					it.next();
 				} else {
-					if (size!=convergesTo) {
-						convergesTo = size;
-						convergesAt = i;
-					}
-					i++;
+					lastSize = size;
 				}
 			}
-			options = new Vector<QueryOptions>(options.subList(0, convergesAt+1));
-			System.out.println("Removed empty & duplicate queries; "+options.size()+" queries to run.");
+			System.out.println("Merged small queries. Running "+options.size()+" queries...");
 		} else {
 			System.out.println("No resizing needed.");
 		}
@@ -391,12 +404,12 @@ public class QueryOptions {
 	 * Creates the Query object corresponding to the given options
 	 * @return		The desired Query
 	 */
-	public Query generateQuery() {
+	public Query generateQuery(boolean sortingOn) {
 		boolean hasPressureCondition = pressureMin!=null || pressureMax!=null;
 		boolean hasTemperatureCondition = temperatureMin!=null || temperatureMax!=null;
 		boolean haspHCondition = pHMin!=null || pHMax!=null;
 		
-		Query query = new Query(limit);
+		Query query = new Query(limit,sortingOn);
 		QueryBlock queryBlock = generateQueryBlock(false,false,false);
 		query.addPropertyBlock(queryBlock);
 		
@@ -439,13 +452,13 @@ public class QueryOptions {
 	 * Downloads the results of the given query to the results database
 	 * @param startFresh	True to rebuild the database from scratch, false otherwise
 	 */
-	public void runDownload(boolean startFresh) {
-		System.out.println("Querying "+propertyName+" results.");
-		Vector<QueryOptions> splitOptions = resize();
+	public void runDownload(boolean startFresh,boolean sortingOn) {
+		List<QueryOptions> splitOptions = resize();
 		QueryHandler handler = new QueryHandler(1000,10);
 		int counter = 0;
 		for (QueryOptions options:splitOptions) {
-			Query query = options.generateQuery();
+			System.out.println("Querying "+propertyName+" results from "+options.endpointMin+" to "+options.endpointMax+" "+endpointUnits+"...");
+			Query query = options.generateQuery(sortingOn);
 			if (counter==0) {
 				handler.downloadQueryResultsToDatabase(query,startFresh);
 			} else {

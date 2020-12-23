@@ -24,16 +24,18 @@ public class Query {
 	public List<Object> filtering = null;
 	@SerializedName("sorting")
 	@Expose
-	public List<Object> sorting = null;
+	public List<Sorting> sorting = null;
 	@SerializedName("participants")
 	@Expose
 	public List<Integer> participants = null;
 	
 	// Constructor with empty property blocks and a specified page size limit
-	public Query(int limit) {
+	public Query(int limit, boolean sortingOn) {
 		propertyBlocks = new ArrayList<PropertyBlock>();
 		paging = new Paging(0,limit);
-		// Filtering & sorting not needed for query
+		// Filtering not needed for this application
+		// Default to sort by number (CAS/EINECS)
+		if (sortingOn) { sorting.add(new Sorting("number","asc")); }
 		// Accepts all participants (CCR, CHEM, IUCLID, J-CHECK, REACH)
 		Integer[] participantsArray = {101,140,580,60,1};
 		participants = Arrays.asList(participantsArray);

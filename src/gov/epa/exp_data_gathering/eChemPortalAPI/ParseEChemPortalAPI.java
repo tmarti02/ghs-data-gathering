@@ -2,6 +2,8 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,13 +28,58 @@ public class ParseEChemPortalAPI extends Parse {
 		folderNameExcel=null;
 	}
 	
+	private static void benchmarkDuplicateElimination() {
+		QueryOptions options = new QueryOptions(ExperimentalConstants.strWaterSolubility);
+		double[] downloadResults = new double[5];
+		for (int i = 0; i < 5; i++) {
+			long start = System.currentTimeMillis();
+			options.runDownload(true, false);
+			long end = System.currentTimeMillis();
+			downloadResults[i] = (end - start)/1000.0;
+		}
+		double[] noStrategyResults = new double[5];
+		double[] lastDuplicateRecResults = new double[5];
+		for (int i = 0; i < 5; i++) {
+			long start = System.currentTimeMillis();
+			RecordEChemPortalAPI.parseResultsInDatabase(false);
+			long end = System.currentTimeMillis();
+			noStrategyResults[i] = (end - start)/1000.0;
+			
+			start = System.currentTimeMillis();
+			RecordEChemPortalAPI.parseResultsInDatabase(true);
+			end = System.currentTimeMillis();
+			lastDuplicateRecResults[i] = (end - start)/1000.0;
+		}
+		
+		double[] downloadSortedResults = new double[5];
+		for (int i = 0; i < 5; i++) {
+			long start = System.currentTimeMillis();
+			options.runDownload(true, true);
+			long end = System.currentTimeMillis();
+			downloadSortedResults[i] = (end - start)/1000.0;
+		}
+		double[] lastDuplicateRecSortedResults = new double[5];
+		for (int i = 0; i < 5; i++) {
+			long start = System.currentTimeMillis();
+			RecordEChemPortalAPI.parseResultsInDatabase(true);
+			long end = System.currentTimeMillis();
+			lastDuplicateRecSortedResults[i] = (end - start)/1000.0;
+		}
+		
+		System.out.println("Unsorted download speeds: "+Arrays.toString(downloadResults));
+		System.out.println("Sorted download speeds: "+Arrays.toString(downloadSortedResults));
+		System.out.println("Naive elimination speeds: "+Arrays.toString(noStrategyResults));
+		System.out.println("Unsorted, last duplicate record elimination speeds: "+Arrays.toString(lastDuplicateRecResults));
+		System.out.println("Sorted, last duplicate record elimination speeds: "+Arrays.toString(lastDuplicateRecSortedResults));
+	}
+	
 	/**
 	 * Parses JSON entries in database to RecordPubChem objects, then saves them to a JSON file
 	 */
 	@Override
 	protected void createRecords() {
-		Vector<RecordEChemPortalAPI> records = RecordEChemPortalAPI.parseResultsInDatabase();
-		writeOriginalRecordsToFile(records);
+		List<RecordEChemPortalAPI> records = RecordEChemPortalAPI.parseResultsInDatabase(false);
+		writeOriginalRecordsToFile(new Vector<RecordEChemPortalAPI>(records));
 	}
 	
 	/**
@@ -205,5 +252,7 @@ public class ParseEChemPortalAPI extends Parse {
 	public static void main(String[] args) {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		p.createFiles();
+		
+//		benchmarkDuplicateElimination();
 	}
 }
