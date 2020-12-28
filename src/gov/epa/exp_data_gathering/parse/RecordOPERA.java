@@ -49,6 +49,7 @@ public class RecordOPERA {
 	String Salt_Solvent;//used to account for the fact that solubility of salt was measured
 	String Salt_Solvent_ID;
 	String MPID;
+	String qc_level; // not sure about this field, but adding it removes errors
 	
 	public Double property_value_point_estimate_original;//each property in OPERA stores the property value in a different field- so need field to store all of them
 	public String property_value_units_original;//sometimes it will take some work to figure this out by comparing to data values from other sources
@@ -86,7 +87,9 @@ public class RecordOPERA {
 			RecordOPERA ro = createRecordOpera(ac);
 
 			//Print out:
-			if (ro.CAS.contentEquals("71-43-2")) System.out.println(ro.toJSON());
+			// if (ro.CAS.contentEquals("71-43-2")) System.out.println(ro.toJSON());
+			if (i == 4) System.out.println(ac.getProperties());
+			
 
 			
 			records.add(ro);
@@ -104,6 +107,16 @@ public class RecordOPERA {
 			return "WS_QR.sdf";			
 		case ExperimentalConstants.strVaporPressure:
 			return "VP_QR.sdf";
+		case ExperimentalConstants.strBoilingPoint:
+			return "BP_QR.sdf";
+		case ExperimentalConstants.strHenrysLawConstant:
+			return "HL_QR.sdf";
+		case ExperimentalConstants.strLogKow:
+			return "LogP_QR.sdf";
+		case ExperimentalConstants.str_pKA:
+			return "pKa_QR.sdf";
+		case ExperimentalConstants.strMeltingPoint:
+			return "MP_QR.sdf";
 			
 		//TODO add other pertinent properties...
 
@@ -139,8 +152,19 @@ public class RecordOPERA {
 			
 			} else if (key.contentEquals("LogHL")) {
 				ro.property_value_point_estimate_original=Double.parseDouble(value);
-				ro.property_value_units_original="log10_?";//TODO- determine what "?" is 					
-				
+				ro.property_value_units_original="log10_dimensionless";//TODO- determine what "?" is 	
+			} else if (key.contentEquals("LogP")) {
+				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_value_units_original="?";
+			} else if (key.contentEquals("MP")) {
+				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_value_units_original="?";
+			} else if (key.contentEquals("LogVP")) {
+				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_value_units_original="?";
+			} else if (key.contentEquals("BP")) {
+				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_value_units_original="?";
 			} else if (key.contains("Reference")) {
 				ro.Reference=value;
 				
@@ -203,10 +227,17 @@ public class RecordOPERA {
 		return acs;
 	}
 
+	// TODO: Need to get data for BP, HL, LogP, MP, pKA, VP, and WS
+
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		parseOPERA_SDF(ExperimentalConstants.strWaterSolubility);
+		// have to figure out a smart way to handle ExperimentalConstants.str_pKA
+		String [] endpoints = {ExperimentalConstants.strBoilingPoint,ExperimentalConstants.strHenrysLawConstant,ExperimentalConstants.strLogKow,ExperimentalConstants.strMeltingPoint, ExperimentalConstants.strVaporPressure,ExperimentalConstants.strWaterSolubility};
+		for (int i = 0; i < endpoints.length; i++) {
+		parseOPERA_SDF(endpoints[i]);
+		}
+		
 	}
 
 }

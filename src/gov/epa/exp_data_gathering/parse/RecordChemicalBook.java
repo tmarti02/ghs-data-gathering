@@ -22,8 +22,6 @@ import org.jsoup.select.Elements;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-
-/*experimental records that appear relevant*/
 /**
  * @author CRAMSLAN
  *
