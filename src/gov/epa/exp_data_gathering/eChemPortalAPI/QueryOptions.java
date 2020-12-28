@@ -216,6 +216,7 @@ public class QueryOptions {
 		allOptions.add(new QueryOptions(ExperimentalConstants.strDensity));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strVaporPressure));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility));
+		// Generates separate queries for non-interconvertable water solubility units
 		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_g_cm3"));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_kg_m3"));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_ppb"));
@@ -223,6 +224,7 @@ public class QueryOptions {
 		allOptions.add(new QueryOptions(ExperimentalConstants.strLogKow));
 		allOptions.add(new QueryOptions(ExperimentalConstants.str_pKA));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant));
+		// Generates separate queries for non-interconvertable HLC units
 		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant+"_dimensionless"));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant+"_dimensionless_vol"));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant+"_atm"));
@@ -270,7 +272,7 @@ public class QueryOptions {
 	 * @return
 	 */
 	private int getQueryMaxSize() {
-		Query query = new Query(limit,false);
+		Query query = new Query(limit);
 		QueryBlock queryBlock = generateQueryBlock(true,true,true);
 		query.addPropertyBlock(queryBlock);
 		QueryHandler handler = new QueryHandler(1000,10);
@@ -306,7 +308,7 @@ public class QueryOptions {
 		List<QueryOptions> options = new ArrayList<QueryOptions>();
 		options.add(this);
 		if (getQueryMaxSize() >= 10000) {
-			System.out.println("Query too large. Resizing...");
+			System.out.println(this.propertyName+" query too large. Resizing...");
 			options = resizeAll(options);
 			System.out.println("Split into "+options.size()+" queries. Optimizing...");
 			ListIterator<QueryOptions> it = options.listIterator();
@@ -327,7 +329,7 @@ public class QueryOptions {
 			}
 			System.out.println("Merged small queries. Running "+options.size()+" queries...");
 		} else {
-			System.out.println("No resizing needed.");
+			System.out.println("No resizing needed. Running query...");
 		}
 		return options;
 	}
@@ -404,12 +406,12 @@ public class QueryOptions {
 	 * Creates the Query object corresponding to the given options
 	 * @return		The desired Query
 	 */
-	public Query generateQuery(boolean sortingOn) {
+	public Query generateQuery() {
 		boolean hasPressureCondition = pressureMin!=null || pressureMax!=null;
 		boolean hasTemperatureCondition = temperatureMin!=null || temperatureMax!=null;
 		boolean haspHCondition = pHMin!=null || pHMax!=null;
 		
-		Query query = new Query(limit,sortingOn);
+		Query query = new Query(limit);
 		QueryBlock queryBlock = generateQueryBlock(false,false,false);
 		query.addPropertyBlock(queryBlock);
 		
@@ -452,13 +454,13 @@ public class QueryOptions {
 	 * Downloads the results of the given query to the results database
 	 * @param startFresh	True to rebuild the database from scratch, false otherwise
 	 */
-	public void runDownload(boolean startFresh,boolean sortingOn) {
+	public void runDownload(boolean startFresh) {
 		List<QueryOptions> splitOptions = resize();
 		QueryHandler handler = new QueryHandler(1000,10);
 		int counter = 0;
 		for (QueryOptions options:splitOptions) {
 			System.out.println("Querying "+propertyName+" results from "+options.endpointMin+" to "+options.endpointMax+" "+endpointUnits+"...");
-			Query query = options.generateQuery(sortingOn);
+			Query query = options.generateQuery();
 			if (counter==0) {
 				handler.downloadQueryResultsToDatabase(query,startFresh);
 			} else {

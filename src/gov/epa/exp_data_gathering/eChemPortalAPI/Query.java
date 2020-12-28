@@ -30,12 +30,13 @@ public class Query {
 	public List<Integer> participants = null;
 	
 	// Constructor with empty property blocks and a specified page size limit
-	public Query(int limit, boolean sortingOn) {
+	public Query(int limit) {
 		propertyBlocks = new ArrayList<PropertyBlock>();
 		paging = new Paging(0,limit);
 		// Filtering not needed for this application
 		// Default to sort by number (CAS/EINECS)
-		if (sortingOn) { sorting.add(new Sorting("number","asc")); }
+		sorting = new ArrayList<Sorting>();
+		sorting.add(new Sorting("number","asc"));
 		// Accepts all participants (CCR, CHEM, IUCLID, J-CHECK, REACH)
 		Integer[] participantsArray = {101,140,580,60,1};
 		participants = Arrays.asList(participantsArray);

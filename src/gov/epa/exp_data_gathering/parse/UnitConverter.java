@@ -154,4 +154,25 @@ public class UnitConverter {
 			er.property_value_units_final = er.property_value_units_original;
 		}
 	}
+	
+	public static void convertHenrysLawConstant(ExperimentalRecord er) {
+		double conversionFactor = 1.0;
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_Pa_m3_mol)) {
+			er.property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_atm_m3_mol)) {
+			conversionFactor = UnitConverter.atm_to_Pa;
+			er.property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_atm)) {
+			conversionFactor = UnitConverter.atm_to_mmHg;
+			er.property_value_units_final = ExperimentalConstants.str_mmHg;
+			er.updateNote("conversion to Pa-m3/mol not possible");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H) ||
+				er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H_vol)) {
+			er.property_value_units_final = er.property_value_units_original;
+			er.updateNote("conversion to Pa-m3/mol not possible");
+		}
+		if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
+		if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
+		if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
+	}
 }

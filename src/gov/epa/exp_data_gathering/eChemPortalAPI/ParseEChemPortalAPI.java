@@ -8,6 +8,8 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
@@ -28,49 +30,15 @@ public class ParseEChemPortalAPI extends Parse {
 		folderNameExcel=null;
 	}
 	
-	private static void benchmarkDuplicateElimination() {
-		QueryOptions options = new QueryOptions(ExperimentalConstants.strWaterSolubility);
-		double[] downloadResults = new double[5];
-		for (int i = 0; i < 5; i++) {
+	private void benchmarkParse(int reps) {
+		double[] results = new double[reps];
+		for (int i = 0; i < reps; i++) {
 			long start = System.currentTimeMillis();
-			options.runDownload(true, false);
+			RecordEChemPortalAPI.parseResultsInDatabase();
 			long end = System.currentTimeMillis();
-			downloadResults[i] = (end - start)/1000.0;
+			results[i] = (double) (end-start)/1000.0;
 		}
-		double[] noStrategyResults = new double[5];
-		double[] lastDuplicateRecResults = new double[5];
-		for (int i = 0; i < 5; i++) {
-			long start = System.currentTimeMillis();
-			RecordEChemPortalAPI.parseResultsInDatabase(false);
-			long end = System.currentTimeMillis();
-			noStrategyResults[i] = (end - start)/1000.0;
-			
-			start = System.currentTimeMillis();
-			RecordEChemPortalAPI.parseResultsInDatabase(true);
-			end = System.currentTimeMillis();
-			lastDuplicateRecResults[i] = (end - start)/1000.0;
-		}
-		
-		double[] downloadSortedResults = new double[5];
-		for (int i = 0; i < 5; i++) {
-			long start = System.currentTimeMillis();
-			options.runDownload(true, true);
-			long end = System.currentTimeMillis();
-			downloadSortedResults[i] = (end - start)/1000.0;
-		}
-		double[] lastDuplicateRecSortedResults = new double[5];
-		for (int i = 0; i < 5; i++) {
-			long start = System.currentTimeMillis();
-			RecordEChemPortalAPI.parseResultsInDatabase(true);
-			long end = System.currentTimeMillis();
-			lastDuplicateRecSortedResults[i] = (end - start)/1000.0;
-		}
-		
-		System.out.println("Unsorted download speeds: "+Arrays.toString(downloadResults));
-		System.out.println("Sorted download speeds: "+Arrays.toString(downloadSortedResults));
-		System.out.println("Naive elimination speeds: "+Arrays.toString(noStrategyResults));
-		System.out.println("Unsorted, last duplicate record elimination speeds: "+Arrays.toString(lastDuplicateRecResults));
-		System.out.println("Sorted, last duplicate record elimination speeds: "+Arrays.toString(lastDuplicateRecSortedResults));
+		System.out.println("Time to parse all records (s): "+Arrays.toString(results));
 	}
 	
 	/**
@@ -78,7 +46,7 @@ public class ParseEChemPortalAPI extends Parse {
 	 */
 	@Override
 	protected void createRecords() {
-		List<RecordEChemPortalAPI> records = RecordEChemPortalAPI.parseResultsInDatabase(false);
+		List<RecordEChemPortalAPI> records = RecordEChemPortalAPI.parseResultsInDatabase();
 		writeOriginalRecordsToFile(new Vector<RecordEChemPortalAPI>(records));
 	}
 	
@@ -119,7 +87,28 @@ public class ParseEChemPortalAPI extends Parse {
 		er.reliability = r.reliability;
 		
 		if (!r.name.equals("-") && !r.name.contains("unnamed")) {
-			er.chemical_name = r.name;
+			String processedName = StringEscapeUtils.unescapeHtml4(r.name);
+			processedName=processedName.replace("^0","\u2070");// superscript 0
+			processedName=processedName.replace("^1","\u00B9");// superscript 1
+			processedName=processedName.replace("^2","\u00B2");// superscript 2
+			processedName=processedName.replace("^3","\u00B3");// superscript 3
+			processedName=processedName.replace("^4","\u2074");// superscript 4
+			processedName=processedName.replace("^5","\u2075");// superscript 5
+			processedName=processedName.replace("^6","\u2076");// superscript 6
+			processedName=processedName.replace("^7","\u2077");// superscript 7
+			processedName=processedName.replace("^8","\u2078");// superscript 8
+			processedName=processedName.replace("^9","\u2079");// superscript 9
+			processedName=processedName.replace("_0","\u2080");// subscript 0
+			processedName=processedName.replace("_1","\u2081");// subscript 1
+			processedName=processedName.replace("_2","\u2082");// subscript 2
+			processedName=processedName.replace("_3","\u2083");// subscript 3
+			processedName=processedName.replace("_4","\u2084");// subscript 4
+			processedName=processedName.replace("_5","\u2085");// subscript 5
+			processedName=processedName.replace("_6","\u2086");// subscript 6
+			processedName=processedName.replace("_7","\u2087");// subscript 7
+			processedName=processedName.replace("_8","\u2088");// subscript 8
+			processedName=processedName.replace("_9","\u2089");// subscript 9
+			er.chemical_name = processedName;
 		}
 		
 		if (r.numberType!=null) {
@@ -251,8 +240,7 @@ public class ParseEChemPortalAPI extends Parse {
 
 	public static void main(String[] args) {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
-		p.createFiles();
-		
-//		benchmarkDuplicateElimination();
+//		p.createFiles();
+		p.benchmarkParse(5);
 	}
 }
