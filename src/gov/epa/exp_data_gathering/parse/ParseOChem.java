@@ -6,6 +6,11 @@ import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Parses data from ochem.eu
+ * @author GSINCL01
+ *
+ */
 public class ParseOChem extends Parse {
 
 	public ParseOChem() {
@@ -39,6 +44,7 @@ public class ParseOChem extends Parse {
 	
 	private void addExperimentalRecords(RecordOChem ocr,ExperimentalRecords records) {
 		ExperimentalRecord er = new ExperimentalRecord();
+		er.date_accessed = RecordOChem.lastUpdated;
 		er.casrn = ocr.casrn;
 		er.smiles = ocr.smiles;
 		er.chemical_name = ocr.name;
@@ -130,7 +136,7 @@ public class ParseOChem extends Parse {
 		}
 		er.flag = false;
 		if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
-				(er.chemical_name==null || er.chemical_name.isBlank())) {
+				(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
 			er.keep = false;
 			er.reason = "No identifiers";
 		} else if (er.measurement_method!=null && er.measurement_method.contains("est")) {

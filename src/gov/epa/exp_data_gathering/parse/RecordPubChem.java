@@ -37,6 +37,7 @@ public class RecordPubChem {
 	Vector<String> henrysLawConstant;
 	Vector<String> logP;
 	Vector<String> pKa;
+	String date_accessed;
 	
 	static final String sourceName=ExperimentalConstants.strSourcePubChem;
 	
@@ -151,7 +152,7 @@ public class RecordPubChem {
 				if (!haveRecord || startFresh) {
 					boolean keepLooking = true;
 					try {
-						rec.experimental=FileUtilities.getText_UTF8(experimentalURL).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.experimental=FileUtilities.getText_UTF8(experimentalURL).replaceAll("'", "\'");
 					} catch (Exception ex) { 
 						counterMissingExpData++;
 						keepLooking = false;
@@ -159,15 +160,15 @@ public class RecordPubChem {
 					Thread.sleep(200);
 					if (keepLooking) {
 						try {
-							rec.cas=FileUtilities.getText_UTF8(casURL).replace("'", "''");
+							rec.cas=FileUtilities.getText_UTF8(casURL).replaceAll("'", "\'");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 						try {
-							rec.identifiers=FileUtilities.getText_UTF8(idURL).replace("'", "''");
+							rec.identifiers=FileUtilities.getText_UTF8(idURL).replaceAll("'", "\'");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 						try {
-							rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replace("'", "''");
+							rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replaceAll("'", "\'");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 					}
@@ -203,9 +204,11 @@ public class RecordPubChem {
 			Statement stat = MySQL_DB.getStatement(databasePath);
 			ResultSet rs = MySQL_DB.getAllRecords(stat,sourceName);
 			while (rs.next()) {
+				String date = rs.getString("date");
 				String experimental = rs.getString("experimental");
 				Data experimentalData = gson.fromJson(experimental,Data.class);
 				RecordPubChem pcr = new RecordPubChem();
+				pcr.date_accessed = date.substring(0,date.indexOf(" "));
 				pcr.cid = experimentalData.record.recordNumber;
 				List<Section> experimentalProperties = experimentalData.record.section.get(0).section.get(0).section;
 				pcr.getExperimentalData(experimentalProperties);

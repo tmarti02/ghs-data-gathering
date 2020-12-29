@@ -46,6 +46,7 @@ public class ParseOFMPub extends Parse {
 	private void addExperimentalRecord(RecordOFMPub opr,ExperimentalRecords records) {
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.source_name = ExperimentalConstants.strSourceOFMPub;
+		er.date_accessed = opr.date_accessed;
 		er.url = opr.url;
 		er.reliability = opr.reliability;
 		er.keep = true;
@@ -208,7 +209,7 @@ public class ParseOFMPub extends Parse {
 			}
 		}
 		
-		er.finalizeUnits();
+		er.finalizePropertyValues();
 		records.add(er);
 	}
 	

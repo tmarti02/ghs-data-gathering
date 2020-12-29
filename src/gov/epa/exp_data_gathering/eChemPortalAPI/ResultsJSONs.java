@@ -1,13 +1,17 @@
-package gov.epa.ghs_data_gathering.Utilities;
+package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.util.List;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class JSONsForEChemPortal {
-
-	public class ResultsData {
+/**
+ * Replicates the various objects of an eChemPortal search result JSON
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
+public class ResultsJSONs {
+	public class ResultsPage {
 		@SerializedName("results")
 		@Expose
 		public List<Result> results = null;
@@ -49,7 +53,7 @@ public class JSONsForEChemPortal {
 		public List<Block> blocks = null;
 		@SerializedName("participant_id")
 		@Expose
-		public Integer participantId;
+		public String participantId;
 		@SerializedName("participant_acronym")
 		@Expose
 		public String participantAcronym;

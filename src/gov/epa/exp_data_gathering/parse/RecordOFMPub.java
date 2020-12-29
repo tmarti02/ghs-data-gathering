@@ -36,6 +36,7 @@ public class RecordOFMPub {
 	String reliability;
 	String reliabilityRemarks;
 	String url;
+	String date_accessed;
 	
 	static final String sourceName=ExperimentalConstants.strSourceOFMPub;
 	
@@ -118,9 +119,11 @@ public class RecordOFMPub {
 				
 				String html = rs.getString("content");
 				String url = rs.getString("url");
+				String date = rs.getString("date");
+				String cleanDate = date.substring(0,date.indexOf(" "));
 				Document doc = Jsoup.parse(html);
 
-				parseDocument(records,doc,url);
+				parseDocument(records,doc,url,cleanDate);
 
 				counter++;
 			}
@@ -134,10 +137,11 @@ public class RecordOFMPub {
 		return null;
 	}
 	
-	private static void parseDocument(Vector<RecordOFMPub> records,Document doc,String url) {
+	private static void parseDocument(Vector<RecordOFMPub> records,Document doc,String url,String date) {
 		Elements tables = doc.select("table.RedTableCopy");
 		for (Element table:tables) {
 			RecordOFMPub opr = new RecordOFMPub();
+			opr.date_accessed = date;
 			opr.url = url;
 			Elements rows = table.getElementsByTag("tr");
 			for (Element row:rows) {

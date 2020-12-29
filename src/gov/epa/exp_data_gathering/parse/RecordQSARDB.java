@@ -2,6 +2,7 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Date;
 import java.util.Vector;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -12,6 +13,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Stores data from qsardb.org
+ * @author GSINCL01
+ *
+ */
 public class RecordQSARDB {
 	String name;
 	String casrn;
@@ -21,7 +27,9 @@ public class RecordQSARDB {
 	String vp;
 	String units;
 	String reference;
+	String url;
 	
+	static final String lastUpdated = "12/04/2020";
 	static final String sourceName = ExperimentalConstants.strSourceQSARDB;
 
 	public static Vector<RecordQSARDB> parseQSARDBRecordsFromExcel() {
@@ -34,7 +42,12 @@ public class RecordQSARDB {
 		for (String filename:filenames) {
 			if (filename.endsWith(".xlsx")) {
 				try {
-					FileInputStream fis = new FileInputStream(new File(excelFilePath+File.separator+filename));
+					String filepath = excelFilePath+File.separator+filename;
+					String date = Parse.getStringCreationDate(filepath);
+					if (!date.equals(lastUpdated)) {
+						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
+					}
+					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					Row headerRow = sheet.getRow(1);
@@ -46,6 +59,7 @@ public class RecordQSARDB {
 					int vpIndex = -1;
 					String getUnits = "";
 					String getReference = sheet.getRow(0).getCell(0).getStringCellValue();
+					String getURL = sheet.getRow(0).getCell(0).getHyperlink().getAddress();
 					for (Cell cell:headerRow) {
 						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
@@ -69,7 +83,8 @@ public class RecordQSARDB {
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordQSARDB qr = new RecordQSARDB();
 						qr.reference = getReference;
-						qr.name = row.getCell(nameIndex).getStringCellValue();
+						qr.url = getURL;
+						qr.name = row.getCell(nameIndex).getStringCellValue().replaceAll("′", "'");
 						qr.casrn = row.getCell(casrnIndex).getStringCellValue();
 						if (logSIndex >= 0) { qr.logS = row.getCell(logSIndex).getStringCellValue(); }
 						if (mpIndex >= 0) { qr.mp = row.getCell(mpIndex).getStringCellValue(); }

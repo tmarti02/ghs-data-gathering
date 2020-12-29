@@ -45,9 +45,22 @@ public class DataFetcher {
 			try {
 				System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")+1));
 				ExperimentalRecords sourceRecords = ExperimentalRecords.loadFromJSON(recordFileName);
+				if (sourceRecords==null) {
+					sourceRecords = new ExperimentalRecords();
+					int i = 1;
+					ExperimentalRecords temp = new ExperimentalRecords();
+					while (temp!=null) {
+						temp = ExperimentalRecords.loadFromJSON(mainFolder+File.separator+source+" Experimental Records "+i+".json");
+						
+						if (temp==null) break;
+						sourceRecords.addAll(temp);
+						i++;
+					}
+				}
 				ExperimentalRecords badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFileName);
 				records.addAll(sourceRecords);
-				records.addAll(badSourceRecords);
+				if(badSourceRecords!=null) records.addAll(badSourceRecords);
+				
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -124,15 +137,20 @@ public class DataFetcher {
 			int counter = 0;
 			int batchCounter = 0;
 			PreparedStatement prep = conn.prepareStatement(s);
-			for (ExperimentalRecord rec:records) {
-				String[] list = rec.getValuesForDatabase();
+			
+			
+			for (ExperimentalRecord rec:records) {				
+				counter++;
+				rec.id_physchem=counter;
+				
+				String[] list = rec.toStringArray( ExperimentalRecord.outputFieldNames);
 
-				if (list.length!=fieldNames.length) {
+				if (list.length!=fieldNames.length) {//probably wont happen now that list is based on names array
 					System.out.println("Wrong number of values: "+list[0]);
+					break;
 				}
 
-				counter++;
-				
+								
 				for (int i = 0; i < list.length; i++) {
 					if (list[i]!=null && !list[i].isBlank()) {
 						prep.setString(i + 1, list[i]);
@@ -265,7 +283,7 @@ public class DataFetcher {
 	}
 	
 	public static void main(String[] args) {
-		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub","QSARDB\\QSARDB",
+		String[] sources = {"eChemPortalAPI\\eChemPortalAPI","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub","QSARDB\\QSARDB",
 				"Bradley\\Bradley","ADDoPT\\ADDoPT","AqSolDB\\AqSolDB"};
 		DataFetcher d = new DataFetcher(sources);
 		d.createExperimentalRecordsDatabase();

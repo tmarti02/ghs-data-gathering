@@ -2,8 +2,16 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -16,6 +24,11 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Stores data from ochem.eu
+ * @author GSINCL01
+ *
+ */
 public class RecordOChem {
 	String smiles;
 	String casrn;
@@ -30,6 +43,7 @@ public class RecordOChem {
 	String pH;
 	String measurementMethod;
 	
+	static final String lastUpdated = "12/14/2020";
 	static final String sourceName = ExperimentalConstants.strSourceOChem;
 	
 	public static Vector<RecordOChem> parseOChemQueriesFromExcel() {
@@ -42,7 +56,12 @@ public class RecordOChem {
 		for (String filename:filenames) {
 			if (filename.endsWith(".xls")) {
 				try {
-					FileInputStream fis = new FileInputStream(new File(excelFilePath+File.separator+filename));
+					String filepath = excelFilePath+File.separator+filename;
+					String date = Parse.getStringCreationDate(filepath);
+					if (!date.equals(lastUpdated)) {
+						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
+					}
+					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new HSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					Row headerRow = sheet.getRow(0);
@@ -91,11 +110,11 @@ public class RecordOChem {
 						String name1 = betterGetCellValue(row,nameIndex1);
 						String name2 = betterGetCellValue(row,nameIndex2);
 						if (name1!=null && !name1.isBlank() && name2!=null && !name2.isBlank()) {
-							ocr.name = name1+"|"+name2;
+							ocr.name = StringEscapeUtils.escapeHtml4(name1)+"|"+StringEscapeUtils.escapeHtml4(name2);
 						} else if (name1!=null && !name1.isBlank()) {
-							ocr.name = name1;
+							ocr.name = StringEscapeUtils.escapeHtml4(name1);
 						} else if (name2!=null && !name2.isBlank()) {
-							ocr.name = name2;
+							ocr.name = StringEscapeUtils.escapeHtml4(name2);
 						}
 						ocr.propertyName = propertyName;
 						ocr.propertyValue = betterGetCellValue(row,propertyValueIndex);

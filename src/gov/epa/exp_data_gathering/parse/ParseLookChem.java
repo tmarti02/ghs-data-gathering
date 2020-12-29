@@ -74,6 +74,7 @@ public class ParseLookChem extends Parse {
 	
 	private static void addAppearanceRecord(RecordLookChem lcr,ExperimentalRecords records) {
 		ExperimentalRecord er=new ExperimentalRecord();
+		er.date_accessed = lcr.date_accessed;
 		er.casrn=lcr.CAS;
 		er.einecs=lcr.EINECS;
 		er.chemical_name=lcr.chemicalName;
@@ -106,6 +107,7 @@ public class ParseLookChem extends Parse {
 	private void addNewExperimentalRecord(RecordLookChem lcr,String propertyName,String propertyValue,ExperimentalRecords recordsExperimental) {
 		// Creates a new ExperimentalRecord object and sets all the fields that do not require advanced parsing
 		ExperimentalRecord er=new ExperimentalRecord();
+		er.date_accessed = lcr.date_accessed;
 		er.casrn=lcr.CAS;
 		er.einecs=lcr.EINECS;
 		er.chemical_name=lcr.chemicalName;
@@ -139,7 +141,7 @@ public class ParseLookChem extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		if (foundNumeric) {
-			er.finalizeUnits();
+			er.finalizePropertyValues();
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }

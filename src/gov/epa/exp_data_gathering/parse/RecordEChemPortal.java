@@ -12,6 +12,11 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Stores data from echemportal.org
+ * @author GSINCL01
+ *
+ */
 public class RecordEChemPortal {
 	String substanceName;
 	String nameType;
@@ -28,7 +33,8 @@ public class RecordEChemPortal {
 	Vector<String> temperature;
 	Vector<String> pH;
 	
-	static final String sourceName = ExperimentalConstants.strSourceEChem;
+	static final String lastUpdated = "11/23/2020";
+	static final String sourceName = ExperimentalConstants.strSourceEChemPortal;
 	
 	private RecordEChemPortal() {
 		values = new Vector<String>();
@@ -57,7 +63,12 @@ public class RecordEChemPortal {
 		for (String filename:filenamesSorted) {
 			if (filename.endsWith(".xls")) {
 				try {
-					FileInputStream fis = new FileInputStream(new File(excelFilePath+File.separator+filename));
+					String filepath = excelFilePath+File.separator+filename;
+					String date = Parse.getStringCreationDate(filepath);
+					if (!date.equals(lastUpdated)) {
+						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
+					}
+					FileInputStream fis = new FileInputStream(new File(filepath));
 					Workbook wb = new HSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					int rows = sheet.getLastRowNum();
@@ -67,7 +78,7 @@ public class RecordEChemPortal {
 						if (urlCheck.add(url)) {
 							RecordEChemPortal ecpr = new RecordEChemPortal();
 							ecpr.url = url;
-							ecpr.substanceName = new String(row.getCell(0).getStringCellValue().trim().getBytes("UTF-8"));
+							ecpr.substanceName = row.getCell(0).getStringCellValue().trim();
 							ecpr.nameType = row.getCell(1).getStringCellValue().trim();
 							ecpr.number = row.getCell(2).getStringCellValue().trim();
 							ecpr.numberType = row.getCell(3).getStringCellValue().trim();
@@ -75,7 +86,7 @@ public class RecordEChemPortal {
 							ecpr.participant = row.getCell(5).getStringCellValue().trim();
 							ecpr.section = row.getCell(6).getStringCellValue().trim();
 							if (ecpr.section.equals("Melting point / freezing point")) { ecpr.section = "Melting / freezing point"; }
-							ecpr.getValues(new String(row.getCell(7).getStringCellValue().trim().getBytes("UTF-8")));
+							ecpr.getValues(row.getCell(7).getStringCellValue().trim());
 							records.add(ecpr);
 						} else { countDuplicates++; }
 					}

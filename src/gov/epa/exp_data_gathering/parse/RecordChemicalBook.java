@@ -22,8 +22,10 @@ import org.jsoup.select.Elements;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-
-/*experimental records that appear relevant*/
+/**
+ * @author CRAMSLAN
+ *
+ */
 public class RecordChemicalBook extends Parse {
 		String chemicalName;
 		String synonyms;
@@ -62,10 +64,16 @@ public class RecordChemicalBook extends Parse {
 		String EPAsrs;
 		String hazardcodes; 
 		String fileName;
+		String date_accessed;
 
 		static final String sourceName="ChemicalBook";	
 
 	
+/**
+ * Parses the jsoup document and occupies the RecordchemicalBook fields with the correct values.
+ * @param rcb
+ * @param doc
+ */
 private static void parseDocument(RecordChemicalBook rcb, Document doc) {
 	Elements table_elements = doc.select("tr.ProdSupplierGN_ProductA_2");
 	Elements table_elements2 = doc.select("tr.ProdSupplierGN_ProductA_1");
@@ -87,7 +95,7 @@ private static void parseDocument(RecordChemicalBook rcb, Document doc) {
 				else if (header.contains("EINECS")) { rcb.EINECS = data; }
 				else if (header.contains("Mol File:")) { rcb.molfile = data; }
 				else if (header.contains("Boiling point")) { rcb.boilingPoint = data; }
-				else if (header.contains("density")) { rcb.density = data; }
+				else if (header.contains("density") && (!(header.contains("vapor density")))) { rcb.density = data; }
 				else if (header.contains("refractive index")) { rcb.refractiveindex = data; }
 				else if (header.contains("Fp")) { rcb.FP = data; }
 				else if (header.contains("form:")) { rcb.form = data; }
@@ -137,7 +145,7 @@ private static Vector<String> getSearchURLsFromDashboardRecords (Vector<RecordDa
 
 /**
  * Parses the HTML strings in the raw HTML database to RecordLookChem objects
- * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
+ * @return	A vector of RecordChemicalBook objects containing the data from the raw HTML database
  */
 public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
@@ -154,10 +162,15 @@ public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 			if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 			
 			String html = rs.getString("content");
+			html = html.replaceAll("\\u2212", "-"); // there are some minus signs rather than "-" <- wanted, "eN" dash, and "eM" dashes
+			html = html.replaceAll("\\u2264", "<="); // removes less than or equal to sign
 			String url = rs.getString("url");
+			String date = rs.getString("date");
 			Document doc = Jsoup.parse(html);
 			
 			RecordChemicalBook rcb=new RecordChemicalBook();
+			rcb.date_accessed = date.substring(0,date.indexOf(" "));
+
 			rcb.fileName=url.substring(url.lastIndexOf("/")+1, url.length());
 			
 			parseDocument(rcb,doc);
@@ -181,6 +194,10 @@ public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 }
 
 
+/**
+ * this is used to parse the search database, not the html one
+ * @return
+ */
 public static Vector<String> parsePropertyLinksInDatabase() {
 	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
 	String databasePath = databaseFolder+File.separator+"search_property_raw_html.db";
@@ -225,18 +242,7 @@ public static void downloadWebpagesFromExcelToDatabase(String filename,int start
 
 public static void main(String[] args) {
 	downloadWebpagesFromExcelToDatabase("Data" + "/PFASSTRUCT.xlsx",8060,8160,8164,false);
-	// testing();
 	}
-
-
-
-private static void testing() {
-	Vector<String> propertyURLs = parsePropertyLinksInDatabase();
-	String url = propertyURLs.get(5);
-	String html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
-	Document doc = Jsoup.parse(html);
-	System.out.println(doc.select("div.RFQbox ~ table").first());
-}
 
 
 }

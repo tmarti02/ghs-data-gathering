@@ -29,8 +29,10 @@ public class ExperimentalConstants {
 	public static final String str_F="F";
 	public static final String str_K="K";
 	public static final String str_pctWt="%w";
+	public static final String str_pctVol="%v";
 	public static final String str_pct="%";
 	public static final String str_ppm="ppm";
+	public static final String str_ppb="ppb";
 	public static final String str_atm_m3_mol="atm-m3/mol";
 	public static final String str_Pa_m3_mol="Pa-m3/mol";
 	public static final String str_mmHg="mmHg";
@@ -43,6 +45,13 @@ public class ExperimentalConstants {
 	public static final String str_torr="Torr";
 	public static final String str_psi="psi";
 	public static final String str_M="M";
+	public static final String str_mM="mM";
+	public static final String str_nM="nM";
+	public static final String str_log_M="log10(M)";
+	public static final String str_log_mg_L="log10(mg/L)";
+	public static final String str_log_mmHg="log10(mmHg)";
+	public static final String str_dimensionless_H="dimensionless H";
+	public static final String str_dimensionless_H_vol="dimensionless H (volumetric)";
 	
 	//Other:
 	public static final String str_dec="decomposes";
@@ -58,7 +67,8 @@ public class ExperimentalConstants {
 	//Add list of source names here:
 	public static final String strSourceLookChem="LookChem";
 	public static final String strSourcePubChem="PubChem";
-	public static final String strSourceEChem="eChemPortal";
+	public static final String strSourceEChemPortal="eChemPortal";
+	public static final String strSourceEChemPortalAPI="eChemPortalAPI";
 	public static final String strSourceOChem="OChem";
 	public static final String strSourceOFMPub="OFMPub";
 	public static final String strSourceSigmaAldrich="Sigma-Aldrich";

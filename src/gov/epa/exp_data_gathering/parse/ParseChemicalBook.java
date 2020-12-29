@@ -8,6 +8,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -18,6 +20,11 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
+
+/**
+ * @author CRAMSLAN
+ *
+ */
 
 public class ParseChemicalBook extends Parse {
 	
@@ -53,6 +60,12 @@ public class ParseChemicalBook extends Parse {
 	}
 	
 	
+	/**
+	 * This is the first part of what is essentially one addExperimentalRecord method for the parse class of other data sources<br> 
+	 * does the 
+	 * @param cbr
+	 * @param recordsExperimental
+	 */
 	private void addExperimentalRecords(RecordChemicalBook cbr,ExperimentalRecords recordsExperimental) {
 		if (cbr.density != null && !cbr.density.isBlank()) {
 			addNewExperimentalRecord(cbr,ExperimentalConstants.strDensity,cbr.density,recordsExperimental);
@@ -69,9 +82,18 @@ public class ParseChemicalBook extends Parse {
          
 	}
 
+	/**
+	 * This is the second part of what is essentially one addExperimentalRecord method for the parse class of other data sources<br>
+	 * populates fields of experimentalRecord objects with data from RecordChemicalBook objects
+	 * @param cbr
+	 * @param propertyName
+	 * @param propertyValue
+	 * @param recordsExperimental
+	 */
 	private void addNewExperimentalRecord(RecordChemicalBook cbr, String propertyName, String propertyValue, ExperimentalRecords recordsExperimental) {
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.casrn=cbr.CAS;
+		er.date_accessed = cbr.date_accessed;
 		er.einecs=cbr.EINECS;
 		er.chemical_name=cbr.chemicalName;
 		if (cbr.synonyms != null) { er.synonyms=cbr.synonyms.replace(';','|'); }
@@ -83,24 +105,37 @@ public class ParseChemicalBook extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		boolean foundNumeric = false;
-		
 		propertyValue = propertyValue.replaceAll(",", ".");
+
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = getDensity(er, propertyValue);
 			getPressureCondition(er,propertyValue);
 			getTemperatureCondition(er,propertyValue);
-		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
-				propertyName==ExperimentalConstants.strFlashPoint) {
+			if (propertyValue.contains("±")) {
+				getUncertaintyRange(er,propertyValue);
+			}
+		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ) {
 			foundNumeric = getTemperatureProperty(er,propertyValue);
 			getPressureCondition(er,propertyValue);
+			// performs the missing temperature check
+			getTemperatureProperty(er,propertyValue);
+			String temp = getTemperatureUnits(propertyValue);
+			if (temp.matches("")) {
+				er.reason = "missing temperature units";
+			}
+			// hard coded bits. I don't see how they can be avoided
+			if (propertyValue.contains("<=")) {
+				er.property_value_numeric_qualifier = "<="; // CAS 15538-93-9 has a problem of alternative less than sign not registering.
+			}
+			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			foundNumeric = getWaterSolubility(er, propertyValue);
 			getTemperatureCondition(er,propertyValue);
-			// getQualitativeSolubility(er, propertyValue);
+			getQualitativeSolubility(er, propertyValue);
 		}
 		
 		if (foundNumeric) {
-			er.finalizeUnits();
+			er.finalizePropertyValues();
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
@@ -113,26 +148,57 @@ public class ParseChemicalBook extends Parse {
 			er.temperature_C = null;
 		}
 		
-		if (propertyValue.contains("Predicted") || propertyValue.contains("estimate")) {
-			er.flag = true;
-		}
 		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
 				&& (er.property_value_units_original!=null || er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
 		} else {
 			er.keep = false;
 		}
+		if ((er.property_value_string.toLowerCase().contains("predicted") || (er.property_value_string.toLowerCase().contains("estimate")))) {
+			er.keep = false;
+			er.reason = "predicted or estimated value";
+		}
+		if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint) {
+			meltingSolventCheck(er,propertyValue);
+		}
+		if (propertyName==ExperimentalConstants.strWaterSolubility) {
+			checkWaterSolubilities(er, propertyValue);
+		}
+		if (propertyName==ExperimentalConstants.strBoilingPoint){
+			getPressureRange(er,propertyValue);
+		}
+		
 		recordsExperimental.add(er);
-	
 	}
-	
 	
 	public static void main(String[] args) {
 		ParseChemicalBook p = new ParseChemicalBook();
-		p.mainFolder = p.mainFolder + File.separator + "General";
+		p.mainFolder = p.mainFolder + File.separator + "PFAS";
 		p.databaseFolder = p.mainFolder;
 		p.jsonFolder= p.mainFolder;
 		p.createFiles();
+	}
+	
+	
+	/**
+	 * obtains a range of values from a string of the form 3.2 - 4.5 (units trimmed earlier), where the "-" is a minus sign.
+	 * @param er
+	 * @param propertyValue
+	 */
+	public static void getUncertaintyRange(ExperimentalRecord er, String propertyValue) {
+		Matcher solubilityMatcher = Pattern.compile("([0-9]*\\.?[0-9]+)(\\u00B1)?([0-9]*\\.?[0-9]+)").matcher(propertyValue);
+		if (solubilityMatcher.find()) {
+			String pointEst = solubilityMatcher.group(1);
+			String uncertainty = solubilityMatcher.group(3);
+			if (!(solubilityMatcher.group(2) == null)) {
+				double center = Double.parseDouble(pointEst);
+				double upperval = center + Double.parseDouble(uncertainty);
+				double lowerval = center - Double.parseDouble(uncertainty);
+				er.property_value_max_original = upperval;
+				er.property_value_min_original = lowerval;
+			}
+		}
+
 	}
 	
 	public void downloadPropertyLinksToDatabase(Vector<String> urls,String tableName, int start, int end, boolean startFresh) {
@@ -183,6 +249,12 @@ public class ParseChemicalBook extends Parse {
 	}
 
 
+	/**
+	 * related to the results page when a particular CAS is searched. Essentially finds out whether a properties link exists  <br> 
+	 * This method really belongs in recordchemicalbook class but I put it here because it started out as non static or something.
+	 * @param url
+	 * @return
+	 */
 	public static String getSearchURLAndVerificationCheck(String url) {
 		try {
 			Document doc = Jsoup.connect(url).get();
@@ -218,81 +290,118 @@ public class ParseChemicalBook extends Parse {
 		}
 		return null;
 	}
-
-	@Override
-	boolean getWaterSolubility(ExperimentalRecord er,String propertyValue) {
-		boolean badUnits = true;
-		int unitsIndex = -1;
-		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
-		if (propertyValue.toLowerCase().contains("mg/l")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/ml")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("µg/ml")) {
-			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("µg/l")) {
-			er.property_value_units_original = ExperimentalConstants.str_ug_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/ml")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/l")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/100")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_100mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/ml")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/100")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("% w/w") || propertyValue.toLowerCase().contains("wt%")) {
-			er.property_value_units_original = ExperimentalConstants.str_pctWt;
-			unitsIndex = propertyValue.indexOf("%");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("%")) {
-			er.property_value_units_original = ExperimentalConstants.str_pct;
-			unitsIndex = propertyValue.indexOf("%");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ppm")) {
-			er.property_value_units_original = ExperimentalConstants.str_ppm;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
-			badUnits = false;
-		} else if (propertyValue.contains("M")) {
-			unitsIndex = propertyValue.indexOf("M");
-			if (unitsIndex>0) {
-				er.property_value_units_original = ExperimentalConstants.str_M;
-				badUnits = false;
-			}
-		} 
-		
-		if (er.source_name!=ExperimentalConstants.strSourceOFMPub && unitsIndex < propertyValue.indexOf(":")) {
-			unitsIndex = propertyValue.length();
-		}
-		
-		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.contains("water") || propertyValue.contains("h2o"))) {
+	
+	/**
+	 * Determines whether "solv" is contained in the string. Nonsensically structured.
+	 * @param er
+	 * @param propertyValue
+	 */
+	void meltingSolventCheck(ExperimentalRecord er, String propertyValue) {
+		if (propertyValue.toLowerCase().contains("solv")){
 			er.keep = false;
+			er.reason = "solvent specified, want pure compound only";
+		}
+	}
+	
+	/**
+	 * Parses water solubility records and removes the ones with bad features. Similarly nonsensically structured.
+	 * @param er
+	 * @param propertyValue
+	 */
+	void checkWaterSolubilities(ExperimentalRecord er, String propertyValue) {
+		if (propertyValue.toLowerCase().contains("%")) {
+			er.keep = false;
+			er.reason = "common feature of bad solubility records";
+		} else if (propertyValue.toLowerCase().contains("parts of water")) {
+			er.keep = false;
+			er.reason = "we don't want these units";
+		} else if (!((propertyValue.toLowerCase().contains("water") || propertyValue.contains("H2O")))) {
+			er.keep = false;
+			er.reason = "no information about water solubility";
+		}
+		if (er.keep == true) {
+			er.reason = ""; // for the moment I am hesitant to edit Parse class or override getWSaterSolubility, this is an inelegant solution
 		}
 		
-		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
-		return foundNumeric;
+	}
+	
+	/**
+	 * guarantees that qualitative solubility descriptions are parsed properly.
+	 * @param er
+	 * @param propertyValue
+	 */
+	@Override
+	void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
+		propertyValue = propertyValue.toLowerCase();
+		String solventMatcherStr = "";
+		if (sourceName.equals(ExperimentalConstants.strSourceChemicalBook)) { // this is the only thing I changed
+			solventMatcherStr = "(([a-zA-Z0-9\s-]+?)(,| and|\\.|\\z|[ ]?\\(|;))?";
+		} 
+		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?uble|miscible))( (in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
+		while (solubilityMatcher.find()) {
+			String qualifier = solubilityMatcher.group(1);
+			qualifier = qualifier.equals("souble") ? "soluble" : qualifier;
+			String prep = solubilityMatcher.group(6);
+			String solvent = solubilityMatcher.group(9);
+			if (solvent==null || solvent.length()==0 || solvent.contains("water")) {
+				er.property_value_qualitative = qualifier;
+			} else {
+				prep = prep==null ? " " : prep;
+				er.updateNote(qualifier + prep + solvent);
+			}
+		}
+		if (propertyValue.contains("reacts") || propertyValue.contains("reaction"))
+			er.property_value_qualitative = "reaction";
+		if (propertyValue.contains("hydrolysis") || propertyValue.contains("hydrolyse") || propertyValue.contains("hydrolyze"))
+			er.property_value_qualitative = "hydrolysis";
+		if (propertyValue.contains("decompos"))
+			er.property_value_qualitative = "decomposes";
+		if (propertyValue.contains("autoignition"))
+			er.property_value_qualitative = "autoignition";
+		
+		String[] qualifiers = {"none","very poor","poor","low","negligible","slight","significant","complete"};
+		for (String qual:qualifiers) {
+			if ((propertyValue.startsWith(qual) || (propertyValue.contains("solubility in water") && propertyValue.contains(qual))) &&
+					(er.property_value_qualitative==null || er.property_value_qualitative.isBlank())) {
+				er.property_value_qualitative = qual;
+			}
+		}
+		
+		if (er.property_value_qualitative!=null || er.note!=null) {
+			er.keep = true;
+			er.reason = null;
+		}
+	}
+	
+	/**
+	 * populates the pressure condition field of experimental record when the pressure is given as a range.<br>
+	 * only applicable when the data comes in as Press: 760 or Press: 38.0 - 47.8
+	 * @param er
+	 * @param propertyValue
+	 */
+	public static void getPressureRange(ExperimentalRecord er, String propertyValue) {
+	// public static void getAveragePressureFromRange(String propertyValue) throws IllegalStateException {
+		if (propertyValue.toLowerCase().contains("press")){
+			try {
+		Matcher afterPressMatcher = Pattern.compile("(Press:)(\\s)?([0-9]*\\.?[0-9]+)(\\-)?([0-9]*\\.?[0-9]+)").matcher(propertyValue);
+		if (afterPressMatcher.find()) {
+		if (!(afterPressMatcher.group(1) == null)) {
+		String lowerPressure = afterPressMatcher.group(3);
+		String rangeCheck = afterPressMatcher.group(4);
+		String higherPressure = afterPressMatcher.group(5);
+		if (!(rangeCheck == null)) {
+			double min = Double.parseDouble(lowerPressure);
+			double max = Double.parseDouble(higherPressure);
+			er.pressure_mmHg = min+"~"+max;
+		}
+		}
+		}
+	} catch (IllegalStateException e) {
+		e.printStackTrace();
 	}
 
-
+		}
+	}
 
 }
 	

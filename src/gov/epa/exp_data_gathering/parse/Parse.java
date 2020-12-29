@@ -4,6 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipOutputStream;
 import java.util.Random;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -30,6 +36,7 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
+import gov.epa.exp_data_gathering.eChemPortalAPI.ParseEChemPortalAPI;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
@@ -61,7 +68,7 @@ public class Parse {
 	public static boolean writeJsonExperimentalRecordsFile=true;//all data converted to final format stored as Json file
 	public static boolean writeExcelExperimentalRecordsFile=true;//all data converted to final format stored as xlsx file
 	
-	Gson gson=null;
+	protected Gson gson=null;
 
 	public void init() {
 		fileNameJSON_Records = sourceName +" Original Records.json";
@@ -110,7 +117,7 @@ public class Parse {
 					long delay = 0;
 					try {
 						long startTime=System.currentTimeMillis();
-						rec.content=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText_UTF8(url).replaceAll("'", "\'"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay = endTime-startTime;
 						rec.addRecordToDatabase(tableName, conn);
@@ -151,7 +158,7 @@ public class Parse {
 					long delay = 0;
 					try {
 						long startTime=System.currentTimeMillis();
-						rec.content=FileUtilities.getText(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText(url).replaceAll("'", "\'"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay = endTime-startTime;
 						rec.addRecordToDatabase(tableName, conn);
@@ -200,7 +207,7 @@ public class Parse {
 					long delay=0;
 					try {
 						long startTime=System.currentTimeMillis();
-						html=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						html=FileUtilities.getText_UTF8(url).replaceAll("'", "\'"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay=endTime-startTime;
 						Document doc = Jsoup.parse(html);
@@ -253,7 +260,7 @@ public class Parse {
 				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
 				if (!haveRecord || startFresh) {
 					try {
-						rec.content=FileUtilities.getText_UTF8(url).replace("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText_UTF8(url).replaceAll("'", "\'"); //single quotes mess with the SQL insert later
 						if (rec.content!=null) { 
 							rec.addRecordToDatabase(tableName, conn);
 							counterSuccess++;
@@ -369,6 +376,22 @@ public class Parse {
 		
 	}
 	
+	// Gets the creation date of any file as a string
+	public static String getStringCreationDate(String filepath) {
+		Path path = Paths.get(filepath);
+		try {
+			BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
+			FileTime createdAt = attrs.creationTime();
+			Date creationDate = new Date(createdAt.toMillis());
+			SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");  
+			String strCreationDate=formatter.format(creationDate);
+			return strCreationDate;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return null;
+	}
+	
 	/**
 	 * Need to override
 	 */
@@ -423,7 +446,25 @@ public class Parse {
 			ExperimentalRecords merge = new ExperimentalRecords();
 			merge.addAll(records);
 			merge.addAll(recordsBad);
-			merge.toExcel_File(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+			if (merge.size() <= 100000) {
+				merge.toExcel_File(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+			} else {
+				ExperimentalRecords temp = new ExperimentalRecords();
+				Iterator<ExperimentalRecord> it = merge.iterator();
+				int i = 0;
+				int batch = 0;
+				while (it.hasNext()) {
+					temp.add(it.next());
+					i++;
+					if (i!=0 && i%100000==0) {
+						batch++;
+						temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
+						temp.removeAllElements();
+					}
+				}
+				batch++;
+				temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
+			}
 		}
 		
 		System.out.println("done\n");
@@ -445,8 +486,7 @@ public class Parse {
 	protected void writeOriginalRecordsToFile(Vector<?> records) {
 		try {
 			GsonBuilder builder = new GsonBuilder();
-			builder.setPrettyPrinting();
-			builder.disableHtmlEscaping();
+			builder.setPrettyPrinting().disableHtmlEscaping();
 			Gson gson = builder.create();
 			
 			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
@@ -521,7 +561,15 @@ public class Parse {
 				double propertyValueAsDouble = Parse.extractDoubleFromString(propertyValue,unitsIndex);
 				int propertyValueIndex = -1;
 				if (propertyValueAsDouble >= 0 && propertyValueAsDouble < 1) {
-					propertyValueIndex = Math.min(propertyValue.replaceAll("\\s","").indexOf("0"),propertyValue.replaceAll("\\s","").indexOf("."));
+					// Bug fix for zeroes, 12/17/2020 - This if statement is new; previous was just the contents of the "else" clause
+					if (!propertyValue.contains(".")) {
+						// If property value is the integer 0, sets start index to the location of the 0
+						propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf("0");
+					} else {
+						// Otherwise, sets start index to the location of the 0 (if present) or the . (if formatted .xx instead of 0.xx)
+						// Without the above "if", if an entry contains just the integer 0, the Math.min will select -1 as the index since it can't find a .
+						propertyValueIndex = Math.min(propertyValue.replaceAll("\\s","").indexOf("0"),propertyValue.replaceAll("\\s","").indexOf("."));
+					}
 				} else {
 					propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
 				}
@@ -538,7 +586,7 @@ public class Parse {
 		return foundNumeric;
 	}
 	
-	static String getNumericQualifier(String str,int index) {
+	protected static String getNumericQualifier(String str,int index) {
 		String symbol = "";
 		if (index > 0) {
 			if (str.charAt(index-1)=='>') {
@@ -557,7 +605,7 @@ public class Parse {
 		return symbol;
 	}
 	
-	static boolean getDensity(ExperimentalRecord er, String propertyValue) {
+	protected static boolean getDensity(ExperimentalRecord er, String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
@@ -604,7 +652,7 @@ public class Parse {
 	}
 	
 	// Applicable for melting point, boiling point, and flash point
-	static boolean getTemperatureProperty(ExperimentalRecord er,String propertyValue) {
+	protected static boolean getTemperatureProperty(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		String units = Parse.getTemperatureUnits(propertyValue);
@@ -617,7 +665,7 @@ public class Parse {
 		return foundNumeric;
 	}
 	
-	boolean getWaterSolubility(ExperimentalRecord er,String propertyValue) {
+	protected boolean getWaterSolubility(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
@@ -641,9 +689,17 @@ public class Parse {
 			er.property_value_units_original = ExperimentalConstants.str_g_mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
 			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("g/cm")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("kg/m")) {
+			er.property_value_units_original = ExperimentalConstants.str_kg_m3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("kg/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("mg/100")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_100mL;
@@ -657,6 +713,10 @@ public class Parse {
 			er.property_value_units_original = ExperimentalConstants.str_pctWt;
 			unitsIndex = propertyValue.indexOf("%");
 			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("vol%")) {
+			er.property_value_units_original = ExperimentalConstants.str_pctVol;
+			unitsIndex = propertyValue.indexOf("vol");
+			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("%")) {
 			er.property_value_units_original = ExperimentalConstants.str_pct;
 			unitsIndex = propertyValue.indexOf("%");
@@ -664,6 +724,10 @@ public class Parse {
 		} else if (propertyValue.toLowerCase().contains("ppm")) {
 			er.property_value_units_original = ExperimentalConstants.str_ppm;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ppb")) {
+			er.property_value_units_original = ExperimentalConstants.str_ppb;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ppb");
 			badUnits = false;
 		} else if (propertyValue.contains("M")) {
 			unitsIndex = propertyValue.indexOf("M");
@@ -740,7 +804,7 @@ public class Parse {
 		}
 	}
 
-	boolean getVaporPressure(ExperimentalRecord er,String propertyValue) {
+	protected boolean getVaporPressure(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
@@ -792,16 +856,29 @@ public class Parse {
 		return foundNumeric;
 	}
 
-	static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
+	protected static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
-		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol")) {
+		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol") ||
+				propertyValue.toLowerCase().contains("atm m^3/mol")) {
 			er.property_value_units_original = ExperimentalConstants.str_atm_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("pa m³/mol")) {
+		} else if (propertyValue.toLowerCase().contains("pa m³/mol") || propertyValue.toLowerCase().contains("pa m^3/mol")) {
 			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("pa");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("dimensionless - vol")) {
+			er.property_value_units_original = ExperimentalConstants.str_dimensionless_H_vol;
+			unitsIndex = propertyValue.toLowerCase().indexOf("dim");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("dimensionless")) {
+			er.property_value_units_original = ExperimentalConstants.str_dimensionless_H;
+			unitsIndex = propertyValue.toLowerCase().indexOf("dim");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("atm") && !propertyValue.toLowerCase().contains("mol")) {
+			er.property_value_units_original = ExperimentalConstants.str_atm;
+			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
 			badUnits = false;
 		}
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
@@ -809,7 +886,7 @@ public class Parse {
 	}
 
 	// Applicable for LogKow and pKa
-	static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {
+	protected static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {
 		int unitsIndex = -1;
 		if (propertyValue.contains("at")) {
 			unitsIndex = propertyValue.indexOf("at");
@@ -827,7 +904,7 @@ public class Parse {
 	 * @param propertyValue	The string to be read
 	 * @return				The temperature condition in C
 	 */
-	static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
+	protected static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
 		String units = getTemperatureUnits(propertyValue);
 		int tempIndex = propertyValue.indexOf(units);
 		// If temperature units were found, looks for the last number that precedes them
@@ -861,7 +938,7 @@ public class Parse {
 	 * @param propertyValue	The string to be read
 	 * @return				The pressure condition in kPa
 	 */
-	void getPressureCondition(ExperimentalRecord er,String propertyValue) {
+	protected void getPressureCondition(ExperimentalRecord er,String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
 		int pressureIndex = -1;
 		double conversionFactor = 1.0;
@@ -894,10 +971,19 @@ public class Parse {
 		// If any pressure units were found, looks for the last number that precedes them
 		boolean foundNumeric = false;
 		if (pressureIndex > 0) {
-			if (sourceName.equals(ExperimentalConstants.strSourceEChem)) {
+			if (sourceName.contains(ExperimentalConstants.strSourceEChemPortal)) {
 				if (!foundNumeric) {
 					try {
 						double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,pressureIndex);
+						String min = formatDouble(range[0]*conversionFactor);
+						String max = formatDouble(range[1]*conversionFactor);
+						er.pressure_mmHg = min+"-"+max;
+						foundNumeric = true;
+					} catch (Exception ex) { }
+				}
+				if (!foundNumeric) {
+					try {
+						double[] range = Parse.extractAltFormatRangeFromString(propertyValue,pressureIndex);
 						String min = formatDouble(range[0]*conversionFactor);
 						String max = formatDouble(range[1]*conversionFactor);
 						er.pressure_mmHg = min+"-"+max;
@@ -923,12 +1009,15 @@ public class Parse {
 					foundNumeric = true;
 				} catch (Exception ex) { }
 			}
+			if (propertyValue.startsWith("ca.")) {
+				er.pressure_mmHg = "~"+er.pressure_mmHg;
+			}
 		}
 	}
 	
 	public static String formatDouble(double d) {
-        DecimalFormat df2 = new DecimalFormat("0.##");
-        DecimalFormat dfSci = new DecimalFormat("0.00E0");
+        DecimalFormat df2 = new DecimalFormat("0.###");
+        DecimalFormat dfSci = new DecimalFormat("0.0##E0");
         if (d < 0.01) {
         	return dfSci.format(d);
         } else {
@@ -945,7 +1034,7 @@ public class Parse {
 	 * @return		The range found as a double[2]
 	 * @throws IllegalStateException	If no number range is found in the given range
 	 */
-	static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
+	protected static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
 		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([-]{1}|to|ca\\.)[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
 		String strMin = anyRangeMatcher.group(1).replace(" ","");
@@ -954,14 +1043,22 @@ public class Parse {
 		double max = Double.parseDouble(strMax);
 		if (min >= max) {
 			int digits = strMax.length();
-			strMax = strMin.substring(0,strMin.length()-digits)+strMax;
-			max = Double.parseDouble(strMax);
+			if (digits > strMin.length() || (digits == strMin.length() && strMin.startsWith("-") && strMax.startsWith("-")) || strMax.equals("0")) {
+				// Swaps values for negative ranges
+				double temp = min;
+				min = max;
+				max = temp;
+			} else {
+				// Otherwise replaces substring
+				strMax = strMin.substring(0,strMin.length()-digits)+strMax;
+				max = Double.parseDouble(strMax);
+			}
 		}
 		double[] range = {min, max};
 		return range;
 	}
 	
-	static double[] extractAltFormatRangeFromString(String str,int end) throws IllegalStateException {
+	protected static double[] extractAltFormatRangeFromString(String str,int end) throws IllegalStateException {
 		Matcher anyRangeMatcher = Pattern.compile(">[=]?[ ]?([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?<[=]?[ ]?([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
 		String strMin = anyRangeMatcher.group(1).replace(" ","");
@@ -970,8 +1067,16 @@ public class Parse {
 		double max = Double.parseDouble(strMax);
 		if (min >= max) {
 			int digits = strMax.length();
-			strMax = strMin.substring(0,strMin.length()-digits)+strMax;
-			max = Double.parseDouble(strMax);
+			if (digits > strMin.length()) {
+				// If max value is smaller but digitwise longer, swaps the values
+				double temp = min;
+				min = max;
+				max = temp;
+			} else {
+				// Otherwise replaces substring
+				strMax = strMin.substring(0,strMin.length()-digits)+strMax;
+				max = Double.parseDouble(strMax);
+			}
 		}
 		double[] range = {min, max};
 		return range;
@@ -984,7 +1089,7 @@ public class Parse {
 	 * @return		The number found as a double
 	 * @throws IllegalStateException	If no number is found in the given range
 	 */
-	static double extractDoubleFromString(String str,int end) throws IllegalStateException, NumberFormatException {
+	protected static double extractDoubleFromString(String str,int end) throws IllegalStateException, NumberFormatException {
 		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
 		String strDouble = "";
 		while (numberMatcher.find()) { strDouble = numberMatcher.group(); }
@@ -1022,8 +1127,26 @@ public class Parse {
 		str=str.replace("\u0009", " ");//blank
 		str=str.replace("\u300c", "");// Ã£â‚¬Å’
 		str=str.replace("\u300d", "");// Ã£â‚¬ï¿½
-		str=str.replace("\u2264", "&le;");// <=  for some reason Gson messes this up so need to convert to html so code doesnt get mangled into weird symbol
-		str=str.replace("\u03B1", "&alpha;");//alpha
+		str=str.replace("\u2070", "^0");// superscript 0
+		str=str.replace("\u00B9", "^1");// superscript 1
+		str=str.replace("\u00B2", "^2");// superscript 2
+		str=str.replace("\u00B3", "^3");// superscript 3
+		str=str.replace("\u2074", "^4");// superscript 4
+		str=str.replace("\u2075", "^5");// superscript 5
+		str=str.replace("\u2076", "^6");// superscript 6
+		str=str.replace("\u2077", "^7");// superscript 7
+		str=str.replace("\u2078", "^8");// superscript 8
+		str=str.replace("\u2079", "^9");// superscript 9
+		str=str.replace("\u2080", "_0");// subscript 0
+		str=str.replace("\u2081", "_1");// subscript 1
+		str=str.replace("\u2082", "_2");// subscript 2
+		str=str.replace("\u2083", "_3");// subscript 3
+		str=str.replace("\u2084", "_4");// subscript 4
+		str=str.replace("\u2085", "_5");// subscript 5
+		str=str.replace("\u2086", "_6");// subscript 6
+		str=str.replace("\u2087", "_7");// subscript 7
+		str=str.replace("\u2088", "_8");// subscript 8
+		str=str.replace("\u2089", "_9");// subscript 9
 
 		return str;
 	}
@@ -1032,12 +1155,13 @@ public class Parse {
 		ParseADDoPT.main(null);
 		ParseAqSolDB.main(null);
 		ParseBradley.main(null);
-		ParseEChemPortal.main(null);
+		ParseEChemPortalAPI.main(null);
 		ParseLookChem.main(null);
 		ParseOChem.main(null);
 		ParseOFMPub.main(null);
 		ParsePubChem.main(null);
 		ParseQSARDB.main(null);
+		// ParseChemBL.main(null);
 		DataFetcher.main(null);
 	}
 }

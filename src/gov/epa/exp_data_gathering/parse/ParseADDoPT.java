@@ -6,7 +6,13 @@ import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Parses data from ADDoPT, accessible at: https://onlinelibrary.wiley.com/doi/epdf/10.1002/jcc.24424 (supplementary info table 1)
+ * @author GSINCL01
+ *
+ */
 public class ParseADDoPT extends Parse {
+
 	public ParseADDoPT() {
 		sourceName = ExperimentalConstants.strSourceADDoPT;
 		this.init();
@@ -37,16 +43,19 @@ public class ParseADDoPT extends Parse {
 	}
 	
 	private void addExperimentalRecords(RecordADDoPT ar,ExperimentalRecords records) {
-		if (ar.value!=null && !ar.value.isBlank()) {
+		if (ar.solubility!=null && !ar.solubility.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.source_name = ExperimentalConstants.strSourceADDoPT;
-			er.chemical_name = ar.name;
+			er.date_accessed = RecordADDoPT.lastUpdated;
+			er.original_source_name = "Yalchowsky & He 2003";
+			er.url = "https://doi.org/10.1002/jcc.24424";
 			er.casrn = ar.cas;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			er.property_value_point_estimate_original = Math.pow(10.0,  Double.parseDouble(ar.value));
-			er.property_value_units_original = ExperimentalConstants.str_M;
+			er.property_value_string = "Observed solubility, log(M): "+ar.solubility;
+			er.property_value_point_estimate_original = Double.parseDouble(ar.solubility);
+			er.property_value_units_original = ExperimentalConstants.str_log_M;
 			er.temperature_C = Double.parseDouble(ar.temp);
-			er.finalizeUnits();
+			er.finalizePropertyValues();
 			er.keep = true;
 			er.flag = false;
 			records.add(er);

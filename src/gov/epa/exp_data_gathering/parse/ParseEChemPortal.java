@@ -8,10 +8,15 @@ import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
 
+/**
+ * Parses data from echemportal.org
+ * @author GSINCL01
+ *
+ */
 public class ParseEChemPortal extends Parse {
 
 	public ParseEChemPortal() {
-		sourceName = ExperimentalConstants.strSourceEChem;
+		sourceName = ExperimentalConstants.strSourceEChemPortal;
 		this.init();
 	}
 	
@@ -47,7 +52,8 @@ public class ParseEChemPortal extends Parse {
 			} else if (ecpr.numberType.equals("EC Number")) { einecs = ecpr.number; }
 			for (int i = 0; i < ecpr.values.size(); i++) {
 				ExperimentalRecord er = new ExperimentalRecord();
-				er.source_name = ExperimentalConstants.strSourceEChem;
+				er.date_accessed = RecordEChemPortal.lastUpdated;
+				er.source_name = ExperimentalConstants.strSourceEChemPortal;
 				er.original_source_name = ecpr.participant;
 				if (cas.length()!=0 && !cas.equals("unknown")) { er.casrn = cas;
 				} else if (einecs.length()!=0 && !einecs.equals("unknown")) { er.einecs = einecs; }
@@ -141,9 +147,9 @@ public class ParseEChemPortal extends Parse {
 					er.property_name = ExperimentalConstants.strHenrysLawConstant;
 					getHenrysLawConstant(er,propertyValue);
 				}
-				er.finalizeUnits();
+				er.finalizePropertyValues();
 				if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
-						(er.chemical_name==null || er.chemical_name.isBlank())) {
+						(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
 					er.keep = false;
 					er.reason = "No identifiers";
 				} else {
