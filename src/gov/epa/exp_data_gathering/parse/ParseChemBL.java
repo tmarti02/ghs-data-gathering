@@ -82,8 +82,9 @@ public class ParseChemBL extends Parse {
 			sensiblePkaCheck(cbr.standardValue, er); // puts records with pka outside the -10 to 25 range into bad
 		}	
 			
-			else if (cbr.standardType.toLowerCase().equals("solubility") && (desc.contains("water") || desc.contains("aq")) && cbr.standardUnits!=null &&
-				!cbr.standardUnits.isBlank() && !desc.contains("buffer") && !desc.contains("acetate") && !desc.contains("dextrose") && !desc.contains("dmso")
+			else if (cbr.standardType.toLowerCase().equals("solubility") && (desc.contains("water") || desc.contains("aq")) && cbr.standardUnits!=null ||
+					desc.contains("buff") && cbr.standardUnits!=null || desc.contains("sal") && cbr.standardUnits!=null 
+					&& !cbr.standardUnits.isBlank() && !desc.contains("buffer") && !desc.contains("acetate") && !desc.contains("dextrose") && !desc.contains("dmso")
 				&& !desc.contains("octanol") && !desc.contains("glycine") && !desc.contains("arginine") && !desc.contains("acid") && !desc.contains("pbs")
 				&& !desc.contains("hcl") && !desc.contains("intestinal") && !desc.contains("triethanolamine") && !desc.contains("cyclodextrin")) {
 			// I started on eliminating bad water solubility records (i.e. non-aqueous solubilities) but there are still more
