@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
 
-public class ParseOFMPub extends Parse {
+public class ParseOFMPub extends ParseDownloader {
 
 	public ParseOFMPub() {
 		sourceName = ExperimentalConstants.strSourceOFMPub;

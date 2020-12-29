@@ -226,7 +226,7 @@ public static Vector<String> parsePropertyLinksInDatabase() {
 }
 
 public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end, int excelFinalRecord, boolean startFresh) {
-	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+	Vector<RecordDashboard> records = ParseDownloader.getDashboardRecordsFromExcel(filename);
 	Vector<String> searchURLs = getSearchURLsFromDashboardRecords(records,1,excelFinalRecord);
 	ParseChemicalBook p = new ParseChemicalBook();
 	p.mainFolder = p.mainFolder + File.separator + "General";

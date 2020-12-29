@@ -53,7 +53,7 @@ public class RecordLookChem {
 	 * @param end		The index in the list to stop downloading
 	 */
 	public static void downloadWebpagesFromExcelToZipFile(String filename,int start,int end) {
-		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+		Vector<RecordDashboard> records = ParseDownloader.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
 		ParseLookChem p = new ParseLookChem();
@@ -69,7 +69,7 @@ public class RecordLookChem {
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
 	public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end,boolean startFresh) {
-		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+		Vector<RecordDashboard> records = ParseDownloader.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
 		ParseLookChem p = new ParseLookChem();

@@ -25,7 +25,7 @@ public class RecordSigmaAldrich {
 	static final String sourceName = ExperimentalConstants.strSourceSigmaAldrich;
 	
 	public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end,boolean startFresh) {
-		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+		Vector<RecordDashboard> records = ParseDownloader.getDashboardRecordsFromExcel(filename);
 		Vector<String> searchURLs = getSearchURLsFromDashboardRecords(records,start,end);
 		Vector<String> listingURLs = new Vector<String>();
 		// Random rand = new Random();

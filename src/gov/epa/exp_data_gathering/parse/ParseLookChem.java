@@ -6,7 +6,7 @@ import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
 
-public class ParseLookChem extends Parse {
+public class ParseLookChem extends ParseDownloader {
 	
 	public ParseLookChem() {
 		sourceName = ExperimentalConstants.strSourceLookChem;
