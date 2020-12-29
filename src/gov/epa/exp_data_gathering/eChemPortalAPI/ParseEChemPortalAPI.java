@@ -14,6 +14,7 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 /**
  * Parses downloaded results from eChemPortal API into RecordEChemPortal API objects and translates them to ExperimentalRecords
@@ -104,45 +105,45 @@ public class ParseEChemPortalAPI extends Parse {
 		switch (r.endpointKind) {
 		case "Melting":
 			er.property_name = ExperimentalConstants.strMeltingPoint;
-			getTemperatureProperty(er,r.value);
+			ParseUtilities.getTemperatureProperty(er,r.value);
 			break;
 		case "BoilingPoint":
 			er.property_name = ExperimentalConstants.strBoilingPoint;
-			getTemperatureProperty(er,r.value);
+			ParseUtilities.getTemperatureProperty(er,r.value);
 			break;
 		case "FlashPoint":
 			er.property_name = ExperimentalConstants.strFlashPoint;
-			getTemperatureProperty(er,r.value);
+			ParseUtilities.getTemperatureProperty(er,r.value);
 			break;
 		case "Density":
 			er.property_name = ExperimentalConstants.strDensity;
-			getDensity(er,r.value);
+			ParseUtilities.getDensity(er,r.value);
 			break;
 		case "Vapour":
 			er.property_name = ExperimentalConstants.strVaporPressure;
-			getVaporPressure(er,r.value);
+			ParseUtilities.getVaporPressure(er,r.value);
 			break;
 		case "Partition":
 			er.property_name = ExperimentalConstants.strLogKow;
-			getLogProperty(er,r.value);
+			ParseUtilities.getLogProperty(er,r.value);
 			break;
 		case "WaterSolubility":
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			getWaterSolubility(er,r.value);
+			ParseUtilities.getWaterSolubility(er,r.value,sourceName);
 			break;
 		case "DissociationConstant":
 			er.property_name = ExperimentalConstants.str_pKA;
-			getLogProperty(er,r.value);
+			ParseUtilities.getLogProperty(er,r.value);
 			break;
 		case "HenrysLawConstant":
 			er.property_name = ExperimentalConstants.strHenrysLawConstant;
-			getHenrysLawConstant(er,r.value);
+			ParseUtilities.getHenrysLawConstant(er,r.value);
 			break;
 		}
 		er.property_value_string = "Value: "+r.value;
 		
 		if (r.pressure!=null) {
-			getPressureCondition(er,r.pressure);
+			ParseUtilities.getPressureCondition(er,r.pressure,sourceName);
 			er.property_value_string = er.property_value_string + ";Pressure: " + r.pressure;
 		}
 		
@@ -150,7 +151,7 @@ public class ParseEChemPortalAPI extends Parse {
 			try {
 				er.temperature_C = Double.parseDouble(r.temperature);
 			} catch (NumberFormatException ex) {
-				getTemperatureCondition(er,r.temperature);
+				ParseUtilities.getTemperatureCondition(er,r.temperature);
 			}
 			er.property_value_string = er.property_value_string + ";Temperature: " + r.temperature;
 		}
@@ -161,13 +162,13 @@ public class ParseEChemPortalAPI extends Parse {
 			er.property_value_string = er.property_value_string + ";pH: " + pHStr;
 			boolean foundpH = false;
 			try {
-				double[] range = Parse.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
+				double[] range = ParseUtilities.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
 				er.pH = range[0]+"-"+range[1];
 				foundpH = true;
 			} catch (Exception ex) { }
 			if (!foundpH) {
 				try {
-					double[] range = Parse.extractAltFormatRangeFromString(pHStr,pHStr.length());
+					double[] range = ParseUtilities.extractAltFormatRangeFromString(pHStr,pHStr.length());
 					er.pH = range[0]+"-"+range[1];
 					foundpH = true;
 				} catch (Exception ex) { }
@@ -189,13 +190,13 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 			if (!foundpH) {
 				try {
-					double pHDouble = Parse.extractDoubleFromString(pHStr,pHStr.length());
+					double pHDouble = ParseUtilities.extractDoubleFromString(pHStr,pHStr.length());
 					String pHDoubleStr = Double.toString(pHDouble);
 					String numQual = "";
 					if (pHDouble >= 0 && pHDouble < 1) {
-						numQual = getNumericQualifier(pHStr,pHStr.indexOf("0"));
+						numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf("0"));
 					} else {
-						numQual = getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
+						numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
 					}
 					er.pH = numQual+pHDoubleStr;
 					foundpH = true;

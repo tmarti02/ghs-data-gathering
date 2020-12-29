@@ -102,7 +102,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			Gson gson = builder.create();
 
 			OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
-			fw.write(reverseFixChars(StringEscapeUtils.escapeHtml4(gson.toJson(this))));
+			fw.write(reverseFixChars(StringEscapeUtils.unescapeHtml4(gson.toJson(this))));
 			fw.flush();
 			fw.close();
 
