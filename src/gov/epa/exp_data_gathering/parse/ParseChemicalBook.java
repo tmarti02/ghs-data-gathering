@@ -108,18 +108,18 @@ public class ParseChemicalBook extends ParseDownloader {
 		propertyValue = propertyValue.replaceAll(",", ".");
 
 		if (propertyName==ExperimentalConstants.strDensity) {
-			foundNumeric = getDensity(er, propertyValue);
-			getPressureCondition(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			if (propertyValue.contains("±")) {
 				getUncertaintyRange(er,propertyValue);
 			}
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ) {
-			foundNumeric = getTemperatureProperty(er,propertyValue);
-			getPressureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 			// performs the missing temperature check
-			getTemperatureProperty(er,propertyValue);
-			String temp = getTemperatureUnits(propertyValue);
+			ParseUtilities.getTemperatureProperty(er,propertyValue);
+			String temp = ParseUtilities.getTemperatureUnits(propertyValue);
 			if (temp.matches("")) {
 				er.reason = "missing temperature units";
 			}
@@ -129,8 +129,8 @@ public class ParseChemicalBook extends ParseDownloader {
 			}
 			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = getWaterSolubility(er, propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			getQualitativeSolubility(er, propertyValue);
 		}
 		
@@ -330,7 +330,6 @@ public class ParseChemicalBook extends ParseDownloader {
 	 * @param er
 	 * @param propertyValue
 	 */
-	@Override
 	void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
 		String solventMatcherStr = "";

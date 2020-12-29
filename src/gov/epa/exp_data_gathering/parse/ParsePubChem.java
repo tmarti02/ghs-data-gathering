@@ -117,26 +117,26 @@ public class ParsePubChem extends Parse {
 		propertyValue = propertyValue.replaceAll("greater than( or equal to )?", ">");
 		propertyValue = propertyValue.replaceAll("less than( or equal to )?", "<");
 		if (propertyName==ExperimentalConstants.strDensity) {
-			foundNumeric = getDensity(er,propertyValue);
-			getPressureCondition(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getDensity(er,propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
 				propertyName==ExperimentalConstants.strFlashPoint) {
-			foundNumeric = getTemperatureProperty(er,propertyValue);
-			getPressureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 			if (propertyValue.contains("closed cup") || propertyValue.contains("c.c.")) { er.measurement_method = "closed cup"; }
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = getWaterSolubility(er, propertyValue);
-			getTemperatureCondition(er,propertyValue);
-			getQualitativeSolubility(er, propertyValue);
+			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			ParseUtilities.getQualitativeSolubility(er, propertyValue,sourceName);
 		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
-			foundNumeric = getVaporPressure(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strHenrysLawConstant) {
-			foundNumeric = getHenrysLawConstant(er,propertyValue);
+			foundNumeric = ParseUtilities.getHenrysLawConstant(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strLogKow || propertyName==ExperimentalConstants.str_pKA) {
-			foundNumeric = getLogProperty(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getLogProperty(er,propertyValue);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		}
 		
 		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {

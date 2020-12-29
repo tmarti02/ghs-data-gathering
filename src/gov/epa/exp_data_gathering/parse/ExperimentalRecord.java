@@ -251,7 +251,7 @@ public class ExperimentalRecord {
 				case "java.lang.Double":
 					if (myField.get(this)==null) val="";	
 					else {
-						val=Parse.formatDouble((Double)myField.get(this));						
+						val=ParseUtilities.formatDouble((Double)myField.get(this));						
 					}										
 					break;
 					

@@ -99,10 +99,10 @@ public class ParseOFMPub extends ParseDownloader {
 		String remarks = opr.resultRemarks.toLowerCase();
 		if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint) {
 			propertyValue = propertyValue.replaceAll("Other @", "K @");
-			foundNumeric = getTemperatureProperty(er,propertyValue);
-			getPressureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 			if ((er.pressure_mmHg==null || er.pressure_mmHg.isBlank()) && remarks.contains("pressure:")) {
-				getPressureCondition(er,opr.resultRemarks);
+				ParseUtilities.getPressureCondition(er,opr.resultRemarks,sourceName);
 			}
 			if (opr.indicator.contains("Decomposes") || (remarks.contains("decomposition: yes")
 					&& !(remarks.contains("no [x") || remarks.contains("no [ x")))) {
@@ -113,29 +113,29 @@ public class ParseOFMPub extends ParseDownloader {
 				er.updateNote(ExperimentalConstants.str_subl);
 			}
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = getWaterSolubility(er, propertyValue);
+			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
 			if (!foundNumeric && opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) {
-				foundNumeric = getWaterSolubility(er, opr.resultRemarks.replaceAll(" per ","/"));
+				foundNumeric = ParseUtilities.getWaterSolubility(er, opr.resultRemarks.replaceAll(" per ","/"),sourceName);
 			}
-			getTemperatureCondition(er,propertyValue);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			if (er.temperature_C==null && remarks.contains("temperature:")) {
-				getTemperatureCondition(er,opr.resultRemarks);
+				ParseUtilities.getTemperatureCondition(er,opr.resultRemarks);
 			}
 			er.property_value_qualitative = opr.indicator.toLowerCase();
 		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
-			foundNumeric = getVaporPressure(er,propertyValue);
+			foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);
 			if (!foundNumeric && opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) {
-				foundNumeric = getVaporPressure(er, opr.resultRemarks);
+				foundNumeric = ParseUtilities.getVaporPressure(er, opr.resultRemarks);
 			}
-			getTemperatureCondition(er,propertyValue);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			if (er.temperature_C==null && remarks.contains("temperature:")) {
-				getTemperatureCondition(er,opr.resultRemarks);
+				ParseUtilities.getTemperatureCondition(er,opr.resultRemarks);
 			}
 		} else if (propertyName==ExperimentalConstants.strLogKow) {
-			foundNumeric = getLogProperty(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getLogProperty(er,propertyValue);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			if (er.temperature_C==null && remarks.contains("temperature:")) {
-				getTemperatureCondition(er,opr.resultRemarks);
+				ParseUtilities.getTemperatureCondition(er,opr.resultRemarks);
 			}
 		}
 		

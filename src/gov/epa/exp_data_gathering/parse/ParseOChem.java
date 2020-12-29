@@ -123,11 +123,11 @@ public class ParseOChem extends Parse {
 			er.property_value_string = er.property_value_string + ";" + ocr.pressure + " " + ocr.pressureUnit;
 			double pressure = Double.parseDouble(ocr.pressure.replaceAll("[^0-9.,E]",""));
 			if (ocr.pressureUnit.contains("mm Hg") || ocr.pressureUnit.contains("Torr")) {
-				er.pressure_mmHg = formatDouble(pressure);
+				er.pressure_mmHg = ParseUtilities.formatDouble(pressure);
 			} else if (ocr.pressureUnit.contains("atm")) {
-				er.pressure_mmHg = formatDouble(pressure*UnitConverter.atm_to_mmHg);
+				er.pressure_mmHg = ParseUtilities.formatDouble(pressure*UnitConverter.atm_to_mmHg);
 			} else if (ocr.pressureUnit.contains("Pa")) {
-				er.pressure_mmHg = formatDouble(pressure*UnitConverter.Pa_to_mmHg);
+				er.pressure_mmHg = ParseUtilities.formatDouble(pressure*UnitConverter.Pa_to_mmHg);
 			}
 		}
 		if (ocr.pH!=null && !ocr.pH.isBlank()) {

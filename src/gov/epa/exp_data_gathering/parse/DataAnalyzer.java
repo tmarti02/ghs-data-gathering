@@ -118,7 +118,7 @@ public class DataAnalyzer {
 						// TODO checking for same (or "close enough") values
 					}
 					double redundancy = (double) redundant/(double) total;
-					System.out.println("Out of "+total+" records in "+sourceI+", found "+redundant+" in "+sourceJ+". Redundancy: "+Parse.formatDouble(redundancy)+".");
+					System.out.println("Out of "+total+" records in "+sourceI+", found "+redundant+" in "+sourceJ+". Redundancy: "+ParseUtilities.formatDouble(redundancy)+".");
 					Cell cell = row.createCell(j);
 					cell.setCellValue(redundancy);
 				}

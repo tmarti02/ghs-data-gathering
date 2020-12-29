@@ -125,17 +125,17 @@ public class ParseLookChem extends ParseDownloader {
 		boolean foundNumeric = false;
 		propertyValue = propertyValue.replaceAll(",", ".");
 		if (propertyName==ExperimentalConstants.strDensity) {
-			foundNumeric = getDensity(er, propertyValue);
-			getPressureCondition(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
 				propertyName==ExperimentalConstants.strFlashPoint) {
-			foundNumeric = getTemperatureProperty(er,propertyValue);
-			getPressureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = getWaterSolubility(er, propertyValue);
-			getTemperatureCondition(er,propertyValue);
-			getQualitativeSolubility(er, propertyValue);
+			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			ParseUtilities.getQualitativeSolubility(er, propertyValue,sourceName);
 		}
 		
 		// Adds measurement methods and notes to valid records

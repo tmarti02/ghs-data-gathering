@@ -129,10 +129,10 @@ public class ParseChemBL extends Parse {
 		Matcher pHMatcher = Pattern.compile("ph (value )?(of )?([-]?[ ]?[0-9]*\\.?[0-9]+)( to )?([-]?[ ]?[0-9]*\\.?[0-9]+)?").matcher(desc);
 		if (pHMatcher.find()) {
 			double min = Double.parseDouble(pHMatcher.group(3));
-			er.pH = Parse.formatDouble(min);
+			er.pH = ParseUtilities.formatDouble(min);
 			if (pHMatcher.group(5)!=null) {
 				double max = Double.parseDouble(pHMatcher.group(5));
-				er.pH += "-" + Parse.formatDouble(max);
+				er.pH += "-" + ParseUtilities.formatDouble(max);
 			}
 		}
 		
