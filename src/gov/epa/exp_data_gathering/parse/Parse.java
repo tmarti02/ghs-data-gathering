@@ -36,6 +36,7 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
+import gov.epa.exp_data_gathering.eChemPortalAPI.ParseEChemPortalAPI;
 import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
@@ -858,11 +859,12 @@ public class Parse {
 	protected static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
-		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol")) {
+		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol") ||
+				propertyValue.toLowerCase().contains("atm m^3/mol")) {
 			er.property_value_units_original = ExperimentalConstants.str_atm_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("pa m³/mol")) {
+		} else if (propertyValue.toLowerCase().contains("pa m³/mol") || propertyValue.toLowerCase().contains("pa m^3/mol")) {
 			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("pa");
 			badUnits = false;
@@ -969,10 +971,19 @@ public class Parse {
 		// If any pressure units were found, looks for the last number that precedes them
 		boolean foundNumeric = false;
 		if (pressureIndex > 0) {
-			if (sourceName.equals(ExperimentalConstants.strSourceEChemPortal)) {
+			if (sourceName.contains(ExperimentalConstants.strSourceEChemPortal)) {
 				if (!foundNumeric) {
 					try {
 						double[] range = Parse.extractFirstDoubleRangeFromString(propertyValue,pressureIndex);
+						String min = formatDouble(range[0]*conversionFactor);
+						String max = formatDouble(range[1]*conversionFactor);
+						er.pressure_mmHg = min+"-"+max;
+						foundNumeric = true;
+					} catch (Exception ex) { }
+				}
+				if (!foundNumeric) {
+					try {
+						double[] range = Parse.extractAltFormatRangeFromString(propertyValue,pressureIndex);
 						String min = formatDouble(range[0]*conversionFactor);
 						String max = formatDouble(range[1]*conversionFactor);
 						er.pressure_mmHg = min+"-"+max;
@@ -997,6 +1008,9 @@ public class Parse {
 					er.pressure_mmHg = formatDouble(conversionFactor*Parse.extractDoubleFromString(propertyValue,pressureIndex));
 					foundNumeric = true;
 				} catch (Exception ex) { }
+			}
+			if (propertyValue.startsWith("ca.")) {
+				er.pressure_mmHg = "~"+er.pressure_mmHg;
 			}
 		}
 	}
@@ -1029,8 +1043,8 @@ public class Parse {
 		double max = Double.parseDouble(strMax);
 		if (min >= max) {
 			int digits = strMax.length();
-			if (digits > strMin.length()) {
-				// If max value is smaller but digitwise longer, swaps the values
+			if (digits > strMin.length() || (digits == strMin.length() && strMin.startsWith("-") && strMax.startsWith("-")) || strMax.equals("0")) {
+				// Swaps values for negative ranges
 				double temp = min;
 				min = max;
 				max = temp;
@@ -1141,7 +1155,7 @@ public class Parse {
 		ParseADDoPT.main(null);
 		ParseAqSolDB.main(null);
 		ParseBradley.main(null);
-		ParseEChemPortal.main(null);
+		ParseEChemPortalAPI.main(null);
 		ParseLookChem.main(null);
 		ParseOChem.main(null);
 		ParseOFMPub.main(null);

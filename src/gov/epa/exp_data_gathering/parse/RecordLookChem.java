@@ -10,6 +10,7 @@ import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -164,7 +165,7 @@ public class RecordLookChem {
 
 			int counter = 1;
 			while (entries.hasMoreElements()) {
-				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
+				// if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 				
 				ZipEntry zipEntry = entries.nextElement();
 
@@ -179,7 +180,7 @@ public class RecordLookChem {
 				}
 			}
 			
-			System.out.println("Parsed "+(counter-1)+" pages");
+			// System.out.println("Parsed "+(counter-1)+" pages");
 			return records;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -249,7 +250,7 @@ public class RecordLookChem {
 					String data = row.getElementsByTag("td").text();
 					// Will need to check & adjust these conditions as necessary if other pages formatted differently
 					if (header.contains("CAS No")) { lcr.CAS = data;
-					} else if (header.contains("Name")) { lcr.chemicalName = data;
+					} else if (header.contains("Name")) { lcr.chemicalName = StringEscapeUtils.escapeHtml4(data);
 					} else if (header.contains("Formula")) { lcr.formula = data;
 					} else if (header.contains("Molecular Weight")) { lcr.molecularWeight = data;
 					} else if (header.contains("Synonyms")) { lcr.synonyms = data;

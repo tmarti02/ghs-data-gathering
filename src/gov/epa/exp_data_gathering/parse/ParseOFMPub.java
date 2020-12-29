@@ -209,7 +209,7 @@ public class ParseOFMPub extends Parse {
 			}
 		}
 		
-		er.finalizeUnits();
+		er.finalizePropertyValues();
 		records.add(er);
 	}
 	

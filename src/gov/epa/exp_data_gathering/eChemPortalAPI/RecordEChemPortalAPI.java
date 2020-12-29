@@ -154,7 +154,7 @@ public class RecordEChemPortalAPI {
 								countEliminated++;
 							}
 						}
-						if (count % 10000==0) { System.out.println("Added "+count+" records..."); }
+						// if (count % 10000==0) { System.out.println("Added "+count+" records..."); }
 					}
 				}
 			}

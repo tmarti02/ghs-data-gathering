@@ -87,28 +87,7 @@ public class ParseEChemPortalAPI extends Parse {
 		er.reliability = r.reliability;
 		
 		if (!r.name.equals("-") && !r.name.contains("unnamed")) {
-			String processedName = StringEscapeUtils.unescapeHtml4(r.name);
-			processedName=processedName.replace("^0","\u2070");// superscript 0
-			processedName=processedName.replace("^1","\u00B9");// superscript 1
-			processedName=processedName.replace("^2","\u00B2");// superscript 2
-			processedName=processedName.replace("^3","\u00B3");// superscript 3
-			processedName=processedName.replace("^4","\u2074");// superscript 4
-			processedName=processedName.replace("^5","\u2075");// superscript 5
-			processedName=processedName.replace("^6","\u2076");// superscript 6
-			processedName=processedName.replace("^7","\u2077");// superscript 7
-			processedName=processedName.replace("^8","\u2078");// superscript 8
-			processedName=processedName.replace("^9","\u2079");// superscript 9
-			processedName=processedName.replace("_0","\u2080");// subscript 0
-			processedName=processedName.replace("_1","\u2081");// subscript 1
-			processedName=processedName.replace("_2","\u2082");// subscript 2
-			processedName=processedName.replace("_3","\u2083");// subscript 3
-			processedName=processedName.replace("_4","\u2084");// subscript 4
-			processedName=processedName.replace("_5","\u2085");// subscript 5
-			processedName=processedName.replace("_6","\u2086");// subscript 6
-			processedName=processedName.replace("_7","\u2087");// subscript 7
-			processedName=processedName.replace("_8","\u2088");// subscript 8
-			processedName=processedName.replace("_9","\u2089");// subscript 9
-			er.chemical_name = processedName;
+			er.chemical_name = r.name;
 		}
 		
 		if (r.numberType!=null) {
@@ -224,7 +203,7 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 		}
 		
-		er.finalizeUnits();
+		er.finalizePropertyValues();
 		
 		if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
 				(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
@@ -240,7 +219,7 @@ public class ParseEChemPortalAPI extends Parse {
 
 	public static void main(String[] args) {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
-//		p.createFiles();
-		p.benchmarkParse(5);
+		p.createFiles();
+//		p.benchmarkParse(5);
 	}
 }

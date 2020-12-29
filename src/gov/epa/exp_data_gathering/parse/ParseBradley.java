@@ -56,7 +56,7 @@ public class ParseBradley extends Parse {
 			getNumericalValue(er,br.concentration,br.concentration.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_M;
 			if (br.notes!=null && !br.notes.isBlank()) { getTemperatureCondition(er,br.notes); }
-			er.finalizeUnits();
+			er.finalizePropertyValues();
 			er.keep = true;
 			er.flag = false;
 			records.add(er);

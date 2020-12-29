@@ -159,7 +159,7 @@ public class ParsePubChem extends Parse {
 			er.reason = "Question mark";
 		}
 		
-		if (foundNumeric) { er.finalizeUnits(); }
+		if (foundNumeric) { er.finalizePropertyValues(); }
 		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep!=false) {
 			er.keep = true;
 			er.reason = null;
