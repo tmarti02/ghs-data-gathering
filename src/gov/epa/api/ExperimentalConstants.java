@@ -13,6 +13,11 @@ public class ExperimentalConstants {
 	public static final String strBoilingPoint="Boiling point";
 	public static final String strFlashPoint="Flash point";
 	public static final String strAppearance="Appearance";
+	
+	public static final String strRatInhalationLC50="rat_inhalation_LC50";
+	public static final String strRabbitInhalationLC50="rabbit_inhalation_LC50";
+	public static final String strMouseInhalationLC50="mouse_inhalation_LC50";
+	public static final String strGuineaPigInhalationLC50="guinea_pig_inhalation_LC50";
 
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
@@ -79,5 +84,6 @@ public class ExperimentalConstants {
 	public static final String strSourceADDoPT="ADDoPT";
 	public static final String strSourceAqSolDB="AqSolDB";
 	public static final String strSourceChemBL="ChemBL";
+	public static final String strSourceChemidplus="ChemIDplus";
 	
 }

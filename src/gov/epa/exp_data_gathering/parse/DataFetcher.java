@@ -27,6 +27,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import gov.epa.QSAR.DataSetCreation.ConvertExperimentalRecordsToDataSet;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 
 public class DataFetcher {
@@ -40,32 +41,71 @@ public class DataFetcher {
 	public DataFetcher(String[] sources) {
 		records = new ExperimentalRecords();
 		for (String source:sources) {
-			String recordFileName = mainFolder+File.separator+source+" Experimental Records.json";
-			String badRecordFileName = mainFolder+File.separator+source+" Experimental Records-Bad.json";
-			try {
-				System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")+1));
-				ExperimentalRecords sourceRecords = ExperimentalRecords.loadFromJSON(recordFileName);
-				if (sourceRecords==null) {
-					sourceRecords = new ExperimentalRecords();
-					int i = 1;
-					ExperimentalRecords temp = new ExperimentalRecords();
-					while (temp!=null) {
-						temp = ExperimentalRecords.loadFromJSON(mainFolder+File.separator+source+" Experimental Records "+i+".json");
-						
-						if (temp==null) break;
-						sourceRecords.addAll(temp);
-						i++;
-					}
-				}
-				ExperimentalRecords badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFileName);
-				records.addAll(sourceRecords);
-				if(badSourceRecords!=null) records.addAll(badSourceRecords);
-				
-			} catch (Exception ex) {
-				ex.printStackTrace();
+			String recordFilePath = mainFolder+File.separator+source+" Experimental Records.json";
+			String badRecordFilePath = mainFolder+File.separator+source+" Experimental Records-Bad.json";
+			
+			File fileRecords=new File(recordFilePath);
+			File fileBadRecords=new File(badRecordFilePath);
+			
+			ExperimentalRecords sourceRecords=null;
+			
+			if (fileRecords.exists()) {
+				sourceRecords = ExperimentalRecords.loadFromJSON(recordFilePath);	
 			}
+			
+			if (fileBadRecords.exists()) {
+				ExperimentalRecords badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFilePath);				
+				sourceRecords.addAll(badSourceRecords);
+			}
+
+//			if (sourceRecords==null) {
+			//TMM- there doesnt seem to be any numbered files...
+//				sourceRecords = getRecordsFromNumberedFiles(source);
+//			}
+			
+			if (sourceRecords==null) {
+				System.out.println("No file for "+source.substring(source.lastIndexOf("\\")+1));
+				continue;
+			}
+			
+			System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")+1));
+
+			addSourceBasedIDNumbers(sourceRecords);			
+			records.addAll(sourceRecords);
+				
+			
+			
+			
 		}
 	}
+
+	private void addSourceBasedIDNumbers(ExperimentalRecords records) {
+		for (int i=0;i<records.size();i++) {
+			ExperimentalRecord record=records.get(i);
+			record.id_physchem=record.source_name+(i+1);
+		}
+	}
+	
+
+	
+	
+	private ExperimentalRecords getRecordsFromNumberedFiles(String source) {
+		ExperimentalRecords sourceRecords;
+		sourceRecords = new ExperimentalRecords();
+		int i = 1;
+		ExperimentalRecords temp = new ExperimentalRecords();
+		
+		while (temp!=null) {
+			File ftemp=new File(mainFolder+File.separator+source+" Experimental Records "+i+".json");					
+			System.out.println(ftemp.getName()+"\t"+ftemp.exists());						
+			temp = ExperimentalRecords.loadFromJSON(mainFolder+File.separator+source+" Experimental Records "+i+".json");
+			if (temp==null) break;
+			sourceRecords.addAll(temp);
+			i++;
+		}
+		return sourceRecords;
+	}
+	
 	
 	public void createExperimentalRecordsDatabase() {
 		File db = new File(databasePath);
@@ -141,9 +181,13 @@ public class DataFetcher {
 			
 			for (ExperimentalRecord rec:records) {				
 				counter++;
-				rec.id_physchem=counter;
+//				rec.id_physchem=counter;
 				
-				String[] list = rec.toStringArray( ExperimentalRecord.outputFieldNames);
+				if (counter%10000==0) System.out.println(counter);
+				rec.setComboID("|");
+
+				
+				String[] list = rec.toStringArray( fieldNames);
 
 				if (list.length!=fieldNames.length) {//probably wont happen now that list is based on names array
 					System.out.println("Wrong number of values: "+list[0]);
@@ -284,7 +328,8 @@ public class DataFetcher {
 	
 	public static void main(String[] args) {
 		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub","QSARDB\\QSARDB",
-				"Bradley\\Bradley","ADDoPT\\ADDoPT","AqSolDB\\AqSolDB"};
+				"Bradley\\Bradley","ADDoPT\\ADDoPT","AqSolDB\\AqSolDB",
+				"Sander\\General\\Sander","ChemicalBook\\PFAS\\ChemicalBook","ChemIDplus\\ChemIDplus"};
 		DataFetcher d = new DataFetcher(sources);
 		d.createExperimentalRecordsDatabase();
 		d.createExperimentalRecordsJSON();
