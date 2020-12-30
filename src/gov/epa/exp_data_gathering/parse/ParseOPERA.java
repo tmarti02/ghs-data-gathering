@@ -47,7 +47,21 @@ public class ParseOPERA extends Parse {
 	 * @param records
 	 */
 	private void addExperimentalRecords(RecordOPERA ro,ExperimentalRecords records) {
-		// if (ro.property_name == ExperimentalConstants.strMeltingPoint) {
+		if (ro.property_name == ExperimentalConstants.str_pKA) {
+			ExperimentalRecord er_a = new ExperimentalRecord();
+			ExperimentalRecord er_b = new ExperimentalRecord();
+			er_a.property_name = ExperimentalConstants.str_pKAa;
+			er_b.property_name = ExperimentalConstants.str_pKAb;
+			er_a.chemical_name = ro.Substance_Name;
+			er_b.chemical_name = ro.Substance_Name;
+			er_a.property_value_point_estimate_final=Double.parseDouble(ro.pKa_a);
+			er_b.property_value_point_estimate_final=Double.parseDouble(ro.pKa_b);
+			er_a.keep = true;
+			er_b.keep = true;
+			records.add(er_a);
+			records.add(er_b);
+		}
+		if (ro.property_name != ExperimentalConstants.str_pKA) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.chemical_name = ro.preferred_name;
 			er.property_name = ro.property_name;
@@ -57,12 +71,11 @@ public class ParseOPERA extends Parse {
 			}
 			er.property_value_units_original = ro.property_value_units_original;
 			er.casrn = ro.CAS;
+			er.smiles=ro.Original_SMILES;
 			er.note = "qc_level= " + ro.qc_level;
 			er.date_accessed = java.time.LocalDate.now().toString();
 			er.finalizeRecord();
 
-			
-			
 			er.original_source_name = ro.Reference;
 			if (!(ro.dsstox_compound_id == null))
 			er.dsstox_substance_id = ro.dsstox_compound_id;
@@ -73,15 +86,16 @@ public class ParseOPERA extends Parse {
 			finalizePropertyValues(er);
 			// 	er.finalizePropertyValues();
 
-			
-			if (er.casrn.contains("NOCAS")) {
+			if ((er.casrn!=null) && er.casrn.contains("NOCAS")) {
 			er.keep = false;
 			er.reason = "do we want this gone or no?";
 			}
 			else {
 			er.keep = true;
 			}
+		
 			records.add(er);
+		}
 	}
 	
 	private static void finalizePropertyValues(ExperimentalRecord er) {
@@ -103,15 +117,12 @@ public class ParseOPERA extends Parse {
 		if ((propertyValue != null && propertyValue.length() > 0) && (!propertyValue.contains("|")))
 			er.temperature_C = Double.parseDouble(propertyValue);
 		else if ((propertyValue != null && propertyValue.length() > 0) && propertyValue.contains("|")) {
-			System.out.println(propertyValue);
 			int vertLineIndex = propertyValue.indexOf("|");
 			String temp1 = propertyValue.substring(0,vertLineIndex);
 			String temp2 = propertyValue.substring(vertLineIndex + 1,propertyValue.length());
 			double temp1double = Double.parseDouble(temp1);
 			double temp2double = Double.parseDouble(temp2);
-			er.temperature_C = temp1double + temp2double / 2;
-			double temp3 = temp1double + temp2double / 2;
-			System.out.println(temp3);
+			er.temperature_C = (temp1double + temp2double)/ 2;
 		}
 	}
 	
