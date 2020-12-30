@@ -26,7 +26,7 @@ import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
  *
  */
 
-public class ParseChemicalBook extends Parse {
+public class ParseChemicalBook extends ParseDownloader {
 	
 	public ParseChemicalBook() {
 		sourceName = "ChemicalBook";
@@ -108,18 +108,18 @@ public class ParseChemicalBook extends Parse {
 		propertyValue = propertyValue.replaceAll(",", ".");
 
 		if (propertyName==ExperimentalConstants.strDensity) {
-			foundNumeric = getDensity(er, propertyValue);
-			getPressureCondition(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			if (propertyValue.contains("±")) {
 				getUncertaintyRange(er,propertyValue);
 			}
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ) {
-			foundNumeric = getTemperatureProperty(er,propertyValue);
-			getPressureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 			// performs the missing temperature check
-			getTemperatureProperty(er,propertyValue);
-			String temp = getTemperatureUnits(propertyValue);
+			ParseUtilities.getTemperatureProperty(er,propertyValue);
+			String temp = ParseUtilities.getTemperatureUnits(propertyValue);
 			if (temp.matches("")) {
 				er.reason = "missing temperature units";
 			}
@@ -129,13 +129,13 @@ public class ParseChemicalBook extends Parse {
 			}
 			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = getWaterSolubility(er, propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			getQualitativeSolubility(er, propertyValue);
 		}
 		
 		if (foundNumeric) {
-			er.finalizeUnits();
+			er.finalizePropertyValues();
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
@@ -330,7 +330,6 @@ public class ParseChemicalBook extends Parse {
 	 * @param er
 	 * @param propertyValue
 	 */
-	@Override
 	void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
 		String solventMatcherStr = "";

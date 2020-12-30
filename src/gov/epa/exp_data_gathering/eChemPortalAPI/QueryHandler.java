@@ -4,8 +4,9 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 import java.io.File;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Vector;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -99,8 +100,8 @@ public class QueryHandler {
 	 * @return		Results as a vector of ResultsPage objects
 	 */
 	@SuppressWarnings("unused") // Previously used for testing, leaving in case needed in the future
-	private Vector<ResultsPage> getQueryResults(Query query) {
-		Vector<ResultsPage> results = new Vector<ResultsPage>();
+	private List<ResultsPage> getQueryResults(Query query) {
+		List<ResultsPage> results = new ArrayList<ResultsPage>();
 		int totalResults = getQuerySize(query);
 		System.out.println("Found "+totalResults+" results. Downloading...");
 		while (query.paging.offset < totalResults) {

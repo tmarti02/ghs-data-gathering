@@ -327,9 +327,11 @@ public class DataFetcher {
 	}
 	
 	public static void main(String[] args) {
-		String[] sources = {"eChemPortal\\eChemPortal","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub","QSARDB\\QSARDB",
+
+		String[] sources = {"eChemPortalAPI\\eChemPortalAPI","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub","QSARDB\\QSARDB",
 				"Bradley\\Bradley","ADDoPT\\ADDoPT","AqSolDB\\AqSolDB",
 				"Sander\\General\\Sander","ChemicalBook\\PFAS\\ChemicalBook","ChemIDplus\\ChemIDplus"};
+
 		DataFetcher d = new DataFetcher(sources);
 		d.createExperimentalRecordsDatabase();
 		d.createExperimentalRecordsJSON();

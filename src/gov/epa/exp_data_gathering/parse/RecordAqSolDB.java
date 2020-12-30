@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Vector;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -38,7 +39,7 @@ public class RecordAqSolDB {
 			if (filename.endsWith(".xlsx")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
-					String date = Parse.getStringCreationDate(filepath);
+					String date = ParseDownloader.getStringCreationDate(filepath);
 					if (!date.equals(lastUpdated)) {
 						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
 					}
@@ -67,7 +68,7 @@ public class RecordAqSolDB {
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordAqSolDB ar = new RecordAqSolDB();
 						ar.id = row.getCell(idIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-						ar.name = row.getCell(nameIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+						ar.name = StringEscapeUtils.escapeHtml4(row.getCell(nameIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
 						ar.smiles = row.getCell(smilesIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						ar.solubility = row.getCell(solIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						records.add(ar);

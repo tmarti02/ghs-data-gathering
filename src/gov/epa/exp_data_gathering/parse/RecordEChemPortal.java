@@ -68,7 +68,7 @@ public class RecordEChemPortal {
 			if (filename.endsWith(".xls")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
-					String date = Parse.getStringCreationDate(filepath);
+					String date = ParseDownloader.getStringCreationDate(filepath);
 					if (!date.equals(lastUpdated)) {
 						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
 					}

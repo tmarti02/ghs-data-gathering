@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -56,7 +57,7 @@ public class RecordOChem {
 			if (filename.endsWith(".xls")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
-					String date = Parse.getStringCreationDate(filepath);
+					String date = ParseDownloader.getStringCreationDate(filepath);
 					if (!date.equals(lastUpdated)) {
 						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
 					}
@@ -109,11 +110,11 @@ public class RecordOChem {
 						String name1 = betterGetCellValue(row,nameIndex1);
 						String name2 = betterGetCellValue(row,nameIndex2);
 						if (name1!=null && !name1.isBlank() && name2!=null && !name2.isBlank()) {
-							ocr.name = name1+"|"+name2;
+							ocr.name = StringEscapeUtils.escapeHtml4(name1)+"|"+StringEscapeUtils.escapeHtml4(name2);
 						} else if (name1!=null && !name1.isBlank()) {
-							ocr.name = name1;
+							ocr.name = StringEscapeUtils.escapeHtml4(name1);
 						} else if (name2!=null && !name2.isBlank()) {
-							ocr.name = name2;
+							ocr.name = StringEscapeUtils.escapeHtml4(name2);
 						}
 						ocr.propertyName = propertyName;
 						ocr.propertyValue = betterGetCellValue(row,propertyValueIndex);

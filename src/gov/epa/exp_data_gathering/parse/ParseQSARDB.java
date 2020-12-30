@@ -53,12 +53,12 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 			er.property_value_string = "LogS: "+qr.logS;
-			getNumericalValue(er,qr.logS,qr.logS.length(),false);
+			ParseUtilities.getNumericalValue(er,qr.logS,qr.logS.length(),false);
 			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
 			if (qr.units.contains("mgL")) { er.property_value_units_original = ExperimentalConstants.str_log_mg_L;
 			} else if (qr.units.contains("M")) { er.property_value_units_original = ExperimentalConstants.str_log_M;
 			}
-			er.finalizeUnits();
+			er.finalizePropertyValues();
 			er.keep = true;
 			er.flag = false;
 			records.add(er);
@@ -73,9 +73,9 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strMeltingPoint;
 			er.property_value_string = "MP (C): "+qr.mp;
-			getNumericalValue(er,qr.mp,qr.mp.length(),false);
+			ParseUtilities.getNumericalValue(er,qr.mp,qr.mp.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_C;
-			er.finalizeUnits();
+			er.finalizePropertyValues();
 			er.keep = true;
 			er.flag = false;
 			records.add(er);
@@ -90,8 +90,8 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strLogKow;
 			er.property_value_string = "mLogP: "+qr.mLogP;
-			getNumericalValue(er,qr.mLogP,qr.mLogP.length(),false);
-			er.finalizeUnits();
+			ParseUtilities.getNumericalValue(er,qr.mLogP,qr.mLogP.length(),false);
+			er.finalizePropertyValues();
 			er.keep = true;
 			er.flag = false;
 			records.add(er);
@@ -106,10 +106,10 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strVaporPressure;
 			er.property_value_string = "LogVP: "+qr.vp;
-			getNumericalValue(er,qr.vp,qr.vp.length(),false);
+			ParseUtilities.getNumericalValue(er,qr.vp,qr.vp.length(),false);
 			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
 			er.property_value_units_original = ExperimentalConstants.str_log_mmHg;
-			er.finalizeUnits();
+			er.finalizePropertyValues();
 			er.keep = true;
 			er.flag = false;
 			records.add(er);

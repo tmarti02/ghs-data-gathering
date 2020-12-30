@@ -79,38 +79,64 @@ public class ExperimentalRecord {
 			"url",
 			"date_accessed"};
 
-	public void finalizeUnits() {
+	/**
+	 * Converts to final units and assigns point estimates for any ranges within tolerance:
+	 * LogKow, pKa = 1 log unit
+	 * Melting point, boiling point, flash point = 10 C
+	 * Density = 0.1 g/cm^3
+	 * Vapor pressure = 10 mmHg
+	 * HLC = 100 Pa-m^3/mol
+	 * Water solubility = 1 g/L
+	 */
+	public void finalizePropertyValues() {
+		double logTolerance = 1.0;
+		double temperatureTolerance = 10.0;
+		double densityTolerance = 0.1;
+		double vaporPressureTolerance = 10.0;
+		double hlcTolerance = 100.0;
+		double solubilityTolerance = 1.0;
 		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
 			if (property_value_point_estimate_original!=null) { property_value_point_estimate_final = property_value_point_estimate_original; }
-			if (property_value_min_original!=null) { property_value_min_final = property_value_min_original; }
-			if (property_value_max_original!=null) { property_value_max_final = property_value_max_original; }
+			if (property_value_min_original!=null) { 
+				property_value_min_final = property_value_min_original;
+				property_value_max_final = property_value_max_original;
+				if (property_value_max_final-property_value_min_final <= logTolerance) {
+					property_value_point_estimate_final = property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
+					updateNote("Point estimate computed from range");
+				}
+			}
 			property_value_units_final = property_value_units_original;
 		} else if ((property_name.equals(ExperimentalConstants.strMeltingPoint) || property_name.equals(ExperimentalConstants.strBoilingPoint) ||
 				property_name.equals(ExperimentalConstants.strFlashPoint)) && property_value_units_original!=null) {
 			UnitConverter.convertTemperature(this);
+			if (property_value_min_final!=null && property_value_max_final-property_value_min_final <= temperatureTolerance) {
+				property_value_point_estimate_final = property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
+				updateNote("Point estimate computed from range");
+			}
 		} else if (property_name.equals(ExperimentalConstants.strDensity)) {
 			UnitConverter.convertDensity(this);
+			if (property_value_min_final!=null && property_value_max_final-property_value_min_final <= densityTolerance) {
+				property_value_point_estimate_final = property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
+				updateNote("Point estimate computed from range");
+			}
 		} else if (property_name.equals(ExperimentalConstants.strVaporPressure) && property_value_units_original!=null) {
 			UnitConverter.convertPressure(this);
-		} else if (property_name.equals(ExperimentalConstants.strHenrysLawConstant) && property_value_units_original!=null) {
-			double conversionFactor = 1.0;
-			if (property_value_units_original.equals(ExperimentalConstants.str_atm_m3_mol)) {
-				conversionFactor = UnitConverter.atm_to_Pa;
-				property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
-			} else if (property_value_units_original.equals(ExperimentalConstants.str_atm)) {
-				conversionFactor = UnitConverter.atm_to_mmHg;
-				property_value_units_final = ExperimentalConstants.str_mmHg;
-				updateNote("conversion to Pa-m3/mol not possible");
-			} else if (property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H) ||
-					property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H_vol)) {
-				property_value_units_final = property_value_units_original;
-				updateNote("conversion to Pa-m3/mol not possible");
+			if (property_value_min_final!=null && property_value_max_final-property_value_min_final <= vaporPressureTolerance) {
+				property_value_point_estimate_final = property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
+				updateNote("Point estimate computed from range");
 			}
-			if (property_value_point_estimate_original!=null) { property_value_point_estimate_final = property_value_point_estimate_original*conversionFactor; }
-			if (property_value_min_original!=null) { property_value_min_final = property_value_min_original*conversionFactor; }
-			if (property_value_max_original!=null) { property_value_max_final = property_value_max_original*conversionFactor; }
+		} else if (property_name.equals(ExperimentalConstants.strHenrysLawConstant) && property_value_units_original!=null) {
+			boolean converted = UnitConverter.convertHenrysLawConstant(this);
+			if (converted && property_value_min_final!=null && property_value_max_final-property_value_min_final <= hlcTolerance) {
+				property_value_point_estimate_final = property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
+				updateNote("Point estimate computed from range");
+			}
 		} else if (property_name.equals(ExperimentalConstants.strWaterSolubility) && property_value_units_original!=null) {
-			UnitConverter.convertSolubility(this);
+			boolean converted = UnitConverter.convertSolubility(this);
+			if (converted && property_value_min_final!=null && property_value_max_final-property_value_min_final <= solubilityTolerance) {
+				property_value_point_estimate_final = property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
+				updateNote("Point estimate computed from range");
+			}
 		}
 	}
 	
@@ -225,7 +251,7 @@ public class ExperimentalRecord {
 				case "java.lang.Double":
 					if (myField.get(this)==null) val="";	
 					else {
-						val=Parse.formatDouble((Double)myField.get(this));						
+						val=ParseUtilities.formatDouble((Double)myField.get(this));						
 					}										
 					break;
 					

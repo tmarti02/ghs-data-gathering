@@ -3,11 +3,14 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 import java.io.File;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Objects;
-import java.util.Vector;
+
+import org.apache.commons.text.StringEscapeUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -52,7 +55,7 @@ public class RecordEChemPortalAPI {
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 	
 	public static void downloadAllResultsToDatabase(boolean startFresh) {
-		Vector<QueryOptions> allOptions = QueryOptions.generateAllQueryOptions();
+		List<QueryOptions> allOptions = QueryOptions.generateAllQueryOptions();
 		int counter = 0;
 		for (QueryOptions options:allOptions) {
 			if (counter==0) {
@@ -68,11 +71,11 @@ public class RecordEChemPortalAPI {
 	 * Parses raw JSON search results from a database into a vector of RecordEChemPortalAPI objects
 	 * @return		The search results as RecordEChemPortalAPI objects
 	 */
-	public static Vector<RecordEChemPortalAPI> parseResultsInDatabase() {
+	public static List<RecordEChemPortalAPI> parseResultsInDatabase() {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		String databaseName = sourceName+"_raw_json.db";
 		String databasePath = p.databaseFolder+File.separator+databaseName;
-		Vector<RecordEChemPortalAPI> records = new Vector<RecordEChemPortalAPI>();
+		List<RecordEChemPortalAPI> records = new ArrayList<RecordEChemPortalAPI>();
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		
 		try {
@@ -103,7 +106,7 @@ public class RecordEChemPortalAPI {
 						rec.participantAcronym = r.participantAcronym;
 						rec.participantURL = r.participantUrl;
 						rec.substanceID = r.substanceId;
-						rec.name = r.name;
+						rec.name = StringEscapeUtils.escapeHtml4(r.name);
 						rec.nameType = r.nameType;
 						rec.number = r.number;
 						rec.substanceURL = r.substanceUrl;
@@ -128,26 +131,22 @@ public class RecordEChemPortalAPI {
 								break;
 							}
 						}
-						RecordEChemPortalAPI lastDuplicateRec = null;
 						if (urlCheck.add(rec.endpointURL)) {
 							// If URL not seen before, adds the record immediately and moves on
 							records.add(rec);
 							count++;
-						} else if (rec.recordEquals(lastDuplicateRec)) {
-							// If URL seen before, checks last duplicate record deeply for equivalence (duplicates tend to repeat)
-							countEliminated++;
 						} else {
-							// Otherwise, iterates through and checks all records deeply for equivalence, adding only non-duplicates
+							// Otherwise, iterates and checks all records deeply for equivalence
 							boolean haveRecord = false;
-							Iterator<RecordEChemPortalAPI> it = records.iterator();
-							while (it.hasNext() && !haveRecord) {
-								RecordEChemPortalAPI existingRec = it.next();
+							ListIterator<RecordEChemPortalAPI> it = records.listIterator(records.size());
+							while (it.hasPrevious() && !haveRecord) {
+								RecordEChemPortalAPI existingRec = it.previous();
 								if (rec.recordEquals(existingRec)) {
 									haveRecord = true;
-									lastDuplicateRec = existingRec;
 								}
 							}
 							if (!haveRecord) {
+								// Adds new record if it is not a duplicate
 								records.add(rec);
 								count++;
 							} else {
@@ -155,12 +154,11 @@ public class RecordEChemPortalAPI {
 								countEliminated++;
 							}
 						}
-						if (count % 1000==0) { System.out.println("Added "+count+" records."); }
+						// if (count % 10000==0) { System.out.println("Added "+count+" records..."); }
 					}
 				}
 			}
-			System.out.println("Added "+count+" records.");
-			System.out.println("Eliminated "+countEliminated+" duplicate records.");
+			System.out.println("Added "+count+" records; eliminated "+countEliminated+" records. Done!");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -184,7 +182,9 @@ public class RecordEChemPortalAPI {
 				Objects.equals(this.temperature, rec.temperature) &&
 				Objects.equals(this.pH, rec.pH) &&
 				Objects.equals(this.participantID, rec.participantID) &&
-				Objects.equals(this.substanceID, rec.substanceID)) {
+				Objects.equals(this.substanceID, rec.substanceID) &&
+				Objects.equals(this.name, rec.name) &&
+				Objects.equals(this.number, rec.number)) {
 			return true;
 		} else {
 			return false;

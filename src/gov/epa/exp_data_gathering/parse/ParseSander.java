@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import gov.epa.api.Chemical;
 import gov.epa.api.ExperimentalConstants;
 
-public class ParseSander extends Parse{
+public class ParseSander extends ParseDownloader {
 	
 	public ParseSander() {
 		sourceName = "Sander";

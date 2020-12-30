@@ -12,6 +12,7 @@ import org.openscience.cdk.io.iterator.IteratingSDFReader;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
 
 import gov.epa.api.ExperimentalConstants;
 
@@ -49,7 +50,24 @@ public class RecordOPERA {
 	String Salt_Solvent;//used to account for the fact that solubility of salt was measured
 	String Salt_Solvent_ID;
 	String MPID;
+	String qc_level; // CR: this is going to be added to the notes of experimentalrecords
 	
+	// **********************************************************************
+	// pka specific terms:
+	String MPID_a;
+	String MPID_b;
+	String pKa_a_ref;
+	String pKa_b_ref;
+	String pKa_a;
+	String pKa_b;
+	String Substance_CASRN;
+	String Substance_Name;
+	String Extenal_ID;
+	String DSSTox_Structure_Id;
+	String DSSTox_QC_Level;
+	String DSSTox_Substance_Id;
+	
+	public String property_name;
 	public Double property_value_point_estimate_original;//each property in OPERA stores the property value in a different field- so need field to store all of them
 	public String property_value_units_original;//sometimes it will take some work to figure this out by comparing to data values from other sources
 		
@@ -84,9 +102,13 @@ public class RecordOPERA {
 		for (int i=0;i<acs.getAtomContainerCount();i++) {
 			AtomContainer ac=(AtomContainer)acs.getAtomContainer(i);
 			RecordOPERA ro = createRecordOpera(ac);
+			ro.property_name = endpoint;
 
 			//Print out:
-			if (ro.CAS.contentEquals("71-43-2")) System.out.println(ro.toJSON());
+			// if (ro.Substance_CASRN.contentEquals("71-43-2")) System.out.println(ro.toJSON());
+			// if (ro.CAS.contentEquals("71-43-2")) System.out.println(ro.toJSON());
+			if (i == 4) System.out.println(ac.getProperties());
+			
 
 			
 			records.add(ro);
@@ -97,15 +119,23 @@ public class RecordOPERA {
 			
 
 	}
-
+	
 	private static String getFileName(String endpoint) {
 		switch (endpoint) {
 		case ExperimentalConstants.strWaterSolubility:
 			return "WS_QR.sdf";			
 		case ExperimentalConstants.strVaporPressure:
 			return "VP_QR.sdf";
-			
-		//TODO add other pertinent properties...
+		case ExperimentalConstants.strBoilingPoint:
+			return "BP_QR.sdf";
+		case ExperimentalConstants.strHenrysLawConstant:
+			return "HL_QR.sdf";
+		case ExperimentalConstants.strLogKow:
+			return "LogP_QR.sdf";
+		case ExperimentalConstants.str_pKA:
+			return "pKa_QR.sdf";
+		case ExperimentalConstants.strMeltingPoint:
+			return "MP_QR.sdf";
 
 		}
 		return null;
@@ -139,8 +169,19 @@ public class RecordOPERA {
 			
 			} else if (key.contentEquals("LogHL")) {
 				ro.property_value_point_estimate_original=Double.parseDouble(value);
-				ro.property_value_units_original="log10_?";//TODO- determine what "?" is 					
-				
+				ro.property_value_units_original="log10_dimensionless";//TODO- determine what "?" is 	
+			} else if (key.contentEquals("LogP")) {
+				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_value_units_original="log10_dimensionless";
+			} else if (key.contentEquals("MP")) {
+				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_value_units_original=ExperimentalConstants.str_C;
+			} else if (key.contentEquals("LogVP")) {
+				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_value_units_original="log10_" + ExperimentalConstants.str_mmHg;
+			} else if (key.contentEquals("BP")) {
+				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_value_units_original=ExperimentalConstants.str_C;
 			} else if (key.contains("Reference")) {
 				ro.Reference=value;
 				
@@ -151,7 +192,8 @@ public class RecordOPERA {
 				try {
 					//Use reflection to assign values from key/value pair:
 //					System.out.println(key);
-					Field myField = ro.getClass().getDeclaredField(key.replace(" ", "_"));
+					Field myField = ro.getClass().getDeclaredField(key.replace(" ", "_").replace("-", "_"));
+
 					myField.set(ro, value);
 					
 					//TODO if get error- add if statement above to account for it or in some cases add a new field to RecordOPERA class
@@ -203,10 +245,28 @@ public class RecordOPERA {
 		return acs;
 	}
 
+	// TODO: Need to get data for BP, HL, LogP, MP, pKA, VP, and WS
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		parseOPERA_SDF(ExperimentalConstants.strWaterSolubility);
+	
+	/**
+	 * this was the old main method, seems sensible to use it in the parseOPERA class in a manner similar to 'parseRecordsInDatabase' from other classes.
+	 * @return
+	 */
+	public static Vector<RecordOPERA> parseOperaSdf() {
+		Vector<RecordOPERA> records=new Vector<>();
+		// have to figure out a smart way to handle ExperimentalConstants.str_pKA
+		String [] endpoints = {ExperimentalConstants.strBoilingPoint,ExperimentalConstants.strHenrysLawConstant,ExperimentalConstants.strLogKow,ExperimentalConstants.strMeltingPoint, ExperimentalConstants.strVaporPressure,ExperimentalConstants.strWaterSolubility};
+		for (int i = 0; i < endpoints.length; i++) {
+		records.addAll(parseOPERA_SDF(endpoints[i]));
+		}
+	return records;
 	}
 
+	/**
+	 * exists only to 
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		parseOPERA_SDF(ExperimentalConstants.str_pKA);
+	}
 }

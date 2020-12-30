@@ -2,13 +2,18 @@ package gov.epa.exp_data_gathering.parse;
 
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.Vector;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
@@ -96,8 +101,8 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			builder.setPrettyPrinting();
 			Gson gson = builder.create();
 
-			FileWriter fw = new FileWriter(file);
-			fw.write(gson.toJson(this));
+			OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
+			fw.write(reverseFixChars(StringEscapeUtils.unescapeHtml4(gson.toJson(this))));
 			fw.flush();
 			fw.close();
 
@@ -142,7 +147,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 					for (int i = 0; i < headers.length; i++) {
 						Field field = erClass.getDeclaredField(headers[i]);
 						Object value = field.get(er);
-						if (value!=null && !(value instanceof Double)) { recRow.createCell(i).setCellValue(value.toString());
+						if (value!=null && !(value instanceof Double)) { recRow.createCell(i).setCellValue(reverseFixChars(value.toString()));
 						} else if (value!=null) { recRow.createCell(i).setCellValue((double) value); }
 					}
 				} else {
@@ -151,7 +156,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 					for (int i = 0; i < 11; i++) {
 						Field field = erClass.getDeclaredField(headers[i]);
 						Object value = field.get(er);
-						if (value!=null && !(value instanceof Double)) { badRow.createCell(i).setCellValue(value.toString());
+						if (value!=null && !(value instanceof Double)) { badRow.createCell(i).setCellValue(reverseFixChars(value.toString()));
 						} else if (value!=null) { badRow.createCell(i).setCellValue((double) value); }
 					}
 				}
@@ -211,6 +216,28 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 //		chemicals.toJSONElement();
 	}
 
-	
+	private static String reverseFixChars(String str) {
+		str=str.replace("^0","\u2070");// superscript 0
+		str=str.replace("^1","\u00B9");// superscript 1
+		str=str.replace("^2","\u00B2");// superscript 2
+		str=str.replace("^3","\u00B3");// superscript 3
+		str=str.replace("^4","\u2074");// superscript 4
+		str=str.replace("^5","\u2075");// superscript 5
+		str=str.replace("^6","\u2076");// superscript 6
+		str=str.replace("^7","\u2077");// superscript 7
+		str=str.replace("^8","\u2078");// superscript 8
+		str=str.replace("^9","\u2079");// superscript 9
+		str=str.replace("_0","\u2080");// subscript 0
+		str=str.replace("_1","\u2081");// subscript 1
+		str=str.replace("_2","\u2082");// subscript 2
+		str=str.replace("_3","\u2083");// subscript 3
+		str=str.replace("_4","\u2084");// subscript 4
+		str=str.replace("_5","\u2085");// subscript 5
+		str=str.replace("_6","\u2086");// subscript 6
+		str=str.replace("_7","\u2087");// subscript 7
+		str=str.replace("_8","\u2088");// subscript 8
+		str=str.replace("_9","\u2089");// subscript 9
+		return str;
+	}
 
 }

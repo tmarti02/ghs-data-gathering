@@ -55,7 +55,7 @@ public class ParseADDoPT extends Parse {
 			er.property_value_point_estimate_original = Double.parseDouble(ar.solubility);
 			er.property_value_units_original = ExperimentalConstants.str_log_M;
 			er.temperature_C = Double.parseDouble(ar.temp);
-			er.finalizeUnits();
+			er.finalizePropertyValues();
 			er.keep = true;
 			er.flag = false;
 			records.add(er);

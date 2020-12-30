@@ -82,8 +82,9 @@ public class ParseChemBL extends Parse {
 			sensiblePkaCheck(cbr.standardValue, er); // puts records with pka outside the -10 to 25 range into bad
 		}	
 			
-			else if (cbr.standardType.toLowerCase().equals("solubility") && (desc.contains("water") || desc.contains("aq")) && cbr.standardUnits!=null &&
-				!cbr.standardUnits.isBlank() && !desc.contains("buffer") && !desc.contains("acetate") && !desc.contains("dextrose") && !desc.contains("dmso")
+			else if (cbr.standardType.toLowerCase().equals("solubility") && (desc.contains("water") || desc.contains("aq")) && cbr.standardUnits!=null ||
+					desc.contains("buff") && cbr.standardUnits!=null || desc.contains("sal") && cbr.standardUnits!=null 
+					&& !cbr.standardUnits.isBlank() && !desc.contains("buffer") && !desc.contains("acetate") && !desc.contains("dextrose") && !desc.contains("dmso")
 				&& !desc.contains("octanol") && !desc.contains("glycine") && !desc.contains("arginine") && !desc.contains("acid") && !desc.contains("pbs")
 				&& !desc.contains("hcl") && !desc.contains("intestinal") && !desc.contains("triethanolamine") && !desc.contains("cyclodextrin")) {
 			// I started on eliminating bad water solubility records (i.e. non-aqueous solubilities) but there are still more
@@ -128,10 +129,10 @@ public class ParseChemBL extends Parse {
 		Matcher pHMatcher = Pattern.compile("ph (value )?(of )?([-]?[ ]?[0-9]*\\.?[0-9]+)( to )?([-]?[ ]?[0-9]*\\.?[0-9]+)?").matcher(desc);
 		if (pHMatcher.find()) {
 			double min = Double.parseDouble(pHMatcher.group(3));
-			er.pH = Parse.formatDouble(min);
+			er.pH = ParseUtilities.formatDouble(min);
 			if (pHMatcher.group(5)!=null) {
 				double max = Double.parseDouble(pHMatcher.group(5));
-				er.pH += "-" + Parse.formatDouble(max);
+				er.pH += "-" + ParseUtilities.formatDouble(max);
 			}
 		}
 		
@@ -165,7 +166,7 @@ public class ParseChemBL extends Parse {
 			er.reason = "Extrapolated";
 		}
 		er.flag = false;
-		er.finalizeUnits();
+		er.finalizePropertyValues();
 		records.add(er);
 	}
 	

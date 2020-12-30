@@ -18,6 +18,12 @@ public class Unit {
 	@Expose
 	public String phraseId;
 	
+	// Default constructor
+	public Unit() {
+		phraseGroupId = null;
+		phraseId = null;
+	}
+	
 	/**
 	 * Translates our unit identifiers to eChemPortal's Unit objects
 	 * @param unit	Desired unit from ExperimentalConstants

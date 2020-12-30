@@ -13,12 +13,15 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.RecordToxVal;
+
 public class OCHEM_AD_Stats {
 
 	static final String strProbStd="PROB-STD";
 	static final String strClassLag="CLASS-LAG";
 	static final String strASNN_STDEV="ASNN-STDEV";
 	static final String strASNN_CORREL="ASNN-CORREL";
+	static final String strBaggingSTD="BAGGING-STD";
 					
 	class RecordOCHEM {
 		String ID;
@@ -84,6 +87,16 @@ public class OCHEM_AD_Stats {
 				if(colNameAD!=null) r.AD=rowi.getCell(colNumAD).getNumericCellValue();
 				
 				if (r.pred.isEmpty())r.AD=99999.0;
+				
+//				if (r.ID.contentEquals("ADD SIDs"))r.AD=99999.0;
+//				*** add SIDs for the chemicals that are too large.***
+				
+//				I created a boolean for isTooLargeMolecule.
+//				This is for molecules that should (but don't always) result in errors
+//				in OCHEM because "in sdf too large molecule with na>100".
+//				-Leora
+				
+				if (isTooLargeMolecule(r)) r.AD=99999.0;		
 
 //				System.out.println(i+"\t"+r.ID+"\t"+r.exp+"\t"+r.pred+"\t"+r.AD);
 				records.add(r);
@@ -180,6 +193,42 @@ public class OCHEM_AD_Stats {
 		}
 		
 	}
+	
+// Creating a boolean for large molecules with na>100.  -Leora	
+	public static boolean isTooLargeMolecule (RecordOCHEM r) {
+		String dtxsid=r.ID;
+		if (dtxsid.contentEquals("DTXSID701019687") || 
+			dtxsid.contentEquals("DTXSID701014651")  || 
+			dtxsid.contentEquals("DTXSID801019523")  || 
+			dtxsid.contentEquals("DTXSID6036205")  || 
+			dtxsid.contentEquals("DTXSID50888572")  || 
+			dtxsid.contentEquals("DTXSID4070037")  || 
+			dtxsid.contentEquals("DTXSID601019622")  || 
+			dtxsid.contentEquals("DTXSID101019560")  || 
+			dtxsid.contentEquals("DTXSID5066794")  || 
+			dtxsid.contentEquals("DTXSID2068474")  || 
+			dtxsid.contentEquals("DTXSID8030760")  || 
+			dtxsid.contentEquals("DTXSID501019398")  || 
+			dtxsid.contentEquals("DTXSID801017622")  || 
+			dtxsid.contentEquals("DTXSID60240602")  || 
+			dtxsid.contentEquals("DTXSID2060125")  || 
+			dtxsid.contentEquals("DTXSID3022829")  || 
+			dtxsid.contentEquals("DTXSID60893197")  || 
+			dtxsid.contentEquals("DTXSID1065508")  || 
+			dtxsid.contentEquals("DTXSID401015105")  || 
+			dtxsid.contentEquals("DTXSID7041706")  || 
+			dtxsid.contentEquals("DTXSID50889948")  || 
+			dtxsid.contentEquals("DTXSID101019508")) {
+			return true;
+		} else {
+			return false;
+		}	
+	}
+	
+	
+	
+	
+	
 	public static void main(String[] args) {
 		
 		OCHEM_AD_Stats o=new OCHEM_AD_Stats();
@@ -188,7 +237,7 @@ public class OCHEM_AD_Stats {
 				
 		System.out.println("file\tAD_Name\tFrac training\tBA prediction set\tCoverage prediction set\tProduct");
 							
-		String [] adnames= {strProbStd,strClassLag,strASNN_CORREL,strASNN_STDEV};
+		String [] adnames= {strProbStd,strClassLag,strASNN_CORREL,strASNN_STDEV, strBaggingSTD};
 		String method="asnn";
 		
 		o.getStatsForFolder(folderPath,null, 1.0,method);
@@ -204,6 +253,25 @@ public class OCHEM_AD_Stats {
 		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 0.95,"xgboost");
 		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 1.0,"xgboost");
 		o.getStatsForFolder(folderPath, null, 1.0,"xgboost");//if dont have AD use null
+		
+//		String [] dm = {strBaggingSTD};
+//		String method2 = "KNN";
+		
+//		o.getStatsForFolder(folderPath,null, 1.0,method2);
+//		for (String distance:dm) {
+//			o.getStatsForFolder(folderPath,distance, 0.95,method2);	
+//		}
+				
+//		for (String distance:dm) {
+//			o.getStatsForFolder(folderPath,distance, 1.0,method2);	
+//		}
+		
+		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"KNN");
+		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"KNN");
+		o.getStatsForFolder(folderPath, null, 1.0,"KNN");//if dont have AD use null
+		
+//  *** The BaggingSTD for KNN isn't working.  Above is my attempt to fix it but so far it isn't working.		
+	
 	}
 	
 	public class StatsBinary {

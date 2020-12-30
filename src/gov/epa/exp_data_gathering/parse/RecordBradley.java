@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Vector;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -40,7 +41,7 @@ public class RecordBradley {
 			if (filename.endsWith(".xlsx")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
-					String date = Parse.getStringCreationDate(filepath);
+					String date = ParseDownloader.getStringCreationDate(filepath);
 					if (!date.equals(lastUpdated)) {
 						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
 					}
@@ -73,7 +74,7 @@ public class RecordBradley {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordBradley br = new RecordBradley();
-						br.solute = row.getCell(soluteIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+						br.solute = StringEscapeUtils.escapeHtml4(row.getCell(soluteIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
 						br.citation = row.getCell(citationIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						br.refURL = row.getCell(refIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						br.soluteSMILES = row.getCell(soluteSMILESIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
