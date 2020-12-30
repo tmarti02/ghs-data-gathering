@@ -67,8 +67,16 @@ public class RecordOPERA {
 	String DSSTox_QC_Level;
 	String DSSTox_Substance_Id;
 	
+	// the many forms of property value string
 	public String property_name;
-	public Double property_value_point_estimate_original;//each property in OPERA stores the property value in a different field- so need field to store all of them
+	public String LogHL;
+	public String LogP;
+	public String MP;
+	public String LogVP;
+	public String BP;
+	public String LogMolar;
+	
+	
 	public String property_value_units_original;//sometimes it will take some work to figure this out by comparing to data values from other sources
 		
 	String Temperature;//Map to ExperimentalRecord.temperature_C
@@ -103,6 +111,7 @@ public class RecordOPERA {
 			AtomContainer ac=(AtomContainer)acs.getAtomContainer(i);
 			RecordOPERA ro = createRecordOpera(ac);
 			ro.property_name = endpoint;
+			
 
 			//Print out:
 			// if (ro.Substance_CASRN.contentEquals("71-43-2")) System.out.println(ro.toJSON());
@@ -159,28 +168,20 @@ public class RecordOPERA {
 			String value=(String)entry.getValue();
 
 			if (key.contains("cdk")) continue;
-
-//			System.out.println("Key = " + key + 
-//					", Value = " + value);
 			
 			if (key.contentEquals("LogMolar")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				// ro.property_value_point_estimate_original=Double.parseDouble(value);
 				ro.property_value_units_original="log10_M";//Note: later to get M need to use Math.pow(10,value)					
 			
 			} else if (key.contentEquals("LogHL")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
 				ro.property_value_units_original="log10_dimensionless";//TODO- determine what "?" is 	
 			} else if (key.contentEquals("LogP")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
 				ro.property_value_units_original="log10_dimensionless";
 			} else if (key.contentEquals("MP")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
 				ro.property_value_units_original=ExperimentalConstants.str_C;
 			} else if (key.contentEquals("LogVP")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
 				ro.property_value_units_original="log10_" + ExperimentalConstants.str_mmHg;
 			} else if (key.contentEquals("BP")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
 				ro.property_value_units_original=ExperimentalConstants.str_C;
 			} else if (key.contains("Reference")) {
 				ro.Reference=value;

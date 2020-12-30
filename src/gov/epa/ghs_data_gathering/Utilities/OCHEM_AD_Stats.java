@@ -179,9 +179,10 @@ public class OCHEM_AD_Stats {
 		DecimalFormat df=new DecimalFormat("0.000");
 		
 		for (File file:files) {
-			
 			if (!file.getName().toLowerCase().contains(".xls")) continue;
 			if (!file.getName().toLowerCase().contains("_"+methodName+"_")) continue;
+			
+//			System.out.println(file.getName()+"\t"+colNameAD);
 			
 			StatsBinary sb=getStats(file.getAbsolutePath(), colNameAD, fracTrainingInsideAD);
 						
@@ -237,41 +238,27 @@ public class OCHEM_AD_Stats {
 				
 		System.out.println("file\tAD_Name\tFrac training\tBA prediction set\tCoverage prediction set\tProduct");
 							
-		String [] adnames= {strProbStd,strClassLag,strASNN_CORREL,strASNN_STDEV, strBaggingSTD};
-		String method="asnn";
-		
-		o.getStatsForFolder(folderPath,null, 1.0,method);
-		
-		for (String adname:adnames) {
-			o.getStatsForFolder(folderPath,adname, 0.95,method);	
-		}
-				
-		for (String adname:adnames) {
-			o.getStatsForFolder(folderPath,adname, 1.0,method);	
-		}
-					
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 0.95,"xgboost");
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 1.0,"xgboost");
-		o.getStatsForFolder(folderPath, null, 1.0,"xgboost");//if dont have AD use null
-		
-//		String [] dm = {strBaggingSTD};
-//		String method2 = "KNN";
-		
-//		o.getStatsForFolder(folderPath,null, 1.0,method2);
-//		for (String distance:dm) {
-//			o.getStatsForFolder(folderPath,distance, 0.95,method2);	
+//		String [] adnames= {strProbStd,strClassLag,strASNN_CORREL,strASNN_STDEV, strBaggingSTD};
+//		String method="asnn";
+//		
+//		o.getStatsForFolder(folderPath,null, 1.0,method);
+//		
+//		for (String adname:adnames) {
+//			o.getStatsForFolder(folderPath,adname, 0.95,method);	
 //		}
-				
-//		for (String distance:dm) {
-//			o.getStatsForFolder(folderPath,distance, 1.0,method2);	
+//				
+//		for (String adname:adnames) {
+//			o.getStatsForFolder(folderPath,adname, 1.0,method);	
 //		}
-		
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"KNN");
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"KNN");
-		o.getStatsForFolder(folderPath, null, 1.0,"KNN");//if dont have AD use null
-		
-//  *** The BaggingSTD for KNN isn't working.  Above is my attempt to fix it but so far it isn't working.		
-	
+//					
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 0.95,"xgboost");
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 1.0,"xgboost");
+//		o.getStatsForFolder(folderPath, null, 1.0,"xgboost");//if dont have AD use null
+				
+		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"knn");
+		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"knn");
+		o.getStatsForFolder(folderPath, null, 1.0,"knn");//if dont have AD use null
+			
 	}
 	
 	public class StatsBinary {
