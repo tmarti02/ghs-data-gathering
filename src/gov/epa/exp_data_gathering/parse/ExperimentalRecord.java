@@ -35,6 +35,7 @@ public class ExperimentalRecord {
 	public String pH;
 	public String measurement_method;//	The experimental method used to measure the property
 	public String reliability;
+	public String dsstox_substance_id; //DSSTox substance identifier
 	public String note;//	Any additional note
 
 	public String property_value_string;//Store original string from source for checking later
