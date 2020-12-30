@@ -86,6 +86,7 @@ public class QueryHandler {
 				retryCount++;
 			}
 			String json = response.getBody();
+			System.out.println(json);
 			page = gson.fromJson(json, ResultsPage.class);
 			return page;
 		} catch (Exception ex) {
@@ -140,9 +141,8 @@ public class QueryHandler {
 	 * @param query			API query to run
 	 * @param startFresh	True to rebuild database, false to append to existing database
 	 */
-	public void downloadQueryResultsToDatabase(Query query,boolean startFresh) {
+	public void downloadQueryResultsToDatabase(Query query,String databaseName,boolean startFresh) {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
-		String databaseName = p.sourceName+"_raw_json.db";
 		String databasePath = p.databaseFolder+File.separator+databaseName;
 		String tableName = "results";
 		File db = new File(databasePath);
@@ -151,7 +151,7 @@ public class QueryHandler {
 		
 		try {
 			int totalResults = getQuerySize(query);
-			System.out.println("Found "+totalResults+" results. Downloading to eChemPortalAPI_raw_json.db...");
+			System.out.println("Found "+totalResults+" results. Downloading to "+databaseName+"...");
 			
 			while (query.paging.offset < totalResults) {
 				downloadResultsPageToDatabase(query,conn);
