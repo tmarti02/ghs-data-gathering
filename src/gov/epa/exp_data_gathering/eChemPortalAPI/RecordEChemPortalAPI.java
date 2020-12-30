@@ -57,12 +57,13 @@ public class RecordEChemPortalAPI {
 	
 	public static void downloadAllResultsToDatabase(boolean startFresh) {
 		List<QueryOptions> allOptions = QueryOptions.generateAllQueryOptions();
+		String databaseName = sourceName+"_raw_json.db";
 		int counter = 0;
 		for (QueryOptions options:allOptions) {
 			if (counter==0) {
-				options.runDownload(startFresh);
+				options.runDownload(databaseName,startFresh);
 			} else {
-				options.runDownload(false);
+				options.runDownload(databaseName,false);
 			}
 			counter++;
 		}

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import gov.epa.api.ExperimentalConstants;
 
 /**
@@ -454,7 +457,7 @@ public class QueryOptions {
 	 * Downloads the results of the given query to the results database
 	 * @param startFresh	True to rebuild the database from scratch, false otherwise
 	 */
-	public void runDownload(boolean startFresh) {
+	public void runDownload(String databaseName,boolean startFresh) {
 		List<QueryOptions> splitOptions = resize();
 		QueryHandler handler = new QueryHandler(1000,10);
 		int counter = 0;
@@ -462,9 +465,9 @@ public class QueryOptions {
 			System.out.println("Querying "+propertyName+" results from "+options.endpointMin+" to "+options.endpointMax+" "+endpointUnits+"...");
 			Query query = options.generateQuery();
 			if (counter==0) {
-				handler.downloadQueryResultsToDatabase(query,startFresh);
+				handler.downloadQueryResultsToDatabase(query,databaseName,startFresh);
 			} else {
-				handler.downloadQueryResultsToDatabase(query,false);
+				handler.downloadQueryResultsToDatabase(query,databaseName,false);
 			}
 			counter++;
 		}
