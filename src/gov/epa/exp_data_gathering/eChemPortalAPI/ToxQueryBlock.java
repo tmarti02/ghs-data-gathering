@@ -24,6 +24,22 @@ public class ToxQueryBlock extends QueryBlock {
 	}
 	
 	/**
+	 * Adds a QueryField to select test type of results
+	 * @param	List of species to include
+	 */
+	public void addTestTypeField(List<String> testTypes,boolean includeOther) {
+		List<Value> testTypeValues = new ArrayList<Value>();
+		for (String t:testTypes) {
+			testTypeValues.add(new Value("EQUALS",t));
+		}
+		if (includeOther) {
+			testTypeValues.add(new Value("LIKE","other:*"));
+		}
+		QueryField testTypeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.TestType","string","Test Type",testTypeValues);
+		queryFields.add(testTypeField);
+	}
+	
+	/**
 	 * Adds a QueryField to select species of results
 	 * @param	List of species to include
 	 */
@@ -54,6 +70,23 @@ public class ToxQueryBlock extends QueryBlock {
 		QueryField routeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.AdministrationExposure.RouteOfAdministration",
 				"string","Route of Administration",routeValues);
 		queryFields.add(routeField);
+	}
+	
+	/**
+	 * Adds a QueryField to select inhalation exposure type of results
+	 * @param	List of species to include
+	 */
+	public void addInhalationTypeField(List<String> inhalationTypes,boolean includeOther) {
+		List<Value> inhalationTypeValues = new ArrayList<Value>();
+		for (String i:inhalationTypes) {
+			inhalationTypeValues.add(new Value("EQUALS",i));
+		}
+		if (includeOther) {
+			inhalationTypeValues.add(new Value("LIKE","other:*"));
+		}
+		QueryField inhalationTypeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.AdministrationExposure.TypeOfInhalationExposure",
+				"string","Inhalation Exposure Type",inhalationTypeValues);
+		queryFields.add(inhalationTypeField);
 	}
 	
 	/**
