@@ -144,7 +144,7 @@ public class ParseChemBL extends Parse {
 		}
 		
 		er.original_source_name = cbr.documentJournal + " " + cbr.documentYear;
-		if (er.keep && (er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
+		if (er.keep && !ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;
 			er.reason = "No identifiers";
 		} else if (er.keep && er.property_value_point_estimate_original==null) {
@@ -166,7 +166,7 @@ public class ParseChemBL extends Parse {
 			er.reason = "Extrapolated";
 		}
 		er.flag = false;
-		er.finalizeRecord();
+		RecordFinalizer.finalizeRecord(er);
 		records.add(er);
 	}
 	

@@ -23,8 +23,9 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 
 import gov.epa.api.RawDataRecord;
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_CreateTable;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 public class RecordChemidplus {
@@ -497,8 +498,8 @@ public class RecordChemidplus {
 		Vector<RecordChemidplus> records = new Vector<>();
 
 		try {
-			Statement stat = MySQL_DB.getStatement(databasePath);
-			ResultSet rs = MySQL_DB.getAllRecords(stat, "webpages");
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = SQLite_GetRecords.getAllRecords(stat, "webpages");
 
 			int counter = 1;
 			
@@ -545,7 +546,7 @@ public class RecordChemidplus {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
-		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
+		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
 		Random rand = new Random();
 		
 		try {

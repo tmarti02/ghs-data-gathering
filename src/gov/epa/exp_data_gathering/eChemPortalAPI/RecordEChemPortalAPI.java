@@ -16,12 +16,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Block;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.NestedBlock;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.OriginalValue;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Result;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 
 /**
  * Stores data downloaded from eChemPortal API
@@ -83,8 +84,8 @@ public class RecordEChemPortalAPI {
 			int countEliminated = 0;
 			// Uses a HashSet to speed up duplicate checking by URL
 			HashSet<String> urlCheck = new HashSet<String>();
-			Statement stat = MySQL_DB.getStatement(databasePath);
-			ResultSet rs = MySQL_DB.getAllRecords(stat,"results");
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = SQLite_GetRecords.getAllRecords(stat,"results");
 			while (rs.next()) {
 				String date = rs.getString("date");
 				String content = rs.getString("content");

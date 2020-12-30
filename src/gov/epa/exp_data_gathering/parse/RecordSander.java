@@ -18,7 +18,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
@@ -116,8 +117,8 @@ public static Vector<String> parsePropertyLinksInDatabase() {
 	System.out.println(databasePath);
 
 	try {
-		Statement stat = MySQL_DB.getStatement(databasePath);
-		ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceSander);
+		Statement stat = SQLite_Utilities.getStatement(databasePath);
+		ResultSet rs = SQLite_GetRecords.getAllRecords(stat, ExperimentalConstants.strSourceSander);
 		
 		int counter = 1;
 		
@@ -189,8 +190,8 @@ public static Vector<RecordSander> parseWebpagesInDatabase() {
 	Vector<RecordSander> records = new Vector<>();
 
 	try {
-		Statement stat = MySQL_DB.getStatement(databasePath);
-		ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceSander);
+		Statement stat = SQLite_Utilities.getStatement(databasePath);
+		ResultSet rs = SQLite_GetRecords.getAllRecords(stat, ExperimentalConstants.strSourceSander);
 		
 		int counter = 1;
 	

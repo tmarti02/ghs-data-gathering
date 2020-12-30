@@ -17,7 +17,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 
 
@@ -197,8 +198,8 @@ public class RecordLookChem {
 		Vector<RecordLookChem> records = new Vector<>();
 
 		try {
-			Statement stat = MySQL_DB.getStatement(databasePath);
-			ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceLookChem);
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = SQLite_GetRecords.getAllRecords(stat, ExperimentalConstants.strSourceLookChem);
 
 			int counter = 1;
 			while (rs.next()) {

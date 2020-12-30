@@ -28,7 +28,8 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.QSAR.DataSetCreation.ConvertExperimentalRecordsToDataSet;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_CreateTable;
+import gov.epa.database.SQLite_Utilities;
 
 public class DataFetcher {
 	
@@ -156,13 +157,13 @@ public class DataFetcher {
 		String tableName = "records";
 		System.out.println("Creating database at "+databasePath+" with fields:\n"+String.join("\n",fieldNames));
 		try {
-			Connection conn= MySQL_DB.getConnection(databasePath);
-			Statement stat = MySQL_DB.getStatement(conn);			
+			Connection conn= SQLite_Utilities.getConnection(databasePath);
+			Statement stat = SQLite_Utilities.getStatement(conn);			
 			conn.setAutoCommit(true);		
 			stat.executeUpdate("drop table if exists "+tableName+";");
 			stat.executeUpdate("VACUUM;");
 			
-			MySQL_DB.create_table_key_with_duplicates(stat, tableName, fieldNames,"casrn");
+			SQLite_CreateTable.create_table_key_with_duplicates(stat, tableName, fieldNames,"casrn");
 			conn.setAutoCommit(false);
 
 			String s = "insert into " + tableName + " values (";

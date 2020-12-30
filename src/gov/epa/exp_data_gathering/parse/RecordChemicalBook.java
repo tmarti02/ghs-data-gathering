@@ -1,7 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 import gov.epa.api.RawDataRecord;
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
@@ -153,8 +153,8 @@ public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 	Vector<RecordChemicalBook> records = new Vector<>();
 
 	try {
-		Statement stat = MySQL_DB.getStatement(databasePath);
-		ResultSet rs = MySQL_DB.getAllRecords(stat, "ChemicalBook");
+		Statement stat = SQLite_Utilities.getStatement(databasePath);
+		ResultSet rs = SQLite_GetRecords.getAllRecords(stat, "ChemicalBook");
 		
 		int counter = 1;
 	
@@ -204,8 +204,8 @@ public static Vector<String> parsePropertyLinksInDatabase() {
 	Vector<String> records = new Vector<>();
 
 	try {
-		Statement stat = MySQL_DB.getStatement(databasePath);
-		ResultSet rs = MySQL_DB.getAllRecords(stat, "searchAndPropertyLinks"); //hardcoded for now
+		Statement stat = SQLite_Utilities.getStatement(databasePath);
+		ResultSet rs = SQLite_GetRecords.getAllRecords(stat, "searchAndPropertyLinks"); //hardcoded for now
 		
 		int counter = 1;
 	

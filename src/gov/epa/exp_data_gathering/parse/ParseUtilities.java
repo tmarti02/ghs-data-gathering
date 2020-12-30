@@ -651,5 +651,14 @@ public class ParseUtilities extends Parse {
 		} 
 		return units;
 	}
+	
+	public static boolean hasIdentifiers(ExperimentalRecord er) {
+		if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
+				(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 
 }

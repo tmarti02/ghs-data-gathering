@@ -4,8 +4,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_CreateTable;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 
 public class RawDataRecordPubChem {
 
@@ -29,14 +30,14 @@ public class RawDataRecordPubChem {
 	
 	public void addRecordToDatabase(String tableName,Connection conn) {
 		String [] values= {date,cid,experimental,identifiers,cas,synonyms};
-		CreateGHS_Database.addDataToTable(tableName, fieldNames, values, conn);
+		SQLite_CreateTable.addDataToTable(tableName, fieldNames, values, conn);
 	}
 	
 	public boolean haveRecordInDatabase(String databasePath,String tableName,Connection conn) {
 
 		try {
-			Statement stat = MySQL_DB.getStatement(conn);
-			ResultSet rs = MySQL_DB.getRecords(stat,tableName,"cid",cid);
+			Statement stat = SQLite_Utilities.getStatement(conn);
+			ResultSet rs = SQLite_GetRecords.getRecords(stat,tableName,"cid",cid);
 			return rs.next();
 		} catch (Exception ex) {
 			ex.printStackTrace();

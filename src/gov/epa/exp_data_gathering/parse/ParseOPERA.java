@@ -74,7 +74,7 @@ public class ParseOPERA extends Parse {
 			er.smiles=ro.Original_SMILES;
 			er.note = "qc_level= " + ro.qc_level;
 			er.date_accessed = java.time.LocalDate.now().toString();
-			er.finalizeRecord();
+			RecordFinalizer.finalizeRecord(er);
 
 			er.original_source_name = ro.Reference;
 			if (!(ro.dsstox_compound_id == null))
