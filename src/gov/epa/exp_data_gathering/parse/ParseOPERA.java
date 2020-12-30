@@ -61,6 +61,7 @@ public class ParseOPERA extends Parse {
 			records.add(er_a);
 			records.add(er_b);
 		}
+		// comment
 		if (ro.property_name != ExperimentalConstants.str_pKA) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.chemical_name = ro.preferred_name;
