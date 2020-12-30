@@ -13,8 +13,8 @@ import com.google.gson.GsonBuilder;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 
+import gov.epa.database.SQLite_CreateTable;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
@@ -147,7 +147,7 @@ public class QueryHandler {
 		String tableName = "results";
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
-		java.sql.Connection conn = CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataEChemPortalAPI.fieldNames, startFresh);
+		java.sql.Connection conn = SQLite_CreateTable.create_table(databasePath, tableName, RawDataEChemPortalAPI.fieldNames, startFresh);
 		
 		try {
 			int totalResults = getQuerySize(query);

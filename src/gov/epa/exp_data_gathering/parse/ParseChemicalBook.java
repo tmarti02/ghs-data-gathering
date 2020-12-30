@@ -19,7 +19,7 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
+import gov.epa.database.SQLite_CreateTable;
 
 /**
  * @author CRAMSLAN
@@ -206,7 +206,7 @@ public class ParseChemicalBook extends Parse {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
-		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
+		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
 		Random rand = new Random();
 		
 		try {

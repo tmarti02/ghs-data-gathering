@@ -2,7 +2,7 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.sql.Connection;
 
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
+import gov.epa.database.SQLite_CreateTable;
 
 /**
  * Stores raw data (date accessed, JSON search query, and JSON search result) for the eChemPortal API
@@ -26,6 +26,6 @@ public class RawDataEChemPortalAPI {
 	
 	public void addRecordToDatabase(Connection conn) {
 		String[] values= {date,query,content};
-		CreateGHS_Database.addDataToTable("results",fieldNames,values,conn);
+		SQLite_CreateTable.addDataToTable("results",fieldNames,values,conn);
 	}
 }

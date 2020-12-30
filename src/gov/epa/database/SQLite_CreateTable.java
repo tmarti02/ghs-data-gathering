@@ -164,6 +164,39 @@ public class SQLite_CreateTable {
 	
 	
 	}
+	
+	public static Connection create_table(String databaseFilePath,String tableName,String [] fieldNames, boolean startFresh) {
+
+		Connection conn=null;
+		
+		try {
+			conn= SQLite_Utilities.getConnection(databaseFilePath);
+			conn.setAutoCommit(true);
+			
+			if (startFresh) {
+				System.out.println("Creating "+tableName+" table");
+				Statement stat1 = SQLite_Utilities.getStatement(conn);
+				stat1.executeUpdate("drop table if exists "+tableName+";");
+				stat1.close();
+				Statement stat2 = SQLite_Utilities.getStatement(conn);
+				stat2.executeUpdate("VACUUM;");//compress db now that have deleted the table
+				stat2.close();
+				Statement stat3 = SQLite_Utilities.getStatement(conn);
+				create_table(stat3, tableName, fieldNames);
+			}
+			
+//			conn.setAutoCommit(true);
+//						
+//			String sqlAddIndex="CREATE INDEX idx_CAS ON "+tableName+" (CAS)";
+//			stat.executeUpdate(sqlAddIndex);			
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		return conn;
+
+	}
 
 	public static void create_table_key_with_duplicates (Statement stat,String table,String []fields,String keyFieldName) {
 	

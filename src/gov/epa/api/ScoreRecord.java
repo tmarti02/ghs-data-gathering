@@ -22,7 +22,6 @@ import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 //Revised version of this class removed need to have FlatFileRecord class

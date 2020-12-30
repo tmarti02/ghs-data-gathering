@@ -14,7 +14,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 
 public class RecordOFMPub {
 	String endpoint;
@@ -112,8 +113,8 @@ public class RecordOFMPub {
 		Vector<RecordOFMPub> records = new Vector<>();
 
 		try {
-			Statement stat = MySQL_DB.getStatement(databasePath);
-			ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceOFMPub);
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = SQLite_GetRecords.getAllRecords(stat, ExperimentalConstants.strSourceOFMPub);
 
 			int counter = 1;
 			while (rs.next()) {
