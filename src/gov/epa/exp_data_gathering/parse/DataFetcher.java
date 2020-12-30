@@ -183,15 +183,12 @@ public class DataFetcher {
 				counter++;
 //				rec.id_physchem=counter;
 				
-<<<<<<< HEAD
-				String[] list = rec.toStringArray(ExperimentalRecord.outputFieldNames);
-=======
+//				String[] list = rec.toStringArray(ExperimentalRecord.outputFieldNames);
 				if (counter%10000==0) System.out.println(counter);
 				rec.setComboID("|");
 
 				
 				String[] list = rec.toStringArray( fieldNames);
->>>>>>> 8a80817f2b1f8f477213f078bbbec54e3dc26149
 
 				if (list.length!=fieldNames.length) {//probably wont happen now that list is based on names array
 					System.out.println("Wrong number of values: "+list[0]);

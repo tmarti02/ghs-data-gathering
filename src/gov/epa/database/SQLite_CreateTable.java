@@ -1,4 +1,4 @@
-package gov.epa.QSAR.database;
+package gov.epa.database;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

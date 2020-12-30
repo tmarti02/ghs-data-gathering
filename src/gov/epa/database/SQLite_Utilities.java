@@ -1,4 +1,4 @@
-package gov.epa.QSAR.database;
+package gov.epa.database;
 
 import java.io.BufferedReader;
 import java.io.File;

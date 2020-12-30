@@ -17,9 +17,9 @@ import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.Vector;
 
-import gov.epa.QSAR.database.SQLite_GetRecords;
-import gov.epa.QSAR.database.SQLite_Utilities;
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 

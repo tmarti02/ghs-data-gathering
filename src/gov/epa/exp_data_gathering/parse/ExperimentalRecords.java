@@ -131,54 +131,46 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			Cell recCell = recHeaderRow.createCell(i);
 			recCell.setCellValue(headers[i]);
 			recCell.setCellStyle(style);
-			if (i < 10) {
-				Cell badCell = badHeaderRow.createCell(i);
-				badCell.setCellValue(headers[i]);
-				badCell.setCellStyle(style);
-			}
+			Cell badCell = badHeaderRow.createCell(i);
+			badCell.setCellValue(headers[i]);
+			badCell.setCellStyle(style);
 		}
 		int recCurrentRow = 2;
 		int badCurrentRow = 2;
 		for (ExperimentalRecord er:this) {
 			Class erClass = er.getClass();
 			try {
+				Row row = null;
 				if (er.keep) {
-					Row recRow = recSheet.createRow(recCurrentRow);
+					row = recSheet.createRow(recCurrentRow);
 					recCurrentRow++;
-					for (int i = 0; i < headers.length; i++) {
-						Field field = erClass.getDeclaredField(headers[i]);
-						Object value = field.get(er);
-						if (value!=null && !(value instanceof Double)) { recRow.createCell(i).setCellValue(reverseFixChars(value.toString()));
-						} else if (value!=null) { recRow.createCell(i).setCellValue((double) value); }
-					}
 				} else {
-					Row badRow = badSheet.createRow(badCurrentRow);
+					row = badSheet.createRow(badCurrentRow);
 					badCurrentRow++;
-					for (int i = 0; i < 11; i++) {
-						Field field = erClass.getDeclaredField(headers[i]);
-						Object value = field.get(er);
-						if (value!=null && !(value instanceof Double)) { badRow.createCell(i).setCellValue(reverseFixChars(value.toString()));
-						} else if (value!=null) { badRow.createCell(i).setCellValue((double) value); }
-					}
+				}
+				for (int i = 0; i < headers.length; i++) {
+					Field field = erClass.getDeclaredField(headers[i]);
+					Object value = field.get(er);
+					if (value!=null && !(value instanceof Double)) { row.createCell(i).setCellValue(reverseFixChars(value.toString()));
+					} else if (value!=null) { row.createCell(i).setCellValue((double) value); }
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		}
 		
-		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:Z"+recCurrentRow));
+		String lastCol = CellReference.convertNumToColString(headers.length);
+		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:"+lastCol+recCurrentRow));
 		recSheet.createFreezePane(0, 2);
-		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:K"+badCurrentRow));
+		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:"+lastCol+badCurrentRow));
 		badSheet.createFreezePane(0, 2);
 		
 		for (int i = 0; i < headers.length; i++) {
 			String col = CellReference.convertNumToColString(i);
 			String recSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(recCurrentRow+1)+")";
 			recSubtotalRow.createCell(i).setCellFormula(recSubtotal);
-			if (i < 11) {
-				String badSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(badCurrentRow+1)+")";
-				badSubtotalRow.createCell(i).setCellFormula(badSubtotal);
-			}
+			String badSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(badCurrentRow+1)+")";
+			badSubtotalRow.createCell(i).setCellFormula(badSubtotal);
 		}
 		
 		try {
