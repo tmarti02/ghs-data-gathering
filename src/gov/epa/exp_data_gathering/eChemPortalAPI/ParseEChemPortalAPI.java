@@ -15,6 +15,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.RecordFinalizer;
 
 /**
  * Parses downloaded results from eChemPortal API into RecordEChemPortal API objects and translates them to ExperimentalRecords
@@ -204,7 +205,7 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 		}
 		
-		er.finalizeRecord();
+		RecordFinalizer.finalizeRecord(er);
 		
 		if (!ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;

@@ -151,7 +151,7 @@ public class ParseEChemPortal extends Parse {
 					
 				}
 
-				er.finalizeRecord();
+				RecordFinalizer.finalizeRecord(er);
 				
 				if (!ParseUtilities.hasIdentifiers(er)) {
 					er.keep = false;

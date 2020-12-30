@@ -166,7 +166,7 @@ public class ParseChemBL extends Parse {
 			er.reason = "Extrapolated";
 		}
 		er.flag = false;
-		er.finalizeRecord();
+		RecordFinalizer.finalizeRecord(er);
 		records.add(er);
 	}
 	

@@ -9,8 +9,6 @@ import org.apache.commons.text.StringEscapeUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import gov.epa.api.ExperimentalConstants;
-
 
 public class ExperimentalRecord {
 
@@ -109,102 +107,6 @@ public class ExperimentalRecord {
 		
 	}	
 
-	
-	/**
-	 * Converts to final units and assigns point estimates for any ranges within tolerance:
-	 * LogKow, pKa = 1 log unit
-	 * Melting point, boiling point, flash point = 10 C
-	 * Density = 0.1 g/cm^3
-	 * Vapor pressure = 10 mmHg
-	 * HLC = 100 Pa-m^3/mol
-	 * Water solubility = 1 g/L
-	 */
-	public void finalizeRecord() {
-		double logTolerance = 0.5;//if value was 1, then max would be 10x bigger than min
-		double temperatureTolerance = 10.0;
-		double densityTolerance = 0.1;
-		
-		//Properties which are usually modeled as log of the property value: pKA, logKow, WS, HLC, VP, LC50, LD50
-		
-								
-		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
-			if (property_value_point_estimate_original!=null) { property_value_point_estimate_final = property_value_point_estimate_original; }
-
-			if (property_value_min_original!=null) { 
-				property_value_min_final = property_value_min_original;
-				property_value_max_final = property_value_max_original;
-
-				if (isWithinTolerance(logTolerance)) {
-					calculateFinalValueFromMinMaxAverage();//values are already in log units so dont need to use geometric median
-					updateNote("Point estimate computed from range");
-				}
-			}
-			property_value_units_final = property_value_units_original;
-		} else if ((property_name.equals(ExperimentalConstants.strMeltingPoint) || property_name.equals(ExperimentalConstants.strBoilingPoint) ||
-				property_name.equals(ExperimentalConstants.strFlashPoint)) && property_value_units_original!=null) {
-			UnitConverter.convertTemperature(this);
-			if (property_value_min_final!=null && isWithinTolerance(temperatureTolerance)) {
-				calculateFinalValueFromMinMaxAverage();
-				updateNote("Point estimate computed from average of range");
-			}
-		} else if (property_name.equals(ExperimentalConstants.strDensity)) {
-			UnitConverter.convertDensity(this);
-			if (property_value_min_final!=null && isWithinTolerance(densityTolerance)) {
-				calculateFinalValueFromMinMaxAverage();
-				updateNote("Point estimate computed from average of range");
-			}
-		} else if (property_name.equals(ExperimentalConstants.strVaporPressure) && property_value_units_original!=null) {
-			UnitConverter.convertPressure(this);
-			if (property_value_min_final!=null && isWithinLogTolerance(logTolerance)) {
-				calculateFinalValueFromMinMaxGeometricMedian();
-				updateNote("Point estimate computed from geometric median of range");
-			}
-		} else if (property_name.equals(ExperimentalConstants.strHenrysLawConstant) && property_value_units_original!=null) {
-			boolean converted = UnitConverter.convertHenrysLawConstant(this);
-			if (converted && property_value_min_final!=null && isWithinLogTolerance(logTolerance)) {
-				calculateFinalValueFromMinMaxGeometricMedian();
-				updateNote("Point estimate computed from geometric median of range");
-			}
-		} else if (property_name.equals(ExperimentalConstants.strWaterSolubility) && property_value_units_original!=null) {
-			boolean converted = UnitConverter.convertSolubility(this);
-			if (converted && property_value_min_final!=null && isWithinLogTolerance(logTolerance)) {
-				calculateFinalValueFromMinMaxGeometricMedian();
-				updateNote("Point estimate computed from geometric median of range");
-			}
-		}  else if (property_name.contains("LC50") || property_name.contains("LD50") && property_value_units_original!=null) {
-			boolean converted=UnitConverter.convertToxicity(this);
-			
-			if (converted && property_value_min_final!=null && isWithinLogTolerance(logTolerance)) {
-				calculateFinalValueFromMinMaxGeometricMedian();
-				updateNote("Point estimate computed from geometric median of range");
-			}
-		}
-		
-		property_name = StringEscapeUtils.escapeHtml4(property_name);
-	}
-
-
-	private boolean isWithinLogTolerance(double logTolerance) {
-		return Math.log10(property_value_max_final/property_value_min_final) <= logTolerance;
-	}
-
-
-	private boolean isWithinTolerance(double temperatureTolerance) {
-		return property_value_max_final-property_value_min_final <= temperatureTolerance;
-	}
-	
-	private void calculateFinalValueFromMinMaxAverage() {
-		property_value_point_estimate_final = (property_value_min_final + property_value_max_final)/2.0;		
-		//@Gabriel this is same as property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
-	}
-	
-	/**
-	 * Use this when values span many orders of magnitude (and modeled property is the log of the value)
-	 */
-	private void calculateFinalValueFromMinMaxGeometricMedian() {
-		property_value_point_estimate_final = Math.sqrt(property_value_min_final * property_value_max_final);		
-		//Note: since usually the log value is the modeled property, geometric median = 10 ^ average log value (properties of logarithms)
-	}
 	
 	public String toString(String del) {
 		// TODO Auto-generated method stub

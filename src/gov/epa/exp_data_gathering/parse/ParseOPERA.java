@@ -59,7 +59,7 @@ public class ParseOPERA extends Parse {
 			er.casrn = ro.CAS;
 			er.note = "qc_level= " + ro.qc_level;
 			er.date_accessed = java.time.LocalDate.now().toString();
-			er.finalizeRecord();
+			RecordFinalizer.finalizeRecord(er);
 
 			
 			

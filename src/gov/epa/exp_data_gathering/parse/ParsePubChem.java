@@ -161,7 +161,7 @@ public class ParsePubChem extends Parse {
 			er.reason = "Question mark";
 		}
 		
-		if (foundNumeric) { er.finalizeRecord(); }
+		if (foundNumeric) { RecordFinalizer.finalizeRecord(er); }
 		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep!=false) {
 			er.keep = true;
 			er.reason = null;
