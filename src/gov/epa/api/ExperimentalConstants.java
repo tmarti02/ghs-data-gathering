@@ -13,6 +13,8 @@ public class ExperimentalConstants {
 	public static final String strBoilingPoint="Boiling point";
 	public static final String strFlashPoint="Flash point";
 	public static final String strAppearance="Appearance";
+	public static final String str_pKAa="pKAa";
+	public static final String str_pKAb="pKAb";
 	
 	public static final String strRatInhalationLC50="rat_inhalation_LC50";
 	public static final String strRabbitInhalationLC50="rabbit_inhalation_LC50";
@@ -85,5 +87,7 @@ public class ExperimentalConstants {
 	public static final String strSourceAqSolDB="AqSolDB";
 	public static final String strSourceChemBL="ChemBL";
 	public static final String strSourceChemidplus="ChemIDplus";
+	public static final String strSourceOPERA="OPERA";
+	
 	
 }
