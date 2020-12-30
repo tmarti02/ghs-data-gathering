@@ -53,10 +53,9 @@ public static void downloadWebpagesHTML() {
 	}
 	System.out.println(urls.size());
 	ParseSander p = new ParseSander();
-	p.mainFolder = p.mainFolder + File.separator + "General";
-	p.databaseFolder = p.mainFolder;
 	Vector<String> html = parsePropertyLinksInDatabase();
-	p.downloadWebpagesToDatabaseAdaptive(urls,"tbody", sourceName,false);
+	String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+	DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptive(urls,"tbody", databasePath,sourceName,false);
 
 }
 	// regex, to be used later depending on whether Todd wants full reference list

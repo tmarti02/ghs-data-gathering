@@ -273,7 +273,7 @@ public class RecordPubChem {
 	}
 	
 	public static void main(String[] args) {
-		Vector<RecordDashboard> drs = ParseDownloader.getDashboardRecordsFromExcel("Data"+"/PFASSTRUCT.xls");
+		Vector<RecordDashboard> drs = DownloadWebpageUtilities.getDashboardRecordsFromExcel("Data"+"/PFASSTRUCT.xls");
 		Vector<String> cids = getCIDsFromDashboardRecords(drs,"Data"+"/CIDDICT.csv",1,8164);
 		downloadJSONsToDatabase(cids,false);
 	}

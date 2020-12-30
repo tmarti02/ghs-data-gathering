@@ -226,18 +226,17 @@ public static Vector<String> parsePropertyLinksInDatabase() {
 }
 
 public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end, int excelFinalRecord, boolean startFresh) {
-	Vector<RecordDashboard> records = ParseDownloader.getDashboardRecordsFromExcel(filename);
+	Vector<RecordDashboard> records = DownloadWebpageUtilities.getDashboardRecordsFromExcel(filename);
 	Vector<String> searchURLs = getSearchURLsFromDashboardRecords(records,1,excelFinalRecord);
 	ParseChemicalBook p = new ParseChemicalBook();
-	p.mainFolder = p.mainFolder + File.separator + "General";
-	p.databaseFolder = p.mainFolder;
 	// p.downloadPropertyLinksToDatabase(searchURLs,"searchAndPropertyLinks", start, end, startFresh);
 	Vector<String> propertyURLs = parsePropertyLinksInDatabase();
 	Vector<String> downloadedURLs = new Vector<String>();
 	for (int i = 3001; i < 5000; i++) {
 		downloadedURLs.add(propertyURLs.get(i));
 	}
-	p.downloadWebpagesToDatabaseAdaptive(downloadedURLs,"div.RFQbox ~ table",sourceName,false);		
+	String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+	DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptive(downloadedURLs,"div.RFQbox ~ table",databasePath,sourceName,false);		
 }
 
 public static void main(String[] args) {

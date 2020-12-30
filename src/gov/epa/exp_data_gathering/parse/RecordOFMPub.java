@@ -85,7 +85,8 @@ public class RecordOFMPub {
 		}
 		
 		ParseOFMPub p = new ParseOFMPub();
-		p.downloadWebpagesToDatabaseAdaptiveNonUnicode(urls,sourceName,startFresh);
+		String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+		DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptiveNonUnicode(urls,databasePath,sourceName,startFresh);
 	}
 	
 	public static void downloadWebpagesToDatabaseFromIndex(boolean startFresh,int start,int end) {
@@ -101,7 +102,8 @@ public class RecordOFMPub {
 		List<String> urlListSubset = urls.subList(start, end);
 		Vector<String> urlSubset = new Vector<String>(urlListSubset);
 		ParseOFMPub p = new ParseOFMPub();
-		p.downloadWebpagesToDatabaseAdaptiveNonUnicode(urlSubset,sourceName,startFresh);
+		String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+		DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptiveNonUnicode(urlSubset,databasePath,sourceName,startFresh);
 	}
 	
 	public static Vector<RecordOFMPub> parseWebpagesInDatabase() {
@@ -115,7 +117,7 @@ public class RecordOFMPub {
 
 			int counter = 1;
 			while (rs.next()) {
-				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
+				// if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 				
 				String html = rs.getString("content");
 				String url = rs.getString("url");
@@ -128,7 +130,7 @@ public class RecordOFMPub {
 				counter++;
 			}
 			
-			System.out.println("Parsed "+(counter-1)+" pages");
+			// System.out.println("Parsed "+(counter-1)+" pages");
 			return records;
 		} catch (Exception e) {
 			e.printStackTrace();

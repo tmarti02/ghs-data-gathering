@@ -53,11 +53,11 @@ public class RecordLookChem {
 	 * @param end		The index in the list to stop downloading
 	 */
 	public static void downloadWebpagesFromExcelToZipFile(String filename,int start,int end) {
-		Vector<RecordDashboard> records = ParseDownloader.getDashboardRecordsFromExcel(filename);
+		Vector<RecordDashboard> records = DownloadWebpageUtilities.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
 		ParseLookChem p = new ParseLookChem();
-		p.downloadWebpagesToZipFile(urls);	
+		DownloadWebpageUtilities.downloadWebpagesToZipFile(urls,p.webpageFolder);	
 	}
 	
 	/**
@@ -69,13 +69,14 @@ public class RecordLookChem {
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
 	public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end,boolean startFresh) {
-		Vector<RecordDashboard> records = ParseDownloader.getDashboardRecordsFromExcel(filename);
+		Vector<RecordDashboard> records = DownloadWebpageUtilities.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
 		ParseLookChem p = new ParseLookChem();
 		p.mainFolder = p.mainFolder + File.separator + "LookChem PFAS";
 		p.databaseFolder = p.mainFolder;
-		p.downloadWebpagesToDatabaseAdaptive(urls,".reir_l_info_table",sourceName,startFresh);		
+		String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+		DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptive(urls,".reir_l_info_table",databasePath,sourceName,startFresh);		
 	}
 	
 	/**
@@ -204,7 +205,7 @@ public class RecordLookChem {
 
 			int counter = 1;
 			while (rs.next()) {
-				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
+				// if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 				
 				String html = rs.getString("content");
 				String url = rs.getString("url");
@@ -226,7 +227,7 @@ public class RecordLookChem {
 				}
 			}
 			
-			System.out.println("Parsed "+(counter-1)+" pages");
+			// System.out.println("Parsed "+(counter-1)+" pages");
 			return records;
 		} catch (Exception e) {
 			e.printStackTrace();

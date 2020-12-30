@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.Objects;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -245,7 +247,7 @@ public class ExperimentalRecord {
 				case "java.lang.String":
 					if (myField.get(this)==null) val="";	
 					else val=myField.get(this)+"";						
-					val=val.replaceAll("(?<!\\\\)'", "\'");					
+					val=StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'"));					
 					break;
 				
 				case "java.lang.Double":

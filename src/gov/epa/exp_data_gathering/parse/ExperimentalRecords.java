@@ -98,11 +98,11 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			file.getParentFile().mkdirs();
 
 			GsonBuilder builder = new GsonBuilder();
-			builder.setPrettyPrinting();
+			builder.setPrettyPrinting().disableHtmlEscaping();
 			Gson gson = builder.create();
 
-			OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
-			fw.write(reverseFixChars(StringEscapeUtils.unescapeHtml4(gson.toJson(this))));
+			FileWriter fw = new FileWriter(file);
+			fw.write(reverseFixChars(gson.toJson(this)));
 			fw.flush();
 			fw.close();
 

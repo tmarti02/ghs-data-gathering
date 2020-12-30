@@ -30,7 +30,7 @@ import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
-public class ParseDownloader extends Parse {
+public class DownloadWebpageUtilities {
 
 	/**
 	 * Stores the content from a list of URLs in timestamped records in a RawDataRecord database
@@ -39,8 +39,7 @@ public class ParseDownloader extends Parse {
 	 * @param tableName		The name of the table to store the data in, i.e., the source name
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String tableName, boolean startFresh) {
-		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
+	public static void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String databasePath,String tableName, boolean startFresh) {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
@@ -80,8 +79,7 @@ public class ParseDownloader extends Parse {
 		}
 	}
 
-	public void downloadWebpagesToDatabaseAdaptiveNonUnicode(Vector<String> urls,String tableName, boolean startFresh) {
-		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
+	public static void downloadWebpagesToDatabaseAdaptiveNonUnicode(Vector<String> urls,String databasePath,String tableName, boolean startFresh) {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
@@ -128,8 +126,7 @@ public class ParseDownloader extends Parse {
 	 * @param tableName		The name of the table to store the data in, i.e., the source name
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String css,String tableName,boolean startFresh) {
-		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
+	public static void downloadWebpagesToDatabaseAdaptive(Vector<String> urls,String css,String databasePath,String tableName,boolean startFresh) {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
@@ -185,8 +182,7 @@ public class ParseDownloader extends Parse {
 	 * @param tableName		The name of the table to store the data in, i.e., the source name
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public void downloadWebpagesToDatabase(Vector<String> urls,String databaseName,String tableName, boolean startFresh) {
-		String databasePath = databaseFolder+File.separator+databaseName;
+	public static void downloadWebpagesToDatabase(Vector<String> urls,String databasePath,String tableName, boolean startFresh) {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
@@ -228,7 +224,7 @@ public class ParseDownloader extends Parse {
 	 * @param urls			The URLs to be downloaded
 	 * @param sourceName	The source name
 	 */
-	public void downloadWebpagesToZipFile(Vector<String> urls) {
+	public static void downloadWebpagesToZipFile(Vector<String> urls,String webpageFolder) {
 		String destZipFolder=webpageFolder+".zip";
 		Random rand = new Random();
 	

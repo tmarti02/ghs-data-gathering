@@ -26,7 +26,7 @@ import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
  *
  */
 
-public class ParseChemicalBook extends ParseDownloader {
+public class ParseChemicalBook extends Parse {
 	
 	public ParseChemicalBook() {
 		sourceName = "ChemicalBook";
