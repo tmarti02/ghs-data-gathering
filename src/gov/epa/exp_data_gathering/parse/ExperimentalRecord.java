@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
+
 
 public class ExperimentalRecord {
 
@@ -120,6 +120,9 @@ public class ExperimentalRecord {
 		double logTolerance = 0.5;//if value was 1, then max would be 10x bigger than min
 		double temperatureTolerance = 10.0;
 		double densityTolerance = 0.1;
+		
+		//Properties which are usually modeled as log of the property value: pKA, logKow, WS, HLC, VP, LC50, LD50
+		
 								
 		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
 			if (property_value_point_estimate_original!=null) { property_value_point_estimate_final = property_value_point_estimate_original; }
@@ -129,7 +132,7 @@ public class ExperimentalRecord {
 				property_value_max_final = property_value_max_original;
 
 				if (isWithinTolerance(logTolerance)) {
-					calculateFinalValueFromMinMaxAverage();
+					calculateFinalValueFromMinMaxAverage();//values are already in log units so dont need to use geometric median
 					updateNote("Point estimate computed from range");
 				}
 			}
@@ -186,14 +189,17 @@ public class ExperimentalRecord {
 		return property_value_max_final-property_value_min_final <= temperatureTolerance;
 	}
 	
-	void calculateFinalValueFromMinMaxAverage() {
+	private void calculateFinalValueFromMinMaxAverage() {
 		property_value_point_estimate_final = (property_value_min_final + property_value_max_final)/2.0;		
 		//@Gabriel this is same as property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
 	}
 	
-	void calculateFinalValueFromMinMaxGeometricMedian() {
+	/**
+	 * Use this when values span many orders of magnitude (and modeled property is the log of the value)
+	 */
+	private void calculateFinalValueFromMinMaxGeometricMedian() {
 		property_value_point_estimate_final = Math.sqrt(property_value_min_final * property_value_max_final);		
-		//@Gabriel this is same as property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
+		//Note: since usually the log value is the modeled property, geometric median = 10 ^ average log value (properties of logarithms)
 	}
 	
 	public String toString(String del) {
