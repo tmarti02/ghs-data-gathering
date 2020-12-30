@@ -56,7 +56,7 @@ public class ParseOPERA extends Parse {
 			er.casrn = ro.CAS;
 			er.note = "qc_level= " + ro.qc_level;
 			er.date_accessed = java.time.LocalDate.now().toString();
-			er.finalizePropertyValues();
+			er.finalizeRecord();
 
 			
 			if (!(ro.property_value_point_estimate_original.isNaN()) && (!(ro.CAS.contains("NOCAS")))) 

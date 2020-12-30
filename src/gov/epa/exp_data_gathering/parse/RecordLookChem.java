@@ -16,9 +16,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
@@ -254,7 +251,7 @@ public class RecordLookChem {
 					} else if (header.contains("Name")) { lcr.chemicalName = StringEscapeUtils.escapeHtml4(data);
 					} else if (header.contains("Formula")) { lcr.formula = data;
 					} else if (header.contains("Molecular Weight")) { lcr.molecularWeight = data;
-					} else if (header.contains("Synonyms")) { lcr.synonyms = data;
+					} else if (header.contains("Synonyms")) { lcr.synonyms = StringEscapeUtils.escapeHtml4(data);
 					} else if (header.contains("EINECS")) { lcr.EINECS = data;
 					} else if (header.contains("Density")) { lcr.density = data;
 					} else if (header.contains("Melting Point")) { lcr.meltingPoint = data;

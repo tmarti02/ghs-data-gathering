@@ -652,39 +652,4 @@ public class ParseUtilities extends Parse {
 		return units;
 	}
 
-	public static String fixChars(String str) {
-		str=str.replace("â€“","-").replace("â€™","'");
-		str=str.replace("\uff08", "(");// ï¼ˆ
-		str=str.replace("\uff09", ")");// ï¼‰
-		str=str.replace("\uff0f", "/");// ï¼�
-		str=str.replace("\u3000", " ");//blank
-		str=str.replace("\u00a0", " ");//blank
-		str=str.replace("\u2003", " ");//blank
-		str=str.replace("\u0009", " ");//blank
-		str=str.replace("\u300c", "");// ã€Œ
-		str=str.replace("\u300d", "");// ã€�
-		str=str.replace("\u2070", "^0");// superscript 0
-		str=str.replace("\u00B9", "^1");// superscript 1
-		str=str.replace("\u00B2", "^2");// superscript 2
-		str=str.replace("\u00B3", "^3");// superscript 3
-		str=str.replace("\u2074", "^4");// superscript 4
-		str=str.replace("\u2075", "^5");// superscript 5
-		str=str.replace("\u2076", "^6");// superscript 6
-		str=str.replace("\u2077", "^7");// superscript 7
-		str=str.replace("\u2078", "^8");// superscript 8
-		str=str.replace("\u2079", "^9");// superscript 9
-		str=str.replace("\u2080", "_0");// subscript 0
-		str=str.replace("\u2081", "_1");// subscript 1
-		str=str.replace("\u2082", "_2");// subscript 2
-		str=str.replace("\u2083", "_3");// subscript 3
-		str=str.replace("\u2084", "_4");// subscript 4
-		str=str.replace("\u2085", "_5");// subscript 5
-		str=str.replace("\u2086", "_6");// subscript 6
-		str=str.replace("\u2087", "_7");// subscript 7
-		str=str.replace("\u2088", "_8");// subscript 8
-		str=str.replace("\u2089", "_9");// subscript 9
-	
-		return str;
-	}
-
 }

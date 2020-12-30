@@ -118,7 +118,7 @@ public class ExperimentalRecord {
 	 * HLC = 100 Pa-m^3/mol
 	 * Water solubility = 1 g/L
 	 */
-	public void finalizePropertyValues() {
+	public void finalizeRecord() {
 		double logTolerance = 0.5;//if value was 1, then max would be 10x bigger than min
 		double temperatureTolerance = 10.0;
 		double densityTolerance = 0.1;
@@ -178,7 +178,8 @@ public class ExperimentalRecord {
 				updateNote("Point estimate computed from geometric median of range");
 			}
 		}
-
+		
+		property_name = StringEscapeUtils.escapeHtml4(property_name);
 	}
 
 
@@ -309,7 +310,7 @@ public class ExperimentalRecord {
 				case "java.lang.String":
 					if (myField.get(this)==null) val="";	
 					else val=myField.get(this)+"";						
-					val=StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'"));					
+					val=ExperimentalRecords.reverseFixChars(StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'")));					
 					break;
 				
 				case "java.lang.Double":

@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.Vector;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import gov.epa.api.ExperimentalConstants;
 
 public class ParsePubChem extends Parse {
@@ -83,7 +85,7 @@ public class ParsePubChem extends Parse {
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.date_accessed = pcr.date_accessed;
 		er.casrn=String.join("|", pcr.cas);
-		er.chemical_name=pcr.iupacName;
+		er.chemical_name=StringEscapeUtils.escapeHtml4(pcr.iupacName);
 		if (pcr.synonyms != null) { er.synonyms=pcr.synonyms; }
 		er.property_name=ExperimentalConstants.strAppearance;
 		er.property_value_string=physicalDescription;
@@ -159,7 +161,7 @@ public class ParsePubChem extends Parse {
 			er.reason = "Question mark";
 		}
 		
-		if (foundNumeric) { er.finalizePropertyValues(); }
+		if (foundNumeric) { er.finalizeRecord(); }
 		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep!=false) {
 			er.keep = true;
 			er.reason = null;

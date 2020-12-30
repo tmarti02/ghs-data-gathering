@@ -150,7 +150,7 @@ public class Parse {
 			FileWriter fw = new FileWriter(jsonPath);
 			String strRecords=gson.toJson(records);
 			
-			strRecords=ParseUtilities.fixChars(strRecords);
+			strRecords=ExperimentalRecords.fixChars(strRecords);
 			
 			fw.write(strRecords);
 			fw.close();

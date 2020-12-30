@@ -151,7 +151,7 @@ public class ParseEChemPortal extends Parse {
 					
 				}
 
-				er.finalizePropertyValues();
+				er.finalizeRecord();
 				
 				if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
 						(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {

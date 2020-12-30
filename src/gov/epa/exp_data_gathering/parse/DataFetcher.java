@@ -184,7 +184,7 @@ public class DataFetcher {
 //				rec.id_physchem=counter;
 				
 //				String[] list = rec.toStringArray(ExperimentalRecord.outputFieldNames);
-				if (counter%10000==0) System.out.println(counter);
+				if (counter%50000==0) System.out.println("Added "+counter+" entries...");
 				rec.setComboID("|");
 
 				
@@ -224,7 +224,7 @@ public class DataFetcher {
 			String sqlAddIndex="CREATE INDEX idx_casrn ON "+tableName+" (casrn)";
 			stat.executeUpdate(sqlAddIndex);
 			
-			System.out.println("Created database with "+counter+" entries");
+			System.out.println("Created database with "+counter+" entries. Done!");
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
