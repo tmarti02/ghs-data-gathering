@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
 import java.util.Vector;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -190,6 +191,19 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 	}
 	
 	
+	public static ExperimentalRecords dumpBadRecords(ExperimentalRecords records) {
+		ExperimentalRecords recordsBad = new ExperimentalRecords();
+		Iterator<ExperimentalRecord> it = records.iterator();
+		while (it.hasNext() ) {
+			ExperimentalRecord temp = it.next();
+			if (!temp.keep) {
+				recordsBad.add(temp);
+				it.remove();
+			}
+		}
+		return recordsBad;
+	}
+
 	public static ExperimentalRecords loadFromJSON(String jsonFilePath) {
 
 		try {

@@ -29,7 +29,7 @@ public class ParseUtilities extends Parse {
 				}
 			} catch (Exception ex) { }
 		}
-		
+
 		if (!foundNumeric) {
 			try {
 				double[] range = extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
@@ -43,7 +43,7 @@ public class ParseUtilities extends Parse {
 				}
 			} catch (Exception ex) { }
 		}
-		
+
 		if (!foundNumeric) {
 			try {
 				double[] range = extractAltFormatRangeFromString(propertyValue,unitsIndex);
@@ -57,7 +57,7 @@ public class ParseUtilities extends Parse {
 				}
 			} catch (Exception ex) { }
 		}
-		
+
 		if (!foundNumeric) {
 			try {
 				double propertyValueAsDouble = extractDoubleFromString(propertyValue,unitsIndex);
@@ -102,7 +102,7 @@ public class ParseUtilities extends Parse {
 			} else if (index > 1 && str.charAt(index-2)=='<' && str.charAt(index-1)=='=') {
 				symbol = "<=";
 			}
-			
+
 		}
 		return symbol;
 	}
@@ -238,18 +238,18 @@ public class ParseUtilities extends Parse {
 				badUnits = false;
 			}
 		} 
-		
+
 		if (er.source_name!=ExperimentalConstants.strSourceOFMPub && unitsIndex < propertyValue.indexOf(":")) {
 			unitsIndex = propertyValue.length();
 		}
-		
+
 		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.contains("water") || propertyValue.contains("h2o")) &&
 				!(propertyValue.contains("ca") || propertyValue.contains("circa") || propertyValue.contains(">") ||
 						propertyValue.contains("<") || propertyValue.contains("=") || propertyValue.contains("~"))) {
 			er.keep = false;
 			er.reason = "Non-aqueous solubility";
 		}
-		
+
 		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
 		return foundNumeric;
 	}
@@ -275,23 +275,23 @@ public class ParseUtilities extends Parse {
 				er.updateNote(qualifier + prep + solvent);
 			}
 		}
-		
+
 		if (propertyValue.contains("reacts") || propertyValue.contains("reaction")) {
 			er.property_value_qualitative = "reaction";
 		}
-		
+
 		if (propertyValue.contains("hydrolysis") || propertyValue.contains("hydrolyse") || propertyValue.contains("hydrolyze")) {
 			er.property_value_qualitative = "hydrolysis";
 		}
-		
+
 		if (propertyValue.contains("decompos")) {
 			er.property_value_qualitative = "decomposes";
 		}
-		
+
 		if (propertyValue.contains("autoignition")) {
 			er.property_value_qualitative = "autoignition";
 		}
-		
+
 		String[] qualifiers = {"none","very poor","poor","low","negligible","slight","significant","complete"};
 		for (String qual:qualifiers) {
 			if ((propertyValue.startsWith(qual) || (propertyValue.contains("solubility in water") && propertyValue.contains(qual))) &&
@@ -299,7 +299,7 @@ public class ParseUtilities extends Parse {
 				er.property_value_qualitative = qual;
 			}
 		}
-		
+
 		if (er.property_value_qualitative!=null || er.note!=null) {
 			er.keep = true;
 			er.reason = null;
@@ -349,11 +349,11 @@ public class ParseUtilities extends Parse {
 		} else if (propertyValue.toLowerCase().contains(ExperimentalConstants.str_negl)) {
 			er.property_value_qualitative = ExperimentalConstants.str_negl;
 		}
-		
+
 		if (er.source_name!=ExperimentalConstants.strSourceOFMPub && propertyValue.contains(":")) {
 			unitsIndex = propertyValue.length();
 		}
-	
+
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
 	}
@@ -386,6 +386,41 @@ public class ParseUtilities extends Parse {
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
 	}
+
+
+	protected static boolean getToxicity(ExperimentalRecord er,String propertyValue,RecordEChemPortal ecpr) {
+
+		boolean badUnits = true;
+		int unitsIndex = -1;
+
+		System.out.println(ecpr.section+"\t"+propertyValue);
+
+		if (propertyValue.toLowerCase().contains("mg/l air")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_L;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else {
+			System.out.println("TODO missing units for "+propertyValue);
+
+		}
+
+		if (ecpr.section.contentEquals("Acute toxicity: inhalation")) {
+			if (ecpr.species.toLowerCase().contentEquals("rat")) {
+				er.property_name=ExperimentalConstants.strRatInhalationLC50;
+			} else  if (ecpr.species.toLowerCase().contentEquals("rabbit")) {
+				er.property_name=ExperimentalConstants.strRabbitInhalationLC50;
+			} else  if (ecpr.species.toLowerCase().contentEquals("mouse")) {
+				er.property_name=ExperimentalConstants.strMouseInhalationLC50;
+			} else  if (ecpr.species.toLowerCase().contentEquals("guinea pig")) {
+				er.property_name=ExperimentalConstants.strGuineaPigInhalationLC50;				
+			}
+		}
+
+
+		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		return foundNumeric;
+	}
+
 
 	// Applicable for LogKow and pKa
 	public static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {
@@ -518,14 +553,14 @@ public class ParseUtilities extends Parse {
 	}
 
 	public static String formatDouble(double d) {
-	    DecimalFormat df2 = new DecimalFormat("0.###");
-	    DecimalFormat dfSci = new DecimalFormat("0.0##E0");
-	    if (d < 0.01) {
-	    	return dfSci.format(d);
-	    } else {
-	    	return df2.format(d);
-	    }
-	
+		DecimalFormat df2 = new DecimalFormat("0.###");
+		DecimalFormat dfSci = new DecimalFormat("0.0##E0");
+		if (d < 0.01) {
+			return dfSci.format(d);
+		} else {
+			return df2.format(d);
+		}
+
 	}
 
 	/**
@@ -615,6 +650,41 @@ public class ParseUtilities extends Parse {
 			units = ExperimentalConstants.str_K;
 		} 
 		return units;
+	}
+
+	public static String fixChars(String str) {
+		str=str.replace("â€“","-").replace("â€™","'");
+		str=str.replace("\uff08", "(");// ï¼ˆ
+		str=str.replace("\uff09", ")");// ï¼‰
+		str=str.replace("\uff0f", "/");// ï¼�
+		str=str.replace("\u3000", " ");//blank
+		str=str.replace("\u00a0", " ");//blank
+		str=str.replace("\u2003", " ");//blank
+		str=str.replace("\u0009", " ");//blank
+		str=str.replace("\u300c", "");// ã€Œ
+		str=str.replace("\u300d", "");// ã€�
+		str=str.replace("\u2070", "^0");// superscript 0
+		str=str.replace("\u00B9", "^1");// superscript 1
+		str=str.replace("\u00B2", "^2");// superscript 2
+		str=str.replace("\u00B3", "^3");// superscript 3
+		str=str.replace("\u2074", "^4");// superscript 4
+		str=str.replace("\u2075", "^5");// superscript 5
+		str=str.replace("\u2076", "^6");// superscript 6
+		str=str.replace("\u2077", "^7");// superscript 7
+		str=str.replace("\u2078", "^8");// superscript 8
+		str=str.replace("\u2079", "^9");// superscript 9
+		str=str.replace("\u2080", "_0");// subscript 0
+		str=str.replace("\u2081", "_1");// subscript 1
+		str=str.replace("\u2082", "_2");// subscript 2
+		str=str.replace("\u2083", "_3");// subscript 3
+		str=str.replace("\u2084", "_4");// subscript 4
+		str=str.replace("\u2085", "_5");// subscript 5
+		str=str.replace("\u2086", "_6");// subscript 6
+		str=str.replace("\u2087", "_7");// subscript 7
+		str=str.replace("\u2088", "_8");// subscript 8
+		str=str.replace("\u2089", "_9");// subscript 9
+	
+		return str;
 	}
 
 }

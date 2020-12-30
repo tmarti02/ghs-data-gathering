@@ -146,8 +146,13 @@ public class ParseEChemPortal extends Parse {
 				} else if (ecpr.section.equals("Henry's Law constant")) {
 					er.property_name = ExperimentalConstants.strHenrysLawConstant;
 					ParseUtilities.getHenrysLawConstant(er,propertyValue);
+				} else {					
+					ParseUtilities.getToxicity(er, propertyValue,ecpr);					
+					
 				}
+
 				er.finalizePropertyValues();
+				
 				if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
 						(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
 					er.keep = false;

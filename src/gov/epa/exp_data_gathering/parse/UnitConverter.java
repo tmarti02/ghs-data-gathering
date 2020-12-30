@@ -21,6 +21,42 @@ public class UnitConverter {
 		return K-273.15;
 	}
 	
+	/**
+	 * TODO Gabriel check this- used for echemportal toxicity values...
+	 * 
+	 * @param er
+	 * @return
+	 */
+	public static boolean convertToxicity(ExperimentalRecord er) {
+	 	boolean isConvertible = true;
+		double conversionFactor = 1.0;
+		
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)) {
+			isConvertible = false;
+			if (er.property_value_point_estimate_original!=null) er.property_value_point_estimate_final = er.property_value_point_estimate_original;
+			if (er.property_value_min_original!=null) er.property_value_min_final = er.property_value_min_original; 
+			if (er.property_value_max_original!=null) er.property_value_max_final = er.property_value_max_original; 
+			er.property_value_units_final = ExperimentalConstants.str_mg_L;
+		} else {
+			er.flag = true;
+		}
+		
+		if (!er.flag && isConvertible) {
+			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
+			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
+			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (isConvertible) {
+			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original; }
+			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original; }
+			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original; }
+			er.property_value_units_final = er.property_value_units_original;
+		}		
+		
+		return !er.flag;
+	}
+	
+	
 	public static void convertTemperature(ExperimentalRecord er) {
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_C)) {
 			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original; }
