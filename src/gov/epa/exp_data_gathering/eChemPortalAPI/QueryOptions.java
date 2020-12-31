@@ -256,7 +256,7 @@ public class QueryOptions {
 	 * Merges the endpoint range of another QueryOptions object into the current QueryOptions
 	 * @param options	The QueryOptions object to merge
 	 */
-	private void mergeOptions(QueryOptions options) {
+	protected void mergeOptions(QueryOptions options) {
 		if (this.propertyName==options.propertyName) {
 			if (this.endpointMax.equals(options.endpointMin)) {
 				this.endpointMax = options.endpointMax;

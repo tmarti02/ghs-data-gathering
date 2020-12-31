@@ -28,25 +28,23 @@ public class UnitConverter {
 	 * @return
 	 */
 	public static boolean convertToxicity(ExperimentalRecord er) {
-	 	boolean isConvertible = true;
 		double conversionFactor = 1.0;
 		
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)) {
-			isConvertible = false;
-			if (er.property_value_point_estimate_original!=null) er.property_value_point_estimate_final = er.property_value_point_estimate_original;
-			if (er.property_value_min_original!=null) er.property_value_min_final = er.property_value_min_original; 
-			if (er.property_value_max_original!=null) er.property_value_max_final = er.property_value_max_original; 
-			er.property_value_units_final = ExperimentalConstants.str_mg_L;
+			// Do nothing
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_m3)) {
+			conversionFactor = 1.0/1000.0;
 		} else {
 			er.flag = true;
+			er.updateNote("conversion to mg/L not possible");
 		}
 		
-		if (!er.flag && isConvertible) {
+		if (!er.flag) {
 			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
 			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
 			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
-			er.property_value_units_final = ExperimentalConstants.str_g_L;
-		} else if (isConvertible) {
+			er.property_value_units_final = ExperimentalConstants.str_mg_L;
+		} else {
 			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original; }
 			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original; }
 			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original; }

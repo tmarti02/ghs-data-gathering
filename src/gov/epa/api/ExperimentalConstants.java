@@ -16,13 +16,11 @@ public class ExperimentalConstants {
 	public static final String str_pKAa="pKAa";
 	public static final String str_pKAb="pKAb";
 	
-	public static final String strRatInhalationLC50="rat_inhalation_LC50";
-	public static final String strRabbitInhalationLC50="rabbit_inhalation_LC50";
-	public static final String strMouseInhalationLC50="mouse_inhalation_LC50";
-	public static final String strGuineaPigInhalationLC50="guinea_pig_inhalation_LC50";
+	public static final String strInhalationLC50="inhalation_LC50";
 
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
+	public static final String str_mg_m3="mg/m^3";
 	public static final String str_mg_mL="mg/mL";
 	public static final String str_g_L="g/L";
 	public static final String str_ug_L="ug/L";

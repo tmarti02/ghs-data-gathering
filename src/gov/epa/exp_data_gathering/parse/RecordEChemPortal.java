@@ -33,10 +33,6 @@ public class RecordEChemPortal {
 	Vector<String> temperature;
 	Vector<String> pH;
 	
-	//Toxicity metadata:
-	String species;
-	String route;
-	
 	static final String lastUpdated = "11/23/2020";
 	static final String sourceName = ExperimentalConstants.strSourceEChemPortal;
 	
@@ -117,8 +113,7 @@ public class RecordEChemPortal {
 				} else if (entry.startsWith(section+", Atm. press.")) { pressure.add(data);
 				} else if (entry.startsWith(section+", Temp.")) { temperature.add(data);
 				} else if (entry.startsWith(section+", pH")) { pH.add(data);
-				} else if (entry.startsWith("Species")) species=data;
-				else if (entry.startsWith("Route of administration")) route=data;
+				}
 			}
 		}
 	}

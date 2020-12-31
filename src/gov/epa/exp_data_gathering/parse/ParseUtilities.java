@@ -5,6 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.eChemPortalAPI.ToxRecordEChemPortalAPI;
 
 public class ParseUtilities extends Parse {
 
@@ -387,35 +388,39 @@ public class ParseUtilities extends Parse {
 		return foundNumeric;
 	}
 
-
-	protected static boolean getToxicity(ExperimentalRecord er,String propertyValue,RecordEChemPortal ecpr) {
-
+	public static boolean getToxicity(ExperimentalRecord er,ToxRecordEChemPortalAPI ecpr) {
+		String propertyValue = ecpr.value;
 		boolean badUnits = true;
 		int unitsIndex = -1;
-
-		System.out.println(ecpr.section+"\t"+propertyValue);
 
 		if (propertyValue.toLowerCase().contains("mg/l air")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
-		} else {
-			System.out.println("TODO missing units for "+propertyValue);
-
+		} else if (propertyValue.toLowerCase().contains("mg/m^3 air")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_m3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ppm")) {
+			er.property_value_units_original = ExperimentalConstants.str_ppm;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
+			badUnits = false;
 		}
 
-		if (ecpr.section.contentEquals("Acute toxicity: inhalation")) {
-			if (ecpr.species.toLowerCase().contentEquals("rat")) {
-				er.property_name=ExperimentalConstants.strRatInhalationLC50;
-			} else  if (ecpr.species.toLowerCase().contentEquals("rabbit")) {
-				er.property_name=ExperimentalConstants.strRabbitInhalationLC50;
-			} else  if (ecpr.species.toLowerCase().contentEquals("mouse")) {
-				er.property_name=ExperimentalConstants.strMouseInhalationLC50;
-			} else  if (ecpr.species.toLowerCase().contentEquals("guinea pig")) {
-				er.property_name=ExperimentalConstants.strGuineaPigInhalationLC50;				
+		if (ecpr.chapter.contentEquals("Acute toxicity: inhalation")) {
+			if (!ecpr.species.toLowerCase().contains("other")) {
+				er.property_name=ecpr.species.replaceAll(" ","_").replaceAll(",","")+"_"+ExperimentalConstants.strInhalationLC50;
+			} else {
+				er.property_name="other_"+ExperimentalConstants.strInhalationLC50;
+				er.updateNote("Species: "+ecpr.species.substring(ecpr.species.indexOf(":")+1));
 			}
 		}
-
+		
+		if (propertyValue.toLowerCase().contains("nominal")) {
+			er.updateNote("nominal units");
+		} else if (propertyValue.toLowerCase().contains("analytical")) {
+			er.updateNote("analytical units");
+		}
 
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;

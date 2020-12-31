@@ -30,32 +30,32 @@ import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
  *
  */
 public class RecordEChemPortalAPI {
-	String baseURL;
-	String chapter;
-	String endpointKey;
-	String endpointKind;
-	String endpointURL;
-	boolean memberOfCategory;
-	String infoType;
-	String reliability;
-	String value;
-	String pressure;
-	String temperature;
-	String pH;
-	String participantID;
-	String participantAcronym;
-	String participantURL;
-	String substanceID;
-	String name;
-	String nameType;
-	String number;
-	String substanceURL;
-	String numberType;
-	String dateAccessed;
+	public String baseURL;
+	public String chapter;
+	public String endpointKey;
+	public String endpointKind;
+	public String endpointURL;
+	public boolean memberOfCategory;
+	public String infoType;
+	public String reliability;
+	public String value;
+	public String pressure;
+	public String temperature;
+	public String pH;
+	public String participantID;
+	public String participantAcronym;
+	public String participantURL;
+	public String substanceID;
+	public String name;
+	public String nameType;
+	public String number;
+	public String substanceURL;
+	public String numberType;
+	public String dateAccessed;
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 	
-	public static void downloadAllResultsToDatabase(boolean startFresh) {
+	public static void downloadAllPhyschemResultsToDatabase(boolean startFresh) {
 		List<QueryOptions> allOptions = QueryOptions.generateAllQueryOptions();
 		String databaseName = sourceName+"_raw_json.db";
 		int counter = 0;
@@ -168,7 +168,7 @@ public class RecordEChemPortalAPI {
 		return records;
 	}
 	
-	private boolean recordEquals(RecordEChemPortalAPI rec) {
+	protected boolean recordEquals(RecordEChemPortalAPI rec) {
 		if (rec==null) {
 			return false;
 		} else if (Objects.equals(this.baseURL, rec.baseURL) &&
@@ -194,6 +194,6 @@ public class RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
-		downloadAllResultsToDatabase(true);
+		downloadAllPhyschemResultsToDatabase(true);
 	}
 }

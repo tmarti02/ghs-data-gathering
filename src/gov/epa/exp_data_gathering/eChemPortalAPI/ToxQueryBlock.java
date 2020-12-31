@@ -56,6 +56,22 @@ public class ToxQueryBlock extends QueryBlock {
 	}
 	
 	/**
+	 * Adds a QueryField to select strain of results
+	 * @param	List of strains to include
+	 */
+	public void addStrainField(List<String> strains,boolean includeOther) {
+		List<Value> strainValues = new ArrayList<Value>();
+		for (String s:strains) {
+			strainValues.add(new Value("EQUALS",s));
+		}
+		if (includeOther) {
+			strainValues.add(new Value("LIKE","other:*"));
+		}
+		QueryField strainField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.TestAnimals.Strain","string","Strain",strainValues);
+		queryFields.add(strainField);
+	}
+	
+	/**
 	 * Adds a QueryField to select administration route of results
 	 * @param	List of administration routes to include
 	 */
@@ -102,7 +118,7 @@ public class ToxQueryBlock extends QueryBlock {
 			doseDescriptorValues.add(new Value("LIKE","other:*"));
 		}
 		QueryField doseDescriptorField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion.EffectLevels.Endpoint",
-				"string","DoseDescriptor",doseDescriptorValues);
+				"string","Dose Descriptor",doseDescriptorValues);
 		queryFields.add(doseDescriptorField);
 	}
 }

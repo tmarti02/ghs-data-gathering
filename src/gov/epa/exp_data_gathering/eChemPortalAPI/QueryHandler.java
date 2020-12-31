@@ -64,7 +64,7 @@ public class QueryHandler {
 			while (retryCount < retryLimit && (!downloaded || response==null)) {
 				try {
 				response = Unirest.post("https://www.echemportal.org/echemportal/api/property-search")
-						.header("Accept", "application/json, text/plain")
+						.header("Accept", "application/json")
 						.header("Accept-Encoding", "gzip, deflate, br")
 						.header("Accept-Language", "en-US,en;q=0.9")
 						.header("Connection", "keep-alive")
@@ -86,7 +86,6 @@ public class QueryHandler {
 				retryCount++;
 			}
 			String json = response.getBody();
-			System.out.println(json);
 			page = gson.fromJson(json, ResultsPage.class);
 			return page;
 		} catch (Exception ex) {

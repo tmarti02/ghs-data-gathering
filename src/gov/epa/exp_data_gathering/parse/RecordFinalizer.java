@@ -67,15 +67,13 @@ public class RecordFinalizer {
 				calculateFinalValueFromMinMaxGeometricMedian(er);
 				er.updateNote("Point estimate computed from geometric median of range");
 			}
-		}  else if (er.property_name.contains("LC50") || er.property_name.contains("LD50") && er.property_value_units_original!=null) {
+		} else if ((er.property_name.contains("LC50") || er.property_name.contains("LD50")) && er.property_value_units_original!=null) {
 			boolean converted=UnitConverter.convertToxicity(er);
-			
 			if (converted && er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxGeometricMedian(er);
 				er.updateNote("Point estimate computed from geometric median of range");
 			}
 		}
-		er.property_name = StringEscapeUtils.escapeHtml4(er.property_name);
 	}
 
 	public static boolean isWithinLogTolerance(ExperimentalRecord er,double logTolerance) {
