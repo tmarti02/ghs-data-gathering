@@ -264,6 +264,38 @@ public class ExperimentalRecord {
 	public void updateNote(String str) {
 		note = Objects.isNull(note) ? str : note+"; "+str;
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o==this) {
+			return true;
+		}
+		
+		if (!(o instanceof ExperimentalRecord)) {
+			return false;
+		}
+		
+		ExperimentalRecord er = (ExperimentalRecord) o;
+		if (Objects.equals(this.casrn, er.casrn) &&
+				Objects.equals(this.einecs, er.einecs) &&
+				Objects.equals(this.chemical_name, er.chemical_name) &&
+				Objects.equals(this.synonyms, er.synonyms) &&
+				Objects.equals(this.smiles, er.smiles) &&
+				Objects.equals(this.property_name, er.property_name) &&
+				Objects.equals(this.property_value_numeric_qualifier, er.property_value_numeric_qualifier) &&
+				Objects.equals(this.temperature_C, er.temperature_C) &&
+				Objects.equals(this.pressure_mmHg, er.pressure_mmHg) &&
+				Objects.equals(this.pH, er.pH) &&
+				Objects.equals(this.dsstox_substance_id, er.dsstox_substance_id) &&
+				Objects.equals(this.property_value_min_original, er.property_value_min_original) &&
+				Objects.equals(this.property_value_max_original, er.property_value_max_original) &&
+				Objects.equals(this.property_value_point_estimate_original, er.property_value_point_estimate_original) &&
+				Objects.equals(this.property_value_units_original, er.property_value_units_original)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 //	public String[] getValuesForDatabase() {
 //		String name = chemical_name==null ? "" : chemical_name.replaceAll("(?<!\\\\)'", "\'");

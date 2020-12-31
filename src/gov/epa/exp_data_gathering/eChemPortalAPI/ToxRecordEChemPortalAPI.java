@@ -34,15 +34,15 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 
 	public static void downloadAllInhalationLC50ResultsToDatabase(boolean startFresh) {
-		List<ToxQueryOptions> allOptions = ToxQueryOptions.generateSimpleInhalationLC50Options();
-		allOptions.addAll(ToxQueryOptions.generateComplexInhalationLC50Options());
+		List<Query> queries = ToxQueryOptions.generateInhalationLC50Queries();
 		String databaseName = sourceName+"_raw_inhalationlc50_json.db";
+		QueryHandler handler = new QueryHandler(1000,10);
 		int counter = 0;
-		for (QueryOptions options:allOptions) {
+		for (Query q:queries) {
 			if (counter==0) {
-				options.runDownload(databaseName,startFresh);
+				handler.downloadQueryResultsToDatabase(q,databaseName,startFresh);
 			} else {
-				options.runDownload(databaseName,false);
+				handler.downloadQueryResultsToDatabase(q,databaseName,false);
 			}
 			counter++;
 		}

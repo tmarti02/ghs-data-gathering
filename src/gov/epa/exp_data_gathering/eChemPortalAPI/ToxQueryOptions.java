@@ -64,57 +64,61 @@ public class ToxQueryOptions extends QueryOptions {
 		includeOtherDoseDescriptor = options.includeOtherDoseDescriptor;
 	}
 	
-	public static List<ToxQueryOptions> generateSimpleInhalationLC50Options() {
-		List<ToxQueryOptions> options = new ArrayList<ToxQueryOptions>();
+	public static List<Query> generateInhalationLC50Queries() {
+		List<Query> queries = new ArrayList<Query>();
 		String[] units = {"mg/L air","mg/L air (nominal)","mg/L air (analytical)","mg/m^3 air","mg/m^3 air (nominal)","mg/m^3 air (analytical)","ppm"};
-		String[] species = {"rat","mouse","guinea pig","rabbit"};
-		String[] routesOfAdministration = {"inhalation","inhalation: aerosol","inhalation: dust","inhalation: gas","inhalation: mist","inhalation: vapour",
-				"inhalation: mixture of gas, vapour and aerosol","inhalation: mixture of gas and vapour","inhalation: mixture of vapour and aerosol / mist"};
-		String[] doseDescriptors = {"LC50"};
-		
-		for (String unit:units) {
-			ToxQueryOptions tqo = new ToxQueryOptions();
-			tqo.propertyName = "AcuteToxicityInhalation";
-			tqo.endpointMin = "0";
-			tqo.endpointMax = String.valueOf(Integer.MAX_VALUE);
-			tqo.endpointUnits = unit;
-			tqo.species = Arrays.asList(species);
-			tqo.routesOfAdministration = Arrays.asList(routesOfAdministration);
-			tqo.includeOtherRoute = true;
-			tqo.doseDescriptors = Arrays.asList(doseDescriptors);
-			options.add(tqo);
-		}
-		
-		return options;
-	}
-	
-	public static List<ToxQueryOptions> generateComplexInhalationLC50Options() {
-		List<ToxQueryOptions> options = generateSimpleInhalationLC50Options();
-		String[] testTypes = {"acute toxic class method","concentration x time method","fixed concentration procedure","traditional method","standard acute method"};
-		String[] species = {"cat","cattle","dog","gerbil","hamster","hamster, Armenian","hamster, Chinese","hamster, Syrian","hen","rat","mouse","guinea pig","rabbit",
+		String[] speciesSimple = {"rat","mouse","guinea pig","rabbit"};
+		String[] testTypesComplex = {"acute toxic class method","concentration x time method","fixed concentration procedure","traditional method","standard acute method"};
+		String[] speciesComplex = {"cat","cattle","dog","gerbil","hamster","hamster, Armenian","hamster, Chinese","hamster, Syrian","hen","rat","mouse","guinea pig","rabbit",
 				"miniature swine","monkey","pig","primate","sheep"};
-		String[] strains = {"Abyssinian","AKR","Angora","B6C3F1","Balb/c","Belgian Hare","Brown Norway","C3H","C57BL","CAF1","Californian","CB6F1","CBA","CD-1","CF-1",
+		String[] strainsComplex = {"Abyssinian","AKR","Angora","B6C3F1","Balb/c","Belgian Hare","Brown Norway","C3H","C57BL","CAF1","Californian","CB6F1","CBA","CD-1","CF-1",
 				"Chinchilla","Crj: CD(SD)","DBA","DBF1","Dunkin-Hartley","Dutch","Fischer 344","Fischer 344/DuCrj","Flemish Giant","FVB","Hartley","Himalayan","ICL-ICR",
 				"ICR","Lewis","Long-Evans","New Zealand Black","New Zealand Red","New Zealand White","NMRI","not specified","Nude","Nude Balb/cAnN","Nude CD-1",
 				"Osborne-Mendel","Peruvian","Pirbright-Hartley","Polish","San Juan","Sencar","Sherman","Shorthair","SIV 50","SKH/HR1","Sprague-Dawley","Strain A","Swiss",
 				"Swiss Webster","Tif:MAGf","Vienna White","Wistar","Wistar Kyoto (WKY)","Zucker"};
-		String[] inhalationTypes = {"head only","nose/head only","nose only","not specified","whole body"};
+		String[] inhalationTypesComplex = {"head only","nose/head only","nose only","not specified","whole body"};
+		String[] routesOfAdministrationBoth = {"inhalation","inhalation: aerosol","inhalation: dust","inhalation: gas","inhalation: mist","inhalation: vapour",
+				"inhalation: mixture of gas, vapour and aerosol","inhalation: mixture of gas and vapour","inhalation: mixture of vapour and aerosol / mist"};
+		String[] doseDescriptorsBoth = {"LC50"};
 		
-		ListIterator<ToxQueryOptions> it = options.listIterator();
-		while (it.hasNext()) {
-			ToxQueryOptions o = it.next();
-			o.species = Arrays.asList(species);
-			o.includeOtherSpecies = true;
-			o.strains = Arrays.asList(strains);
-			o.includeOtherStrain = true;
-			o.testTypes = Arrays.asList(testTypes);
-			o.includeOtherTestType = true;
-			o.inhalationTypes = Arrays.asList(inhalationTypes);
-			o.includeOtherInhalationType = true;
-			it.set(o);
+		for (String unit:units) {
+			ToxQueryOptions simple = new ToxQueryOptions();
+			simple.propertyName = "AcuteToxicityInhalation";
+			simple.endpointMin = "0";
+			simple.endpointMax = String.valueOf(Integer.MAX_VALUE);
+			simple.endpointUnits = unit;
+			simple.species = Arrays.asList(speciesSimple);
+			simple.routesOfAdministration = Arrays.asList(routesOfAdministrationBoth);
+			simple.includeOtherRoute = true;
+			simple.doseDescriptors = Arrays.asList(doseDescriptorsBoth);
+			
+			ToxQueryOptions complex = new ToxQueryOptions();
+			complex.propertyName = "AcuteToxicityInhalation";
+			complex.endpointMin = "0";
+			complex.endpointMax = String.valueOf(Integer.MAX_VALUE);
+			complex.endpointUnits = unit;
+			complex.species = Arrays.asList(speciesComplex);
+			complex.includeOtherSpecies = true;
+			complex.strains = Arrays.asList(strainsComplex);
+			complex.includeOtherStrain = true;
+			complex.testTypes = Arrays.asList(testTypesComplex);
+			complex.includeOtherTestType = true;
+			complex.routesOfAdministration = Arrays.asList(routesOfAdministrationBoth);
+			complex.includeOtherRoute = true;
+			complex.inhalationTypes = Arrays.asList(inhalationTypesComplex);
+			complex.includeOtherInhalationType = true;
+			complex.doseDescriptors = Arrays.asList(doseDescriptorsBoth);
+			
+			Query query = new Query(5000);
+			ToxQueryBlock simpleBlock = simple.generateToxQueryBlock();
+			ToxQueryBlock complexBlock = complex.generateToxQueryBlock();
+			query.addPropertyBlock(complexBlock);
+			query.addOperatorBlock("OR");
+			query.addPropertyBlock(simpleBlock);
+			queries.add(query);
 		}
 		
-		return options;
+		return queries;
 	}
 	
 	/**
