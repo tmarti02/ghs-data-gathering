@@ -6,17 +6,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Vector;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -29,8 +27,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
-import gov.epa.api.ScoreRecord;
+
 import gov.epa.ghs_data_gathering.Parse.Parse;
+
 
 /**
  * Class to store chemicals
@@ -58,6 +57,13 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		return null;
 	}
 	
+	public void addSourceBasedIDNumbers() {
+
+		for (int i=0;i<size();i++) {
+			ExperimentalRecord record=get(i);
+			record.id_physchem=record.source_name+(i+1);
+		}
+	}
 	
 	
 	public void toFlatFile(String filepath,String del) {
@@ -66,7 +72,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 								
 			FileWriter fw=new FileWriter(filepath);
 			
-			fw.write(ScoreRecord.getHeader(del)+"\r\n");
+			fw.write(getHeader(del)+"\r\n");
 											
 			for (ExperimentalRecord record:this) {				
 				String line=record.toString("|");				
@@ -80,6 +86,22 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			ex.printStackTrace();
 		}
 		
+	}
+	
+	public static String getHeader(String del) {
+		// TODO Auto-generated method stub
+
+		String [] fieldNames=ExperimentalRecord.outputFieldNames;
+		String Line = "";
+		for (int i = 0; i < fieldNames.length; i++) {
+			Line += fieldNames[i];
+			if (i < fieldNames.length - 1) {
+				Line += del;
+			}
+			
+		}
+
+		return Line;
 	}
 	
 	public String toJSON() {
@@ -111,6 +133,58 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 			ex.printStackTrace();
 		}
 
+	}
+	
+	public static ExperimentalRecords loadFromExcel(String excelFilePath) {
+
+		try {
+
+			ExperimentalRecords records = new ExperimentalRecords();
+
+			FileInputStream inputStream = new FileInputStream(new File(excelFilePath));
+
+			Workbook workbook = new XSSFWorkbook(inputStream);
+			Sheet firstSheet = workbook.getSheetAt(0);
+
+			DataFormatter formatter = new DataFormatter();
+			
+			Row rowHeader = firstSheet.getRow(1);
+
+			Vector<String>fieldNames=new Vector<String>();
+			
+			for (int i=0;i<rowHeader.getLastCellNum();i++) {
+				String fieldName=rowHeader.getCell(i).getStringCellValue();
+				fieldNames.add(fieldName);
+			}
+			
+			
+			for (int i=2;i<firstSheet.getLastRowNum();i++) {
+				ExperimentalRecord record=new ExperimentalRecord();
+			
+				Row row = firstSheet.getRow(i);
+				
+				for (int j=0;j<fieldNames.size();j++) {
+					String fieldName=fieldNames.get(j);					
+
+					if (row.getCell(j)!=null) {
+						String fieldValue=formatter.formatCellValue(row.getCell(j));
+						record.assignValue(fieldName, fieldValue);
+					}
+					
+				}
+				records.add(record);
+//				System.out.println(record.toJSON());
+				
+			}
+			
+			inputStream.close();
+			workbook.close();
+			return records;
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
 	}
 	
 	public void toExcel_File(String filePath) {
@@ -254,9 +328,12 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 	}
 
 	public static void main(String[] args) {
-		ExperimentalRecords records = loadFromJSON("sample.json");
-		System.out.println(records.toJSON());
+//		ExperimentalRecords records = loadFromJSON("sample.json");
+//		System.out.println(records.toJSON());
 //		chemicals.toJSONElement();
+		
+		ExperimentalRecords records = loadFromExcel("data\\experimental\\eChemPortalAPI\\eChemPortalAPI Toxicity Experimental Records.xlsx");
+		
 	}
 
 	public static String reverseFixChars(String str) {

@@ -71,7 +71,7 @@ public class DataFetcher {
 			
 			System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")+1));
 
-			addSourceBasedIDNumbers(sourceRecords);			
+//			addSourceBasedIDNumbers(sourceRecords);			
 			records.addAll(sourceRecords);
 				
 			
@@ -80,12 +80,6 @@ public class DataFetcher {
 		}
 	}
 
-	private void addSourceBasedIDNumbers(ExperimentalRecords records) {
-		for (int i=0;i<records.size();i++) {
-			ExperimentalRecord record=records.get(i);
-			record.id_physchem=record.source_name+(i+1);
-		}
-	}
 	
 
 	

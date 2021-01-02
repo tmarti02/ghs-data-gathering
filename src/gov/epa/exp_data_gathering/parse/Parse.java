@@ -94,6 +94,8 @@ public class Parse {
 
 		System.out.println("Going through original records");
 		ExperimentalRecords records=goThroughOriginalRecords();
+		records.addSourceBasedIDNumbers();
+		
 		ExperimentalRecords recordsBad = ExperimentalRecords.dumpBadRecords(records);
 
 		if (writeFlatFile) {

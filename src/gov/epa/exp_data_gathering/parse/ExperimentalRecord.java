@@ -106,8 +106,45 @@ public class ExperimentalRecord {
 		comboID=CAS+del+name+del+SMILES;//TODO add einecs
 		
 	}	
-
 	
+	
+	public void assignValue(String fieldName,String fieldValue) {
+		Field myField;
+		try {
+			myField = getClass().getDeclaredField(fieldName);
+		
+		if (myField.getType().getName().contentEquals("boolean")) {
+			myField.setBoolean(this, Boolean.parseBoolean(fieldValue));
+
+		} else if (myField.getType().getName().contentEquals("double")) {
+			myField.setDouble(this, Double.parseDouble(fieldValue));
+
+		} else if (myField.getType().getName().contentEquals("int")) {
+			myField.setInt(this, Integer.parseInt(fieldValue));
+
+		} else if (myField.getType().getName().contentEquals("java.lang.Double")) {
+			Double dval=Double.parseDouble(fieldValue);						
+			myField.set(this, dval);
+		} else if (myField.getType().getName().contentEquals("java.lang.Integer")) {
+			Integer ival=Integer.parseInt(fieldValue);
+			myField.setInt(this,ival);
+		} else if (myField.getType().getName().contentEquals("java.lang.String")) {
+			myField.set(this, fieldValue);
+		} else {
+			System.out.println("Need to implement"+myField.getType().getName());
+		}					
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+
+		
+	}
+
+	public String toString() {
+		return toString("|");
+	}
 	public String toString(String del) {
 		// TODO Auto-generated method stub
 		return toString(del,outputFieldNames);
@@ -133,7 +170,7 @@ public class ExperimentalRecord {
 
 				String val=null;
 
-				//						System.out.println(myField.getType().getName());
+//				System.out.println(fieldNames[i]+"\t"+myField.getType().getName());
 
 				if (myField.getType().getName().contains("Double")) {
 					if (myField.get(this)==null) {
@@ -155,6 +192,10 @@ public class ExperimentalRecord {
 						val=myField.get(this)+"";
 					}
 					
+				} else if (myField.getType().getName().contains("boolean")) {
+					val=myField.getBoolean(this)+"";
+				
+				
 				} else {//string
 					if (myField.get(this)==null) {
 						//								val="\"\"";
