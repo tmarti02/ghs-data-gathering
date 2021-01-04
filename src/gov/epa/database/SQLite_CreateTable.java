@@ -3,6 +3,9 @@ package gov.epa.database;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.Arrays;
+
+import com.fasterxml.jackson.databind.ser.std.StdArraySerializers.FloatArraySerializer;
 
 public class SQLite_CreateTable {
 
@@ -185,10 +188,12 @@ public class SQLite_CreateTable {
 				create_table(stat3, tableName, fieldNames);
 			}
 			
-//			conn.setAutoCommit(true);
-//						
-//			String sqlAddIndex="CREATE INDEX idx_CAS ON "+tableName+" (CAS)";
-//			stat.executeUpdate(sqlAddIndex);			
+			if (Arrays.asList(fieldNames).contains("url")) {
+				conn.setAutoCommit(true);
+				Statement stat4 = SQLite_Utilities.getStatement(conn);
+				String sqlAddIndex="CREATE INDEX idx_url ON "+tableName+" (url)";
+				stat4.executeUpdate(sqlAddIndex);
+			}
 
 		} catch (Exception ex) {
 			ex.printStackTrace();

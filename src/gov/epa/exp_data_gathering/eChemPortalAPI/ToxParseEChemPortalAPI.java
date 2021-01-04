@@ -58,7 +58,7 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 			String source1="ECHA REACH";
 			String source2="ECHA CHEM";
 			boolean omitBadNumericOperator=true;
-			d.removeDuplicates(recordsExperimental,source1,source2,omitBadNumericOperator);	
+			d.removeDuplicates(recordsExperimental,sourceName,source1,source2);	
 			
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -100,22 +100,22 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 		
 		if (r.testType!=null && !r.testType.isBlank()) {
 			String testType = "Test Type: "+r.testType;
-			er.property_value_string += ";"+testType;
+			er.property_value_string += "; "+testType;
 		}
 		
 		if (r.strain!=null && !r.strain.isBlank()) {
 			String strain = "Strain: "+r.strain;
-			er.property_value_string += ";"+strain;
+			er.property_value_string += "; "+strain;
 		}
 		
 		if (r.routeOfAdministration!=null && !r.routeOfAdministration.isBlank()) {
 			String route = "Route of Administration: "+r.routeOfAdministration;
-			er.property_value_string += ";"+route;
+			er.property_value_string += "; "+route;
 		}
 		
 		if (r.inhalationExposureType!=null && !r.inhalationExposureType.isBlank()) {
 			String inhalationExposureType = "Inhalation Exposure Type: "+r.inhalationExposureType;
-			er.property_value_string += ";"+inhalationExposureType;
+			er.property_value_string += "; "+inhalationExposureType;
 		}
 		
 		RecordFinalizer.finalizeRecord(er);

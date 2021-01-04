@@ -36,6 +36,11 @@ public class ParseOFMPub extends Parse {
 					addExperimentalRecord(r,recordsExperimental);
 				}
 			}
+			
+			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+			boolean omitBadNumericOperator=true;
+			d.removeDuplicates(recordsExperimental,sourceName);	
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -90,8 +95,8 @@ public class ParseOFMPub extends Parse {
 			break;
 		}
 		
-		er.property_value_string = opr.value;
-		if (opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) { er.property_value_string = er.property_value_string + ";" + opr.resultRemarks; }
+		er.property_value_string = "Value: "+opr.value;
+		if (opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) { er.property_value_string = er.property_value_string + "; Remarks: " + opr.resultRemarks; }
 		
 		boolean foundNumeric = false;
 		String propertyName = er.property_name;

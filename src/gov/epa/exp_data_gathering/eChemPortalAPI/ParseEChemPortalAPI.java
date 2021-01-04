@@ -74,7 +74,7 @@ public class ParseEChemPortalAPI extends Parse {
 			String source1="ECHA REACH";
 			String source2="ECHA CHEM";
 			boolean omitBadNumericOperator=true;
-			d.removeDuplicates(recordsExperimental,source1,source2,omitBadNumericOperator);		
+			d.removeDuplicates(recordsExperimental,sourceName,source1,source2);		
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -153,7 +153,7 @@ public class ParseEChemPortalAPI extends Parse {
 		
 		if (r.pressure!=null) {
 			ParseUtilities.getPressureCondition(er,r.pressure,sourceName);
-			er.property_value_string = er.property_value_string + ";Pressure: " + r.pressure;
+			er.property_value_string = er.property_value_string + "; Pressure: " + r.pressure;
 		}
 		
 		if (r.temperature!=null) {
@@ -162,13 +162,13 @@ public class ParseEChemPortalAPI extends Parse {
 			} catch (NumberFormatException ex) {
 				ParseUtilities.getTemperatureCondition(er,r.temperature);
 			}
-			er.property_value_string = er.property_value_string + ";Temperature: " + r.temperature;
+			er.property_value_string = er.property_value_string + "; Temperature: " + r.temperature;
 		}
 		
 		// Handles all kinds of weird pH formatting
 		if (r.pH!=null) {
 			String pHStr = r.pH;
-			er.property_value_string = er.property_value_string + ";pH: " + pHStr;
+			er.property_value_string = er.property_value_string + "; pH: " + pHStr;
 			boolean foundpH = false;
 			try {
 				double[] range = ParseUtilities.extractFirstDoubleRangeFromString(pHStr,pHStr.length());

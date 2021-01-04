@@ -41,6 +41,11 @@ public class ParsePubChem extends Parse {
 				RecordPubChem r = recordsPubChem[i];
 				addExperimentalRecords(r,recordsExperimental);
 			}
+			
+			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+			boolean omitBadNumericOperator=true;
+			d.removeDuplicates(recordsExperimental,sourceName);	
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

@@ -293,10 +293,20 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 	
 		return str;
 	}
+	
+	public void dontKeepNumericQualifierRecords() {
+		for (ExperimentalRecord record:this) {
+			if (record.keep && record.property_value_numeric_qualifier!=null && !record.property_value_numeric_qualifier.isBlank() &&
+					!record.property_value_numeric_qualifier.contentEquals("~")) {
+				record.keep=false;
+				record.reason="Has numeric qualifier";
+			}
+		}
+	}
 
-	public static ExperimentalRecords dumpBadRecords(ExperimentalRecords records) {
+	public ExperimentalRecords dumpBadRecords() {
 		ExperimentalRecords recordsBad = new ExperimentalRecords();
-		Iterator<ExperimentalRecord> it = records.iterator();
+		Iterator<ExperimentalRecord> it = this.iterator();
 		while (it.hasNext() ) {
 			ExperimentalRecord temp = it.next();
 			if (!temp.keep) {
