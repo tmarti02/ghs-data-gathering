@@ -17,8 +17,8 @@ public class DataRemoveDuplicateExperimentalValues {
 	 * 
 	 * @param records
 	 * @param endpoint
-	 * @param source1
-	 * @param source2
+	 * @param source1 (preferred source)
+	 * @param source2 (removed source)
 	 * @param omitBadNumericOperator
 	 * @return
 	 */
@@ -67,6 +67,8 @@ public class DataRemoveDuplicateExperimentalValues {
 				key=record.chemical_name;
 			} else if (record.einecs!=null) {
 				key=record.einecs;
+			} else {
+				continue;
 			}
 			
 //			System.out.println("key="+key);
@@ -199,8 +201,8 @@ public class DataRemoveDuplicateExperimentalValues {
 				
 				if (!recj.keep) continue;
 				
-				String tsi=getToxString(reci)+"\t"+reci.original_source_name+"\t"+reci.property_name;
-				String tsj=getToxString(recj)+"\t"+recj.original_source_name+"\t"+recj.property_name;
+				String tsi=reci.property_value_string+"\t"+reci.original_source_name+"\t"+reci.property_name;
+				String tsj=recj.property_value_string+"\t"+recj.original_source_name+"\t"+recj.property_name;
 								
 				if (tsi.contentEquals(tsj)) {
 //					System.out.println("Remove exact match same src:"+recj);
@@ -236,8 +238,8 @@ public class DataRemoveDuplicateExperimentalValues {
 				
 				if (!recj.original_source_name.contentEquals(source2)) continue;												
 				
-				String tsi=getToxString(reci)+"\t"+reci.property_name;
-				String tsj=getToxString(recj)+"\t"+recj.property_name;
+				String tsi=reci.property_value_string+"\t"+reci.property_name;
+				String tsj=recj.property_value_string+"\t"+recj.property_name;
 				
 //				if (reci.casrn.contentEquals("10049-04-4")) {
 //					System.out.println(tsi+"\t"+tsj+"\t"+tsi.contentEquals(tsj));
@@ -272,15 +274,15 @@ public class DataRemoveDuplicateExperimentalValues {
 
 			boolean haveNonNominal=false;
 
-			
 			for (int j=0;j<recs.size();j++) {
 
 				if (i==j) continue;
 				
 				ExperimentalRecord recj=recs.get(j);
+				
 				if (!recj.keep) continue;
 				
-				if (recj.note==null || (!reci.note.contains("nominal units"))) {
+				if (recj.note==null || !recj.note.contains("nominal units")) {
 					haveNonNominal=true;
 					break;
 				}
@@ -313,6 +315,8 @@ public class DataRemoveDuplicateExperimentalValues {
 			
 			if(!reci.keep) continue;
 			
+			String tsi=reci.property_value_string+"\t"+reci.property_name;
+			
 			for (int j=i+1;j<recs.size();j++) {
 
 //				if (i==j) continue;
@@ -321,8 +325,7 @@ public class DataRemoveDuplicateExperimentalValues {
 
 				if(!recj.keep) continue;
 				
-				String tsi=getToxString(reci)+"\t"+reci.property_name;
-				String tsj=getToxString(recj)+"\t"+recj.property_name;
+				String tsj=recj.property_value_string+"\t"+recj.property_name;
 				
 				if (tsi.contentEquals(tsj)) {
 //					recs.remove(j);
@@ -341,15 +344,15 @@ public class DataRemoveDuplicateExperimentalValues {
 		
 	}
 	
-	String getToxString(ExperimentalRecord er) {
-		if (er.property_value_point_estimate_final==null) {
-			return er.property_value_min_final+"-"+er.property_value_max_final+"\t"+er.property_value_units_final;
-		} else {
-			return er.property_value_numeric_qualifier+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final;			
-		}
-		
-
-	}
+	// Can just use property_value_string, which includes full experimental conditions
+//	String getToxString(ExperimentalRecord er) {
+//		if (er.property_value_point_estimate_final==null) {
+//			return er.property_value_min_final+"-"+er.property_value_max_final+"\t"+er.property_value_units_final;
+//		} else {
+//			return er.property_value_numeric_qualifier+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final;			
+//		}
+//
+//	}
 	
 
 

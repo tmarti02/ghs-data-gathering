@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.DataRemoveDuplicateExperimentalValues;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
@@ -52,6 +53,13 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 				ToxRecordEChemPortalAPI r = toxRecordsEChemPortalAPI[i];
 				addExperimentalRecords(r,recordsExperimental);
 			}
+			
+			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+			String source1="ECHA REACH";
+			String source2="ECHA CHEM";
+			boolean omitBadNumericOperator=true;
+			d.removeDuplicates(recordsExperimental,source1,source2,omitBadNumericOperator);	
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
