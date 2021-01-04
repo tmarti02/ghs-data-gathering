@@ -171,21 +171,27 @@ public class RecordOPERA {
 			
 			if (key.contentEquals("LogMolar")) {
 				// ro.property_value_point_estimate_original=Double.parseDouble(value);
-				ro.property_value_units_original="log10_M";//Note: later to get M need to use Math.pow(10,value)					
-			
+				ro.property_name=ExperimentalConstants.strWaterSolubility;
+				ro.property_value_units_original=ExperimentalConstants.str_log_M;//Note: later to get M need to use Math.pow(10,value)					
+				ro.LogMolar=value;
 			} else if (key.contentEquals("LogHL")) {
-				ro.property_value_units_original="log10_dimensionless";//TODO- determine what "?" is
+				ro.property_value_units_original=ExperimentalConstants.str_log_atm_m3_mol;//TODO- determine what "?" is
+				ro.property_name=ExperimentalConstants.strHenrysLawConstant;
 				ro.LogHL=value;
+				
 			} else if (key.contentEquals("LogP")) {
-				ro.property_value_units_original="log10_dimensionless";
+				ro.property_name=ExperimentalConstants.strLogKow;
 				ro.LogP=value;
 			} else if (key.contentEquals("MP")) {
+				ro.property_name=ExperimentalConstants.strMeltingPoint;
 				ro.property_value_units_original=ExperimentalConstants.str_C;
 				ro.MP=value;
 			} else if (key.contentEquals("LogVP")) {
-				ro.property_value_units_original="log10_" + ExperimentalConstants.str_mmHg;
+				ro.property_name=ExperimentalConstants.strVaporPressure;
+				ro.property_value_units_original=ExperimentalConstants.str_log_mmHg;
 				ro.LogVP=value;
 			} else if (key.contentEquals("BP")) {
+				ro.property_name=ExperimentalConstants.strBoilingPoint;
 				ro.property_value_units_original=ExperimentalConstants.str_C;
 				ro.BP=value;
 			} else if (key.contains("Reference")) {

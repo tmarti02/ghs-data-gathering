@@ -1,5 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.util.concurrent.atomic.DoubleAdder;
+
 import gov.epa.api.ExperimentalConstants;
 
 public class UnitConverter {
@@ -202,6 +204,11 @@ public class UnitConverter {
 			er.property_value_units_final = ExperimentalConstants.str_mmHg;
 			er.updateNote("conversion to Pa-m3/mol not possible");
 			er.flag=true;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_log_atm_m3_mol)) {
+			Double temp = Math.pow(10.0,er.property_value_point_estimate_original);
+			er.property_value_point_estimate_original = temp; // CR approach is silly but adapted well to your code
+			conversionFactor = UnitConverter.atm_to_Pa;
+			er.property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H) ||
 				er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H_vol)) {
 			er.property_value_units_final = er.property_value_units_original;

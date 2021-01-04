@@ -47,28 +47,40 @@ public class ParseOPERA extends Parse {
 	 * @param records
 	 */
 	private void addExperimentalRecords(RecordOPERA ro,ExperimentalRecords records) {
-		if (ro.property_name == ExperimentalConstants.str_pKA) {
+		String temp = ro.property_name;
+		if (temp == ExperimentalConstants.str_pKA) {
 			ExperimentalRecord er_a = new ExperimentalRecord();
-			ExperimentalRecord er_b = new ExperimentalRecord();
-			er_a.property_name = ExperimentalConstants.str_pKAa;
-			er_b.property_name = ExperimentalConstants.str_pKAb;
 			er_a.chemical_name = ro.Substance_Name;
-			er_b.chemical_name = ro.Substance_Name;
-			er_a.property_value_point_estimate_final=Double.parseDouble(ro.pKa_a);
-			er_b.property_value_point_estimate_final=Double.parseDouble(ro.pKa_b);
-			er_a.keep = true;
-			er_b.keep = true;
-			records.add(er_a);
-			records.add(er_b);
+			er_a.smiles = ro.Original_SMILES;
+			er_a.casrn = ro.Substance_CASRN;
+			er_a.dsstox_substance_id = ro.DSSTox_Substance_Id;
+			if(ro.pKa_a != null || ro.pKa_a !="NaN") {
+				er_a.property_value_point_estimate_final=Double.parseDouble(ro.pKa_a);
+				er_a.property_name = ExperimentalConstants.str_pKAa;
+				ParseUtilities.getLogProperty(er_a,er_a.property_value_point_estimate_final.toString()); // log quantity
+				er_a.keep = true;
+				records.add(er_a);
+
+			} else if (ro.pKa_b != null || ro.pKa_b != "NaN") {
+				ExperimentalRecord er_b = er_a; // makes the second experimental record for bases from the one RecordOPERA record.
+				er_b.property_value_point_estimate_original=Double.parseDouble(ro.pKa_b);
+				er_a.property_name = ExperimentalConstants.str_pKAb;
+				ParseUtilities.getLogProperty(er_a,er_a.property_value_point_estimate_original.toString()); // log quantity
+				er_b.keep = true;
+				records.add(er_b);
+			}
+			
 		}
-		// comment
-		if (ro.property_name != ExperimentalConstants.str_pKA) {
+		if (temp != ExperimentalConstants.str_pKA) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.chemical_name = ro.preferred_name;
 			er.property_name = ro.property_name;
 			er.property_value_point_estimate_original = getPropertyValueOriginal(ro);
 			if (er.property_value_point_estimate_original != null) {
 				er.property_value_string = er.property_value_point_estimate_original.toString();
+			}
+			if (ro.property_name == ExperimentalConstants.strLogKow) {
+				ParseUtilities.getLogProperty(er,er.property_value_string);
 			}
 			er.property_value_units_original = ro.property_value_units_original;
 			er.casrn = ro.CAS;
@@ -84,19 +96,21 @@ public class ParseOPERA extends Parse {
 			// handles temperature recorded as 24|25 and absent temperatures
 			getTemperatureCondition(er,ro.Temperature);
 			
-			finalizePropertyValues(er);
-			// 	er.finalizePropertyValues();
-
-			if ((er.casrn!=null) && er.casrn.contains("NOCAS")) {
-			er.keep = false;
-			er.reason = "do we want this gone or no?";
+			// finalizePropertyValues(er);
+			// er.finalizePropertyValues();
+			RecordFinalizer.finalizeRecord(er);
+			
+			if ((ro.property_name.toLowerCase() == "pka")) {
+				er.keep=false;
+				er.reason="this is copied over junk, pka records are handled differently";
 			}
 			else {
-			er.keep = true;
+				er.keep = true;
 			}
-		
+					
 			records.add(er);
 		}
+		else {	}
 	}
 	
 	private static void finalizePropertyValues(ExperimentalRecord er) {
@@ -140,8 +154,7 @@ public class ParseOPERA extends Parse {
 			return Double.parseDouble(ro.LogVP);
 		else if (!(ro.LogMolar == null))
 			return Double.parseDouble(ro.LogMolar);
-		else
-			return (double)0;
+		return null;
 	}
 
 
