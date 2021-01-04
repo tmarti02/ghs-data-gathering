@@ -2,6 +2,8 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
@@ -47,31 +49,41 @@ public class ParseOPERA extends Parse {
 	 * @param records
 	 */
 	private void addExperimentalRecords(RecordOPERA ro,ExperimentalRecords records) {
-		String temp = ro.property_name;
-		if (temp == ExperimentalConstants.str_pKA) {
+		//TODO make the pka experimentalrecords rely on getLogProperty like the logP ones do.
+		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+		Date date = new Date();  
+		String strDate=formatter.format(date);
+		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
+
+		if (ro.property_name.equals(ExperimentalConstants.str_pKA)) {
 			ExperimentalRecord er_a = new ExperimentalRecord();
 			er_a.chemical_name = ro.Substance_Name;
 			er_a.smiles = ro.Original_SMILES;
+			er_a.property_value_string = "pkaa=" + ro.pKa_a + "|"+ "pkab=" + ro.pKa_b;
 			er_a.casrn = ro.Substance_CASRN;
+			er_a.note = "qc_level= " + ro.DSSTox_QC_Level;
 			er_a.dsstox_substance_id = ro.DSSTox_Substance_Id;
-			if(ro.pKa_a != null || ro.pKa_a !="NaN") {
+			er_a.date_accessed = dayOnly;
+
+			if(!(ro.pKa_a.equals("NaN"))) {
 				er_a.property_value_point_estimate_final=Double.parseDouble(ro.pKa_a);
 				er_a.property_name = ExperimentalConstants.str_pKAa;
-				ParseUtilities.getLogProperty(er_a,er_a.property_value_point_estimate_final.toString()); // log quantity
+				// ParseUtilities.getLogProperty(er_a,er_a.property_value_point_estimate_final.toString()); // log quantity
 				er_a.keep = true;
 				records.add(er_a);
 
-			} else if (ro.pKa_b != null || ro.pKa_b != "NaN") {
+			}
+			if ((!(ro.pKa_b.equals("NaN")))) {
 				ExperimentalRecord er_b = er_a; // makes the second experimental record for bases from the one RecordOPERA record.
-				er_b.property_value_point_estimate_original=Double.parseDouble(ro.pKa_b);
+				er_b.property_value_point_estimate_final=Double.parseDouble(ro.pKa_b);
 				er_a.property_name = ExperimentalConstants.str_pKAb;
-				ParseUtilities.getLogProperty(er_a,er_a.property_value_point_estimate_original.toString()); // log quantity
+				// ParseUtilities.getLogProperty(er_b,er_b.property_value_point_estimate_original.toString()); // log quantity
 				er_b.keep = true;
 				records.add(er_b);
 			}
 			
 		}
-		if (temp != ExperimentalConstants.str_pKA) {
+		if (!(ro.property_name.equals(ExperimentalConstants.str_pKA))) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.chemical_name = ro.preferred_name;
 			er.property_name = ro.property_name;
@@ -86,7 +98,7 @@ public class ParseOPERA extends Parse {
 			er.casrn = ro.CAS;
 			er.smiles=ro.Original_SMILES;
 			er.note = "qc_level= " + ro.qc_level;
-			er.date_accessed = java.time.LocalDate.now().toString();
+			er.date_accessed = dayOnly;
 			RecordFinalizer.finalizeRecord(er);
 
 			er.original_source_name = ro.Reference;
@@ -100,17 +112,11 @@ public class ParseOPERA extends Parse {
 			// er.finalizePropertyValues();
 			RecordFinalizer.finalizeRecord(er);
 			
-			if ((ro.property_name.toLowerCase() == "pka")) {
-				er.keep=false;
-				er.reason="this is copied over junk, pka records are handled differently";
-			}
-			else {
-				er.keep = true;
-			}
-					
+			
+			er.keep = true;
+			
 			records.add(er);
 		}
-		else {	}
 	}
 	
 	private static void finalizePropertyValues(ExperimentalRecord er) {
