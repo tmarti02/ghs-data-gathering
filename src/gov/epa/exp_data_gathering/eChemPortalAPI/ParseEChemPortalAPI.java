@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.text.StringEscapeUtils;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.DataRemoveDuplicateExperimentalValues;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
@@ -68,6 +69,13 @@ public class ParseEChemPortalAPI extends Parse {
 				RecordEChemPortalAPI r = recordsEChemPortalAPI[i];
 				addExperimentalRecords(r,recordsExperimental);
 			}
+			
+			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+			String source1="ECHA REACH";
+			String source2="ECHA CHEM";
+			boolean omitBadNumericOperator=true;
+			d.removeDuplicates(recordsExperimental,source1,source2,omitBadNumericOperator);		
+
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

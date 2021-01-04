@@ -93,7 +93,9 @@ public class ExperimentalRecord {
 			}
 			//TODO - do we need to handle Cases with no dashes? Check for bad cas numbers (bad check sum?)
 		}
-		String name=chemical_name;
+		String name=StringEscapeUtils.escapeJava(chemical_name);
+				
+		
 		if (name==null || name.trim().isEmpty()) name="name=null";//need placeholder so dont get spurious match in chemreg
 		name=name.trim();
 		

@@ -1,6 +1,5 @@
 package gov.epa.exp_data_gathering.parse;
 
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -13,21 +12,54 @@ import java.util.TreeMap;
  */
 public class DataRemoveDuplicateExperimentalValues {
 
+	/**
+	 * Removes records if original source=source2 if having matching record with source1
+	 * 
+	 * @param records
+	 * @param endpoint
+	 * @param source1
+	 * @param source2
+	 * @param omitBadNumericOperator
+	 * @return
+	 */
+	public void removeDuplicates(ExperimentalRecords records,String source1,String source2,boolean omitBadNumericOperator) {
+			
+		Map<String,ExperimentalRecords>mapRecords=convertToMap(records, omitBadNumericOperator);		
+		Set<String> setOfKeys = mapRecords.keySet();
 	
-	void removeDuplicates(ExperimentalRecords records,String endpoint,String source1,String source2,boolean omitBadNumericOperator) {
-
-		Map<String,ExperimentalRecords>ht=new TreeMap<>();
+		for(String key : setOfKeys) {			             
+            ExperimentalRecords recs=mapRecords.get(key);            
+//            System.out.println(CAS+"\t"+ht.get(CAS).size());
+            remove_eChemPortal_DuplicatesForKey(recs, source1, source2);            
+        }
+				 
+	}
+	
+	/**
+	 * Maps records by CAS, name, and einecs. Useful for removing duplicates between ECHA REACH and ECHA CHEM (ECHA CHEM sometimes has blank name)
+	 * 
+	 * @param records
+	 * @param omitBadNumericOperator
+	 * @return
+	 */
+	Map<String,ExperimentalRecords> convertToMap(ExperimentalRecords records,boolean omitBadNumericOperator) {
+		Map<String,ExperimentalRecords>mapRecords=new TreeMap<>();
 		
-		int count=0;
+		
 		for (ExperimentalRecord record:records) {
 						
-			if (!record.property_name.contentEquals(endpoint)) continue;
 			
-			if (omitBadNumericOperator && record.property_value_numeric_qualifier!=null) continue;
-									
+			if (omitBadNumericOperator && record.property_value_numeric_qualifier!=null) {
+				record.keep=false;
+				record.reason="Has numeric operator";
+//				System.out.println("Has numeric operator:"+record);
+			} else {
+//				System.out.println("No numeric operator:"+record);
+			}
+												
 			String key=null;
 			
-			//TODO add smiles as a possible key...
+			//TODO add smiles as a possible key...(echemportal doesnt report it)
 			
 			if (record.casrn!=null) {
 				key=record.casrn;
@@ -39,52 +71,159 @@ public class DataRemoveDuplicateExperimentalValues {
 			
 //			System.out.println("key="+key);
 
-			count++;
-			if (ht.containsKey(key)) {
-				ExperimentalRecords recs=ht.get(key);
+			if (mapRecords.containsKey(key)) {
+				ExperimentalRecords recs=mapRecords.get(key);
 				recs.add(record);
 			} else {
 				ExperimentalRecords recs=new ExperimentalRecords();
 				recs.add(record);
-				ht.put(key, recs);
+				mapRecords.put(key, recs);
 			}
 									
 		}
-		System.out.println("Count before removing duplicates"+count);
 		
-		Set<String> setOfKeys = ht.keySet();
-	
-		
-		ExperimentalRecords records2=new ExperimentalRecords();
-		
-		int uniqueCount=0;
-		for(String key : setOfKeys) {			 
-            
-            ExperimentalRecords recs=ht.get(key);            
-            if (recs.size()==1) continue;
-
-//            System.out.println(CAS+"\t"+ht.get(CAS).size());
-
-            removeDuplicates(recs, source1, source2);            
-            records2.addAll(recs);
-            
-            if (recs.size()>0) uniqueCount++;
-            
-        }
-		
-//		for (ExperimentalRecord record:records2) {
-//			System.out.println(record);
-//		}
-		 
-		System.out.println("Record count after removing duplicates:"+records2.size());
-		System.out.println("Unique key count:"+uniqueCount);
-	
+		return mapRecords;
 	}
 	
-	void removeDuplicates(ExperimentalRecords recs,String source1,String source2) {
+	Map<String,ExperimentalRecords> convertToMapByComboID(ExperimentalRecords records,boolean omitBadNumericOperator) {
+		Map<String,ExperimentalRecords>mapRecords=new TreeMap<>();
+		
+		int count=0;
+		
+		for (ExperimentalRecord record:records) {
+						
+			
+			if (omitBadNumericOperator && record.property_value_numeric_qualifier!=null) {
+				record.keep=false;
+				record.reason="Has numeric operator";
+			}
+						
+			record.setComboID("|");
+			String key=record.comboID;
+			
+//			System.out.println(key);
+						
+//			System.out.println("key="+key);
+
+			count++;
+			if (mapRecords.containsKey(key)) {
+				ExperimentalRecords recs=mapRecords.get(key);
+				recs.add(record);
+			} else {
+				ExperimentalRecords recs=new ExperimentalRecords();
+				recs.add(record);
+				mapRecords.put(key, recs);
+			}
+									
+		}
+		
+		return mapRecords;
+	}
+	
+	
+	/**
+	 * Removes extra records if property value is the same
+	 * 
+	 * @param records
+	 * @param endpoint
+	 * @param omitBadNumericOperator
+	 * @return
+	 */
+	public void removeDuplicatesByComboID(ExperimentalRecords records,boolean omitBadNumericOperator) {
+		Map<String,ExperimentalRecords>mapRecords=convertToMapByComboID(records, omitBadNumericOperator);
+		
+		Set<String> setOfKeys = mapRecords.keySet();
+		
+        int count = getCountIDsWithKeptRecord(mapRecords, setOfKeys);
+		System.out.println("Number of IDs before duplicates removed:"+count);
+				
+		for(String key : setOfKeys) {			             
+            ExperimentalRecords recs=mapRecords.get(key);            
+//            System.out.println(CAS+"\t"+ht.get(CAS).size());
+//            System.out.println(key);
+            removeDuplicatesForKey(recs);            
+                    
+        }
+
+        int countAfter = getCountIDsWithKeptRecord(mapRecords, setOfKeys);
+		System.out.println("Number of IDS after removed:"+countAfter);
+						
+	
+	}
+
+	private int getCountIDsWithKeptRecord(Map<String, ExperimentalRecords> mapRecords, Set<String> setOfKeys) {
+		int count=0;						
+
+		for(String key : setOfKeys) {			
+            ExperimentalRecords recs=mapRecords.get(key);
+			for (ExperimentalRecord rec:recs) {
+				if (rec.keep) {
+					count++;
+					break;
+				}
+			}
+		}
+		return count;
+	}
+	
+	/**
+	 * 
+	 * For echemportal records, duplicates are removed if:<br>
+	 *  - have nominal value but have matching analytical value<br>
+	 *  - have source 2 but have matching value from source 1 <br>
+	 *  - have duplicate for same source
+	 * 
+	 * @param recs
+	 * @param source1
+	 * @param source2
+	 */
+	void remove_eChemPortal_DuplicatesForKey(ExperimentalRecords recs,String source1,String source2) {
+		removeNominalIfHaveAnalytical(recs);
+		removeSource2IfHaveSource1(recs, source1, source2);				
+		//now that we removed duplicates from source2, delete remaining property duplicates where source name is the same		
+		removeDuplicatesForSameSource(recs);
+	}
+
+	private void removeDuplicatesForSameSource(ExperimentalRecords recs) {
 		for (int i=0;i<recs.size();i++) {			
 			ExperimentalRecord reci=recs.get(i);			
 //			System.out.println(reci.original_source_name+"\t"+source1);
+				
+			if(!reci.keep) continue;
+			
+			for (int j=0;j<recs.size();j++) {
+
+				if (i==j) continue;
+								
+				ExperimentalRecord recj=recs.get(j);
+				
+				if (!recj.keep) continue;
+				
+				String tsi=getToxString(reci)+"\t"+reci.original_source_name+"\t"+reci.property_name;
+				String tsj=getToxString(recj)+"\t"+recj.original_source_name+"\t"+recj.property_name;
+								
+				if (tsi.contentEquals(tsj)) {
+//					System.out.println("Remove exact match same src:"+recj);
+//					recs.remove(j);
+//					j--;
+					
+					recj.keep=false;
+					recj.reason="Duplicate experimental value from same original source";
+					
+					
+				} else {
+//					System.out.println("mismatch:"+tsi+"\t"+tsj);
+				}
+			}
+			
+		}
+	}
+
+	private void removeSource2IfHaveSource1(ExperimentalRecords recs, String source1, String source2) {
+		for (int i=0;i<recs.size();i++) {			
+			ExperimentalRecord reci=recs.get(i);			
+//			System.out.println(reci.original_source_name+"\t"+source1);
+			if(!reci.keep) continue;
 			
 			if (!reci.original_source_name.contentEquals(source1)) continue;
 			
@@ -93,14 +232,25 @@ public class DataRemoveDuplicateExperimentalValues {
 				if (i==j) continue;
 				
 				ExperimentalRecord recj=recs.get(j);
+				if (!recj.keep) continue;
+				
 				if (!recj.original_source_name.contentEquals(source2)) continue;												
 				
-				String tsi=getToxString(reci);
-				String tsj=getToxString(recj);
+				String tsi=getToxString(reci)+"\t"+reci.property_name;
+				String tsj=getToxString(recj)+"\t"+recj.property_name;
+				
+//				if (reci.casrn.contentEquals("10049-04-4")) {
+//					System.out.println(tsi+"\t"+tsj+"\t"+tsi.contentEquals(tsj));
+//				}
 				
 				if (tsi.contentEquals(tsj)) {
-					recs.remove(recj);
-					j--;
+//					recs.remove(j);
+//					j--;
+					
+					recj.keep=false;
+					recj.reason="Duplicate experimental value, already have from "+source1;
+//					System.out.println("removed duplicate:"+recj);
+					
 				} else {
 //					System.out.println("mismatch:"+tsi+"\t"+tsj);
 				}
@@ -108,23 +258,99 @@ public class DataRemoveDuplicateExperimentalValues {
 			
 		}
 	}
+
+	private void removeNominalIfHaveAnalytical(ExperimentalRecords recs) {
+		//Remove nominal records if have non nominal:
+		for (int i=0;i<recs.size();i++) {
+			
+			ExperimentalRecord reci=recs.get(i);			
+//			System.out.println(reci.original_source_name+"\t"+source1);
+			if(!reci.keep) continue;
+			
+			if (reci.note==null) continue;			
+			if (!reci.note.contains("nominal units")) continue;
+
+			boolean haveNonNominal=false;
+
+			
+			for (int j=0;j<recs.size();j++) {
+
+				if (i==j) continue;
+				
+				ExperimentalRecord recj=recs.get(j);
+				if (!recj.keep) continue;
+				
+				if (recj.note==null || (!reci.note.contains("nominal units"))) {
+					haveNonNominal=true;
+					break;
+				}
+				
+			}
+//			System.out.println(reci.casrn+"\t"+haveNonNominal);
+
+			if (haveNonNominal) {
+				reci.keep=false;
+				reci.reason="Concentration is nominal, analytical value available";
+			}
+			
+			
+		}
+	}
+	
+	/**
+	 * Goes through records with same CAS (or same name or EINECS sometimes).
+	 * If have same tox value for matching pair, it keeps source1 value and omits source2 value
+	 * 
+	 * Then it goes through and omits same exact value from same source
+	 * 
+	 * @param recs
+	 * @param source1
+	 * @param source2
+	 */
+	void removeDuplicatesForKey(ExperimentalRecords recs) {
+		for (int i=0;i<recs.size();i++) {			
+			ExperimentalRecord reci=recs.get(i);			
+			
+			if(!reci.keep) continue;
+			
+			for (int j=i+1;j<recs.size();j++) {
+
+//				if (i==j) continue;
+				
+				ExperimentalRecord recj=recs.get(j);
+
+				if(!recj.keep) continue;
+				
+				String tsi=getToxString(reci)+"\t"+reci.property_name;
+				String tsj=getToxString(recj)+"\t"+recj.property_name;
+				
+				if (tsi.contentEquals(tsj)) {
+//					recs.remove(j);
+//					j--;
+					
+					recj.keep=false;
+					recj.reason="Duplicate experimental value";
+//					System.out.println("removed duplicate:"+recj);
+					
+				} else {
+//					System.out.println("mismatch:"+tsi+"\t"+tsj);
+				}
+			}
+			
+		}
+		
+	}
 	
 	String getToxString(ExperimentalRecord er) {
-		return er.property_value_numeric_qualifier+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final;
+		if (er.property_value_point_estimate_final==null) {
+			return er.property_value_min_final+"-"+er.property_value_max_final+"\t"+er.property_value_units_final;
+		} else {
+			return er.property_value_numeric_qualifier+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final;			
+		}
+		
+
 	}
 	
-	
-	
-	public static void main(String[] args) {
-		DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();
-		
-		String filepathExcel="data\\experimental\\eChemPortalAPI\\eChemPortalAPI Toxicity Experimental Records.xlsx";
-		ExperimentalRecords records = ExperimentalRecords.loadFromExcel(filepathExcel);
-		String source1="ECHA REACH";
-		String source2="ECHA CHEM";
-		d.removeDuplicates(records,"rat_inhalation_LC50",source1,source2,true);
-		
-	}
-	
+
 
 }

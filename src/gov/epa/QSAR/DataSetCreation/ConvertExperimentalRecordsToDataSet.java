@@ -20,6 +20,8 @@ import java.util.Vector;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.exp_data_gathering.parse.DataFetcher;
+import gov.epa.exp_data_gathering.parse.DataRemoveDuplicateExperimentalValues;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 
@@ -144,7 +146,7 @@ public class ConvertExperimentalRecordsToDataSet {
 	 * Loop through records for property 
 	 * @param property
 	 */
-	void getListOfComboIDsForGoodRecords(String property,ExperimentalRecords recordsValid) {
+	void getListOfComboIDsForGoodRecords(String property,ExperimentalRecords records) {
 						
 		try {
 		
@@ -158,7 +160,7 @@ public class ConvertExperimentalRecordsToDataSet {
 //			records.toExcel_File(filepathExcel);
 				
 			
-			Vector<String> uniqueIDs = getUniqueComboIDs(recordsValid,"|");
+			Vector<String> uniqueIDs = getUniqueComboIDs(records,"|");
 									
 			String fileout=folder+property+"_ChemReg_Import_ComboID.txt";			
 			FileWriter fw=new FileWriter(fileout);
@@ -175,7 +177,7 @@ public class ConvertExperimentalRecordsToDataSet {
 			fw.close();
 			
 
-			System.out.println(recordsValid.size()+"\t"+uniqueIDs.size());
+			System.out.println(records.size()+"\t"+uniqueIDs.size());
 			
 			
 		} catch (Exception ex) {
@@ -191,6 +193,8 @@ public class ConvertExperimentalRecordsToDataSet {
 		
 		for (ExperimentalRecord record:records2) {
 //				String comboID=record.casrn+"\t"+record.chemical_name+"\t"+record.smiles+"\t"+record.einecs;				
+			
+			if (!record.keep) continue;
 			
 			record.setComboID("\t");
 			String comboID=record.comboID;
@@ -245,26 +249,7 @@ public class ConvertExperimentalRecordsToDataSet {
 				continue;					
 			}
 			
-			
-			if (record.property_value_point_estimate_final==null) {
-				
-				if (record.property_value_min_final==null || record.property_value_max_final==null) {
-					continue;
-				}				
-				
-//				if (record.property_value_min_final!=null && record.property_value_max_final!=null) {
-//					//For now take an average of min and max:					
-//					//TODO- if min and max is too far apart exclude if 10K for MP				
-//					double min=record.property_value_min_final;
-//					double max=record.property_value_max_final;
-//					record.property_value_point_estimate_final=(min+max)/2.0;
-////						System.out.println(record.casrn+"\t"+record.property_value_point_estimate_final);
-//				} else {
-//						System.out.println(record.toJSON());
-//					continue;
-//				}
-			}
-			
+						
 			if (record.temperature_C!=null && (record.temperature_C<20 || record.temperature_C>30)) {
 //				System.out.println("bad temp="+record.temperature_C);
 				continue;
@@ -422,16 +407,74 @@ public class ConvertExperimentalRecordsToDataSet {
 		return comboIDs1;
 	}
 	
+	ExperimentalRecords getRecordsWithProperty(String propertyName,ExperimentalRecords records) {
+		ExperimentalRecords records2=new ExperimentalRecords();	
+
+		for (ExperimentalRecord record:records) {
+			if(record.property_name.contentEquals(propertyName)) {
+				records2.add(record);
+			}
+		}
+		return records2;
+	}
+	
+	void runRatInhalationLC50() {
+		
+		String property=ExperimentalConstants.strRatInhalationLC50;		
+		String folder = "data\\DataSets\\"+property+"\\";
+		boolean omitBadNumericOperator=true;
+
+
+		String filepathExcel="data\\experimental\\eChemPortalAPI\\eChemPortalAPI Toxicity Experimental Records.xlsx";
+		ExperimentalRecords recordsExcel = ExperimentalRecords.loadFromExcel(filepathExcel);		
+		ExperimentalRecords recordsEchemportal=getRecordsWithProperty(property, recordsExcel);
+				
+//		//Since we dont have IDs in the excel file yet:
+		for (int i=0;i<recordsExcel.size();i++) recordsExcel.get(i).id_physchem=ExperimentalConstants.strSourceEChemPortalAPI+i;
+
+		
+		DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+		String source1="ECHA REACH";
+		String source2="ECHA CHEM";
+		d.removeDuplicates(recordsEchemportal,source1,source2,omitBadNumericOperator);		
+		
+		
+//	System.out.println("ECHA record count="+recordsECHA.size());
+
+		ExperimentalRecords recordsChemIDplus=getExperimentalRecords(property);
+		d.removeDuplicatesByComboID(recordsChemIDplus, omitBadNumericOperator);
+//		System.out.println("Chemidplus record count="+recordsChemIDplus.size());
+		
+	
+//		
+		ExperimentalRecords records=new ExperimentalRecords();
+		records.addAll(recordsEchemportal);
+		records.addAll(recordsChemIDplus);
+//		
+//						
+////		getListOfComboIDsForGoodRecords(property, records);	
+		getListOfUniqueIdentifiersForGoodRecords(folder,property,records);
+//		
+		records.toExcel_File(folder+"records.xlsx");
+
+		
+	}
+	
 	
 	public static void main(String[] args) {
 		ConvertExperimentalRecordsToDataSet c=new ConvertExperimentalRecordsToDataSet();
 		
+		
+		c.runRatInhalationLC50();
+		
+		if (true) return;
+		
 		Statement stat=SQLite_Utilities.getStatement(databasePathExperimentalRecords);
 
 		
-//		String property=ExperimentalConstants.strWaterSolubility;
+		String property=ExperimentalConstants.strWaterSolubility;
 //		String property=ExperimentalConstants.strBoilingPoint;
-		String property=ExperimentalConstants.strRatInhalationLC50;
+//		String property=ExperimentalConstants.strRatInhalationLC50;
 
 		String folder = "data\\DataSets\\"+property+"\\";
 
@@ -458,7 +501,8 @@ public class ConvertExperimentalRecordsToDataSet {
 		
 		c.getListOfUniqueIdentifiersForGoodRecords(folder,property,recordsValid);
 		c.getListOfComboIDsForGoodRecords(property, recordsValid);
-		c.compareIDFiles(ExperimentalConstants.strWaterSolubility, ExperimentalConstants.strBoilingPoint);
+		
+//		c.compareIDFiles(ExperimentalConstants.strWaterSolubility, ExperimentalConstants.strBoilingPoint);
 	}
 
 }

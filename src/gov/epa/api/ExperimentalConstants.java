@@ -15,8 +15,9 @@ public class ExperimentalConstants {
 	public static final String strAppearance="Appearance";
 	public static final String str_pKAa="pKAa";
 	public static final String str_pKAb="pKAb";
-	
+
 	public static final String strInhalationLC50="inhalation_LC50";
+	public static final String strRatInhalationLC50="rat_inhalation_LC50";
 
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";

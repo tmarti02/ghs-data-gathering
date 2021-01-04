@@ -12,7 +12,7 @@ public class RecordFinalizer {
 	 * @param er - ExperimentalRecord to convert units and store final values
 	 */
 	public static void finalizeRecord(ExperimentalRecord er) {
-		double logTolerance = 0.5;//log units for properties that vary many orders of magnitude; if value was 1, then max would be 10x bigger than min
+		double logTolerance = 1.0;//log units for properties that vary many orders of magnitude; if value was 1, then max would be 10x bigger than min
 		double temperatureTolerance = 10.0;//C For Melting point, boiling point, flash point
 		double densityTolerance = 0.1;//g/cm^3 for density
 		
