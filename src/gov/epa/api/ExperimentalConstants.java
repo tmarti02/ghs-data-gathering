@@ -56,6 +56,7 @@ public class ExperimentalConstants {
 	public static final String str_log_M="log10(M)";
 	public static final String str_log_mg_L="log10(mg/L)";
 	public static final String str_log_mmHg="log10(mmHg)";
+	public static final String str_log_atm_m3_mol="log10(atm-m3/mol)";
 	public static final String str_dimensionless_H="dimensionless H";
 	public static final String str_dimensionless_H_vol="dimensionless H (volumetric)";
 	
