@@ -80,6 +80,7 @@ public class ParseChemBL extends Parse {
 				er.property_value_point_estimate_original = Double.parseDouble(cbr.standardValue);
 			}
 			sensiblePkaCheck(cbr.standardValue, er); // puts records with pka outside the -10 to 25 range into bad
+			functionalGroupAI(cbr.assayDescription, er);
 		}	
 			
 			else if (cbr.standardType.toLowerCase().equals("solubility") && (desc.contains("water") || desc.contains("aq")) && cbr.standardUnits!=null ||
@@ -184,4 +185,70 @@ public class ParseChemBL extends Parse {
 		}
 	}
 	
+	public static void functionalGroupAI(String assayDescription, ExperimentalRecord er) {
+		if (assayDescription.contains("carboxyl")) {
+			er.updateNote("carboxyl");
+		}	else if (assayDescription.contains("amino")) {
+			er.updateNote("amino");
+		} 	else if (assayDescription.contains("guanidine")) {
+			er.updateNote("guanidine");
+		}	else if (assayDescription.contains("oxime")) {
+			er.updateNote("oxime");
+		}	else if (assayDescription.contains("quinoline")) {
+			er.updateNote("quinoline");
+		}	else if (assayDescription.contains("NH group")) {
+			er.updateNote("NHgroup");
+		}	else if (assayDescription.contains("OH group")) {
+			er.updateNote("OHgroup");
+		}	else if (assayDescription.contains("sulfonamide")) {
+			er.updateNote("sulfonamide");
+		}	else if (assayDescription.contains("Amine")) {
+			er.updateNote("amine");
+		}	else if (assayDescription.contains("aliphatic nitrogen")) {
+			er.updateNote("aliphaticnitrogen");
+		}	else if (assayDescription.contains("hydroxyimine methyl acid")) {
+			er.updateNote("hydroxyiminemethylacid");
+		}	else if (assayDescription.contains("pyrophosphate")) {
+			er.updateNote("tbd"); // TODO figure out what should go here
+		}	else if (assayDescription.contains("formamidine")) {
+			er.updateNote("formamidinering");
+		}	else if (assayDescription.contains("imidazole")) {
+			er.updateNote("imidazolering");
+		}	else if (assayDescription.contains("pyridinium")) {
+			er.updateNote("pyridinium");
+		}	else if (assayDescription.contains("Ar-COOH")) {
+			er.updateNote("Ar-COOH");
+		}	else if (assayDescription.contains("P(O)O-OH")) {
+			er.updateNote("P(O)O-OH");
+		}	else if (assayDescription.contains("OH/C-ring")) {
+			er.updateNote("OH/C-ring");
+		}	else if (assayDescription.contains("N-1")) {
+			er.updateNote("N-1");
+		}	else if (assayDescription.contains("polyamino carboxylate")) {
+			er.updateNote("polyamino carboxylate");
+		}	else if (assayDescription.contains("benzimidazole")) {
+			er.updateNote("benzimidazole");
+		}	else if (assayDescription.contains("Phenolic")) { // sorted, this is where all the weird stuff starts showing up
+			er.updateNote("phenolic");
+		}	else if (assayDescription.contains("benzyl amine")) {
+			er.updateNote("benzylamine");
+		}	else if (assayDescription.contains("piperdine amine")) {
+			er.updateNote("piperdineamine");
+		}	else if (assayDescription.contains("heterocyclic component")) {
+			er.updateNote("heterocyclic_component");
+		}	else if (assayDescription.contains("of nitrogen -")) {
+			er.updateNote("nitrogen");
+		}	else if (assayDescription.contains("urea")) {
+			er.updateNote("urea");
+		}	else if (assayDescription.contains("Sugar COOH")) {
+			er.updateNote("sugarCOOH");
+		}	else if (assayDescription.contains("carboxylic acid")) {
+			er.updateNote("carboxylic acid");
+		}	else if (assayDescription.contains("sulfonamido")) {
+			er.updateNote("sulfonamido");
+			}
+		
+			
+		}
 }
+	
