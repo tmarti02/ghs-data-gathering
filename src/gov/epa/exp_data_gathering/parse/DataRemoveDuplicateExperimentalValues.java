@@ -49,7 +49,7 @@ public class DataRemoveDuplicateExperimentalValues {
 		for (ExperimentalRecord record:records) {
 						
 			
-			if (omitBadNumericOperator && record.property_value_numeric_qualifier!=null) {
+			if (omitBadNumericOperator && record.property_value_numeric_qualifier!=null && !record.property_value_numeric_qualifier.contentEquals("~")) {
 				record.keep=false;
 				record.reason="Has numeric operator";
 //				System.out.println("Has numeric operator:"+record);
@@ -93,7 +93,7 @@ public class DataRemoveDuplicateExperimentalValues {
 		for (ExperimentalRecord record:records) {
 						
 			
-			if (omitBadNumericOperator && record.property_value_numeric_qualifier!=null) {
+			if (omitBadNumericOperator && record.property_value_numeric_qualifier!=null && !record.property_value_numeric_qualifier.contentEquals("~")) {
 				record.keep=false;
 				record.reason="Has numeric operator";
 			}
