@@ -79,8 +79,9 @@ public class ParseChemBL extends Parse {
 			if (cbr.standardValue!=null && !cbr.standardValue.isBlank()) {
 				er.property_value_point_estimate_original = Double.parseDouble(cbr.standardValue);
 			}
-			sensiblePkaCheck(cbr.standardValue, er); // puts records with pka outside the -10 to 25 range into bad
+			sensiblepkaRangeCheck(cbr.standardValue, er); // puts records with pka outside the -10 to 25 range into bad
 			functionalGroupAI(cbr.assayDescription, er);
+			pKACheck(cbr.assayDescription, er); // removes records with solvents other than water specified.
 		}	
 			
 			else if (cbr.standardType.toLowerCase().equals("solubility") && (desc.contains("water") || desc.contains("aq")) && cbr.standardUnits!=null ||
@@ -176,7 +177,7 @@ public class ParseChemBL extends Parse {
 		p.createFiles();
 	}
 
-	public static void sensiblePkaCheck(String standardVal, ExperimentalRecord er) {
+	public static void sensiblepkaRangeCheck(String standardVal, ExperimentalRecord er) {
 		if ((!(standardVal == null)) && !standardVal.isBlank()) {
 		if ((Double.parseDouble(standardVal) > 25 || Double.parseDouble(standardVal) < -10) ) {
 			er.keep = false;
@@ -185,9 +186,29 @@ public class ParseChemBL extends Parse {
 		}
 	}
 	
+	
+	public static void pKACheck(String assayDescription, ExperimentalRecord er) {
+		String badRecordFeature[] = {"lipophilicity","log d","log p","partition coefficient","pharmacokinetic","photostability","catalytic rate","gadolinium(iii) stability"};
+		for (int i = 0; i < badRecordFeature.length; i++) {
+			if (assayDescription.toLowerCase().contains(badRecordFeature[i])) {
+				er.keep=false;
+				er.reason="incorrect property measured";
+			}
+		}
+		String badSolventList[] = {"dmf","etoh","ethanol","ethyl alcohol","meoh","methanol","dmso"};
+		for (int j = 0; j < badSolventList.length; j++) {
+			if (assayDescription.toLowerCase().contains(badSolventList[j])) {
+				er.keep=false;
+				er.reason="other solvent specified";
+			}
+		}
+	}
+	
 	public static void functionalGroupAI(String assayDescription, ExperimentalRecord er) {
 		if (assayDescription.contains("carboxyl")) {
 			er.updateNote("carboxyl");
+		}	else if (assayDescription.contains("urea")) {
+			er.updateNote("urea");
 		}	else if (assayDescription.contains("amino")) {
 			er.updateNote("amino");
 		} 	else if (assayDescription.contains("guanidine")) {
@@ -196,6 +217,8 @@ public class ParseChemBL extends Parse {
 			er.updateNote("oxime");
 		}	else if (assayDescription.contains("quinoline")) {
 			er.updateNote("quinoline");
+		}	else if (assayDescription.contains("P(O)O-OH")) {
+			er.updateNote("P(O)O-OH");
 		}	else if (assayDescription.contains("NH group")) {
 			er.updateNote("NHgroup");
 		}	else if (assayDescription.contains("OH group")) {
@@ -218,8 +241,7 @@ public class ParseChemBL extends Parse {
 			er.updateNote("pyridinium");
 		}	else if (assayDescription.contains("Ar-COOH")) {
 			er.updateNote("Ar-COOH");
-		}	else if (assayDescription.contains("P(O)O-OH")) {
-			er.updateNote("P(O)O-OH");
+
 		}	else if (assayDescription.contains("OH/C-ring")) {
 			er.updateNote("OH/C-ring");
 		}	else if (assayDescription.contains("N-1")) {
@@ -238,8 +260,6 @@ public class ParseChemBL extends Parse {
 			er.updateNote("heterocyclic_component");
 		}	else if (assayDescription.contains("of nitrogen -")) {
 			er.updateNote("nitrogen");
-		}	else if (assayDescription.contains("urea")) {
-			er.updateNote("urea");
 		}	else if (assayDescription.contains("Sugar COOH")) {
 			er.updateNote("sugarCOOH");
 		}	else if (assayDescription.contains("carboxylic acid")) {
