@@ -94,8 +94,11 @@ public class Parse {
 
 		System.out.println("Going through original records");
 		ExperimentalRecords records=goThroughOriginalRecords();
-		records.dontKeepNumericQualifierRecords();
+//		records.dontKeepNumericQualifierRecords();
 		records.addSourceBasedIDNumbers();
+		
+		DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+		d.removeDuplicates(records,sourceName);	
 		
 		ExperimentalRecords recordsBad = records.dumpBadRecords();
 

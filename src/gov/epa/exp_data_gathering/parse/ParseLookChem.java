@@ -90,10 +90,6 @@ public class ParseLookChem extends Parse {
 		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
 		
-		er.keep = true;
-		er.reason = null;
-		er.flag = false;
-		
 		records.add(er);
 	}
 	
@@ -146,7 +142,6 @@ public class ParseLookChem extends Parse {
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
 			// Warns if there may be a problem with an entry
-			er.flag = false;
 			if (propertyName.contains("?")) {
 				er.flag = true;
 				er.reason = "Question mark";

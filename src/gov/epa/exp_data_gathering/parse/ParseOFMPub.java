@@ -37,10 +37,6 @@ public class ParseOFMPub extends Parse {
 				}
 			}
 			
-			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
-			boolean omitBadNumericOperator=true;
-			d.removeDuplicates(recordsExperimental,sourceName);	
-			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -54,9 +50,7 @@ public class ParseOFMPub extends Parse {
 		er.date_accessed = opr.date_accessed;
 		er.url = opr.url;
 		er.reliability = opr.reliability;
-		er.keep = true;
-		er.reason = null;
-		er.flag = false;
+
 		if (opr.testSubstanceName!=null && !opr.testSubstanceName.isBlank() && opr.testSubstanceCAS!=null && !opr.testSubstanceCAS.isBlank()) {
 			er.casrn = opr.testSubstanceCAS;
 			er.chemical_name = opr.testSubstanceName;

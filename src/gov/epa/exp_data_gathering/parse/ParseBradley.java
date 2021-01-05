@@ -60,8 +60,6 @@ public class ParseBradley extends Parse {
 				er.property_value_string = er.property_value_string + "; Temperature: "+br.notes;
 			}
 			RecordFinalizer.finalizeRecord(er);
-			er.keep = true;
-			er.flag = false;
 			records.add(er);
 		}
 	}

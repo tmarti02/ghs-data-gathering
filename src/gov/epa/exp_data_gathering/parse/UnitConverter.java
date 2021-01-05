@@ -38,7 +38,7 @@ public class UnitConverter {
 			conversionFactor = 1.0/1000.0;
 		} else {
 			er.flag = true;
-			er.updateNote("conversion to mg/L not possible");
+			er.updateNote("Conversion to mg/L not possible");
 		}
 		
 		if (!er.flag) {
@@ -140,7 +140,7 @@ public class UnitConverter {
 			if (er.property_value_max_original!=null) { er.property_value_max_final = Math.pow(10.0,er.property_value_max_original); }
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
-			er.updateNote("conversion to g/L not possible");
+			er.updateNote("Conversion to g/L not possible");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mM)) {
 			isConvertible = false;
 			conversionFactor = 1.0/1000.0;
@@ -149,7 +149,7 @@ public class UnitConverter {
 			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
-			er.updateNote("conversion to g/L not possible");
+			er.updateNote("Conversion to g/L not possible");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_nM)) {
 			isConvertible = false;
 			conversionFactor = 1.0/1000000000.0;
@@ -158,7 +158,7 @@ public class UnitConverter {
 			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
-			er.updateNote("conversion to g/L not possible");
+			er.updateNote("Conversion to g/L not possible");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L) || er.property_value_units_original.equals(ExperimentalConstants.str_ug_mL)
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_ppm)) {
 			conversionFactor = 1.0/1000.0;
@@ -176,7 +176,7 @@ public class UnitConverter {
 		} else if (!er.property_value_units_original.equals(ExperimentalConstants.str_g_L) && !er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL) &&
 				!er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)) {
 			er.flag = true;
-			er.updateNote("conversion to g/L not possible");
+			er.updateNote("Conversion to g/L not possible");
 		}
 		if (!er.flag && isConvertible) {
 			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
@@ -202,7 +202,7 @@ public class UnitConverter {
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_atm)) {
 			conversionFactor = UnitConverter.atm_to_mmHg;
 			er.property_value_units_final = ExperimentalConstants.str_mmHg;
-			er.updateNote("conversion to Pa-m3/mol not possible");
+			er.updateNote("Conversion to Pa-m3/mol not possible");
 			er.flag=true;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_log_atm_m3_mol)) {
 			Double temp = Math.pow(10.0,er.property_value_point_estimate_original);
@@ -212,7 +212,7 @@ public class UnitConverter {
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H) ||
 				er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless_H_vol)) {
 			er.property_value_units_final = er.property_value_units_original;
-			er.updateNote("conversion to Pa-m3/mol not possible");
+			er.updateNote("Conversion to Pa-m3/mol not possible");
 			er.flag=true;
 		}
 		if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }

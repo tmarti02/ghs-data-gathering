@@ -68,13 +68,7 @@ public class ParseEChemPortalAPI extends Parse {
 			for (int i = 0; i < recordsEChemPortalAPI.length; i++) {
 				RecordEChemPortalAPI r = recordsEChemPortalAPI[i];
 				addExperimentalRecords(r,recordsExperimental);
-			}
-			
-			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
-			String source1="ECHA REACH";
-			String source2="ECHA CHEM";
-			boolean omitBadNumericOperator=true;
-			d.removeDuplicates(recordsExperimental,sourceName,source1,source2);		
+			}	
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -215,12 +209,9 @@ public class ParseEChemPortalAPI extends Parse {
 		
 		RecordFinalizer.finalizeRecord(er);
 		
-		if (!ParseUtilities.hasIdentifiers(er)) {
+		if (er.keep && !ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;
 			er.reason = "No identifiers";
-		} else {
-			er.keep = true;
-			er.reason = null;
 		}
 		
 		records.add(er);

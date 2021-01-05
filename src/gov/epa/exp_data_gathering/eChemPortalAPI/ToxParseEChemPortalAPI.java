@@ -54,12 +54,6 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 				addExperimentalRecords(r,recordsExperimental);
 			}
 			
-			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
-			String source1="ECHA REACH";
-			String source2="ECHA CHEM";
-			boolean omitBadNumericOperator=true;
-			d.removeDuplicates(recordsExperimental,sourceName,source1,source2);	
-			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -123,9 +117,6 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 		if (!ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;
 			er.reason = "No identifiers";
-		} else {
-			er.keep = true;
-			er.reason = null;
 		}
 		
 		records.add(er);

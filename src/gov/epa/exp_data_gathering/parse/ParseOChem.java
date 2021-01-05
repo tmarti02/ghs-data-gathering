@@ -37,10 +37,6 @@ public class ParseOChem extends Parse {
 				addExperimentalRecords(rec,recordsExperimental);
 			}
 			
-			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
-			boolean omitBadNumericOperator=true;
-			d.removeDuplicates(recordsExperimental,sourceName);	
-			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -139,18 +135,18 @@ public class ParseOChem extends Parse {
 			er.property_value_string = er.property_value_string + "; pH: " + ocr.pH;
 			er.pH = ocr.pH;
 		}
-		er.flag = false;
+		
 		if (!ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;
 			er.reason = "No identifiers";
-		} if (er.measurement_method!=null && er.measurement_method.contains("est")) {
+		}
+		
+		if (er.measurement_method!=null && er.measurement_method.contains("est")) {
 			er.updateNote(ExperimentalConstants.str_est);
 			er.keep = false;
 			er.reason = "Estimated";
-		} else {
-			er.keep = true;
-			er.reason = null;
 		}
+		
 		records.add(er);
 	}
 	

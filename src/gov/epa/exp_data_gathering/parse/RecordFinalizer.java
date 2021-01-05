@@ -28,8 +28,8 @@ public class RecordFinalizer {
 	
 				if (isWithinTolerance(er,logTolerance)) {
 					calculateFinalValueFromMinMaxAverage(er);//values are already in log units so dont need to use geometric median
-				} else if (!isWithinLogTolerance(er,logTolerance)) {
-					er.keep = false;
+				} else if (!isWithinTolerance(er,logTolerance)) {
+					er.flag = true;
 					er.reason = "Range too wide to compute point estimate";
 				}
 			}
@@ -40,7 +40,7 @@ public class RecordFinalizer {
 			if (er.property_value_min_final!=null && isWithinTolerance(er,temperatureTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
 			} else if (er.property_value_min_final!=null && !isWithinTolerance(er,temperatureTolerance)) {
-				er.keep = false;
+				er.flag = true;
 				er.reason = "Range too wide to compute point estimate";
 			}
 		} else if (er.property_name.equals(ExperimentalConstants.strDensity)) {
@@ -48,46 +48,70 @@ public class RecordFinalizer {
 			if (er.property_value_min_final!=null && isWithinTolerance(er,densityTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
 			} else if (er.property_value_min_final!=null && !isWithinTolerance(er,densityTolerance)) {
-				er.keep = false;
+				er.flag = true;
 				er.reason = "Range too wide to compute point estimate";
 			}
 		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure) && er.property_value_units_original!=null) {
 			UnitConverter.convertPressure(er);
 			if (er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
-			} else if (er.property_value_min_final!=null && !isWithinTolerance(er,logTolerance)) {
-				er.keep = false;
-				er.reason = "Range too wide to compute point estimate";
+			} else if (er.property_value_min_final!=null && !isWithinLogTolerance(er,logTolerance)) {
+				if (er.property_value_min_final==0) {
+					er.keep = false;
+					er.reason = "Range with minimum 0 is not interpretable";
+				} else {
+					er.flag = true;
+					er.reason = "Range too wide to compute point estimate";
+				}
 			}
 		} else if (er.property_name.equals(ExperimentalConstants.strHenrysLawConstant) && er.property_value_units_original!=null) {
 			UnitConverter.convertHenrysLawConstant(er);
 			if (er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
-			} else if (er.property_value_min_final!=null && !isWithinTolerance(er,logTolerance)) {
-				er.keep = false;
-				er.reason = "Range too wide to compute point estimate";
+			} else if (er.property_value_min_final!=null && !isWithinLogTolerance(er,logTolerance)) {
+				if (er.property_value_min_final==0) {
+					er.keep = false;
+					er.reason = "Range with minimum 0 is not interpretable";
+				} else {
+					er.flag = true;
+					er.reason = "Range too wide to compute point estimate";
+				}
 			}
 		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility) && er.property_value_units_original!=null) {
 			UnitConverter.convertSolubility(er);
 			if (er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
-			} else if (er.property_value_min_final!=null && !isWithinTolerance(er,logTolerance)) {
-				er.keep = false;
-				er.reason = "Range too wide to compute point estimate";
+			} else if (er.property_value_min_final!=null && !isWithinLogTolerance(er,logTolerance)) {
+				if (er.property_value_min_final==0) {
+					er.keep = false;
+					er.reason = "Range with minimum 0 is not interpretable";
+				} else {
+					er.flag = true;
+					er.reason = "Range too wide to compute point estimate";
+				}
 			}
 		} else if ((er.property_name.contains("LC50") || er.property_name.contains("LD50")) && er.property_value_units_original!=null) {
 			UnitConverter.convertToxicity(er);
 			if (er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
-			} else if (er.property_value_min_final!=null && !isWithinTolerance(er,logTolerance)) {
-				er.keep = false;
-				er.reason = "Range too wide to compute point estimate";
+			} else if (er.property_value_min_final!=null && !isWithinLogTolerance(er,logTolerance)) {
+				if (er.property_value_min_final==0) {
+					er.keep = false;
+					er.reason = "Range with minimum 0 is not interpretable";
+				} else {
+					er.flag = true;
+					er.reason = "Range too wide to compute point estimate";
+				}
 			}
 		}
 	}
 
 	public static boolean isWithinLogTolerance(ExperimentalRecord er,double logTolerance) {
-		return Math.log10(er.property_value_max_final/er.property_value_min_final) <= logTolerance;
+		if (er.property_value_min_final!=0) {
+			return Math.log10(er.property_value_max_final/er.property_value_min_final) <= logTolerance;
+		} else {
+			return false;
+		}
 	}
 
 	public static boolean isWithinTolerance(ExperimentalRecord er,double tolerance) {		
@@ -96,8 +120,7 @@ public class RecordFinalizer {
 
 	public static void calculateFinalValueFromMinMaxAverage(ExperimentalRecord er) {
 		er.property_value_point_estimate_final = (er.property_value_min_final + er.property_value_max_final)/2.0;				
-		er.updateNote("Point estimate computed from average of range");		
-		//@Gabriel this is same as property_value_min_final + (property_value_max_final-property_value_min_final)/2.0;
+		er.updateNote("Point estimate computed from average of range");
 	}
 
 //	/**
