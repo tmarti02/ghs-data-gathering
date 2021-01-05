@@ -10,8 +10,15 @@ public class RecordFinalizer {
 	/**
 	 * Converts to final units and assigns point estimates for any ranges within tolerance:
 	 * @param er - ExperimentalRecord to convert units and store final values
+	 * (Also does checksum and fixes leading zeroes in casrn field - convenient place to do it)
 	 */
 	public static void finalizeRecord(ExperimentalRecord er) {
+		er.casrn = ParseUtilities.fixCASLeadingZero(er.casrn);
+		if (er.casrn!=null && !ParseUtilities.isValidCAS(er.casrn)) {
+			er.keep = false;
+			er.reason = "Invalid CAS";
+		}
+		
 		double logTolerance = 1.0;//log units for properties that vary many orders of magnitude; if value was 1, then max would be 10x bigger than min
 		double temperatureTolerance = 10.0;//C For Melting point, boiling point, flash point
 		double densityTolerance = 0.1;//g/cm^3 for density

@@ -87,11 +87,7 @@ public class ExperimentalRecord {
 		String CAS=casrn;
 		if (CAS==null || CAS.trim().isEmpty()) CAS="casrn=null";//need placeholder so dont get spurious match in chemreg
 		else {
-			CAS=CAS.trim();
-			while (CAS.substring(0,1).contentEquals("0")) {//trim off zeros at front
-				CAS=CAS.substring(1,CAS.length());
-			}
-			//TODO - do we need to handle Cases with no dashes? Check for bad cas numbers (bad check sum?)
+			CAS=ParseUtilities.fixCASLeadingZero(CAS);
 		}
 		String name=StringEscapeUtils.escapeJava(chemical_name);
 		
@@ -110,8 +106,7 @@ public class ExperimentalRecord {
 		
 		comboID=CAS+del+EINECS+del+name+del+SMILES;
 		
-	}	
-	
+	}
 	
 	public void assignValue(String fieldName,String fieldValue) {
 		Field myField;

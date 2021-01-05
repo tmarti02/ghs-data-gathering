@@ -163,7 +163,7 @@ public class RecordEChemPortalAPI {
 					}
 				}
 			}
-			System.out.println("Added "+count+" records; eliminated "+countEliminated+" records. Done!");
+//			System.out.println("Added "+count+" records; eliminated "+countEliminated+" records. Done!");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

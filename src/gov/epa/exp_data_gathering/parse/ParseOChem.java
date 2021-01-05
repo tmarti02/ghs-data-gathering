@@ -85,24 +85,24 @@ public class ParseOChem extends Parse {
 		}
 		switch (ocr.propertyUnit.trim()) {
 		case "Celsius":
-			er.property_value_units_final = ExperimentalConstants.str_C;
+			er.property_value_units_original = ExperimentalConstants.str_C;
 			break;
 		case "g/cm3":
-			er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
 			break;
 		case "g/L":
-			er.property_value_units_final = ExperimentalConstants.str_g_L;
+			er.property_value_units_original = ExperimentalConstants.str_g_L;
 			break;
 		case "Log unit":
 			break;
 		case "m^(3)*Pa/mol":
-			er.property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
+			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
 			break;
 		case "mm Hg":
-			er.property_value_units_final = ExperimentalConstants.str_mmHg;
+			er.property_value_units_original = ExperimentalConstants.str_mmHg;
 			break;
 		}
-		er.property_value_point_estimate_final = Double.parseDouble(ocr.propertyValue);
+		er.property_value_point_estimate_original = Double.parseDouble(ocr.propertyValue);
 		if (ocr.temperature!=null && !ocr.temperature.isBlank()) {
 			er.property_value_string = er.property_value_string + "; Temperature: " + ocr.temperature + " " + ocr.temperatureUnit;
 			String cleanTemp = ocr.temperature.replaceAll("[^0-9.,E]","");
@@ -147,6 +147,7 @@ public class ParseOChem extends Parse {
 			er.reason = "Estimated";
 		}
 		
+		RecordFinalizer.finalizeRecord(er);
 		records.add(er);
 	}
 	

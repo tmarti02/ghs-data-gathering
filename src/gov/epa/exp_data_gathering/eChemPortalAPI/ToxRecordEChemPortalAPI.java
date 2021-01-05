@@ -156,7 +156,7 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 //					if (count % 1000==0) { System.out.println("Added "+count+" records..."); }
 				}
 			}
-			System.out.println("Added "+count+" records; eliminated "+countEliminated+" records. Done!");
+//			System.out.println("Added "+count+" records; eliminated "+countEliminated+" records. Done!");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

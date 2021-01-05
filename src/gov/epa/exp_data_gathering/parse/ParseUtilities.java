@@ -666,4 +666,35 @@ public class ParseUtilities extends Parse {
 		}
 	}
 
+	public static String fixCASLeadingZero(String cas) {
+		if (cas!=null && !cas.isBlank()) {
+			cas=cas.trim();
+			while (cas.substring(0,1).contentEquals("0")) {//trim off zeros at front
+				cas=cas.substring(1,cas.length());
+			}
+			return cas;
+		} else {
+			return null;
+		}
+	}
+	
+	public static boolean isValidCAS(String casInput) {
+		String[] casArray = casInput.split("|");
+		boolean valid = true;
+		for (String cas:casArray) {
+			String casTemp = cas.replaceAll("[^0-9]","");
+			int len = casTemp.length();
+			int check = Character.getNumericValue(casTemp.charAt(len-1));
+			int sum = 0;
+			for (int i = 1; i <= len-1; i++) {
+				sum += i*Character.getNumericValue(casTemp.charAt(len-1-i));
+			}
+			if (check % 10 != sum) {
+				valid = false;
+				break;
+			}
+		}
+		return valid;
+	}
+
 }
