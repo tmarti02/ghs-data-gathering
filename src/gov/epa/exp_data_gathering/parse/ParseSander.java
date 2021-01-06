@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,7 +16,7 @@ import gov.epa.api.ExperimentalConstants;
 public class ParseSander extends Parse {
 	
 	public ParseSander() {
-		sourceName = "Sander";
+		sourceName = ExperimentalConstants.strSourceSander;
 		this.init();
 	}
 	@Override
@@ -32,17 +33,40 @@ public class ParseSander extends Parse {
 			
 			RecordSander[] recordsSander = gson.fromJson(new FileReader(jsonFile), RecordSander[].class);
 			
-			for (int i = 0; i < 200; i++) { // recordsSander.length
+			for (int i = 0; i < recordsSander.length; i++) { // recordsSander.length
 				RecordSander rec = recordsSander[i];
-				// addExperimentalRecords(rec,recordsExperimental);
-				Gabrieldemo(rec);
+				addExperimentalRecords(rec,recordsExperimental);
 			}
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		return recordsExperimental;
 	}
-	// get the names right
+	
+	
+	void makeFullRefTxt() {
+		BufferedWriter bw = null;
+		try {
+			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			File txtfile = new File(mainFolder + File.separator + "General" + "SanderReferences.txt");
+			FileWriter fw = new FileWriter(txtfile);
+			bw = new BufferedWriter(fw);
+			RecordSander[] recordsSander = gson.fromJson(new FileReader(jsonFile), RecordSander[].class);
+			
+			for (int i = 0; i < recordsSander.length; i++) { // recordsSander.length
+				RecordSander rec = recordsSander[i];
+				String temp = Gabrieldemo(rec);
+				bw.write(temp);
+			}
+			
+			bw.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
 	/**
 	 * populates experimentalrecord fields with data from the recordSander object.
 	 * @param rs
@@ -90,6 +114,8 @@ public class ParseSander extends Parse {
 		p.databaseFolder = p.mainFolder;
 		p.jsonFolder= p.mainFolder;
 		p.createFiles();
+		p.makeFullRefTxt();
+		
 	}
 
 
@@ -121,18 +147,12 @@ public class ParseSander extends Parse {
 		}
 	}
 	
-	public void Gabrieldemo(RecordSander rs) {
-		BufferedWriter bw = null;
-		try {
-			File file = new File(mainFolder + File.separator + "General" + "SanderReferences.txt");
-			if (!file.exists()) {
-				file.createNewFile();
-			}
-			  FileWriter fw = new FileWriter(file);
-			  bw = new BufferedWriter(fw);
-			
+	public static String Gabrieldemo(RecordSander rs) {
+		
 		Vector<String> Referenceshort = rs.referenceAbbreviated;
 		Vector<String> Referencelong = rs.referenceFull;
+		
+		String output = "";
 		
 		for (String Reference:Referenceshort) {
 		Pattern p = Pattern.compile("(([^ ]+) .*?)([^\\s]+$)");
@@ -143,19 +163,12 @@ public class ParseSander extends Parse {
 			String year = m.group(3);
 			for (int i = 0; i < Referencelong.size(); i++) {
 				if ((Referencelong.get(i).contains(name)) && (Referencelong.get(i).contains(year))) {
-					bw.append(rs.chemicalName + "|" + Reference + "|" + Referencelong.get(i) + "\n");
-					bw.flush();
+					output = output + rs.chemicalName.replace("? ? ? ", "") + "|" + Reference + "|" + Referencelong.get(i) + "\n";
 				}
 			}
 		}
 		}
-		bw.close();
-
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		
+	return output;	
 	}
 
 	/**

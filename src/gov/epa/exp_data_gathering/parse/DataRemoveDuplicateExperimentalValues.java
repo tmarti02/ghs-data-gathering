@@ -24,6 +24,7 @@ public class DataRemoveDuplicateExperimentalValues {
 	 * @param omitBadNumericOperator
 	 * @return
 	 */
+
 	public void removeDuplicates(ExperimentalRecords records,String sourceName,String originalSource1,String originalSource2) {
 			
 		Map<String,ExperimentalRecords>mapRecords=convertToMap(records);		
@@ -135,8 +136,8 @@ public class DataRemoveDuplicateExperimentalValues {
 		
 		Set<String> setOfKeys = mapRecords.keySet();
 		
-        int count = getCountIDsWithKeptRecord(mapRecords, setOfKeys);
-		System.out.println("Number of IDs before duplicates removed:"+count);
+//        int count = getCountIDsWithKeptRecord(mapRecords, setOfKeys);
+//		System.out.println("Number of IDs before duplicates removed:"+count);
 				
 		for(String key : setOfKeys) {			             
             ExperimentalRecords recs=mapRecords.get(key);            
@@ -146,8 +147,8 @@ public class DataRemoveDuplicateExperimentalValues {
                     
         }
 
-        int countAfter = getCountIDsWithKeptRecord(mapRecords, setOfKeys);
-		System.out.println("Number of IDS after removed:"+countAfter);
+//        int countAfter = getCountIDsWithKeptRecord(mapRecords, setOfKeys);
+//		System.out.println("Number of IDS after removed:"+countAfter);
 						
 	
 	}
@@ -180,7 +181,7 @@ public class DataRemoveDuplicateExperimentalValues {
 	 */
 	void remove_eChemPortal_DuplicatesForKey(ExperimentalRecords recs,String source1,String source2) {
 		removeNominalIfHaveAnalytical(recs);
-		removeSource2IfHaveSource1(recs, source1, source2);				
+		removeOriginalSource2IfOriginalHaveSource1(recs, source1, source2);				
 		//now that we removed duplicates from source2, delete remaining property duplicates where source name is the same		
 		removeDuplicatesForSameSource(recs);
 	}
@@ -238,13 +239,14 @@ public class DataRemoveDuplicateExperimentalValues {
 		}
 	}
 
-	private void removeSource2IfHaveSource1(ExperimentalRecords recs, String source1, String source2) {
+	private void removeOriginalSource2IfOriginalHaveSource1(ExperimentalRecords recs, String originalSource1, String originalSource2) {
+		
 		for (int i=0;i<recs.size();i++) {			
 			ExperimentalRecord reci=recs.get(i);			
 //			System.out.println(reci.original_source_name+"\t"+source1);
 			if(!reci.keep) continue;
 			
-			if (!reci.original_source_name.contentEquals(source1)) continue;
+			if (!reci.original_source_name.contentEquals(originalSource1)) continue;
 			
 			String tsi=reci.property_value_string+"\t"+reci.property_name;
 			
@@ -255,7 +257,7 @@ public class DataRemoveDuplicateExperimentalValues {
 				ExperimentalRecord recj=recs.get(j);
 				if (!recj.keep) continue;
 				
-				if (!recj.original_source_name.contentEquals(source2)) continue;												
+				if (!recj.original_source_name.contentEquals(originalSource2)) continue;												
 				
 				String tsj=recj.property_value_string+"\t"+recj.property_name;
 				
@@ -265,10 +267,9 @@ public class DataRemoveDuplicateExperimentalValues {
 				
 				if (tsi.contentEquals(tsj)) {
 //					recs.remove(j);
-//					j--;
-					
+//					j--;				
 					recj.keep=false;
-					recj.reason="Duplicate of experimental value from "+source1;
+					recj.reason="Duplicate experimental value, already have from "+originalSource1;
 //					System.out.println("removed duplicate:"+recj);
 					
 				} else {
