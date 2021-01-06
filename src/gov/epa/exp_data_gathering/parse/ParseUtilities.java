@@ -685,8 +685,8 @@ public class ParseUtilities extends Parse {
 	}
 	
 	/**
-	 * Verifies CAS checksum
-	 * Note: If RN is missing dashes, this will still verify the checksum appropriately, but will not correct the formatting
+	 * Verifies CAS checksum per https://www.cas.org/support/documentation/chemical-substances/checkdig
+	 * 
 	 * @param casInput	CAS RN (or pipe-delimited sequence of multiple CAS RNs)
 	 * @return			True if checksum holds for all CAS RNs in input; false otherwise
 	 */
@@ -696,6 +696,7 @@ public class ParseUtilities extends Parse {
 		for (String cas:casArray) {
 			String casTemp = cas.replaceAll("[^0-9]","");
 			int len = casTemp.length();
+			if (len > 10) { return false; }
 			int check = Character.getNumericValue(casTemp.charAt(len-1));
 			int sum = 0;
 			for (int i = 1; i <= len-1; i++) {
@@ -704,9 +705,11 @@ public class ParseUtilities extends Parse {
 			if (sum % 10 != check) {
 				valid = false;
 				break;
-			} else if (!cas.contains("-")) {
-				System.out.println("Valid CAS missing dashes: "+cas);
 			}
+			// There are no valid CAS RNs with bad formatting in the current data set, but if that happens in other sources, could add format correction here
+//			else if (!cas.contains("-")) {
+//				System.out.println("Valid CAS with bad format: "+cas);
+//			}
 		}
 		return valid;
 	}

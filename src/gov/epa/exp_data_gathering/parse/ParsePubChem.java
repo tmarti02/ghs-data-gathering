@@ -93,7 +93,7 @@ public class ParsePubChem extends Parse {
 		er.property_value_qualitative=physicalDescription.toLowerCase().replaceAll("colour","color").replaceAll("odour","odor").replaceAll("vapour","vapor");
 		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
-		
+		RecordFinalizer.finalizeRecord(er);
 		records.add(er);
 	}
 	
@@ -155,15 +155,16 @@ public class ParsePubChem extends Parse {
 			er.flag = true;
 			er.reason = "Question mark";
 		}
-		
-		if (foundNumeric) { RecordFinalizer.finalizeRecord(er); }
-		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep!=false) {
+
+		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep) {
 			er.keep = true;
 			er.reason = null;
 		} else {
 			er.keep = false;
 			er.reason = "Bad data or units";
 		}
+		
+		RecordFinalizer.finalizeRecord(er);
 		
 		recordsExperimental.add(er);
 	}

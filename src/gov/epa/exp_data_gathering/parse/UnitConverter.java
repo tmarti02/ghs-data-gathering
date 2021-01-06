@@ -79,7 +79,7 @@ public class UnitConverter {
 		if (er.property_value_units_original!=null && (er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3) ||
 				er.property_value_units_original.equals(ExperimentalConstants.str_g_L))) {
 			conversionFactor = 1.0/1000.0;
-		} else if (er.property_value_units_original==null && (er.note.contains(ExperimentalConstants.str_relative_gas_density) ||
+		} else if (er.property_value_units_original==null && er.note!=null && (er.note.contains(ExperimentalConstants.str_relative_gas_density) ||
 				er.note.contains(ExperimentalConstants.str_relative_mixture_density))) {
 			conversionFactor = UnitConverter.airDensitySTP;
 		}
