@@ -1,6 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -666,6 +667,11 @@ public class ParseUtilities extends Parse {
 		}
 	}
 
+	/**
+	 * Strips whitespace and leading zero from CAS RN
+	 * @param cas	CAS RN to fix
+	 * @return		Fixed CAS RN
+	 */
 	public static String fixCASLeadingZero(String cas) {
 		if (cas!=null && !cas.isBlank()) {
 			cas=cas.trim();
@@ -678,8 +684,14 @@ public class ParseUtilities extends Parse {
 		}
 	}
 	
+	/**
+	 * Verifies CAS checksum
+	 * Note: If RN is missing dashes, this will still verify the checksum appropriately, but will not correct the formatting
+	 * @param casInput	CAS RN (or pipe-delimited sequence of multiple CAS RNs)
+	 * @return			True if checksum holds for all CAS RNs in input; false otherwise
+	 */
 	public static boolean isValidCAS(String casInput) {
-		String[] casArray = casInput.split("|");
+		String[] casArray = casInput.split("\\|");
 		boolean valid = true;
 		for (String cas:casArray) {
 			String casTemp = cas.replaceAll("[^0-9]","");
@@ -689,9 +701,11 @@ public class ParseUtilities extends Parse {
 			for (int i = 1; i <= len-1; i++) {
 				sum += i*Character.getNumericValue(casTemp.charAt(len-1-i));
 			}
-			if (check % 10 != sum) {
+			if (sum % 10 != check) {
 				valid = false;
 				break;
+			} else if (!cas.contains("-")) {
+				System.out.println("Valid CAS missing dashes: "+cas);
 			}
 		}
 		return valid;
