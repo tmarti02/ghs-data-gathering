@@ -1,7 +1,10 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,9 +32,10 @@ public class ParseSander extends Parse {
 			
 			RecordSander[] recordsSander = gson.fromJson(new FileReader(jsonFile), RecordSander[].class);
 			
-			for (int i = 0; i < recordsSander.length; i++) {
+			for (int i = 0; i < 200; i++) { // recordsSander.length
 				RecordSander rec = recordsSander[i];
-				addExperimentalRecords(rec,recordsExperimental);
+				// addExperimentalRecords(rec,recordsExperimental);
+				Gabrieldemo(rec);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -115,6 +119,43 @@ public class ParseSander extends Parse {
 				er.property_value_point_estimate_original = Double.parseDouble(strMantissa.replaceAll("\\s",""));
 			}
 		}
+	}
+	
+	public void Gabrieldemo(RecordSander rs) {
+		BufferedWriter bw = null;
+		try {
+			File file = new File(mainFolder + File.separator + "General" + "SanderReferences.txt");
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+			  FileWriter fw = new FileWriter(file);
+			  bw = new BufferedWriter(fw);
+			
+		Vector<String> Referenceshort = rs.referenceAbbreviated;
+		Vector<String> Referencelong = rs.referenceFull;
+		
+		for (String Reference:Referenceshort) {
+		Pattern p = Pattern.compile("(([^ ]+) .*?)([^\\s]+$)");
+		Matcher m = p.matcher(Reference);
+		
+		if (m.find()) {
+			String name = m.group(2);
+			String year = m.group(3);
+			for (int i = 0; i < Referencelong.size(); i++) {
+				if ((Referencelong.get(i).contains(name)) && (Referencelong.get(i).contains(year))) {
+					bw.append(rs.chemicalName + "|" + Reference + "|" + Referencelong.get(i) + "\n");
+					bw.flush();
+				}
+			}
+		}
+		}
+		bw.close();
+
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	/**
