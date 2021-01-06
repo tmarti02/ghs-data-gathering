@@ -116,8 +116,9 @@ public class RecordOPERA {
 			//Print out:
 			// if (ro.Substance_CASRN.contentEquals("71-43-2")) System.out.println(ro.toJSON());
 			// if (ro.CAS.contentEquals("71-43-2")) System.out.println(ro.toJSON());
-			if (i == 4) System.out.println(ac.getProperties());
-			
+			if (ro.CAS != null) { // only added because pka printing for benzene doesn't work
+			if (ro.CAS.contentEquals("71-43-2")) System.out.println(ac.getProperties());
+			}
 
 			
 			records.add(ro);
@@ -278,6 +279,6 @@ public class RecordOPERA {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		parseOPERA_SDF(ExperimentalConstants.str_pKA);
+		parseOPERA_SDF(ExperimentalConstants.strWaterSolubility);
 	}
 }
