@@ -153,10 +153,8 @@ public class ParseEChemPortal extends Parse {
 				if (!ParseUtilities.hasIdentifiers(er)) {
 					er.keep = false;
 					er.reason = "No identifiers";
-				} else {
-					er.keep = true;
-					er.reason = null;
 				}
+				
 				er.reliability = ecpr.reliability;
 				records.add(er);
 			}

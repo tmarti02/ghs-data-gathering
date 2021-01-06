@@ -84,7 +84,7 @@ public class RecordEChemPortalAPI {
 			int count = 0;
 			int countEliminated = 0;
 			// Uses a HashSet to speed up duplicate checking by URL
-			HashSet<String> urlCheck = new HashSet<String>();
+//			HashSet<String> urlCheck = new HashSet<String>();
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
 			ResultSet rs = SQLite_GetRecords.getAllRecords(stat,"results");
 			while (rs.next()) {
@@ -133,34 +133,37 @@ public class RecordEChemPortalAPI {
 								break;
 							}
 						}
-						if (urlCheck.add(rec.endpointURL)) {
-							// If URL not seen before, adds the record immediately and moves on
-							records.add(rec);
-							count++;
-						} else {
-							// Otherwise, iterates and checks all records deeply for equivalence
-							boolean haveRecord = false;
-							ListIterator<RecordEChemPortalAPI> it = records.listIterator(records.size());
-							while (it.hasPrevious() && !haveRecord) {
-								RecordEChemPortalAPI existingRec = it.previous();
-								if (rec.recordEquals(existingRec)) {
-									haveRecord = true;
-								}
-							}
-							if (!haveRecord) {
-								// Adds new record if it is not a duplicate
-								records.add(rec);
-								count++;
-							} else {
-								// Counts the number of records eliminated
-								countEliminated++;
-							}
-						}
+						records.add(rec);
+						count++;
+						// Now handled by general deduplication code
+//						if (urlCheck.add(rec.endpointURL)) {
+//							// If URL not seen before, adds the record immediately and moves on
+//							records.add(rec);
+//							count++;
+//						} else {
+//							// Otherwise, iterates and checks all records deeply for equivalence
+//							boolean haveRecord = false;
+//							ListIterator<RecordEChemPortalAPI> it = records.listIterator(records.size());
+//							while (it.hasPrevious() && !haveRecord) {
+//								RecordEChemPortalAPI existingRec = it.previous();
+//								if (rec.recordEquals(existingRec)) {
+//									haveRecord = true;
+//								}
+//							}
+//							if (!haveRecord) {
+//								// Adds new record if it is not a duplicate
+//								records.add(rec);
+//								count++;
+//							} else {
+//								// Counts the number of records eliminated
+//								countEliminated++;
+//							}
+//						}
 						// if (count % 10000==0) { System.out.println("Added "+count+" records..."); }
 					}
 				}
 			}
-			System.out.println("Added "+count+" records; eliminated "+countEliminated+" records. Done!");
+//			System.out.println("Added "+count+" records; eliminated "+countEliminated+" records. Done!");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

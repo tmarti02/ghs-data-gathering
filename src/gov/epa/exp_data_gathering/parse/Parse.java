@@ -94,9 +94,13 @@ public class Parse {
 
 		System.out.println("Going through original records");
 		ExperimentalRecords records=goThroughOriginalRecords();
+//		records.dontKeepNumericQualifierRecords();
 		records.addSourceBasedIDNumbers();
 		
-		ExperimentalRecords recordsBad = ExperimentalRecords.dumpBadRecords(records);
+		DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+		d.removeDuplicates(records,sourceName);	
+		
+		ExperimentalRecords recordsBad = records.dumpBadRecords();
 
 		if (writeFlatFile) {
 			System.out.println("Writing flat file for chemical records");

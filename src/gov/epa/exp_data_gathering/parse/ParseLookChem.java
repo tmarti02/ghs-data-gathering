@@ -89,11 +89,7 @@ public class ParseLookChem extends Parse {
 		String prefix = lcr.CAS.substring(0,3);
 		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
-		
-		er.keep = true;
-		er.reason = null;
-		er.flag = false;
-		
+		RecordFinalizer.finalizeRecord(er);
 		records.add(er);
 	}
 	
@@ -141,12 +137,10 @@ public class ParseLookChem extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		if (foundNumeric) {
-			RecordFinalizer.finalizeRecord(er);
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
 			// Warns if there may be a problem with an entry
-			er.flag = false;
 			if (propertyName.contains("?")) {
 				er.flag = true;
 				er.reason = "Question mark";
@@ -165,6 +159,8 @@ public class ParseLookChem extends Parse {
 			er.keep = false;
 			er.reason = "Bad data or units";
 		}
+		
+		RecordFinalizer.finalizeRecord(er);
 		
 		recordsExperimental.add(er);
 	}

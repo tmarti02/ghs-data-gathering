@@ -55,10 +55,11 @@ public class ParseBradley extends Parse {
 			er.property_value_string = "Concentration (M): "+br.concentration;
 			ParseUtilities.getNumericalValue(er,br.concentration,br.concentration.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_M;
-			if (br.notes!=null && !br.notes.isBlank()) { ParseUtilities.getTemperatureCondition(er,br.notes); }
+			if (br.notes!=null && !br.notes.isBlank()) {
+				ParseUtilities.getTemperatureCondition(er,br.notes);
+				er.property_value_string = er.property_value_string + "; Temperature: "+br.notes;
+			}
 			RecordFinalizer.finalizeRecord(er);
-			er.keep = true;
-			er.flag = false;
 			records.add(er);
 		}
 	}

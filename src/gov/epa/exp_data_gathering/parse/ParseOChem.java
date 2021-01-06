@@ -36,6 +36,7 @@ public class ParseOChem extends Parse {
 				RecordOChem rec = recordsOChem[i];
 				addExperimentalRecords(rec,recordsExperimental);
 			}
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -51,7 +52,7 @@ public class ParseOChem extends Parse {
 		er.measurement_method = ocr.measurementMethod;
 		er.source_name = ExperimentalConstants.strSourceOChem;
 		er.url = "https://ochem.eu/home/show.do"; // How do we get individual OChem URLs?
-		er.property_value_string = ocr.propertyValue+" "+ocr.propertyUnit;
+		er.property_value_string = "Value: "+ocr.propertyValue+" "+ocr.propertyUnit;
 		
 		switch (ocr.propertyName.trim()) {
 		case "melting point":
@@ -84,26 +85,26 @@ public class ParseOChem extends Parse {
 		}
 		switch (ocr.propertyUnit.trim()) {
 		case "Celsius":
-			er.property_value_units_final = ExperimentalConstants.str_C;
+			er.property_value_units_original = ExperimentalConstants.str_C;
 			break;
 		case "g/cm3":
-			er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
 			break;
 		case "g/L":
-			er.property_value_units_final = ExperimentalConstants.str_g_L;
+			er.property_value_units_original = ExperimentalConstants.str_g_L;
 			break;
 		case "Log unit":
 			break;
 		case "m^(3)*Pa/mol":
-			er.property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
+			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
 			break;
 		case "mm Hg":
-			er.property_value_units_final = ExperimentalConstants.str_mmHg;
+			er.property_value_units_original = ExperimentalConstants.str_mmHg;
 			break;
 		}
-		er.property_value_point_estimate_final = Double.parseDouble(ocr.propertyValue);
+		er.property_value_point_estimate_original = Double.parseDouble(ocr.propertyValue);
 		if (ocr.temperature!=null && !ocr.temperature.isBlank()) {
-			er.property_value_string = er.property_value_string + ";" + ocr.temperature + " " + ocr.temperatureUnit;
+			er.property_value_string = er.property_value_string + "; Temperature: " + ocr.temperature + " " + ocr.temperatureUnit;
 			String cleanTemp = ocr.temperature.replaceAll("[^0-9.,E]","");
 			double temp = 0.0;
 			try {
@@ -120,7 +121,7 @@ public class ParseOChem extends Parse {
 			}
 		}
 		if (ocr.pressure!=null && !ocr.pressure.isBlank()) {
-			er.property_value_string = er.property_value_string + ";" + ocr.pressure + " " + ocr.pressureUnit;
+			er.property_value_string = er.property_value_string + "; Pressure: " + ocr.pressure + " " + ocr.pressureUnit;
 			double pressure = Double.parseDouble(ocr.pressure.replaceAll("[^0-9.,E]",""));
 			if (ocr.pressureUnit.contains("mm Hg") || ocr.pressureUnit.contains("Torr")) {
 				er.pressure_mmHg = ParseUtilities.formatDouble(pressure);
@@ -131,21 +132,22 @@ public class ParseOChem extends Parse {
 			}
 		}
 		if (ocr.pH!=null && !ocr.pH.isBlank()) {
-			er.property_value_string = er.property_value_string + ";" + ocr.pH;
+			er.property_value_string = er.property_value_string + "; pH: " + ocr.pH;
 			er.pH = ocr.pH;
 		}
-		er.flag = false;
+		
 		if (!ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;
 			er.reason = "No identifiers";
-		} else if (er.measurement_method!=null && er.measurement_method.contains("est")) {
+		}
+		
+		if (er.measurement_method!=null && er.measurement_method.contains("est")) {
 			er.updateNote(ExperimentalConstants.str_est);
 			er.keep = false;
 			er.reason = "Estimated";
-		} else {
-			er.keep = true;
-			er.reason = null;
 		}
+		
+		RecordFinalizer.finalizeRecord(er);
 		records.add(er);
 	}
 	

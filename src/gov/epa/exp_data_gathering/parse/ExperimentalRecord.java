@@ -48,8 +48,8 @@ public class ExperimentalRecord {
 								//"original_source_name" rather than "source_name_original" to avoid syntactic confusion with "*_original" vs "*_final" fields above
 	public String date_accessed;//use Experimental constants
 	
-	public boolean keep;//Does the record contain useful data?
-	public boolean flag;
+	public boolean keep=true;//Does the record contain useful data?
+	public boolean flag=false;
 	public String reason;//If keep=false or flag=true, why?
 	
 	//TODO do we need parent url too? sometimes there are several urls we have to follow along the way to get to the final url
@@ -87,14 +87,13 @@ public class ExperimentalRecord {
 		String CAS=casrn;
 		if (CAS==null || CAS.trim().isEmpty()) CAS="casrn=null";//need placeholder so dont get spurious match in chemreg
 		else {
-			CAS=CAS.trim();
-			while (CAS.substring(0,1).contentEquals("0")) {//trim off zeros at front
-				CAS=CAS.substring(1,CAS.length());
-			}
-			//TODO - do we need to handle Cases with no dashes? Check for bad cas numbers (bad check sum?)
+			CAS=ParseUtilities.fixCASLeadingZero(CAS);
 		}
 		String name=StringEscapeUtils.escapeJava(chemical_name);
-				
+		
+		String EINECS=einecs;
+		if (EINECS==null || EINECS.trim().isEmpty()) EINECS="einecs=null";//need placeholder so dont get spurious match in chemreg
+		EINECS=EINECS.trim();
 		
 		if (name==null || name.trim().isEmpty()) name="name=null";//need placeholder so dont get spurious match in chemreg
 		name=name.trim();
@@ -105,10 +104,9 @@ public class ExperimentalRecord {
 		
 		//TODO omit chemicals where smiles indicates bad element....
 		
-		comboID=CAS+del+name+del+SMILES;//TODO add einecs
+		comboID=CAS+del+EINECS+del+name+del+SMILES;
 		
-	}	
-	
+	}
 	
 	public void assignValue(String fieldName,String fieldValue) {
 		Field myField;

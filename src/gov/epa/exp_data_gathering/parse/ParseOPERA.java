@@ -58,6 +58,7 @@ public class ParseOPERA extends Parse {
 		if (ro.property_name.equals(ExperimentalConstants.str_pKA)) {
 			ExperimentalRecord er_a = new ExperimentalRecord();
 			er_a.chemical_name = ro.Substance_Name;
+			er_a.source_name = ExperimentalConstants.strSourceOPERA;
 			er_a.smiles = ro.Original_SMILES;
 			er_a.property_value_string = "pkaa=" + ro.pKa_a + "|"+ "pkab=" + ro.pKa_b;
 			er_a.casrn = ro.Substance_CASRN;
@@ -86,6 +87,7 @@ public class ParseOPERA extends Parse {
 		if (!(ro.property_name.equals(ExperimentalConstants.str_pKA))) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.chemical_name = ro.preferred_name;
+			er.source_name = ExperimentalConstants.strSourceOPERA;
 			er.property_name = ro.property_name;
 			er.property_value_point_estimate_original = getPropertyValueOriginal(ro);
 			if (er.property_value_point_estimate_original != null) {

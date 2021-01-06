@@ -1,7 +1,11 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,7 +16,7 @@ import gov.epa.api.ExperimentalConstants;
 public class ParseSander extends Parse {
 	
 	public ParseSander() {
-		sourceName = "Sander";
+		sourceName = ExperimentalConstants.strSourceSander;
 		this.init();
 	}
 	@Override
@@ -29,16 +33,40 @@ public class ParseSander extends Parse {
 			
 			RecordSander[] recordsSander = gson.fromJson(new FileReader(jsonFile), RecordSander[].class);
 			
-			for (int i = 0; i < recordsSander.length; i++) {
+			for (int i = 0; i < recordsSander.length; i++) { // recordsSander.length
 				RecordSander rec = recordsSander[i];
 				addExperimentalRecords(rec,recordsExperimental);
 			}
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		return recordsExperimental;
 	}
-	// get the names right
+	
+	
+	void makeFullRefTxt() {
+		BufferedWriter bw = null;
+		try {
+			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			File txtfile = new File(mainFolder + File.separator + "General" + "SanderReferences.txt");
+			FileWriter fw = new FileWriter(txtfile);
+			bw = new BufferedWriter(fw);
+			RecordSander[] recordsSander = gson.fromJson(new FileReader(jsonFile), RecordSander[].class);
+			
+			for (int i = 0; i < recordsSander.length; i++) { // recordsSander.length
+				RecordSander rec = recordsSander[i];
+				String temp = Gabrieldemo(rec);
+				bw.write(temp);
+			}
+			
+			bw.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
 	/**
 	 * populates experimentalrecord fields with data from the recordSander object.
 	 * @param rs
@@ -86,6 +114,8 @@ public class ParseSander extends Parse {
 		p.databaseFolder = p.mainFolder;
 		p.jsonFolder= p.mainFolder;
 		p.createFiles();
+		p.makeFullRefTxt();
+		
 	}
 
 
@@ -115,6 +145,30 @@ public class ParseSander extends Parse {
 				er.property_value_point_estimate_original = Double.parseDouble(strMantissa.replaceAll("\\s",""));
 			}
 		}
+	}
+	
+	public static String Gabrieldemo(RecordSander rs) {
+		
+		Vector<String> Referenceshort = rs.referenceAbbreviated;
+		Vector<String> Referencelong = rs.referenceFull;
+		
+		String output = "";
+		
+		for (String Reference:Referenceshort) {
+		Pattern p = Pattern.compile("(([^ ]+) .*?)([^\\s]+$)");
+		Matcher m = p.matcher(Reference);
+		
+		if (m.find()) {
+			String name = m.group(2);
+			String year = m.group(3);
+			for (int i = 0; i < Referencelong.size(); i++) {
+				if ((Referencelong.get(i).contains(name)) && (Referencelong.get(i).contains(year))) {
+					output = output + rs.chemicalName.replace("? ? ? ", "") + "|" + Reference + "|" + Referencelong.get(i) + "\n";
+				}
+			}
+		}
+		}
+	return output;	
 	}
 
 	/**

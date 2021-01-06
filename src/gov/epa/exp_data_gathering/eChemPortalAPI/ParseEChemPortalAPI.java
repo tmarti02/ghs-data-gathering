@@ -68,13 +68,7 @@ public class ParseEChemPortalAPI extends Parse {
 			for (int i = 0; i < recordsEChemPortalAPI.length; i++) {
 				RecordEChemPortalAPI r = recordsEChemPortalAPI[i];
 				addExperimentalRecords(r,recordsExperimental);
-			}
-			
-			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
-			String source1="ECHA REACH";
-			String source2="ECHA CHEM";
-			boolean omitBadNumericOperator=true;
-			d.removeDuplicates(recordsExperimental,source1,source2,omitBadNumericOperator);		
+			}	
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -153,7 +147,7 @@ public class ParseEChemPortalAPI extends Parse {
 		
 		if (r.pressure!=null) {
 			ParseUtilities.getPressureCondition(er,r.pressure,sourceName);
-			er.property_value_string = er.property_value_string + ";Pressure: " + r.pressure;
+			er.property_value_string = er.property_value_string + "; Pressure: " + r.pressure;
 		}
 		
 		if (r.temperature!=null) {
@@ -162,13 +156,13 @@ public class ParseEChemPortalAPI extends Parse {
 			} catch (NumberFormatException ex) {
 				ParseUtilities.getTemperatureCondition(er,r.temperature);
 			}
-			er.property_value_string = er.property_value_string + ";Temperature: " + r.temperature;
+			er.property_value_string = er.property_value_string + "; Temperature: " + r.temperature;
 		}
 		
 		// Handles all kinds of weird pH formatting
 		if (r.pH!=null) {
 			String pHStr = r.pH;
-			er.property_value_string = er.property_value_string + ";pH: " + pHStr;
+			er.property_value_string = er.property_value_string + "; pH: " + pHStr;
 			boolean foundpH = false;
 			try {
 				double[] range = ParseUtilities.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
@@ -215,12 +209,9 @@ public class ParseEChemPortalAPI extends Parse {
 		
 		RecordFinalizer.finalizeRecord(er);
 		
-		if (!ParseUtilities.hasIdentifiers(er)) {
+		if (er.keep && !ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;
 			er.reason = "No identifiers";
-		} else {
-			er.keep = true;
-			er.reason = null;
 		}
 		
 		records.add(er);

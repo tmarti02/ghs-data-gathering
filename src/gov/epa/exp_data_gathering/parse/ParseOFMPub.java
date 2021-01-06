@@ -36,6 +36,7 @@ public class ParseOFMPub extends Parse {
 					addExperimentalRecord(r,recordsExperimental);
 				}
 			}
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -49,9 +50,7 @@ public class ParseOFMPub extends Parse {
 		er.date_accessed = opr.date_accessed;
 		er.url = opr.url;
 		er.reliability = opr.reliability;
-		er.keep = true;
-		er.reason = null;
-		er.flag = false;
+
 		if (opr.testSubstanceName!=null && !opr.testSubstanceName.isBlank() && opr.testSubstanceCAS!=null && !opr.testSubstanceCAS.isBlank()) {
 			er.casrn = opr.testSubstanceCAS;
 			er.chemical_name = opr.testSubstanceName;
@@ -90,8 +89,8 @@ public class ParseOFMPub extends Parse {
 			break;
 		}
 		
-		er.property_value_string = opr.value;
-		if (opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) { er.property_value_string = er.property_value_string + ";" + opr.resultRemarks; }
+		er.property_value_string = "Value: "+opr.value;
+		if (opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) { er.property_value_string = er.property_value_string + "; Remarks: " + opr.resultRemarks; }
 		
 		boolean foundNumeric = false;
 		String propertyName = er.property_name;

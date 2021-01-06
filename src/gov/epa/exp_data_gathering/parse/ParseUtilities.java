@@ -1,6 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -664,6 +665,53 @@ public class ParseUtilities extends Parse {
 		} else {
 			return true;
 		}
+	}
+
+	/**
+	 * Strips whitespace and leading zero from CAS RN
+	 * @param cas	CAS RN to fix
+	 * @return		Fixed CAS RN
+	 */
+	public static String fixCASLeadingZero(String cas) {
+		if (cas!=null && !cas.isBlank()) {
+			cas=cas.trim();
+			while (cas.substring(0,1).contentEquals("0")) {//trim off zeros at front
+				cas=cas.substring(1,cas.length());
+			}
+			return cas;
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * Verifies CAS checksum per https://www.cas.org/support/documentation/chemical-substances/checkdig
+	 * 
+	 * @param casInput	CAS RN (or pipe-delimited sequence of multiple CAS RNs)
+	 * @return			True if checksum holds for all CAS RNs in input; false otherwise
+	 */
+	public static boolean isValidCAS(String casInput) {
+		String[] casArray = casInput.split("\\|");
+		boolean valid = true;
+		for (String cas:casArray) {
+			String casTemp = cas.replaceAll("[^0-9]","");
+			int len = casTemp.length();
+			if (len > 10) { return false; }
+			int check = Character.getNumericValue(casTemp.charAt(len-1));
+			int sum = 0;
+			for (int i = 1; i <= len-1; i++) {
+				sum += i*Character.getNumericValue(casTemp.charAt(len-1-i));
+			}
+			if (sum % 10 != check) {
+				valid = false;
+				break;
+			}
+			// There are no valid CAS RNs with bad formatting in the current data set, but if that happens in other sources, could add format correction here
+//			else if (!cas.contains("-")) {
+//				System.out.println("Valid CAS with bad format: "+cas);
+//			}
+		}
+		return valid;
 	}
 
 }

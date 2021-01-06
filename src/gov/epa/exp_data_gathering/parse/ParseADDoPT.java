@@ -51,13 +51,11 @@ public class ParseADDoPT extends Parse {
 			er.url = "https://doi.org/10.1002/jcc.24424";
 			er.casrn = ar.cas;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			er.property_value_string = "Observed solubility, log(M): "+ar.solubility;
+			er.property_value_string = "Observed solubility, log(M): "+ar.solubility+"; Temperature: "+ar.temp;
 			er.property_value_point_estimate_original = Double.parseDouble(ar.solubility);
 			er.property_value_units_original = ExperimentalConstants.str_log_M;
 			er.temperature_C = Double.parseDouble(ar.temp);
 			RecordFinalizer.finalizeRecord(er);
-			er.keep = true;
-			er.flag = false;
 			records.add(er);
 		}
 	}
