@@ -170,9 +170,7 @@ public class ParseOPERA extends Parse {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		ParseOPERA p = new ParseOPERA();
-		p.mainFolder = p.mainFolder + File.separator + "General";
-		p.jsonFolder= p.mainFolder;
-		p.createFiles();
+		p.createFilesFromOriginalRecords();
 	}
 
 }

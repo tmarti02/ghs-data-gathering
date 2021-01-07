@@ -173,10 +173,8 @@ public class ParseChemicalBook extends Parse {
 	
 	public static void main(String[] args) {
 		ParseChemicalBook p = new ParseChemicalBook();
-		p.mainFolder = p.mainFolder + File.separator + "PFAS";
-		p.databaseFolder = p.mainFolder;
-		p.jsonFolder= p.mainFolder;
-		p.createFiles();
+//		p.createFiles();
+		p.createFilesFromOriginalRecords();
 	}
 	
 	

@@ -80,8 +80,6 @@ public class ExperimentalRecord {
 			"original_source_name",
 			"url",
 			"date_accessed"};
-
-
 	
 	public void setComboID(String del) {
 		String CAS=casrn;

@@ -2,10 +2,13 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
 
@@ -53,15 +56,16 @@ public class DataCompare {
 	
 	private ExperimentalRecords compare() {
 		ExperimentalRecords comp = new ExperimentalRecords();
+		System.out.println("Finding records missing from "+sourceName2+"...");
 		List<ExperimentalRecord> recordsIn1NotIn2 = new ArrayList<ExperimentalRecord>(records1);
 		List<ExperimentalRecord> recordsIn2ToRemove = new ArrayList<ExperimentalRecord>(records2);
 		recordsIn1NotIn2.removeAll(recordsIn2ToRemove);
-		System.out.println("Found "+recordsIn1NotIn2.size()+" records in "+sourceName1+" missing from "+sourceName2+".");
+		System.out.println("Finding records missing from "+sourceName1+"...");
 		List<ExperimentalRecord> recordsIn2NotIn1 = new ArrayList<ExperimentalRecord>(records2);
 		List<ExperimentalRecord> recordsIn1ToRemove = new ArrayList<ExperimentalRecord>(records1);
 		recordsIn2NotIn1.removeAll(recordsIn1ToRemove);
-		System.out.println("Found "+recordsIn2NotIn1.size()+" records in "+sourceName2+" missing from "+sourceName1+".");
 		if (sourceName1.equals(ExperimentalConstants.strSourceEChemPortal) && sourceName2.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
+			System.out.println("Correcting for eChemPortal formatting...");
 			eChemPortalCorrection(recordsIn1NotIn2,recordsIn2NotIn1);
 		}
 		comp.addAll(recordsIn1NotIn2);
@@ -85,11 +89,10 @@ public class DataCompare {
 				if (identifiersMatch(reci,recj) && reci.property_name.equals(recj.property_name)) {
 					// Accounts for false mismatches due to character encoding problems
 					int valueIndex = reci.property_value_string.contains(";") ? reci.property_value_string.indexOf(";") : reci.property_value_string.length();
-					String fixedPropertyValueString = reci.property_value_string.substring(0,valueIndex).replaceAll("\\?","-");
+					String fixedPropertyValueString = reci.property_value_string.substring(0,valueIndex).replaceAll("\\?","-").replaceAll("—", "-");
 					if (recj.property_value_string.contains(fixedPropertyValueString) && conditionsMatch(reci,recj)) {
 						remove = true;
 						itj.remove();
-						break;
 					}
 				}
 			}
@@ -98,7 +101,10 @@ public class DataCompare {
 	}
 	
 	private static boolean identifiersMatch(ExperimentalRecord reci, ExperimentalRecord recj) {
-		if (Objects.equals(reci.casrn, recj.casrn) || Objects.equals(reci.einecs, recj.einecs) || Objects.equals(reci.chemical_name,  recj.chemical_name)) {
+		if ((reci.casrn!=null && Objects.equals(reci.casrn, recj.casrn)) || 
+				((reci.casrn==null || recj.casrn==null) && reci.einecs!=null && Objects.equals(reci.einecs, recj.einecs)) || 
+				((reci.casrn==null || recj.casrn==null) && (reci.einecs==null || recj.einecs==null) && 
+						reci.chemical_name!=null && Objects.equals(reci.chemical_name,  recj.chemical_name))) {
 			return true;
 		} else {
 			return false;
@@ -106,9 +112,10 @@ public class DataCompare {
 	}
 	
 	private static boolean conditionsMatch(ExperimentalRecord reci, ExperimentalRecord recj) {
-		if ((Objects.equals(reci.pressure_mmHg, recj.pressure_mmHg) || reci.pressure_mmHg==null) &&
-				(Objects.equals(reci.temperature_C, recj.temperature_C) || reci.temperature_C==null) &&
-				(Objects.equals(reci.pH, recj.pH) || reci.pH==null)) {
+		if ((reci.pressure_mmHg==null || reci.pressure_mmHg.isBlank() || Objects.equals(reci.pressure_mmHg, recj.pressure_mmHg) || 
+				Objects.equals(reci.pressure_mmHg.replaceAll("\\?", "").replaceAll("—", "-"),recj.pressure_mmHg)) &&
+				(reci.temperature_C==null || Objects.equals(reci.temperature_C, recj.temperature_C)) &&
+				(reci.pH==null || reci.pH.isBlank() || Objects.equals(reci.pH, recj.pH) || Objects.equals(reci.pH.replaceAll("\\?", "").replaceAll("—", "-"),recj.pH))) {
 			return true;
 		} else {
 			return false;

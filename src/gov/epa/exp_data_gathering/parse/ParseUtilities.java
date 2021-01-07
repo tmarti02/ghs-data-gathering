@@ -12,7 +12,7 @@ public class ParseUtilities extends Parse {
 
 	public static boolean getNumericalValue(ExperimentalRecord er, String propertyValue, int unitsIndex, boolean badUnits) {
 		if (badUnits) { unitsIndex = propertyValue.length(); }
-		if (propertyValue.contains("±")) { unitsIndex = Math.min(propertyValue.indexOf("±"),unitsIndex); }
+		if (propertyValue.contains("Â±")) { unitsIndex = Math.min(propertyValue.indexOf("Â±"),unitsIndex); }
 		boolean foundNumeric = false;
 		if (!foundNumeric) {
 			try {
@@ -181,13 +181,13 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("µg/ml")) {
+		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("Âµg/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("Âµg/") : propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("µg/l")) {
+		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("Âµg/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("Âµg/") : propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_mL;
@@ -363,12 +363,12 @@ public class ParseUtilities extends Parse {
 	public static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
-		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol") ||
+		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm mÂ³/mol") ||
 				propertyValue.toLowerCase().contains("atm m^3/mol")) {
 			er.property_value_units_original = ExperimentalConstants.str_atm_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("pa m³/mol") || propertyValue.toLowerCase().contains("pa m^3/mol")) {
+		} else if (propertyValue.toLowerCase().contains("pa mÂ³/mol") || propertyValue.toLowerCase().contains("pa m^3/mol")) {
 			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("pa");
 			badUnits = false;
@@ -577,7 +577,7 @@ public class ParseUtilities extends Parse {
 	 * @throws IllegalStateException	If no number range is found in the given range
 	 */
 	public static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
-		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([-]{1}|to|ca\\.)[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
+		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([â€”][-]{1}|to|ca\\.[\\?])[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		anyRangeMatcher.find();
 		String strMin = anyRangeMatcher.group(1).replace(" ","");
 		String strMax = anyRangeMatcher.group(3).replace(" ","");
@@ -646,10 +646,10 @@ public class ParseUtilities extends Parse {
 	public static String getTemperatureUnits(String propertyValue) {
 		propertyValue=propertyValue.replaceAll(" ","");
 		String units = "";
-		if (propertyValue.contains("°C") || propertyValue.contains("ºC") || propertyValue.contains("oC")
+		if (propertyValue.contains("Â°C") || propertyValue.contains("ÂºC") || propertyValue.contains("oC")
 				|| (propertyValue.indexOf("C") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1)))) {
 			units = ExperimentalConstants.str_C;
-		} else if (propertyValue.contains("°F") || propertyValue.contains("ºF") || propertyValue.contains("oF")
+		} else if (propertyValue.contains("Â°F") || propertyValue.contains("ÂºF") || propertyValue.contains("oF")
 				|| (propertyValue.indexOf("F") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("F")-1)))) {
 			units = ExperimentalConstants.str_F;
 		} else if ((propertyValue.indexOf("K") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("K")-1)))) {

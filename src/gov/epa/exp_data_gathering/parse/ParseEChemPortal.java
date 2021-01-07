@@ -6,6 +6,8 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import gov.epa.api.ExperimentalConstants;
 
 /**
@@ -58,7 +60,7 @@ public class ParseEChemPortal extends Parse {
 				if (cas.length()!=0 && !cas.equals("unknown")) { er.casrn = cas;
 				} else if (einecs.length()!=0 && !einecs.equals("unknown")) { er.einecs = einecs; }
 				if (ecpr.substanceName!=null && !ecpr.substanceName.equals("-") && !ecpr.substanceName.contains("unnamed")) {
-					er.chemical_name = ecpr.substanceName;
+					er.chemical_name = StringEscapeUtils.escapeHtml4(ecpr.substanceName);
 				}
 				er.url = ecpr.url;
 				if (ecpr.method!=null && !ecpr.method.isBlank()) {
