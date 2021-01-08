@@ -60,7 +60,7 @@ public class DownloadWebpageUtilities {
 					long delay = 0;
 					try {
 						long startTime=System.currentTimeMillis();
-						rec.content=FileUtilities.getText_UTF8(url).replaceAll("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText_UTF8(url).replaceAll("'", "''").replaceAll(";", "\\;"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay = endTime-startTime;
 						rec.addRecordToDatabase(tableName, conn);
@@ -100,7 +100,7 @@ public class DownloadWebpageUtilities {
 					long delay = 0;
 					try {
 						long startTime=System.currentTimeMillis();
-						rec.content=FileUtilities.getText(url).replaceAll("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText(url).replaceAll("'", "''").replaceAll(";", "\\;"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay = endTime-startTime;
 						rec.addRecordToDatabase(tableName, conn);
@@ -148,7 +148,7 @@ public class DownloadWebpageUtilities {
 					long delay=0;
 					try {
 						long startTime=System.currentTimeMillis();
-						html=FileUtilities.getText_UTF8(url).replaceAll("'", "''"); //single quotes mess with the SQL insert later
+						html=FileUtilities.getText_UTF8(url).replaceAll("'", "''").replaceAll(";", "\\;"); //single quotes mess with the SQL insert later
 						long endTime=System.currentTimeMillis();
 						delay=endTime-startTime;
 						Document doc = Jsoup.parse(html);
@@ -200,7 +200,7 @@ public class DownloadWebpageUtilities {
 				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
 				if (!haveRecord || startFresh) {
 					try {
-						rec.content=FileUtilities.getText_UTF8(url).replaceAll("'", "''"); //single quotes mess with the SQL insert later
+						rec.content=FileUtilities.getText_UTF8(url).replaceAll("'", "''").replaceAll(";", "\\;"); //single quotes mess with the SQL insert later
 						if (rec.content!=null) { 
 							rec.addRecordToDatabase(tableName, conn);
 							counterSuccess++;
