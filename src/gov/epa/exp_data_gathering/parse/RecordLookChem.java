@@ -50,11 +50,14 @@ public class RecordLookChem {
 	 * @param start		The index in the list to start downloading
 	 * @param end		The index in the list to stop downloading
 	 */
-	public static void downloadWebpagesFromExcelToZipFile(String filename,int start,int end) {
+	public static void downloadWebpagesFromExcelToZipFile(String filename,String version,int start,int end) {
 		Vector<RecordDashboard> records = DownloadWebpageUtilities.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
-		ParseLookChem p = new ParseLookChem();
+		String[] arrVersion = {version};
+		ParseLookChem p = new ParseLookChem(arrVersion);
+		p.mainFolder = p.mainFolder + File.separator + "LookChem "+version;
+		p.webpageFolder = p.mainFolder + File.separator + "web pages";
 		DownloadWebpageUtilities.downloadWebpagesToZipFile(urls,p.webpageFolder);	
 	}
 	
@@ -66,12 +69,13 @@ public class RecordLookChem {
 	 * @param end			The index in the list to stop downloading
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end,boolean startFresh) {
+	public static void downloadWebpagesFromExcelToDatabase(String filename,String version,int start,int end,boolean startFresh) {
 		Vector<RecordDashboard> records = DownloadWebpageUtilities.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
-		ParseLookChem p = new ParseLookChem();
-		p.mainFolder = p.mainFolder + File.separator + "LookChem PFAS";
+		String[] arrVersion = {version};
+		ParseLookChem p = new ParseLookChem(arrVersion);
+		p.mainFolder = p.mainFolder + File.separator + "LookChem "+version;
 		p.databaseFolder = p.mainFolder;
 		String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
 		DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptive(urls,".reir_l_info_table",databasePath,sourceName,startFresh);		
@@ -192,8 +196,8 @@ public class RecordLookChem {
 	 * Parses the HTML strings in the raw HTML database to RecordLookChem objects
 	 * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
 	 */
-	public static Vector<RecordLookChem> parseWebpagesInDatabase() {
-		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "LookChem PFAS";
+	public static Vector<RecordLookChem> parseWebpagesInDatabase(String version) {
+		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "LookChem "+version;
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		Vector<RecordLookChem> records = new Vector<>();
 
@@ -246,7 +250,7 @@ public class RecordLookChem {
 			if (!rows.isEmpty()) {
 				for (Element row:rows) {
 					String header = row.getElementsByTag("th").text();
-					String data = row.getElementsByTag("td").text();
+					String data = row.getElementsByTag("td").text().replaceAll("-", "-");
 					// Will need to check & adjust these conditions as necessary if other pages formatted differently
 					if (header.contains("CAS No")) { lcr.CAS = data;
 					} else if (header.contains("Name")) { lcr.chemicalName = StringEscapeUtils.escapeHtml4(data);
@@ -269,7 +273,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx",47000,50000,false);
+		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx","General",47000,50000,false);
 	}
 	
 }

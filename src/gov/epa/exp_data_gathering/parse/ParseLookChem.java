@@ -7,10 +7,12 @@ import java.util.Vector;
 import gov.epa.api.ExperimentalConstants;
 
 public class ParseLookChem extends Parse {
+	String[] versions;
 	
-	public ParseLookChem() {
+	public ParseLookChem(String[] versions) {
 		sourceName = ExperimentalConstants.strSourceLookChem;
 		this.init();
+		this.versions = versions;
 	}
 	
 	/**
@@ -19,7 +21,10 @@ public class ParseLookChem extends Parse {
 	@Override
 	protected void createRecords() {
 		// Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInZipFile();
-		Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInDatabase();
+		Vector<RecordLookChem> records = new Vector<RecordLookChem>();
+		for (String v:versions) {
+			records.addAll(RecordLookChem.parseWebpagesInDatabase(v));
+		}
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -119,7 +124,7 @@ public class ParseLookChem extends Parse {
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
 
 		boolean foundNumeric = false;
-		propertyValue = propertyValue.replaceAll(",", ".");
+		propertyValue = propertyValue.replaceAll(",", ".").replaceAll("-", "-");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
 			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
@@ -166,10 +171,7 @@ public class ParseLookChem extends Parse {
 	}
 	
 	public static void main(String[] args) {
-		ParseLookChem p = new ParseLookChem();
-		p.mainFolder = p.mainFolder + File.separator + "LookChem PFAS";
-		p.databaseFolder = p.mainFolder;
-		p.jsonFolder= p.mainFolder;
+		ParseLookChem p = new ParseLookChem(args);
 		p.createFiles();
 	}
 }
