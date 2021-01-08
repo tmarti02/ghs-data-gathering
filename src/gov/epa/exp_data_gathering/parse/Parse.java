@@ -225,7 +225,8 @@ public class Parse {
 		ParseBradley.main(null);
 		ParseChemicalBook.main(null);
 		ParseEChemPortalAPI.main(null);
-		ParseLookChem.main(null);
+		String[] lookChemArgs = {"General","PFAS"};
+		ParseLookChem.main(lookChemArgs);
 		ParseOChem.main(null);
 		ParseOFMPub.main(null);
 		ParseOPERA.main(null);

@@ -42,8 +42,8 @@ public class DataFetcher {
 	public DataFetcher(String[] sources) {
 		records = new ExperimentalRecords();
 		for (String source:sources) {
-			String recordFilePath = mainFolder+File.separator+source+" Experimental Records.json";
-			String badRecordFilePath = mainFolder+File.separator+source+" Experimental Records-Bad.json";
+			String recordFilePath = mainFolder+File.separator+source+File.separator+source+" Experimental Records.json";
+			String badRecordFilePath = mainFolder+File.separator+source+File.separator+source+" Experimental Records-Bad.json";
 			
 			File fileRecords=new File(recordFilePath);
 			File fileBadRecords=new File(badRecordFilePath);
@@ -65,11 +65,11 @@ public class DataFetcher {
 //			}
 			
 			if (sourceRecords==null) {
-				System.out.println("No file for "+source.substring(source.lastIndexOf("\\")+1));
+				System.out.println("No file for "+source);
 				continue;
 			}
 			
-			System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")+1));
+			System.out.println("Fetching data from "+source);
 
 //			addSourceBasedIDNumbers(sourceRecords);			
 			records.addAll(sourceRecords);
@@ -324,10 +324,7 @@ public class DataFetcher {
 	
 	public static void main(String[] args) {
 
-		String[] sources = {"eChemPortalAPI\\eChemPortalAPI","LookChem\\LookChem PFAS\\LookChem","LookChem\\LookChem General\\LookChem",
-				"PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub","OPERA\\OPERA",
-				"QSARDB\\QSARDB","Bradley\\Bradley","ADDoPT\\ADDoPT","AqSolDB\\AqSolDB",
-				"Sander\\General\\Sander","ChemicalBook\\ChemicalBook","ChemIDplus\\ChemIDplus"};
+		String[] sources = {"eChemPortalAPI","LookChem","PubChem","OChem","OFMPub","OPERA","QSARDB","Bradley","ADDoPT","AqSolDB","Sander","ChemicalBook","ChemIDplus"};
 
 		DataFetcher d = new DataFetcher(sources);
 		d.createExperimentalRecordsDatabase();

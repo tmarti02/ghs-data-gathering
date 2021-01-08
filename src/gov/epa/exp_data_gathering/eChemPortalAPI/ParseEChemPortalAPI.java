@@ -129,6 +129,7 @@ public class ParseEChemPortalAPI extends Parse {
 		case "Partition":
 			er.property_name = ExperimentalConstants.strLogKow;
 			ParseUtilities.getLogProperty(er,r.value);
+			if (!r.value.contains("log Pow")) { er.property_value_units_original = "non log"; }
 			break;
 		case "WaterSolubility":
 			er.property_name = ExperimentalConstants.strWaterSolubility;

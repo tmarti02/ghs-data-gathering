@@ -27,12 +27,17 @@ public class RecordFinalizer {
 		
 								
 		if (er.property_name.equals(ExperimentalConstants.str_pKA) || er.property_name.equals(ExperimentalConstants.strLogKow)) {
-			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original; }
-	
-			if (er.property_value_min_original!=null) { 
-				er.property_value_min_final = er.property_value_min_original;
-				er.property_value_max_final = er.property_value_max_original;
-	
+			if (er.property_value_units_original!=null && er.property_value_units_original.equals("non log")) {
+				if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = Math.log10(er.property_value_point_estimate_original); }
+				if (er.property_value_min_original!=null) { er.property_value_min_final = Math.log10(er.property_value_min_original); }
+				if (er.property_value_max_original!=null) { er.property_value_max_final = Math.log10(er.property_value_max_original); }
+				er.updateNote("Computed from non-log Pow");
+			} else {
+				if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original; }
+				if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original; }
+				if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original; }
+			}
+			if (er.property_value_min_final!=null) {
 				if (isWithinTolerance(er,logTolerance)) {
 					calculateFinalValueFromMinMaxAverage(er);//values are already in log units so dont need to use geometric median
 				} else if (!isWithinTolerance(er,logTolerance)) {
@@ -40,7 +45,6 @@ public class RecordFinalizer {
 					er.reason = "Range too wide to compute point estimate";
 				}
 			}
-			er.property_value_units_final = er.property_value_units_original;
 		} else if ((er.property_name.equals(ExperimentalConstants.strMeltingPoint) || er.property_name.equals(ExperimentalConstants.strBoilingPoint) ||
 				er.property_name.equals(ExperimentalConstants.strFlashPoint)) && er.property_value_units_original!=null) {
 			UnitConverter.convertTemperature(er);

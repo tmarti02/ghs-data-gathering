@@ -17,25 +17,28 @@ public class ParseUtilities extends Parse {
 		if (!foundNumeric) {
 			try {
 				Matcher sciMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?(e|x10)[ ]?([-|\\+]?[ ]?[0-9]+)").matcher(propertyValue.toLowerCase().substring(0,unitsIndex));
-				sciMatcher.find();
-				String strMantissa = sciMatcher.group(1);
-				String strMagnitude = sciMatcher.group(3);
-				Double mantissa = Double.parseDouble(strMantissa.replaceAll("\\s",""));
-				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll("\\s","").replaceAll("\\+", ""));
-				er.property_value_point_estimate_original = mantissa*Math.pow(10, magnitude);
-				foundNumeric = true;
-				int propertyValueIndex;
-				if ((propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
-					String checkSymbol = propertyValue.replaceAll("\\s","");
-					er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
+				if (sciMatcher.find()) {
+					String strMantissa = sciMatcher.group(1);
+					String strMagnitude = sciMatcher.group(3);
+					Double mantissa = Double.parseDouble(strMantissa.replaceAll("\\s",""));
+					Double magnitude =  Double.parseDouble(strMagnitude.replaceAll("\\s","").replaceAll("\\+", ""));
+					er.property_value_point_estimate_original = mantissa*Math.pow(10, magnitude);
+					foundNumeric = true;
+					int propertyValueIndex;
+					if ((propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
+						String checkSymbol = propertyValue.replaceAll("\\s","");
+						er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
+					}
 				}
-			} catch (Exception ex) { }
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 		}
 
 		if (!foundNumeric) {
 			try {
 				double[] range = extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
-				if (!badUnits) {
+				if (!badUnits && range!=null) {
 					er.property_value_min_original = range[0];
 					er.property_value_max_original = range[1];
 					foundNumeric = true;
@@ -43,13 +46,15 @@ public class ParseUtilities extends Parse {
 				if (propertyValue.contains("~") || propertyValue.contains("ca.")) {
 					er.property_value_numeric_qualifier = "~";
 				}
-			} catch (Exception ex) { }
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 		}
 
 		if (!foundNumeric) {
 			try {
 				double[] range = extractAltFormatRangeFromString(propertyValue,unitsIndex);
-				if (!badUnits) {
+				if (!badUnits && range!=null) {
 					er.property_value_min_original = range[0];
 					er.property_value_max_original = range[1];
 					foundNumeric = true;
@@ -57,7 +62,9 @@ public class ParseUtilities extends Parse {
 				if (propertyValue.contains("~") || propertyValue.contains("ca.")) {
 					er.property_value_numeric_qualifier = "~";
 				}
-			} catch (Exception ex) { }
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 		}
 
 		if (!foundNumeric) {
@@ -85,8 +92,11 @@ public class ParseUtilities extends Parse {
 						er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
 					}
 				}
-			} catch (Exception ex) { }
+			} catch (NumberFormatException ex) {
+				// NumberFormatException means no numerical value was found; leave foundNumeric = false and do nothing else
+			}
 		}
+		
 		return foundNumeric;
 	}
 
@@ -471,7 +481,9 @@ public class ParseUtilities extends Parse {
 						break;
 					}
 				}
-			} catch (Exception ex) { }
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 		}
 	}
 
@@ -516,22 +528,22 @@ public class ParseUtilities extends Parse {
 		if (pressureIndex > 0) {
 			if (sourceName.contains(ExperimentalConstants.strSourceEChemPortal)) {
 				if (!foundNumeric) {
-					try {
-						double[] range = extractFirstDoubleRangeFromString(propertyValue,pressureIndex);
+					double[] range = extractFirstDoubleRangeFromString(propertyValue,pressureIndex);
+					if (range!=null) {
 						String min = formatDouble(range[0]*conversionFactor);
 						String max = formatDouble(range[1]*conversionFactor);
 						er.pressure_mmHg = min+"-"+max;
 						foundNumeric = true;
-					} catch (Exception ex) { }
+					}
 				}
 				if (!foundNumeric) {
-					try {
-						double[] range = extractAltFormatRangeFromString(propertyValue,pressureIndex);
+					double[] range = extractAltFormatRangeFromString(propertyValue,pressureIndex);
+					if (range!=null) {
 						String min = formatDouble(range[0]*conversionFactor);
 						String max = formatDouble(range[1]*conversionFactor);
 						er.pressure_mmHg = min+"-"+max;
 						foundNumeric = true;
-					} catch (Exception ex) { }
+					}
 				}
 				if (!foundNumeric) {
 					try {
@@ -543,14 +555,18 @@ public class ParseUtilities extends Parse {
 							er.pressure_mmHg = numQual+min+"~"+max;
 							foundNumeric = true;
 						}
-					} catch (Exception ex) { }
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
 				}
 			}
 			if (!foundNumeric) {
 				try {
 					er.pressure_mmHg = formatDouble(conversionFactor*extractDoubleFromString(propertyValue,pressureIndex));
 					foundNumeric = true;
-				} catch (Exception ex) { }
+				} catch (NumberFormatException ex) {
+					// NumberFormatException means no numerical value was found; leave foundNumeric = false and do nothing else
+				}
 			}
 			if (propertyValue.startsWith("ca.")) {
 				er.pressure_mmHg = "~"+er.pressure_mmHg;
@@ -577,51 +593,57 @@ public class ParseUtilities extends Parse {
 	 * @throws IllegalStateException	If no number range is found in the given range
 	 */
 	public static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
-		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([—][-]{1}|to|ca\\.[\\?])[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
-		anyRangeMatcher.find();
-		String strMin = anyRangeMatcher.group(1).replace(" ","");
-		String strMax = anyRangeMatcher.group(3).replace(" ","");
-		double min = Double.parseDouble(strMin);
-		double max = Double.parseDouble(strMax);
-		if (min >= max) {
-			int digits = strMax.length();
-			if (digits > strMin.length() || (digits == strMin.length() && strMin.startsWith("-") && strMax.startsWith("-")) || strMax.equals("0")) {
-				// Swaps values for negative ranges
-				double temp = min;
-				min = max;
-				max = temp;
-			} else {
-				// Otherwise replaces substring
-				strMax = strMin.substring(0,strMin.length()-digits)+strMax;
-				max = Double.parseDouble(strMax);
+		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([—]|[-]{1}|to|ca\\.[\\?])[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
+		if (anyRangeMatcher.find()) {
+			String strMin = anyRangeMatcher.group(1).replace(" ","");
+			String strMax = anyRangeMatcher.group(3).replace(" ","");
+			double min = Double.parseDouble(strMin);
+			double max = Double.parseDouble(strMax);
+			if (min > max) {
+				int digits = strMax.length();
+				if (digits > strMin.length() || (digits == strMin.length() && strMin.startsWith("-") && strMax.startsWith("-")) || strMax.equals("0")) {
+					// Swaps values for negative ranges
+					double temp = min;
+					min = max;
+					max = temp;
+				} else {
+					// Otherwise replaces substring
+					strMax = strMin.substring(0,strMin.length()-digits)+strMax;
+					max = Double.parseDouble(strMax);
+				}
 			}
+			double[] range = {min, max};
+			return range;
+		} else {
+			return null;
 		}
-		double[] range = {min, max};
-		return range;
 	}
 
 	public static double[] extractAltFormatRangeFromString(String str,int end) throws IllegalStateException {
 		Matcher anyRangeMatcher = Pattern.compile(">[=]?[ ]?([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?<[=]?[ ]?([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
-		anyRangeMatcher.find();
-		String strMin = anyRangeMatcher.group(1).replace(" ","");
-		String strMax = anyRangeMatcher.group(2).replace(" ","");
-		double min = Double.parseDouble(strMin);
-		double max = Double.parseDouble(strMax);
-		if (min >= max) {
-			int digits = strMax.length();
-			if (digits > strMin.length()) {
-				// If max value is smaller but digitwise longer, swaps the values
-				double temp = min;
-				min = max;
-				max = temp;
-			} else {
-				// Otherwise replaces substring
-				strMax = strMin.substring(0,strMin.length()-digits)+strMax;
-				max = Double.parseDouble(strMax);
+		if (anyRangeMatcher.find()) {
+			String strMin = anyRangeMatcher.group(1).replace(" ","");
+			String strMax = anyRangeMatcher.group(2).replace(" ","");
+			double min = Double.parseDouble(strMin);
+			double max = Double.parseDouble(strMax);
+			if (min >= max) {
+				int digits = strMax.length();
+				if (digits > strMin.length()) {
+					// If max value is smaller but digitwise longer, swaps the values
+					double temp = min;
+					min = max;
+					max = temp;
+				} else {
+					// Otherwise replaces substring
+					strMax = strMin.substring(0,strMin.length()-digits)+strMax;
+					max = Double.parseDouble(strMax);
+				}
 			}
+			double[] range = {min, max};
+			return range;
+		} else {
+			return null;
 		}
-		double[] range = {min, max};
-		return range;
 	}
 
 	/**
@@ -631,10 +653,12 @@ public class ParseUtilities extends Parse {
 	 * @return		The number found as a double
 	 * @throws IllegalStateException	If no number is found in the given range
 	 */
-	public static double extractDoubleFromString(String str,int end) throws IllegalStateException, NumberFormatException {
+	public static double extractDoubleFromString(String str,int end) throws NumberFormatException {
 		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
 		String strDouble = "";
-		while (numberMatcher.find()) { strDouble = numberMatcher.group(); }
+		while (numberMatcher.find()) { 
+			strDouble = numberMatcher.group();
+		}
 		return Double.parseDouble(strDouble.replace(" ",""));
 	}
 

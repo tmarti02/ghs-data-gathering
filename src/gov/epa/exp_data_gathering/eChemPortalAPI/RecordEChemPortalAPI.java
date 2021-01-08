@@ -131,6 +131,9 @@ public class RecordEChemPortalAPI {
 							case "pH":
 								rec.pH = value.value;
 								break;
+							case "isLog":
+								rec.value = rec.value + " (" + value.value +")";
+								break;
 							}
 						}
 						records.add(rec);

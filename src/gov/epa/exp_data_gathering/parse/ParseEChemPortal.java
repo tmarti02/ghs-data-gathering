@@ -66,18 +66,20 @@ public class ParseEChemPortal extends Parse {
 				if (ecpr.method!=null && !ecpr.method.isBlank()) {
 					er.measurement_method = ecpr.method;
 				}
-				er.property_value_string = ecpr.values.get(i);
-				String propertyValue = ecpr.values.get(i);
+				er.property_value_string = ecpr.values.get(i).replaceAll("—", "-");
+				String propertyValue = er.property_value_string;
 				if (!ecpr.temperature.isEmpty() && ecpr.temperature.get(i)!=null) { 
-					ParseUtilities.getTemperatureCondition(er,ecpr.temperature.get(i));
-					er.property_value_string = er.property_value_string + ";" + ecpr.temperature.get(i);
+					String temp = ecpr.temperature.get(i).replaceAll("—", "-");
+					ParseUtilities.getTemperatureCondition(er,temp);
+					er.property_value_string = er.property_value_string + ";" + temp;
 				}
 				if (!ecpr.pressure.isEmpty() && ecpr.pressure.get(i)!=null) {
-					ParseUtilities.getPressureCondition(er,ecpr.pressure.get(i),sourceName);
-					er.property_value_string = er.property_value_string + ";" + ecpr.pressure.get(i);
+					String pressure = ecpr.pressure.get(i).replaceAll("—", "-");
+					ParseUtilities.getPressureCondition(er,pressure,sourceName);
+					er.property_value_string = er.property_value_string + ";" + pressure;
 				}
 				if (!ecpr.pH.isEmpty() && ecpr.pH.get(i)!=null) { 
-					String pHStr = ecpr.pH.get(i);
+					String pHStr = ecpr.pH.get(i).replaceAll("—", "-");
 					er.property_value_string = er.property_value_string + ";" + pHStr;
 					boolean foundpH = false;
 					try {
