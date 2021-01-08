@@ -188,7 +188,7 @@ public class SQLite_CreateTable {
 				create_table(stat3, tableName, fieldNames);
 			}
 			
-			if (Arrays.asList(fieldNames).contains("url")) {
+			if (Arrays.asList(fieldNames).contains("url") && startFresh) {
 				conn.setAutoCommit(true);
 				Statement stat4 = SQLite_Utilities.getStatement(conn);
 				String sqlAddIndex="CREATE INDEX idx_url ON "+tableName+" (url)";
