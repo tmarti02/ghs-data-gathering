@@ -7,7 +7,14 @@ public class ToxQueryBlock extends QueryBlock {
 	
 	public ToxQueryBlock(String endpointKind) {
 		super(endpointKind);
+		if (endpointKind.equals("AcuteToxicityInhalation")) {
+			effectLevelString = "EffectLevels";
+		} else if (endpointKind.equals("RepeatedDoseToxicityOral")) {
+			effectLevelString = "EffectLevels.Efflevel";
+		}
 	}
+	
+	private transient String effectLevelString;
 	
 	/**
 	 * Adds a QueryField to set endpoint value bounds
@@ -15,8 +22,8 @@ public class ToxQueryBlock extends QueryBlock {
 	 * @param upper		Upper endpoint value bound
 	 * @param unit		Desired endpoint value unit from ExperimentalConstants
 	 */
-	public void addEndpointField(String lower,String upper,String unit) {
-		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion.EffectLevels.EffectLevel";
+	public void addEffectLevelField(String lower,String upper,String unit) {
+		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".EffectLevel";
 		String type = "range";
 		Value endpointValue = new Value(type,lower,upper,new ToxUnit(unit));
 		QueryField endpoint = new QueryField(fieldName,type,"Value",endpointValue);
@@ -39,6 +46,12 @@ public class ToxQueryBlock extends QueryBlock {
 		queryFields.add(testTypeField);
 	}
 	
+	public void addAllTestTypeField() {
+		Value testTypeValue = new Value("LIKE","*");
+		QueryField testTypeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.TestType","string","Test Type",testTypeValue);
+		queryFields.add(testTypeField);
+	}
+	
 	/**
 	 * Adds a QueryField to select species of results
 	 * @param	List of species to include
@@ -55,6 +68,12 @@ public class ToxQueryBlock extends QueryBlock {
 		queryFields.add(speciesField);
 	}
 	
+	public void addAllSpeciesField() {
+		Value speciesValue = new Value("LIKE","*");
+		QueryField speciesField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.TestAnimals.Species","string","Species",speciesValue);
+		queryFields.add(speciesField);
+	}
+	
 	/**
 	 * Adds a QueryField to select strain of results
 	 * @param	List of strains to include
@@ -68,6 +87,12 @@ public class ToxQueryBlock extends QueryBlock {
 			strainValues.add(new Value("LIKE","other:*"));
 		}
 		QueryField strainField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.TestAnimals.Strain","string","Strain",strainValues);
+		queryFields.add(strainField);
+	}
+	
+	public void addAllStrainField() {
+		Value strainValue = new Value("LIKE","*");
+		QueryField strainField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.TestAnimals.Strain","string","Strain",strainValue);
 		queryFields.add(strainField);
 	}
 	
@@ -88,6 +113,13 @@ public class ToxQueryBlock extends QueryBlock {
 		queryFields.add(routeField);
 	}
 	
+	public void addAllAdministrationRouteField() {
+		Value routeValue = new Value("LIKE","*");
+		QueryField routeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.AdministrationExposure.RouteOfAdministration",
+				"string","Route of Administration",routeValue);
+		queryFields.add(routeField);
+	}
+	
 	/**
 	 * Adds a QueryField to select inhalation exposure type of results
 	 * @param	List of species to include
@@ -105,6 +137,13 @@ public class ToxQueryBlock extends QueryBlock {
 		queryFields.add(inhalationTypeField);
 	}
 	
+	public void addAllInhalationTypeField() {
+		Value inhalationTypeValue = new Value("LIKE","*");
+		QueryField inhalationTypeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.AdministrationExposure.TypeOfInhalationExposure",
+				"string","Inhalation Exposure Type",inhalationTypeValue);
+		queryFields.add(inhalationTypeField);
+	}
+	
 	/**
 	 * Adds a QueryField to select dose descriptor of results
 	 * @param	List of dose descriptors to include
@@ -117,8 +156,22 @@ public class ToxQueryBlock extends QueryBlock {
 		if (includeOther) {
 			doseDescriptorValues.add(new Value("LIKE","other:*"));
 		}
-		QueryField doseDescriptorField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion.EffectLevels.Endpoint",
+		QueryField doseDescriptorField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".Endpoint",
 				"string","Dose Descriptor",doseDescriptorValues);
 		queryFields.add(doseDescriptorField);
+	}
+	
+	public void addAllDoseDescriptorField() {
+		Value doseDescriptorValue = new Value("LIKE","*");
+		QueryField doseDescriptorField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".Endpoint",
+				"string","Dose Descriptor",doseDescriptorValue);
+		queryFields.add(doseDescriptorField);
+	}
+	
+	public void addAllEndpointTypeField() {
+		Value endpointTypeValue = new Value("LIKE","*");
+		QueryField endpointTypeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".AdministrativeData.Endpoint",
+				"string","Dose Descriptor",endpointTypeValue);
+		queryFields.add(endpointTypeField);
 	}
 }

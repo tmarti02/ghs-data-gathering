@@ -64,6 +64,30 @@ public class ToxUnit extends Unit {
 			phraseGroupId = "T12";
 			phraseId = "2283";
 			break;
+		case "mg/kg bw/day (nominal)":
+			phraseGroupId = "T28-1";
+			phraseId = "2087";
+			break;
+		case "mg/kg bw/day (actual dose received)":
+			phraseGroupId = "T28-1";
+			phraseId = "2086";
+			break;
+		case "mg/kg diet":
+			phraseGroupId = "T28-1";
+			phraseId = "2090";
+			break;
+		case "mg/L drinking water":
+			phraseGroupId = "T28-1";
+			phraseId = "2102";
+			break;
+		case "mg/kg bw (total dose)":
+			phraseGroupId = "T28-1";
+			phraseId = "2082";
+			break;
+		case "ppm_oral":
+			phraseGroupId = "T28-1";
+			phraseId = "2283";
+			break;
 		}
 	}
 }

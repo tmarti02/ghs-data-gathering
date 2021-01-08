@@ -71,7 +71,7 @@ public class QueryBlock {
 	 * Adds a QueryField to guarantee results with reliability <= maxReliabilityLevel (2 recommended)
 	 * @param maxReliabilityLevel	1 = reliable w/o restrictions, 2 = reliable w/ restrictions, 3 = not reliable, 4 = not assignable
 	 */
-	public void addReliabilityField(int maxReliabilityLevel) {
+	public void addReliabilityField(int maxReliabilityLevel,boolean includeOther) {
 		List<Value> reliabilityValues = new ArrayList<Value>();
 		Value reliabilityValue1 = new Value("EQUALS","1 (reliable without restriction)");
 		Value reliabilityValue2 = new Value("EQUALS","2 (reliable with restrictions)");
@@ -81,8 +81,18 @@ public class QueryBlock {
 		for (int i = 0; i < maxReliabilityLevel; i++) {
 			reliabilityValues.add(reliabilityValuesArray[i]);
 		}
+		if (includeOther) {
+			reliabilityValues.add(new Value("LIKE","other:*"));
+		}
 		QueryField reliability = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".AdministrativeData.Reliability","string","Reliability",reliabilityValues);
 		queryFields.add(reliability);
+	}
+	
+	public void addAfterYearField(String afterYear) {
+		Value afterYearValue = new Value("numeric","GT",afterYear,null);
+		QueryField afterYearField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".DataSource.Reference+LITERATURE.GeneralInfo.ReferenceYear",
+				"numeric","Year",afterYearValue);
+		queryFields.add(afterYearField);
 	}
 	
 	/**
@@ -152,13 +162,15 @@ public class QueryBlock {
 	}
 	
 	/**
-	 * For partition coefficient queries, adds QueryFields to guarantee 1) octanol-water partition coefficient, 2) log Pow rather than Pow
+	 * For partition coefficient queries, adds QueryFields to guarantee octanol-water partition coefficient and include both Pow and log Pow records
 	 */
 	public void addPartitionCoefficientFields() {
 		Value type1Value = new Value("EQUALS","octanol-water");
-		Value type2Value = new Value("EQUALS","log Pow");
+		Value type2Value1 = new Value("EQUALS","log Pow");
+		Value type2Value2 = new Value("EQUALS","Pow");
 		QueryField type1 = new QueryField("ENDPOINT_STUDY_RECORD.Partition.MaterialsAndMethods.PartitionCoefficientType","string","Type",type1Value);
-		QueryField type2 = new QueryField("ENDPOINT_STUDY_RECORD.Partition.ResultsAndDiscussion.Partcoeff.Type","string","isLog",type2Value);
+		QueryField type2 = new QueryField("ENDPOINT_STUDY_RECORD.Partition.ResultsAndDiscussion.Partcoeff.Type","string","isLog",type2Value1);
+		type2.values.add(type2Value2);
 		queryFields.add(type1);
 		queryFields.add(type2);
 	}
@@ -170,5 +182,24 @@ public class QueryBlock {
 		Value typeValue = new Value("EQUALS","water solubility");
 		QueryField type = new QueryField("ENDPOINT_STUDY_RECORD.WaterSolubility.AdministrativeData.Endpoint","string","Solvent",typeValue);
 		queryFields.add(type);
+	}
+	
+	public void addAllGLPComplianceField() {
+		Value glpComplianceValue = new Value("LIKE","*");
+		QueryField glpComplianceField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.GLPComplianceStatement",
+				"string","GLP Compliance",glpComplianceValue);
+		queryFields.add(glpComplianceField);
+	}
+	
+	public void addAllTestGuidelineAndQualifierFields() {
+		Value qualifierValue = new Value("LIKE","*");
+		QueryField qualifierField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.Guideline.Qualifier",
+				"string","Guideline Qualifier",qualifierValue);
+		queryFields.add(qualifierField);
+		
+		Value guidelineValue = new Value("LIKE","*");
+		QueryField guidelineField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.Guideline.Guideline",
+				"string","Guideline",guidelineValue);
+		queryFields.add(guidelineField);
 	}
 }

@@ -9,16 +9,23 @@ import java.util.ListIterator;
 public class ToxQueryOptions extends QueryOptions {
 	List<String> testTypes;
 	boolean includeOtherTestType;
+	boolean includeAllTestTypes;
 	List<String> species;
 	boolean includeOtherSpecies;
+	boolean includeAllSpecies;
 	List<String> strains;
 	boolean includeOtherStrain;
+	boolean includeAllStrains;
 	List<String> routesOfAdministration;
 	boolean includeOtherRoute;
+	boolean includeAllRoutes;
 	List<String> inhalationTypes;
 	boolean includeOtherInhalationType;
+	boolean includeAllInhalationTypes;
 	List<String> doseDescriptors;
 	boolean includeOtherDoseDescriptor;
+	boolean includeAllDoseDescriptors;
+	boolean includeAllEndpointTypes;
 	
 	// Default null constructor
 	ToxQueryOptions() {
@@ -40,6 +47,13 @@ public class ToxQueryOptions extends QueryOptions {
 		includeOtherRoute = false;
 		includeOtherInhalationType = false;
 		includeOtherDoseDescriptor = false;
+		includeAllTestTypes = false;
+		includeAllSpecies = false;
+		includeAllStrains = false;
+		includeAllRoutes = false;
+		includeAllInhalationTypes = false;
+		includeAllDoseDescriptors = false;
+		includeAllEndpointTypes = false;
 	}
 	
 	// Duplicate constructor
@@ -47,6 +61,7 @@ public class ToxQueryOptions extends QueryOptions {
 		limit = options.limit;
 		propertyName = options.propertyName;
 		maxReliabilityLevel = options.maxReliabilityLevel;
+		afterYear = options.afterYear;
 		endpointMin = options.endpointMin;
 		endpointMax = options.endpointMax;
 		endpointUnits = options.endpointUnits;
@@ -62,23 +77,21 @@ public class ToxQueryOptions extends QueryOptions {
 		includeOtherRoute = options.includeOtherRoute;
 		includeOtherInhalationType = options.includeOtherInhalationType;
 		includeOtherDoseDescriptor = options.includeOtherDoseDescriptor;
+		includeAllTestTypes = options.includeAllTestTypes;
+		includeAllSpecies = options.includeAllSpecies;
+		includeAllStrains = options.includeAllStrains;
+		includeAllRoutes = options.includeAllRoutes;
+		includeAllInhalationTypes = options.includeAllInhalationTypes;
+		includeAllGLPCompliances = options.includeAllGLPCompliances;
+		includeAllGuidelines = options.includeAllGuidelines;
+		includeAllDoseDescriptors = options.includeAllDoseDescriptors;
+		includeAllEndpointTypes = options.includeAllEndpointTypes;
 	}
 	
 	public static List<Query> generateInhalationLC50Queries() {
 		List<Query> queries = new ArrayList<Query>();
 		String[] units = {"mg/L air","mg/L air (nominal)","mg/L air (analytical)","mg/m^3 air","mg/m^3 air (nominal)","mg/m^3 air (analytical)","ppm"};
 		String[] speciesSimple = {"rat","mouse","guinea pig","rabbit"};
-		String[] testTypesComplex = {"acute toxic class method","concentration x time method","fixed concentration procedure","traditional method","standard acute method"};
-		String[] speciesComplex = {"cat","cattle","dog","gerbil","hamster","hamster, Armenian","hamster, Chinese","hamster, Syrian","hen","rat","mouse","guinea pig","rabbit",
-				"miniature swine","monkey","pig","primate","sheep"};
-		String[] strainsComplex = {"Abyssinian","AKR","Angora","B6C3F1","Balb/c","Belgian Hare","Brown Norway","C3H","C57BL","CAF1","Californian","CB6F1","CBA","CD-1","CF-1",
-				"Chinchilla","Crj: CD(SD)","DBA","DBF1","Dunkin-Hartley","Dutch","Fischer 344","Fischer 344/DuCrj","Flemish Giant","FVB","Hartley","Himalayan","ICL-ICR",
-				"ICR","Lewis","Long-Evans","New Zealand Black","New Zealand Red","New Zealand White","NMRI","not specified","Nude","Nude Balb/cAnN","Nude CD-1",
-				"Osborne-Mendel","Peruvian","Pirbright-Hartley","Polish","San Juan","Sencar","Sherman","Shorthair","SIV 50","SKH/HR1","Sprague-Dawley","Strain A","Swiss",
-				"Swiss Webster","Tif:MAGf","Vienna White","Wistar","Wistar Kyoto (WKY)","Zucker"};
-		String[] inhalationTypesComplex = {"head only","nose/head only","nose only","not specified","whole body"};
-		String[] routesOfAdministrationBoth = {"inhalation","inhalation: aerosol","inhalation: dust","inhalation: gas","inhalation: mist","inhalation: vapour",
-				"inhalation: mixture of gas, vapour and aerosol","inhalation: mixture of gas and vapour","inhalation: mixture of vapour and aerosol / mist"};
 		String[] doseDescriptorsBoth = {"LC50"};
 		
 		for (String unit:units) {
@@ -88,8 +101,7 @@ public class ToxQueryOptions extends QueryOptions {
 			simple.endpointMax = String.valueOf(Integer.MAX_VALUE);
 			simple.endpointUnits = unit;
 			simple.species = Arrays.asList(speciesSimple);
-			simple.routesOfAdministration = Arrays.asList(routesOfAdministrationBoth);
-			simple.includeOtherRoute = true;
+			simple.includeAllRoutes = true;
 			simple.doseDescriptors = Arrays.asList(doseDescriptorsBoth);
 			
 			ToxQueryOptions complex = new ToxQueryOptions();
@@ -97,16 +109,11 @@ public class ToxQueryOptions extends QueryOptions {
 			complex.endpointMin = "0";
 			complex.endpointMax = String.valueOf(Integer.MAX_VALUE);
 			complex.endpointUnits = unit;
-			complex.species = Arrays.asList(speciesComplex);
-			complex.includeOtherSpecies = true;
-			complex.strains = Arrays.asList(strainsComplex);
-			complex.includeOtherStrain = true;
-			complex.testTypes = Arrays.asList(testTypesComplex);
-			complex.includeOtherTestType = true;
-			complex.routesOfAdministration = Arrays.asList(routesOfAdministrationBoth);
-			complex.includeOtherRoute = true;
-			complex.inhalationTypes = Arrays.asList(inhalationTypesComplex);
-			complex.includeOtherInhalationType = true;
+			complex.includeAllTestTypes = true;
+			complex.includeAllSpecies = true;
+			complex.includeAllStrains = true;
+			complex.includeAllInhalationTypes = true;
+			complex.includeAllRoutes = true;
 			complex.doseDescriptors = Arrays.asList(doseDescriptorsBoth);
 			
 			Query query = new Query(5000);
@@ -118,6 +125,34 @@ public class ToxQueryOptions extends QueryOptions {
 			queries.add(query);
 		}
 		
+		return queries;
+	}
+	
+	public static List<Query> generateRepeatedDoseOralQueries() {
+		List<Query> queries = new ArrayList<Query>();
+		String[] units = {"mg/kg bw/day (nominal)","mg/kg bw/day (actual dose received)","mg/kg diet","mg/L drinking water","mg/kg bw (total dose)","ppm_oral"};
+		for (String unit:units) {
+			ToxQueryOptions options = new ToxQueryOptions();
+			options.propertyName = "RepeatedDoseToxicityOral";
+			options.endpointMin = "0";
+			options.endpointMax = "100";
+			options.endpointUnits = unit;
+			options.maxReliabilityLevel = 4;
+			options.includeOtherReliability = true;
+			options.afterYear = "1960";
+			options.includeAllGuidelines = true;
+			options.includeAllGLPCompliances = true;
+			options.includeAllEndpointTypes = true;
+			options.includeAllSpecies = true;
+			options.includeAllStrains = true;
+			options.includeAllRoutes = true;
+			options.includeAllDoseDescriptors = true;
+			
+			Query query = new Query(5000);
+			ToxQueryBlock toxQueryBlock = options.generateToxQueryBlock();
+			query.addPropertyBlock(toxQueryBlock);
+			queries.add(query);
+		}
 		return queries;
 	}
 	
@@ -210,39 +245,60 @@ public class ToxQueryOptions extends QueryOptions {
 		String endpointKind = propertyName;
 		ToxQueryBlock toxQueryBlock = new ToxQueryBlock(endpointKind);
 		toxQueryBlock.addInfoTypeField();
-		toxQueryBlock.addReliabilityField(maxReliabilityLevel);
+		toxQueryBlock.addReliabilityField(maxReliabilityLevel,includeOtherReliability);
 		
-		// Endpoint value (called "Effect level" for tox data)
-		toxQueryBlock.addEndpointField(endpointMin,endpointMax,endpointUnits);
-		
-		// Test types
-		if (testTypes!=null && !testTypes.isEmpty()) {
+		toxQueryBlock.addEffectLevelField(endpointMin,endpointMax,endpointUnits);
+
+		if (includeAllTestTypes) {
+			toxQueryBlock.addAllTestTypeField();
+		} else if (testTypes!=null && !testTypes.isEmpty()) {
 			toxQueryBlock.addTestTypeField(testTypes,includeOtherTestType);
 		}
-		
-		// Species
-		if (species!=null && !species.isEmpty()) {
+
+		if (includeAllSpecies) {
+			toxQueryBlock.addAllSpeciesField();
+		} else if (species!=null && !species.isEmpty()) {
 			toxQueryBlock.addSpeciesField(species,includeOtherSpecies);
 		}
-		
-		// Strain
-		if (strains!=null && !strains.isEmpty()) {
+
+		if (includeAllStrains) {
+			toxQueryBlock.addAllStrainField();
+		} else if (strains!=null && !strains.isEmpty()) {
 			toxQueryBlock.addStrainField(strains,includeOtherStrain);
 		}
-		
-		// Route of administration
-		if (routesOfAdministration!=null && !routesOfAdministration.isEmpty()) {
+
+		if (includeAllRoutes) {
+			toxQueryBlock.addAllAdministrationRouteField();
+		} else if (routesOfAdministration!=null && !routesOfAdministration.isEmpty()) {
 			toxQueryBlock.addAdministrationRouteField(routesOfAdministration,includeOtherRoute);
 		}
-		
-		// Inhalation types
-		if (inhalationTypes!=null && !inhalationTypes.isEmpty()) {
+
+		if (includeAllInhalationTypes) {
+			toxQueryBlock.addAllInhalationTypeField();
+		} else if (inhalationTypes!=null && !inhalationTypes.isEmpty()) {
 			toxQueryBlock.addInhalationTypeField(inhalationTypes,includeOtherInhalationType);
 		}
-		
-		// Dose descriptor
-		if (doseDescriptors!=null && !doseDescriptors.isEmpty()) {
+
+		if (includeAllDoseDescriptors) {
+			toxQueryBlock.addAllDoseDescriptorField();
+		} else if (doseDescriptors!=null && !doseDescriptors.isEmpty()) {
 			toxQueryBlock.addDoseDescriptorField(doseDescriptors, includeOtherDoseDescriptor);
+		}
+		
+		if (includeAllGLPCompliances) {
+			toxQueryBlock.addAllGLPComplianceField();
+		}
+		
+		if (includeAllGuidelines) {
+			toxQueryBlock.addAllTestGuidelineAndQualifierFields();
+		}
+		
+		if (includeAllEndpointTypes) {
+			toxQueryBlock.addAllEndpointTypeField();
+		}
+		
+		if (afterYear!=null) {
+			toxQueryBlock.addAfterYearField(afterYear);
 		}
 		
 		return toxQueryBlock;

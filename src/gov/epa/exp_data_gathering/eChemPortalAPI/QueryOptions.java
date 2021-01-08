@@ -18,6 +18,7 @@ public class QueryOptions {
 	int limit = 5000; // Most efficient page limit in most tests
 	String propertyName = null;
 	int maxReliabilityLevel = 2; // Recommended
+	String afterYear = null;
 	String endpointMin = null;
 	String endpointMax = null;
 	String endpointUnits = null;
@@ -32,12 +33,16 @@ public class QueryOptions {
 	String pHMin = null;
 	String pHMax = null;
 	boolean includeNullpH = false;
+	boolean includeOtherReliability = false;
+	boolean includeAllGLPCompliances = false;
+	boolean includeAllGuidelines = false;
 	
 	// Default null constructor
 	QueryOptions() {
 		limit = 5000;
 		propertyName = null;
 		maxReliabilityLevel = 2;
+		afterYear = null;
 		endpointMin = null;
 		endpointMax = null;
 		endpointUnits = null;
@@ -52,6 +57,9 @@ public class QueryOptions {
 		pHMin = null;
 		pHMax = null;
 		includeNullpH = false;
+		includeOtherReliability = false;
+		includeAllGLPCompliances = false;
+		includeAllGuidelines = false;
 	}
 	
 	// Duplicate constructor
@@ -59,6 +67,7 @@ public class QueryOptions {
 		limit = options.limit;
 		propertyName = options.propertyName;
 		maxReliabilityLevel = options.maxReliabilityLevel;
+		afterYear = options.afterYear;
 		endpointMin = options.endpointMin;
 		endpointMax = options.endpointMax;
 		endpointUnits = options.endpointUnits;
@@ -73,6 +82,8 @@ public class QueryOptions {
 		pHMin = options.pHMin;
 		pHMax = options.pHMax;
 		includeNullpH = options.includeNullpH;
+		includeAllGLPCompliances = options.includeAllGLPCompliances;
+		includeAllGuidelines = options.includeAllGuidelines;
 	}
 	
 	/**
@@ -112,7 +123,7 @@ public class QueryOptions {
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.strLogKow)) {
 			endpointMin = "-1000";
-			endpointMax = "1000";
+			endpointMax = "126000000000"; // Largest non-log Pow value in eChemPortal
 			endpointUnits = "";
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
@@ -348,7 +359,7 @@ public class QueryOptions {
 		String endpointKind = getEndpointKind(propertyName);
 		QueryBlock queryBlock = new QueryBlock(endpointKind);
 		queryBlock.addInfoTypeField();
-		queryBlock.addReliabilityField(maxReliabilityLevel);
+		queryBlock.addReliabilityField(maxReliabilityLevel,includeOtherReliability);
 		
 		// Disambiguates potential unit collisions between density and solubility, pressure and HLC
 		if (endpointUnits.equals(ExperimentalConstants.str_g_L) || endpointUnits.equals(ExperimentalConstants.str_g_cm3) ||

@@ -6,7 +6,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Objects;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -33,9 +32,24 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 
-	public static void downloadAllInhalationLC50ResultsToDatabase(boolean startFresh) {
+	public static void downloadInhalationLC50ResultsToDatabase(boolean startFresh) {
 		List<Query> queries = ToxQueryOptions.generateInhalationLC50Queries();
 		String databaseName = sourceName+"_raw_inhalationlc50_json.db";
+		QueryHandler handler = new QueryHandler(1000,10);
+		int counter = 0;
+		for (Query q:queries) {
+			if (counter==0) {
+				handler.downloadQueryResultsToDatabase(q,databaseName,startFresh);
+			} else {
+				handler.downloadQueryResultsToDatabase(q,databaseName,false);
+			}
+			counter++;
+		}
+	}
+	
+	public static void downloadRepeatedDoseOralResultsToDatabase(boolean startFresh) {
+		List<Query> queries = ToxQueryOptions.generateRepeatedDoseOralQueries();
+		String databaseName = sourceName+"_raw_repeateddoseoral_json.db";
 		QueryHandler handler = new QueryHandler(1000,10);
 		int counter = 0;
 		for (Query q:queries) {
@@ -181,7 +195,7 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
-		downloadAllInhalationLC50ResultsToDatabase(true);
+		downloadRepeatedDoseOralResultsToDatabase(true);
 	}
 	
 }
