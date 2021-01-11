@@ -116,4 +116,33 @@ public class ToxUnit extends Unit {
 			break;
 		}
 	}
+	
+	public ToxUnit(String endpointKind) {
+		switch (endpointKind) {
+		case "AcuteToxicityOral":
+			phraseGroupId = "T04";
+			break;
+		case "AcuteToxicityInhalation":
+			phraseGroupId = "T07";
+			break;
+		case "AcuteToxicityDermal":
+			phraseGroupId = "T04";
+			break;
+		case "AcuteToxicityOther":
+			phraseGroupId = "T12";
+			break;
+		case "RepeatedDoseToxicityOral":
+			phraseGroupId = "T28-1";
+			break;
+		case "RepeatedDoseToxicityInhalation":
+			phraseGroupId = "T28-2";
+			break;
+		case "RepeatedDoseToxicityDermal":
+			phraseGroupId = "T28-3";
+			break;
+		case "RepeatedDoseToxicityOther":
+			phraseGroupId = "T28-5";
+			break;
+		}
+	}
 }

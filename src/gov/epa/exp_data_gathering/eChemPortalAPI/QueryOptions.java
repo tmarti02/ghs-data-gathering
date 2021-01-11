@@ -19,6 +19,7 @@ public class QueryOptions {
 	String propertyName = null;
 	int maxReliabilityLevel = 2; // Recommended
 	String afterYear = null;
+	String beforeYear = null;
 	String endpointMin = null;
 	String endpointMax = null;
 	String endpointUnits = null;
@@ -46,6 +47,7 @@ public class QueryOptions {
 		propertyName = options.propertyName;
 		maxReliabilityLevel = options.maxReliabilityLevel;
 		afterYear = options.afterYear;
+		beforeYear = options.beforeYear;
 		endpointMin = options.endpointMin;
 		endpointMax = options.endpointMax;
 		endpointUnits = options.endpointUnits;

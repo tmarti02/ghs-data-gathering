@@ -24,6 +24,10 @@ public class QueryBlock {
 	private transient String endpointKind2;
 	private transient String endpointKind3;
 	
+	public QueryBlock() {
+		queryFields = new ArrayList<QueryField>();
+	}
+	
 	public QueryBlock(String endpointKind) {
 		this.endpointKind = endpointKind;
 		
@@ -89,10 +93,17 @@ public class QueryBlock {
 	}
 	
 	public void addAfterYearField(String afterYear) {
-		Value afterYearValue = new Value("numeric","GT",afterYear,null);
+		Value afterYearValue = new Value("numeric","GT_EQUALS",afterYear,null);
 		QueryField afterYearField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".DataSource.Reference+LITERATURE.GeneralInfo.ReferenceYear",
 				"numeric","Year",afterYearValue);
 		queryFields.add(afterYearField);
+	}
+	
+	public void addBeforeYearField(String beforeYear) {
+		Value beforeYearValue = new Value("numeric","LT",beforeYear,null);
+		QueryField beforeYearField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".DataSource.Reference+LITERATURE.GeneralInfo.ReferenceYear",
+				"numeric","Year",beforeYearValue);
+		queryFields.add(beforeYearField);
 	}
 	
 	/**

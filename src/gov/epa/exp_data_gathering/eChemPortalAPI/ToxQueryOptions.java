@@ -1,12 +1,16 @@
 package gov.epa.exp_data_gathering.eChemPortalAPI;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
 public class ToxQueryOptions extends QueryOptions {
+	boolean includeAllUnits;
 	List<String> testTypes;
 	boolean includeOtherTestType;
 	boolean includeAllTestTypes;
@@ -47,9 +51,11 @@ public class ToxQueryOptions extends QueryOptions {
 		propertyName = options.propertyName;
 		maxReliabilityLevel = options.maxReliabilityLevel;
 		afterYear = options.afterYear;
+		beforeYear = options.beforeYear;
 		endpointMin = options.endpointMin;
 		endpointMax = options.endpointMax;
 		endpointUnits = options.endpointUnits;
+		includeAllUnits = options.includeAllUnits;
 		testTypes = options.testTypes;
 		species = options.species;
 		strains = options.strains;
@@ -116,32 +122,29 @@ public class ToxQueryOptions extends QueryOptions {
 		return queries;
 	}
 	
-	public static List<Query> generateRepeatedDoseOralQueries() {
-		List<Query> queries = new ArrayList<Query>();
-		String[] units = {"mg/kg bw/day (nominal)","mg/kg bw/day (actual dose received)","mg/kg diet","mg/L drinking water","mg/kg bw (total dose)","ppm"};
-		for (String unit:units) {
-			ToxQueryOptions options = new ToxQueryOptions();
-			options.propertyName = "RepeatedDoseToxicityOral";
-			options.endpointMin = "0";
-			options.endpointMax = "1000000";
-			options.endpointUnits = unit;
-			options.maxReliabilityLevel = 4;
-			options.includeOtherReliability = true;
-			options.afterYear = "1960";
-			options.includeAllGuidelines = true;
-			options.includeAllGLPCompliances = true;
-			options.includeAllEndpointTypes = true;
-			options.includeAllSpecies = true;
-			options.includeAllStrains = true;
+	public static ToxQueryOptions generateCompleteToxQueryOptions(String endpointKind) {
+		ToxQueryOptions options = new ToxQueryOptions();
+		options.propertyName = endpointKind;
+		options.endpointMin = "0";
+		options.endpointMax = "1000000";
+		options.includeAllUnits = true;
+		options.maxReliabilityLevel = 4;
+		options.includeOtherReliability = true;
+		options.afterYear = "1960";
+		options.includeAllGuidelines = true;
+		options.includeAllGLPCompliances = true;
+		if (endpointKind.contains("AcuteToxicity") && !endpointKind.contains("Other")) { options.includeAllTestTypes = true; }
+		if (endpointKind.contains("RepeatedDoseToxicity")) { options.includeAllEndpointTypes = true; }
+		options.includeAllSpecies = true;
+		options.includeAllStrains = true;
+		if (endpointKind.contains("Dermal")) {
+			options.includeAllCoverageTypes = true;
+		} else {
 			options.includeAllRoutes = true;
-			options.includeAllDoseDescriptors = true;
-			
-			Query query = new Query(5000);
-			ToxQueryBlock toxQueryBlock = options.generateToxQueryBlock();
-			query.addPropertyBlock(toxQueryBlock);
-			queries.add(query);
 		}
-		return queries;
+		if (endpointKind.contains("Inhalation")) { options.includeAllInhalationTypes = true; }
+		options.includeAllDoseDescriptors = true;
+		return options;
 	}
 	
 	/**
@@ -154,7 +157,7 @@ public class ToxQueryOptions extends QueryOptions {
 		ToxQueryOptions upperSplitOptions = new ToxQueryOptions(this);
 		double min = endpointMin==null ? Integer.MIN_VALUE : Double.parseDouble(endpointMin);
 		double max = endpointMax==null ? Integer.MAX_VALUE : Double.parseDouble(endpointMax);
-		double midpoint = min + (max - min)/2.0;
+		double midpoint = (max + min)/2.0;
 		lowerSplitOptions.endpointMax = String.valueOf(midpoint);
 		upperSplitOptions.endpointMin = String.valueOf(midpoint);
 		splitOptions.add(lowerSplitOptions);
@@ -184,6 +187,7 @@ public class ToxQueryOptions extends QueryOptions {
 		List<ToxQueryOptions> newOptions = new ArrayList<ToxQueryOptions>();
 		for (ToxQueryOptions o:options) {
 			int size = o.getQueryMaxSize();
+			System.out.println(o.endpointMin + " to " + o.endpointMax + ": " + size + " records");
 			if (size >= 10000) {
 				List<ToxQueryOptions> splitOptions = o.generateSplitOptions();
 				splitOptions = resizeAll(splitOptions);
@@ -235,7 +239,11 @@ public class ToxQueryOptions extends QueryOptions {
 		toxQueryBlock.addInfoTypeField();
 		toxQueryBlock.addReliabilityField(maxReliabilityLevel,includeOtherReliability);
 		
-		toxQueryBlock.addEffectLevelField(endpointMin,endpointMax,endpointUnits);
+		if (includeAllUnits) {
+			toxQueryBlock.addAllUnitEffectLevelField(endpointMin, endpointMax);
+		} else {
+			toxQueryBlock.addEffectLevelField(endpointMin,endpointMax,endpointUnits);
+		}
 
 		if (includeAllTestTypes) {
 			toxQueryBlock.addAllTestTypeField();
@@ -293,6 +301,10 @@ public class ToxQueryOptions extends QueryOptions {
 		
 		if (afterYear!=null) {
 			toxQueryBlock.addAfterYearField(afterYear);
+		}
+		
+		if (beforeYear!=null) {
+			toxQueryBlock.addBeforeYearField(beforeYear);
 		}
 		
 		return toxQueryBlock;

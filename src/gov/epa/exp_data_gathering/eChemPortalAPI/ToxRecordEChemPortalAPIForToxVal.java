@@ -121,7 +121,7 @@ public class ToxRecordEChemPortalAPIForToxVal {
 							if (objValue!=null) { value = objValue.toString(); }
 						}
 						
-						if (value!=null) { 
+						if (value!=null && !value.isBlank()) { 
 							String fixValue = ExperimentalRecords.reverseFixChars(StringEscapeUtils.unescapeHtml4(value));
 							row.createCell(j).setCellValue(fixValue);
 						}
@@ -243,8 +243,27 @@ public class ToxRecordEChemPortalAPIForToxVal {
 		return records;
 	}
 	
+	public static void downloadAndWriteAllToxicityResults(boolean startFresh) {
+		String[] routes = {"Other"};
+		String[] durations = {"AcuteToxicity"};
+		for (String r:routes) {
+			for (String d:durations) {
+				String endpointKind = d + r;
+				if (endpointKind.equals("AcuteToxicityOral")) { continue; }
+				if (endpointKind.equals("AcuteToxicityDermal")) { continue; }
+				ToxQueryOptions options = ToxQueryOptions.generateCompleteToxQueryOptions(endpointKind);
+				String databaseName = "Toxicity" + File.separator + "EChemPortalAPI_" + endpointKind + "_RawJSON.db";
+				options.runDownload(databaseName, startFresh);
+				
+				List<ToxRecordEChemPortalAPIForToxVal> records = getToxResultsInDatabase(databaseName);
+				
+				String excelFileName = "Toxicity" + File.separator + "EChemPortalAPI_" + endpointKind + "_Records.xlsx";
+				writeToxRecordsToExcel(records,excelFileName);
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
-		List<ToxRecordEChemPortalAPIForToxVal> records = getToxResultsInDatabase("EChemPortalAPI_raw_repeateddoseoral_json.db");
-		writeToxRecordsToExcel(records,"EChemPortalAPI_repeateddoseoral.xlsx");
+		downloadAndWriteAllToxicityResults(true);
 	}
 }

@@ -6,7 +6,7 @@ import java.util.List;
 public class ToxQueryBlock extends QueryBlock {
 	
 	public ToxQueryBlock(String endpointKind) {
-		super(endpointKind);
+		this.endpointKind = endpointKind;
 		if (endpointKind.contains("AcuteToxicity")) {
 			effectLevelString = "EffectLevels";
 		} else if (endpointKind.contains("RepeatedDoseToxicity")) {
@@ -26,6 +26,14 @@ public class ToxQueryBlock extends QueryBlock {
 		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".EffectLevel";
 		String type = "range";
 		Value endpointValue = new Value(type,lower,upper,new ToxUnit(unit,endpointKind));
+		QueryField endpoint = new QueryField(fieldName,type,"Effect Level",endpointValue);
+		queryFields.add(endpoint);
+	}
+	
+	public void addAllUnitEffectLevelField(String lower,String upper) {
+		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".EffectLevel";
+		String type = "range";
+		Value endpointValue = new Value(type,lower,upper,new ToxUnit(endpointKind));
 		QueryField endpoint = new QueryField(fieldName,type,"Effect Level",endpointValue);
 		queryFields.add(endpoint);
 	}

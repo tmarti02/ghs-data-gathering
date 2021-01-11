@@ -47,21 +47,6 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 		}
 	}
 	
-	public static void downloadRepeatedDoseOralResultsToDatabase(boolean startFresh) {
-		List<Query> queries = ToxQueryOptions.generateRepeatedDoseOralQueries();
-		String databaseName = sourceName+"_raw_repeateddoseoral_json.db";
-		QueryHandler handler = new QueryHandler(1000,10);
-		int counter = 0;
-		for (Query q:queries) {
-			if (counter==0) {
-				handler.downloadQueryResultsToDatabase(q,databaseName,startFresh);
-			} else {
-				handler.downloadQueryResultsToDatabase(q,databaseName,false);
-			}
-			counter++;
-		}
-	}
-	
 	/**
 	 * Parses raw JSON search results from a database into a vector of RecordEChemPortalAPI objects
 	 * @return		The search results as RecordEChemPortalAPI objects
@@ -194,7 +179,7 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
-		downloadRepeatedDoseOralResultsToDatabase(true);
+		// TODO
 	}
 	
 }
