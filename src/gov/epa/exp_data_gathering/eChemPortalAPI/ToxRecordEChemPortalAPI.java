@@ -66,9 +66,8 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 	 * Parses raw JSON search results from a database into a vector of RecordEChemPortalAPI objects
 	 * @return		The search results as RecordEChemPortalAPI objects
 	 */
-	public static List<ToxRecordEChemPortalAPI> parseToxResultsInDatabase() {
+	public static List<ToxRecordEChemPortalAPI> parseToxResultsInDatabase(String databaseName) {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
-		String databaseName = sourceName+"_raw_inhalationlc50_json.db";
 		String databasePath = p.databaseFolder+File.separator+databaseName;
 		List<ToxRecordEChemPortalAPI> records = new ArrayList<ToxRecordEChemPortalAPI>();
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
@@ -116,7 +115,7 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 								case "Reliability":
 									rec.reliability = value.value;
 									break;
-								case "Value":
+								case "Effect Level":
 									rec.value = value.value;
 									break;
 								case "Dose Descriptor":

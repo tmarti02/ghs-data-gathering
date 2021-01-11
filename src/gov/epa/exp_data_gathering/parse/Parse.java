@@ -32,7 +32,7 @@ public class Parse {
 	protected String fileNameExcelExperimentalRecords;
 	protected String fileNameFlatExperimentalRecordsBad;
 	protected String fileNameJsonExperimentalRecordsBad;
-	protected String mainFolder;
+	public String mainFolder;
 	
 	public static boolean generateOriginalJSONRecords=true; //runs code to generate json records from original data format (json file has all the chemicals in one file)	
 	public static boolean writeFlatFile=false;//all data converted to final format stored as flat text file

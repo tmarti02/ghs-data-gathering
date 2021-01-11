@@ -22,6 +22,9 @@ public class ToxQueryOptions extends QueryOptions {
 	List<String> inhalationTypes;
 	boolean includeOtherInhalationType;
 	boolean includeAllInhalationTypes;
+	List<String> coverageTypes;
+	boolean includeOtherCoverageType;
+	boolean includeAllCoverageTypes;
 	List<String> doseDescriptors;
 	boolean includeOtherDoseDescriptor;
 	boolean includeAllDoseDescriptors;
@@ -29,31 +32,13 @@ public class ToxQueryOptions extends QueryOptions {
 	
 	// Default null constructor
 	ToxQueryOptions() {
-		limit = 5000;
-		propertyName = null;
-		maxReliabilityLevel = 2;
-		endpointMin = null;
-		endpointMax = null;
-		endpointUnits = null;
 		testTypes = new ArrayList<String>();
 		species = new ArrayList<String>();
 		strains = new ArrayList<String>();
 		routesOfAdministration = new ArrayList<String>();
 		inhalationTypes = new ArrayList<String>();
+		coverageTypes = new ArrayList<String>();
 		doseDescriptors = new ArrayList<String>();
-		includeOtherTestType = false;
-		includeOtherSpecies = false;
-		includeOtherStrain = false;
-		includeOtherRoute = false;
-		includeOtherInhalationType = false;
-		includeOtherDoseDescriptor = false;
-		includeAllTestTypes = false;
-		includeAllSpecies = false;
-		includeAllStrains = false;
-		includeAllRoutes = false;
-		includeAllInhalationTypes = false;
-		includeAllDoseDescriptors = false;
-		includeAllEndpointTypes = false;
 	}
 	
 	// Duplicate constructor
@@ -70,18 +55,21 @@ public class ToxQueryOptions extends QueryOptions {
 		strains = options.strains;
 		routesOfAdministration = options.routesOfAdministration;
 		inhalationTypes = options.inhalationTypes;
+		coverageTypes = options.coverageTypes;
 		doseDescriptors = options.doseDescriptors;
 		includeOtherTestType = options.includeOtherTestType;
 		includeOtherSpecies = options.includeOtherSpecies;
 		includeOtherStrain = options.includeOtherStrain;
 		includeOtherRoute = options.includeOtherRoute;
 		includeOtherInhalationType = options.includeOtherInhalationType;
+		includeOtherCoverageType = options.includeOtherCoverageType;
 		includeOtherDoseDescriptor = options.includeOtherDoseDescriptor;
 		includeAllTestTypes = options.includeAllTestTypes;
 		includeAllSpecies = options.includeAllSpecies;
 		includeAllStrains = options.includeAllStrains;
 		includeAllRoutes = options.includeAllRoutes;
 		includeAllInhalationTypes = options.includeAllInhalationTypes;
+		includeAllCoverageTypes = options.includeAllCoverageTypes;
 		includeAllGLPCompliances = options.includeAllGLPCompliances;
 		includeAllGuidelines = options.includeAllGuidelines;
 		includeAllDoseDescriptors = options.includeAllDoseDescriptors;
@@ -92,7 +80,7 @@ public class ToxQueryOptions extends QueryOptions {
 		List<Query> queries = new ArrayList<Query>();
 		String[] units = {"mg/L air","mg/L air (nominal)","mg/L air (analytical)","mg/m^3 air","mg/m^3 air (nominal)","mg/m^3 air (analytical)","ppm"};
 		String[] speciesSimple = {"rat","mouse","guinea pig","rabbit"};
-		String[] doseDescriptorsBoth = {"LC50"};
+		String[] lc50 = {"LC50"};
 		
 		for (String unit:units) {
 			ToxQueryOptions simple = new ToxQueryOptions();
@@ -102,7 +90,7 @@ public class ToxQueryOptions extends QueryOptions {
 			simple.endpointUnits = unit;
 			simple.species = Arrays.asList(speciesSimple);
 			simple.includeAllRoutes = true;
-			simple.doseDescriptors = Arrays.asList(doseDescriptorsBoth);
+			simple.doseDescriptors = Arrays.asList(lc50);
 			
 			ToxQueryOptions complex = new ToxQueryOptions();
 			complex.propertyName = "AcuteToxicityInhalation";
@@ -114,7 +102,7 @@ public class ToxQueryOptions extends QueryOptions {
 			complex.includeAllStrains = true;
 			complex.includeAllInhalationTypes = true;
 			complex.includeAllRoutes = true;
-			complex.doseDescriptors = Arrays.asList(doseDescriptorsBoth);
+			complex.doseDescriptors = Arrays.asList(lc50);
 			
 			Query query = new Query(5000);
 			ToxQueryBlock simpleBlock = simple.generateToxQueryBlock();
@@ -130,12 +118,12 @@ public class ToxQueryOptions extends QueryOptions {
 	
 	public static List<Query> generateRepeatedDoseOralQueries() {
 		List<Query> queries = new ArrayList<Query>();
-		String[] units = {"mg/kg bw/day (nominal)","mg/kg bw/day (actual dose received)","mg/kg diet","mg/L drinking water","mg/kg bw (total dose)","ppm_oral"};
+		String[] units = {"mg/kg bw/day (nominal)","mg/kg bw/day (actual dose received)","mg/kg diet","mg/L drinking water","mg/kg bw (total dose)","ppm"};
 		for (String unit:units) {
 			ToxQueryOptions options = new ToxQueryOptions();
 			options.propertyName = "RepeatedDoseToxicityOral";
 			options.endpointMin = "0";
-			options.endpointMax = "100";
+			options.endpointMax = "1000000";
 			options.endpointUnits = unit;
 			options.maxReliabilityLevel = 4;
 			options.includeOtherReliability = true;
@@ -277,6 +265,12 @@ public class ToxQueryOptions extends QueryOptions {
 			toxQueryBlock.addAllInhalationTypeField();
 		} else if (inhalationTypes!=null && !inhalationTypes.isEmpty()) {
 			toxQueryBlock.addInhalationTypeField(inhalationTypes,includeOtherInhalationType);
+		}
+		
+		if (includeAllCoverageTypes) {
+			toxQueryBlock.addAllCoverageTypeField();
+		} else if (coverageTypes!=null && !coverageTypes.isEmpty()) {
+			toxQueryBlock.addCoverageTypeField(coverageTypes,includeOtherCoverageType);
 		}
 
 		if (includeAllDoseDescriptors) {

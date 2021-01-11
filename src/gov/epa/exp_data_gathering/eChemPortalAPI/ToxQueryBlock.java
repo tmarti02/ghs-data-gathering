@@ -7,9 +7,9 @@ public class ToxQueryBlock extends QueryBlock {
 	
 	public ToxQueryBlock(String endpointKind) {
 		super(endpointKind);
-		if (endpointKind.equals("AcuteToxicityInhalation")) {
+		if (endpointKind.contains("AcuteToxicity")) {
 			effectLevelString = "EffectLevels";
-		} else if (endpointKind.equals("RepeatedDoseToxicityOral")) {
+		} else if (endpointKind.contains("RepeatedDoseToxicity")) {
 			effectLevelString = "EffectLevels.Efflevel";
 		}
 	}
@@ -25,8 +25,8 @@ public class ToxQueryBlock extends QueryBlock {
 	public void addEffectLevelField(String lower,String upper,String unit) {
 		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".EffectLevel";
 		String type = "range";
-		Value endpointValue = new Value(type,lower,upper,new ToxUnit(unit));
-		QueryField endpoint = new QueryField(fieldName,type,"Value",endpointValue);
+		Value endpointValue = new Value(type,lower,upper,new ToxUnit(unit,endpointKind));
+		QueryField endpoint = new QueryField(fieldName,type,"Effect Level",endpointValue);
 		queryFields.add(endpoint);
 	}
 	
@@ -144,6 +144,26 @@ public class ToxQueryBlock extends QueryBlock {
 		queryFields.add(inhalationTypeField);
 	}
 	
+	public void addCoverageTypeField(List<String> coverageTypes,boolean includeOther) {
+		List<Value> coverageTypeValues = new ArrayList<Value>();
+		for (String c:coverageTypes) {
+			coverageTypeValues.add(new Value("EQUALS",c));
+		}
+		if (includeOther) {
+			coverageTypeValues.add(new Value("LIKE","other:*"));
+		}
+		QueryField coverageTypeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.AdministrationExposure.TypeOfCoverage",
+				"string","Coverage Type",coverageTypeValues);
+		queryFields.add(coverageTypeField);
+	}
+	
+	public void addAllCoverageTypeField() {
+		Value coverageTypeValue = new Value("LIKE","*");
+		QueryField coverageTypeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.AdministrationExposure.TypeOfCoverage",
+				"string","Coverage Type",coverageTypeValue);
+		queryFields.add(coverageTypeField);
+	}
+	
 	/**
 	 * Adds a QueryField to select dose descriptor of results
 	 * @param	List of dose descriptors to include
@@ -171,7 +191,7 @@ public class ToxQueryBlock extends QueryBlock {
 	public void addAllEndpointTypeField() {
 		Value endpointTypeValue = new Value("LIKE","*");
 		QueryField endpointTypeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".AdministrativeData.Endpoint",
-				"string","Dose Descriptor",endpointTypeValue);
+				"string","Endpoint",endpointTypeValue);
 		queryFields.add(endpointTypeField);
 	}
 }

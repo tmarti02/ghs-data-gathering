@@ -33,7 +33,7 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 	 */
 	@Override
 	protected void createRecords() {
-		List<ToxRecordEChemPortalAPI> records = ToxRecordEChemPortalAPI.parseToxResultsInDatabase();
+		List<ToxRecordEChemPortalAPI> records = ToxRecordEChemPortalAPI.parseToxResultsInDatabase(sourceName+"_raw_inhalationlc50_json.db");
 		writeOriginalRecordsToFile(new Vector<ToxRecordEChemPortalAPI>(records));
 	}
 	

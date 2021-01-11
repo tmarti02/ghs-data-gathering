@@ -38,29 +38,7 @@ public class QueryOptions {
 	boolean includeAllGuidelines = false;
 	
 	// Default null constructor
-	QueryOptions() {
-		limit = 5000;
-		propertyName = null;
-		maxReliabilityLevel = 2;
-		afterYear = null;
-		endpointMin = null;
-		endpointMax = null;
-		endpointUnits = null;
-		pressureMin = null;
-		pressureMax = null;
-		pressureUnits = null;
-		includeNullPressure = false;
-		temperatureMin = null;
-		temperatureMax = null;
-		temperatureUnits = null;
-		includeNullTemperature = false;
-		pHMin = null;
-		pHMax = null;
-		includeNullpH = false;
-		includeOtherReliability = false;
-		includeAllGLPCompliances = false;
-		includeAllGuidelines = false;
-	}
+	QueryOptions() { }
 	
 	// Duplicate constructor
 	QueryOptions(QueryOptions options) {
