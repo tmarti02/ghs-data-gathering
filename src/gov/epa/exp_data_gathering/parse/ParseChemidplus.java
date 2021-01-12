@@ -9,17 +9,29 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.RecordChemidplus.PhysicalPropertyRecord;
 import gov.epa.exp_data_gathering.parse.RecordChemidplus.ToxicityRecord;
 
 
 public class ParseChemidplus extends Parse {
 
+	String recordTypeToParse;
 	Hashtable<String, Double> htDensity = new Hashtable<String, Double>(); // density look up table, densities in g/ml
 	
-	public ParseChemidplus() {
-		sourceName = ExperimentalConstants.strSourceChemidplus;		
-		webpageFolder="database";
+	public ParseChemidplus(String recordTypeToParse) {
+		sourceName = ExperimentalConstants.strSourceChemidplus;
+		this.recordTypeToParse = recordTypeToParse;
 		super.init();
+		fileNameSourceExcel=null;
+		folderNameWebpages=null;
+		folderNameExcel=null;
+		String toxNote = recordTypeToParse.toLowerCase().contains("tox") ? " Toxicity" : "";
+		fileNameJSON_Records = sourceName +toxNote + " Original Records.json";
+		fileNameFlatExperimentalRecords = sourceName +toxNote + " Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.txt";
+		fileNameJsonExperimentalRecords = sourceName +toxNote + " Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +toxNote + " Experimental Records.xlsx";
 		loadDensityData();
 
 	}
@@ -99,8 +111,14 @@ public class ParseChemidplus extends Parse {
 	}	
 	
 	private void addExperimentalRecords(RecordChemidplus r, ExperimentalRecords recordsExperimental,UniqueValues uv) {
-
-				
+		if (recordTypeToParse.toLowerCase().contains("tox")) {
+			addToxicityExperimentalRecords(r,recordsExperimental,uv);
+		} else {
+			addPhyschemExperimentalRecords(r,recordsExperimental,uv);
+		}
+	}
+	
+	private void addToxicityExperimentalRecords(RecordChemidplus r, ExperimentalRecords recordsExperimental,UniqueValues uv) {
 		ArrayList<String> okSpecies = new ArrayList<String>();
 		okSpecies.add("mouse");// 27796
 		okSpecies.add("rat");// 13124
@@ -158,10 +176,89 @@ public class ParseChemidplus extends Parse {
 			}
 					
 		}
-
 	}
+	
+	private void addPhyschemExperimentalRecords(RecordChemidplus r, ExperimentalRecords recordsExperimental,UniqueValues uv) {
+				
+		for (int i=0;i<r.PhysicalProperties.size();i++) {
 
+			PhysicalPropertyRecord pr=r.PhysicalProperties.get(i);
 
+			ExperimentalRecord er=new ExperimentalRecord();		
+			er.casrn=r.CASRegistryNumber;
+			er.chemical_name=r.NameOfSubstance;
+							
+			if (er.chemical_name.contains("[")) {
+				er.chemical_name=er.chemical_name.substring(0,er.chemical_name.indexOf("[")).trim();
+//					System.out.println(er.chemical_name);
+			}
+			
+			er.smiles=r.Smiles;			
+			er.source_name=sourceName;
+			er.url=r.url;
+			er.date_accessed = r.date_accessed;
+			
+			double MW=0;				
+			if (r.Molecular_Weight!=null) MW=Double.parseDouble(r.Molecular_Weight);
+			
+			boolean valid = false;
+			if (pr.PhysicalProperty.equals("Boiling Point")) {
+				er.property_name = ExperimentalConstants.strBoilingPoint;
+				er.property_value_units_original = ExperimentalConstants.str_C;
+				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				valid = true;
+			} else if (pr.PhysicalProperty.equals("Henry's Law Constant")) {
+				er.property_name = ExperimentalConstants.strHenrysLawConstant;
+				er.property_value_units_original = ExperimentalConstants.str_atm_m3_mol;
+				if (pr.TempdegC!=null && !pr.TempdegC.isBlank()) { er.temperature_C = Double.parseDouble(pr.TempdegC); }
+				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				valid = true;
+			} else if (pr.PhysicalProperty.equals("log P (octanol-water)")) {
+				er.property_name = ExperimentalConstants.strLogKow;
+				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				valid = true;
+			} else if (pr.PhysicalProperty.equals("Melting Point")) {
+				er.property_name = ExperimentalConstants.strMeltingPoint;
+				er.property_value_units_original = ExperimentalConstants.str_C;
+				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				valid = true;
+			} else if (pr.PhysicalProperty.equals("pKa Dissociation Constant")) {
+				er.property_name = ExperimentalConstants.str_pKA;
+				if (pr.TempdegC!=null && !pr.TempdegC.isBlank()) { er.temperature_C = Double.parseDouble(pr.TempdegC); }
+				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				valid = true;
+			} else if (pr.PhysicalProperty.equals("Vapor Pressure")) {
+				er.property_name = ExperimentalConstants.strVaporPressure;
+				er.property_value_units_original = ExperimentalConstants.str_mmHg;
+				if (pr.TempdegC!=null && !pr.TempdegC.isBlank()) { er.temperature_C = Double.parseDouble(pr.TempdegC); }
+				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				valid = true;
+			} else if (pr.PhysicalProperty.equals("WaterSolubility")) {
+				er.property_name = ExperimentalConstants.strWaterSolubility;
+				er.property_value_units_original = ExperimentalConstants.str_mg_L;
+				if (pr.TempdegC!=null && !pr.TempdegC.isBlank()) { er.temperature_C = Double.parseDouble(pr.TempdegC); }
+				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				valid = true;
+			}
+			
+			if (valid) {
+				if (pr.Source.toLowerCase().contains("est")) {
+					er.updateNote(ExperimentalConstants.str_est);
+					er.keep = false;
+					er.reason = "Estimated";
+				}
+				
+				if (!ParseUtilities.hasIdentifiers(er)) {
+					er.keep = false;
+					er.reason = "No identifiers";
+				}
+				
+				RecordFinalizer.finalizeRecord(er);
+				
+				recordsExperimental.add(er);	
+			}	
+		}
+	}
 
 	private boolean parseAndConvertUniqueMeasurements(ExperimentalRecord er,ToxicityRecord tr,double MW,UniqueValues uv) {
 	
@@ -339,8 +436,7 @@ public class ParseChemidplus extends Parse {
 	}
 
 	public static void main(String[] args) {
-		ParseChemidplus p = new ParseChemidplus();
-		p.generateOriginalJSONRecords=false;
+		ParseChemidplus p = new ParseChemidplus("physchem");
 		p.createFiles();
 	}
 

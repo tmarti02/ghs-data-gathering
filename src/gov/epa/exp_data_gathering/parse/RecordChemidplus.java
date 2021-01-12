@@ -517,7 +517,7 @@ public class RecordChemidplus {
 			ParseChemidplusElements pce=new ParseChemidplusElements();
 			
 			while (rs.next()) {
-				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
+				// if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 				
 				String html = rs.getString("content");
 				String url = rs.getString("url");
