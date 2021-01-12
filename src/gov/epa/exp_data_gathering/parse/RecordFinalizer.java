@@ -46,7 +46,7 @@ public class RecordFinalizer {
 	
 	
 	/**
-	 * Converts to final units and assigns point estimates for any ranges within tolerance:
+	 * Converts to final units for QSAR modeling
 	 * @param er - ExperimentalRecord to convert units and store final values
 	 * 
 	 */

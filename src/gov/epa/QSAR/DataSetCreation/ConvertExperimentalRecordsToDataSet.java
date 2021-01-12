@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import gov.epa.QSAR.utilities.Inchi;
+import gov.epa.QSAR.utilities.IndigoUtilities;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
@@ -244,8 +246,6 @@ public class ConvertExperimentalRecordsToDataSet {
 	private Map<String, Vector<String>> getUniqueIdentifierMap(ExperimentalRecords records2) {
 		Map<String,Vector<String>>uniqueIdentifiers=new TreeMap<>();
 		
-		//TODO This needs to store what id_physchems have each unique identifier
-		
 		for (ExperimentalRecord record:records2) {
 //				String comboID=record.casrn+"\t"+record.chemical_name+"\t"+record.smiles+"\t"+record.einecs;				
 			
@@ -273,8 +273,6 @@ public class ConvertExperimentalRecordsToDataSet {
 	private Map<String, Vector<String>> getUniqueCASMap(ExperimentalRecords records2) {
 		Map<String,Vector<String>>uniqueIdentifiers=new TreeMap<>();
 		
-		//TODO This needs to store what id_physchems have each unique identifier
-		
 		for (ExperimentalRecord record:records2) {
 //				String comboID=record.casrn+"\t"+record.chemical_name+"\t"+record.smiles+"\t"+record.einecs;				
 			
@@ -299,9 +297,7 @@ public class ConvertExperimentalRecordsToDataSet {
 	
 	private Vector<String> getUniqueComboIDs(ExperimentalRecords records2,String del) {
 		Vector<String>uniqueIdentifiers=new Vector<>();
-		
-		//TODO This needs to store what id_physchems have each unique identifier
-		
+			
 		for (ExperimentalRecord record:records2) {
 //				String comboID=record.casrn+"\t"+record.chemical_name+"\t"+record.smiles+"\t"+record.einecs;				
 			
@@ -344,7 +340,6 @@ public class ConvertExperimentalRecordsToDataSet {
 			}
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return records;
@@ -375,7 +370,6 @@ public class ConvertExperimentalRecordsToDataSet {
 			}
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return records;
@@ -397,7 +391,6 @@ public class ConvertExperimentalRecordsToDataSet {
 			}
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return sources;
@@ -445,10 +438,8 @@ public class ConvertExperimentalRecordsToDataSet {
 		    while (s.hasNext()) {
 		        lines.add(s.nextLine());
 		    }
-
 		}
-		
-		
+				
 		for (int i=1;i<lines.size();i++) {
 			String Line=lines.get(i);
 			String ID=Line.substring(Line.indexOf("\t")+1,Line.length());
@@ -469,7 +460,8 @@ public class ConvertExperimentalRecordsToDataSet {
 	}
 	
 	/**
-	 * This version uses inchiKey1 from Structure_InChIKey to merge
+	 * 
+	 * Create flat file by merging inchiKey1 matches and omitting salts and use median prop values:
 	 * 
 	 * @param expRecords
 	 * @param folder
@@ -483,6 +475,8 @@ public class ConvertExperimentalRecordsToDataSet {
 		Set<String> keys = htRecordsInchiKey1.keySet();
 		Iterator<String> itr = keys.iterator();
 
+		System.out.println("number of keys="+keys.size());
+		
 		try {
 			
 			FileWriter fwIsomers=new FileWriter(folder+"isomers.txt");
@@ -555,7 +549,6 @@ public class ConvertExperimentalRecordsToDataSet {
 			expRecordsQSAR.toExcel_File(folder+endpoint+"QSAR_flat.xlsx", fieldNames);
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -567,8 +560,8 @@ public class ConvertExperimentalRecordsToDataSet {
 		//Sort by values:
 		Collections.sort(records, new Comparator<ExperimentalRecord>() {
 			@Override
-			public int compare(ExperimentalRecord u1, ExperimentalRecord u2) {
-				return u1.property_value_point_estimate_final.compareTo(u2.property_value_point_estimate_final);
+			public int compare(ExperimentalRecord r1, ExperimentalRecord r2) {
+				return r1.property_value_point_estimate_final.compareTo(r2.property_value_point_estimate_final);
 			}
 		});
 
@@ -578,18 +571,12 @@ public class ConvertExperimentalRecordsToDataSet {
 		//			System.out.println(i+"\t"+records.get(i).property_value_point_estimate_final);
 		//		}
 
-
 		if (records.size()==1) {
 			recs.add(records.get(0));
-
-		} else if (records.size()%2==0) {
-			//even
+		} else if (records.size()%2==0) {//even
 			int midVal=records.size()/2-1;
-
 			recs.add(records.get(midVal));
 			recs.add(records.get(midVal+1));
-
-
 		} else {//odd			
 			int midVal=records.size()/2;						
 			recs.add(records.get(midVal));					
@@ -627,8 +614,12 @@ public class ConvertExperimentalRecordsToDataSet {
 		for(ExperimentalRecord recordExp:expRecords) {
 			
 			if (!recordExp.keep) continue;
-			
-			String inchiKey1=recordExp.Structure_InChIKey.substring(0,recordExp.Structure_InChIKey.indexOf("-"));
+
+			//Use inchiKey based on original smiles:
+//			String inchiKey1=recordExp.Structure_InChIKey.substring(0,recordExp.Structure_InChIKey.indexOf("-"));
+
+			//Use qsar ready smiles to calculate inchikey:
+			String inchiKey1=IndigoUtilities.toInchiIndigo(recordExp.Structure_SMILES_2D_QSAR).inchiKey1;			
 			
 			if (htRecordsInchiKey1.get(inchiKey1)==null) {
 				ExperimentalRecords recs=new ExperimentalRecords();
@@ -682,7 +673,7 @@ public class ConvertExperimentalRecordsToDataSet {
 		long t2=System.currentTimeMillis();
 		System.out.println("time to get DSSToxInfo="+(t2-t1)/1000.0+" secs");
 		
-		
+		//Create flat file by merging inchiKey1 matches and omitting salts and use median prop values:
 		mergeIsomersContinuousOmitSalts(recordsExperimental,property, folder);
 		
 		
@@ -815,7 +806,6 @@ public class ConvertExperimentalRecordsToDataSet {
 	
 	public static void main(String[] args) {
 		ConvertExperimentalRecordsToDataSet c=new ConvertExperimentalRecordsToDataSet();
-		
 		
 		c.runRatInhalationLC50();
 //		c.runWS();		
