@@ -1,11 +1,49 @@
 package gov.epa.exp_data_gathering.parse;
 
 import org.apache.commons.text.StringEscapeUtils;
-
 import gov.epa.api.ExperimentalConstants;
 
 public class RecordFinalizer {
 
+	
+	public static void finalizeRecordAgain(ExperimentalRecord er) {
+		
+		boolean reset=false;
+		
+		if (er.property_value_units_final==null) return;
+		
+		if (er.property_name.equals(ExperimentalConstants.str_pKA) || er.property_name.equals(ExperimentalConstants.strLogKow)) {
+			
+		} else if ((er.property_name.equals(ExperimentalConstants.strMeltingPoint) || er.property_name.equals(ExperimentalConstants.strBoilingPoint) ||
+				er.property_name.equals(ExperimentalConstants.strFlashPoint))) {
+			//probably dont need to be reset
+		} else if (er.property_name.equals(ExperimentalConstants.strDensity)) {
+			
+		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
+			
+		} else if (er.property_name.equals(ExperimentalConstants.strHenrysLawConstant)) {
+			
+		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility)) {
+			
+		} else if (er.property_name.contains("LC50")) {
+			
+			if (!er.property_value_units_final.contentEquals(ExperimentalConstants.str_mg_L)) {
+				reset=true;
+			}			
+			
+		} else if (er.property_name.contains("LD50")) {
+			
+		}
+		
+		
+		if (reset) {
+			er.property_value_units_original=er.property_value_units_final;
+			er.property_value_point_estimate_original=er.property_value_point_estimate_final;
+			finalizeRecord(er);
+		}
+		
+	}
+	
 	
 	/**
 	 * Converts to final units and assigns point estimates for any ranges within tolerance:

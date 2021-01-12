@@ -32,13 +32,38 @@ public class UnitConverter {
 	public static boolean convertToxicity(ExperimentalRecord er) {
 		double conversionFactor = 1.0;
 		
+		//TODO make it work for LC50 inhalation and LD50 oral/dermal
+				
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)) {
 			// Do nothing
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_m3)) {
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_m3)
+				|| er.property_value_units_original.equals("mg/m3")) {//TODO ParseChemIDplus needs to standardize its units
 			conversionFactor = 1.0/1000.0;
+			er.flag=false;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppm)) {
+			
+			if (er.Structure_MolWt!=null) {				
+				try {
+					double MW=Double.parseDouble(er.Structure_MolWt);
+					conversionFactor = 0.001*MW/24.45;
+					er.flag=false;					
+					
+				} catch (Exception ex) {
+					er.flag = true;
+					er.updateNote("Conversion from ppm to mg/L not possible since cant parse mol wt");					
+				}
+				
+			} else {
+				er.flag = true;
+				er.updateNote("Conversion from ppm to mg/L not possible since missing mol wt");
+				
+			}
+
+			
 		} else {
 			er.flag = true;
-			er.updateNote("Conversion to mg/L not possible");
+			er.updateNote("Conversion to mg/L not possible: "+er.property_value_units_original);
+			
 		}
 		
 		if (!er.flag) {
@@ -55,6 +80,8 @@ public class UnitConverter {
 		
 		return !er.flag;
 	}
+	
+	
 	
 	
 	public static void convertTemperature(ExperimentalRecord er) {
