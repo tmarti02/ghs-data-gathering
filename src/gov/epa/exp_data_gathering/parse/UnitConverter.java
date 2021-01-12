@@ -32,7 +32,7 @@ public class UnitConverter {
 	public static boolean convertToxicity(ExperimentalRecord er) {
 		double conversionFactor = 1.0;
 		
-		//TODO make it work for LC50 inhalation and LD50 oral/dermal
+		//TODO make it work for LC50 inhalation and LD50 oral/dermal - see ParseChemidplus.parseAndConvertUniqueMeasurements
 				
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)) {
 			// Do nothing

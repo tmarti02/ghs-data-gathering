@@ -75,7 +75,7 @@ public class RecordFinalizer {
 				if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original; }
 				if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original; }
 			}
-			if (er.property_value_min_final!=null) {
+			if (er.property_value_point_estimate_final==null && er.property_value_min_final!=null) {
 				if (isWithinTolerance(er,logTolerance)) {
 					calculateFinalValueFromMinMaxAverage(er);//values are already in log units so dont need to use geometric median
 				} else if (!isWithinTolerance(er,logTolerance)) {
@@ -86,7 +86,7 @@ public class RecordFinalizer {
 		} else if ((er.property_name.equals(ExperimentalConstants.strMeltingPoint) || er.property_name.equals(ExperimentalConstants.strBoilingPoint) ||
 				er.property_name.equals(ExperimentalConstants.strFlashPoint)) && er.property_value_units_original!=null) {
 			UnitConverter.convertTemperature(er);
-			if (er.property_value_min_final!=null && isWithinTolerance(er,temperatureTolerance)) {
+			if (er.property_value_point_estimate_final==null && er.property_value_min_final!=null && isWithinTolerance(er,temperatureTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
 			} else if (er.property_value_min_final!=null && !isWithinTolerance(er,temperatureTolerance)) {
 				er.flag = true;
@@ -94,7 +94,7 @@ public class RecordFinalizer {
 			}
 		} else if (er.property_name.equals(ExperimentalConstants.strDensity)) {
 			UnitConverter.convertDensity(er);
-			if (er.property_value_min_final!=null && isWithinTolerance(er,densityTolerance)) {
+			if (er.property_value_point_estimate_final==null && er.property_value_min_final!=null && isWithinTolerance(er,densityTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
 			} else if (er.property_value_min_final!=null && !isWithinTolerance(er,densityTolerance)) {
 				er.flag = true;
@@ -102,7 +102,7 @@ public class RecordFinalizer {
 			}
 		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure) && er.property_value_units_original!=null) {
 			UnitConverter.convertPressure(er);
-			if (er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
+			if (er.property_value_point_estimate_final==null && er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
 			} else if (er.property_value_min_final!=null && !isWithinLogTolerance(er,logTolerance)) {
 				if (er.property_value_min_final==0) {
@@ -115,7 +115,7 @@ public class RecordFinalizer {
 			}
 		} else if (er.property_name.equals(ExperimentalConstants.strHenrysLawConstant) && er.property_value_units_original!=null) {
 			UnitConverter.convertHenrysLawConstant(er);
-			if (er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
+			if (er.property_value_point_estimate_final==null && er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
 			} else if (er.property_value_min_final!=null && !isWithinLogTolerance(er,logTolerance)) {
 				if (er.property_value_min_final==0) {
@@ -128,7 +128,7 @@ public class RecordFinalizer {
 			}
 		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility) && er.property_value_units_original!=null) {
 			UnitConverter.convertSolubility(er);
-			if (er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
+			if (er.property_value_point_estimate_final==null && er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
 			} else if (er.property_value_min_final!=null && !isWithinLogTolerance(er,logTolerance)) {
 				if (er.property_value_min_final==0) {
@@ -141,7 +141,8 @@ public class RecordFinalizer {
 			}
 		} else if ((er.property_name.contains("LC50") || er.property_name.contains("LD50")) && er.property_value_units_original!=null) {
 			UnitConverter.convertToxicity(er);
-			if (er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
+			
+			if (er.property_value_point_estimate_final==null && er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
 			} else if (er.property_value_min_final!=null && !isWithinLogTolerance(er,logTolerance)) {
 				if (er.property_value_min_final==0) {
