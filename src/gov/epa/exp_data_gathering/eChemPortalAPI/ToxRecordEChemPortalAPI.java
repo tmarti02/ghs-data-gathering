@@ -4,9 +4,7 @@ import java.io.File;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.commons.text.StringEscapeUtils;
 
@@ -58,10 +56,10 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		
 		try {
-			int count = 0;
-			int countEliminated = 0;
+//			int count = 0;
+//			int countEliminated = 0;
 			// Uses a HashSet to speed up duplicate checking by URL
-			HashSet<String> urlCheck = new HashSet<String>();
+//			HashSet<String> urlCheck = new HashSet<String>();
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
 			ResultSet rs = SQLite_GetRecords.getAllRecords(stat,"results");
 			while (rs.next()) {
@@ -126,7 +124,7 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 						}
 					}
 					records.add(rec);
-					count++;
+//					count++;
 					// Now handled by general deduplication code
 //					if (urlCheck.add(rec.endpointURL)) {
 //						// If URL not seen before, adds the record immediately and moves on
@@ -162,21 +160,21 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 		return records;
 	}
 	
-	private boolean recordEquals(ToxRecordEChemPortalAPI rec) {
-		if (rec==null) {
-			return false;
-		} else if (this.recordEquals((RecordEChemPortalAPI) rec) &&
-				Objects.equals(this.doseDescriptor,rec.doseDescriptor) &&
-				Objects.equals(this.testType,rec.testType) &&
-				Objects.equals(this.species,rec.species) &&
-				Objects.equals(this.strain,rec.strain) &&
-				Objects.equals(this.routeOfAdministration,rec.routeOfAdministration) &&
-				Objects.equals(this.inhalationExposureType,rec.inhalationExposureType)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+//	private boolean recordEquals(ToxRecordEChemPortalAPI rec) {
+//		if (rec==null) {
+//			return false;
+//		} else if (this.recordEquals((RecordEChemPortalAPI) rec) &&
+//				Objects.equals(this.doseDescriptor,rec.doseDescriptor) &&
+//				Objects.equals(this.testType,rec.testType) &&
+//				Objects.equals(this.species,rec.species) &&
+//				Objects.equals(this.strain,rec.strain) &&
+//				Objects.equals(this.routeOfAdministration,rec.routeOfAdministration) &&
+//				Objects.equals(this.inhalationExposureType,rec.inhalationExposureType)) {
+//			return true;
+//		} else {
+//			return false;
+//		}
+//	}
 	
 	public static void main(String[] args) {
 		// TODO

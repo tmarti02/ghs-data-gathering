@@ -1,11 +1,8 @@
 package gov.epa.exp_data_gathering.eChemPortalAPI;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -157,9 +154,17 @@ public class ToxQueryOptions extends QueryOptions {
 		ToxQueryOptions upperSplitOptions = new ToxQueryOptions(this);
 		double min = endpointMin==null ? Integer.MIN_VALUE : Double.parseDouble(endpointMin);
 		double max = endpointMax==null ? Integer.MAX_VALUE : Double.parseDouble(endpointMax);
-		double midpoint = (max + min)/2.0;
-		lowerSplitOptions.endpointMax = String.valueOf(midpoint);
-		upperSplitOptions.endpointMin = String.valueOf(midpoint);
+		if (min!=max) {
+			double midpoint = Math.floor((max + min)/2.0);
+			lowerSplitOptions.endpointMax = String.valueOf(midpoint);
+			upperSplitOptions.endpointMin = String.valueOf(midpoint);
+		} else {
+			String newYear = String.valueOf(this.afterYear + (new Date()).getYear()/2);
+			lowerSplitOptions.beforeYear = newYear;
+			lowerSplitOptions.afterYear = null;
+			upperSplitOptions.beforeYear = null;
+			upperSplitOptions.afterYear = newYear;
+		}
 		splitOptions.add(lowerSplitOptions);
 		splitOptions.add(upperSplitOptions);
 		return splitOptions;

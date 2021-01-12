@@ -4,10 +4,7 @@ import java.io.File;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Objects;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -81,8 +78,8 @@ public class RecordEChemPortalAPI {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		
 		try {
-			int count = 0;
-			int countEliminated = 0;
+//			int count = 0;
+//			int countEliminated = 0;
 			// Uses a HashSet to speed up duplicate checking by URL
 //			HashSet<String> urlCheck = new HashSet<String>();
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
@@ -137,7 +134,7 @@ public class RecordEChemPortalAPI {
 							}
 						}
 						records.add(rec);
-						count++;
+//						count++;
 						// Now handled by general deduplication code
 //						if (urlCheck.add(rec.endpointURL)) {
 //							// If URL not seen before, adds the record immediately and moves on

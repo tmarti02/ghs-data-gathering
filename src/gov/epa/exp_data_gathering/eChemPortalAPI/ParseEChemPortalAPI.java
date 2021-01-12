@@ -2,16 +2,13 @@ package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.io.File;
 import java.io.FileReader;
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.text.StringEscapeUtils;
-
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.exp_data_gathering.parse.DataRemoveDuplicateExperimentalValues;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
@@ -33,16 +30,16 @@ public class ParseEChemPortalAPI extends Parse {
 		folderNameExcel=null;
 	}
 	
-	private void benchmarkParse(int reps) {
-		double[] results = new double[reps];
-		for (int i = 0; i < reps; i++) {
-			long start = System.currentTimeMillis();
-			RecordEChemPortalAPI.parseResultsInDatabase();
-			long end = System.currentTimeMillis();
-			results[i] = (double) (end-start)/1000.0;
-		}
-		System.out.println("Time to parse all records (s): "+Arrays.toString(results));
-	}
+//	private void benchmarkParse(int reps) {
+//		double[] results = new double[reps];
+//		for (int i = 0; i < reps; i++) {
+//			long start = System.currentTimeMillis();
+//			RecordEChemPortalAPI.parseResultsInDatabase();
+//			long end = System.currentTimeMillis();
+//			results[i] = (double) (end-start)/1000.0;
+//		}
+//		System.out.println("Time to parse all records (s): "+Arrays.toString(results));
+//	}
 	
 	/**
 	 * Parses JSON entries in database to RecordPubChem objects, then saves them to a JSON file
