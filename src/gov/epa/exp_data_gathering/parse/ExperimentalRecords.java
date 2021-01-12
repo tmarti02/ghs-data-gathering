@@ -187,7 +187,11 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		}
 	}
 	
-	public void toExcel_File(String filePath) {
+	
+	public void toExcel_File(String filePath,String [] fieldNames) {
+
+		String[] headers = fieldNames;
+
 		int size = this.size();
 		Workbook wb = new XSSFWorkbook();
 		Sheet recSheet = wb.createSheet("Records");
@@ -196,7 +200,6 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		Row recHeaderRow = recSheet.createRow(1);
 		Row badSubtotalRow = badSheet.createRow(0);
 		Row badHeaderRow = badSheet.createRow(1);
-		String[] headers = ExperimentalRecord.outputFieldNames;
 		CellStyle style = wb.createCellStyle();
 		Font font = wb.createFont();
 		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
@@ -256,6 +259,12 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
+		
+	}
+		
+	public void toExcel_File(String filePath) {
+		toExcel_File(filePath,ExperimentalRecord.outputFieldNames);
 	}
 	
 	
