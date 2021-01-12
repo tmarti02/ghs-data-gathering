@@ -11,6 +11,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -492,58 +494,55 @@ public class ConvertExperimentalRecordsToDataSet {
 			int countOmittedSIDS=0;
 			
 			while (itr.hasNext()) {
-				
+
 				String inchiKey1=itr.next();					
 				ExperimentalRecords records=htRecordsInchiKey1.get(inchiKey1);
 
-				if (records.size()>1) {
-					count++;
-					
-					ExperimentalRecords recsMedian=getMedianRecs(inchiKey1,records);
+				count++;
 
-					Double finalScore=null;
-					
-					if (recsMedian.size()==1) {
-						finalScore=Double.valueOf(recsMedian.get(0).property_value_point_estimate_final);
-					} else if (recsMedian.size()==2) {
-						double val1=recsMedian.get(0).property_value_point_estimate_final;
-						double val2=recsMedian.get(1).property_value_point_estimate_final;						
-						finalScore=calculateFinalValue(val1, val2, recsMedian.get(0).property_name);						
-					} else {
-						System.out.println("recs.size="+recsMedian.size());					
-					}
-										
-					
-					if (finalScore==null) {
-						System.out.println("Cant assign final value:"+"\t"+inchiKey1);						
-						countOmittedSIDS+=records.size();
-						
-					} else {
-						ExperimentalRecord recExp=recsMedian.get(0);//use first record for info
-						recExp.property_value_point_estimate_final=finalScore;
-												
-						Vector<String>IDs=new Vector<>();
-						
-						for (ExperimentalRecord rec:recsMedian) {
-							IDs.add(rec.id_physchem);
-						}
-						recExp.id_physchem=IDs.toString();
-						
-						expRecordsQSAR.add(recExp);
-						countOmittedSIDS+=records.size()-1;
-					}
-										
-					//Store isomer info:
-					fwIsomers.write(inchiKey1+"\t"+finalScore+"\r\n");
-					for(ExperimentalRecord rt:records) {
-						fwIsomers.write(rt+"\r\n");
-					}
-					fwIsomers.write("\r\n");
+				ExperimentalRecords recsMedian=getMedianRecs(inchiKey1,records);
 
-//					System.out.println(inchiKey1+"\t"+records.size()+"\t"+finalScore);
+				Double finalScore=null;
+
+				if (recsMedian.size()==1) {
+					finalScore=Double.valueOf(recsMedian.get(0).property_value_point_estimate_final);
+				} else if (recsMedian.size()==2) {
+					double val1=recsMedian.get(0).property_value_point_estimate_final;
+					double val2=recsMedian.get(1).property_value_point_estimate_final;						
+					finalScore=calculateFinalValue(val1, val2, recsMedian.get(0).property_name);						
 				} else {
-					expRecordsQSAR.add(records.get(0));
+					System.out.println("recs.size="+recsMedian.size());					
 				}
+
+
+				if (finalScore==null) {
+					System.out.println("Cant assign final value since median values don't agree:"+"\t"+inchiKey1);						
+					countOmittedSIDS+=records.size();
+
+				} else {
+					ExperimentalRecord recExp=recsMedian.get(0);//use first record for info
+					recExp.property_value_point_estimate_final=finalScore;
+
+					Vector<String>IDs=new Vector<>();
+
+					for (ExperimentalRecord rec:recsMedian) {
+						IDs.add(rec.id_physchem);
+					}
+					recExp.id_physchem=IDs.toString();
+
+					expRecordsQSAR.add(recExp);
+					countOmittedSIDS+=records.size()-1;
+				}
+
+				//Store isomer info:
+				fwIsomers.write(inchiKey1+"\t"+finalScore+"\r\n");
+				for(ExperimentalRecord rt:records) {
+					fwIsomers.write(rt+"\r\n");
+				}
+				fwIsomers.write("\r\n");
+
+				//					System.out.println(inchiKey1+"\t"+records.size()+"\t"+finalScore);
+
 
 			}
 			fwIsomers.write("\nNumber of sets of duplicates="+count);			
@@ -564,29 +563,40 @@ public class ConvertExperimentalRecordsToDataSet {
 	}
 
 	private ExperimentalRecords getMedianRecs(String inchiKey1,ExperimentalRecords records) {
-			
-		
+
+		//Sort by values:
+		Collections.sort(records, new Comparator<ExperimentalRecord>() {
+			@Override
+			public int compare(ExperimentalRecord u1, ExperimentalRecord u2) {
+				return u1.property_value_point_estimate_final.compareTo(u2.property_value_point_estimate_final);
+			}
+		});
+
 		ExperimentalRecords recs=new ExperimentalRecords();
-		
-		
+
+		//		for (int i=0;i<records.size();i++) {
+		//			System.out.println(i+"\t"+records.get(i).property_value_point_estimate_final);
+		//		}
+
+
 		if (records.size()==1) {
 			recs.add(records.get(0));
-			
+
 		} else if (records.size()%2==0) {
 			//even
 			int midVal=records.size()/2-1;
-									
+
 			recs.add(records.get(midVal));
 			recs.add(records.get(midVal+1));
-			
-					
+
+
 		} else {//odd			
 			int midVal=records.size()/2;						
 			recs.add(records.get(midVal));					
 		}
-		
+
 		return recs;
-				
+
 	}
 	
 	
