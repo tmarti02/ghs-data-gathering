@@ -110,9 +110,6 @@ public class ParseSander extends Parse {
 
 	public static void main(String[] args) {
 		ParseSander p = new ParseSander();
-		p.mainFolder = p.mainFolder + File.separator + "General";
-		p.databaseFolder = p.mainFolder;
-		p.jsonFolder= p.mainFolder;
 		p.createFiles();
 		p.makeFullRefTxt();
 		

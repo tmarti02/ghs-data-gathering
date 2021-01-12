@@ -232,9 +232,8 @@ public class Parse {
 		ParseOPERA.main(null);
 		ParsePubChem.main(null);
 		ParseQSARDB.main(null);
-		//ParseChemBL.main(null);
 		ParseChemidplus.main(null);
-		//ParseSander.main(null);
+		ParseSander.main(null);
 
 		DataFetcher.main(null);
 	}

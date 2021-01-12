@@ -111,7 +111,7 @@ private static Vector<String> ObtainWebpages() {
 
 	// returns all html from the websites downloaded to the database
 public static Vector<String> parsePropertyLinksInDatabase() {
-	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
+	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 	String databasePath = databaseFolder+File.separator+ExperimentalConstants.strSourceSander + "_raw_html.db";
 	Vector<String> records = new Vector<>();
 	System.out.println(databasePath);
@@ -185,7 +185,7 @@ private static void getExperimentalTable(Document doc, RecordSander rs) {
  * @return	A vector of RecordSander objects containing the data from the raw HTML database
  */
 public static Vector<RecordSander> parseWebpagesInDatabase() {
-	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
+	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 	String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 	Vector<RecordSander> records = new Vector<>();
 

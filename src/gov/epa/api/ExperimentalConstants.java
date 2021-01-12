@@ -22,6 +22,7 @@ public class ExperimentalConstants {
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
 	public static final String str_mg_m3="mg/m^3";
+	public static final String str_mL_m3="mL/m^3";
 	public static final String str_mg_mL="mg/mL";
 	public static final String str_g_L="g/L";
 	public static final String str_ug_L="ug/L";
@@ -59,6 +60,11 @@ public class ExperimentalConstants {
 	public static final String str_log_atm_m3_mol="log10(atm-m3/mol)";
 	public static final String str_dimensionless_H="dimensionless H";
 	public static final String str_dimensionless_H_vol="dimensionless H (volumetric)";
+	public static final String str_mg_kg="mg/kg";
+	public static final String str_mL_kg="mL/kg";
+	public static final String str_iu_kg="iu/kg";
+	public static final String str_units_kg="units/kg";
+	public static final String str_mg="mg";
 	
 	//Other:
 	public static final String str_dec="decomposes";

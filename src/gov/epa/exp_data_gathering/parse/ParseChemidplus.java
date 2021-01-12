@@ -95,8 +95,8 @@ public class ParseChemidplus extends Parse {
 				addExperimentalRecords(r,recordsExperimental,uv);
 			}
 			
-			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
-			d.removeDuplicatesByComboID(recordsExperimental);//TODO maybe handle elsewhere?
+//			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+//			d.removeDuplicatesByComboID(recordsExperimental);//TODO maybe handle elsewhere?
 
 			
 			System.out.println("Created "+recordsExperimental.size()+" Experimental Records");
@@ -140,6 +140,7 @@ public class ParseChemidplus extends Parse {
 				ExperimentalRecord er=new ExperimentalRecord();		
 				er.casrn=r.CASRegistryNumber;
 				er.chemical_name=r.NameOfSubstance;
+				if (r.Synonyms!=null && !r.Synonyms.isEmpty()) { er.synonyms = String.join("|", r.Synonyms); }
 								
 				if (er.chemical_name.contains("[")) {
 					er.chemical_name=er.chemical_name.substring(0,er.chemical_name.indexOf("[")).trim();
@@ -150,24 +151,28 @@ public class ParseChemidplus extends Parse {
 				er.source_name=sourceName;
 				er.url=r.url;
 				
-				double MW=0;				
-				if (r.Molecular_Weight!=null) MW=Double.parseDouble(r.Molecular_Weight);
+				if (tr.Organism.contains("(")) {
+					er.property_name=tr.Organism.substring(0,tr.Organism.indexOf("(")).trim();
+				} else {
+					er.property_name=tr.Organism;
+				}
+				er.property_name=er.property_name.replaceAll("[^a-zA-Z]+","_")+"_"+tr.Route+"_"+tr.TestType;
+				er.property_name=er.property_name.trim().toLowerCase();
 				
-				boolean parseOK=parseAndConvertUniqueMeasurements(er, tr,MW,uv);
+				er.property_value_string = "Reported: "+tr.ReportedDose+"; Normalized: "+tr.NormalizedDose;
 				
-				if (parseOK && er.property_value_numeric_qualifier==null) er.keep=true;
-				else er.keep=false;
+				// boolean parseOK=parseAndConvertUniqueMeasurements(er,tr,MW,uv);
+				ParseUtilities.getToxicity(er,tr);
 				
-//				System.out.println(er.property_value_numeric_qualifier.isEmpty()+"\t"+parseOK);
+//				System.out.println(er.property_value_numeric_qualifier.isEmpty()+"\t"+parseOK);													
+//				System.out.println(er.toJSON());	
 				
-				if (er.property_value_numeric_qualifier!=null && !er.property_value_numeric_qualifier.isEmpty()) 
-					er.reason="Has numeric qualifier";										
-				if (er.property_value_point_estimate_final==null) 
-					er.reason="point_estimate_final=null";														
-//				System.out.println(er.toJSON());			
+				if (!ParseUtilities.hasIdentifiers(er)) {
+					er.keep = false;
+					er.reason = "No identifiers";
+				}
 				
-				er.property_name=tr.Organism.replace(" ", "_")+"_"+tr.Route+"_"+tr.TestType;
-				er.property_name=er.property_name.trim();
+				RecordFinalizer.finalizeRecord(er);
 				
 				recordsExperimental.add(er);			
 				
@@ -187,6 +192,7 @@ public class ParseChemidplus extends Parse {
 			ExperimentalRecord er=new ExperimentalRecord();		
 			er.casrn=r.CASRegistryNumber;
 			er.chemical_name=r.NameOfSubstance;
+			if (r.Synonyms!=null && !r.Synonyms.isEmpty()) { er.synonyms = String.join("|", r.Synonyms); }
 							
 			if (er.chemical_name.contains("[")) {
 				er.chemical_name=er.chemical_name.substring(0,er.chemical_name.indexOf("[")).trim();
@@ -198,10 +204,9 @@ public class ParseChemidplus extends Parse {
 			er.url=r.url;
 			er.date_accessed = r.date_accessed;
 			
-			double MW=0;				
-			if (r.Molecular_Weight!=null) MW=Double.parseDouble(r.Molecular_Weight);
-			
 			boolean valid = false;
+			er.property_value_string = "Value: "+pr.Value+" "+pr.Units;
+			if (pr.TempdegC!=null && !pr.TempdegC.isBlank()) { er.property_value_string = er.property_value_string + "; Temperature: "+pr.TempdegC+" deg C"; }
 			if (pr.PhysicalProperty.equals("Boiling Point")) {
 				er.property_name = ExperimentalConstants.strBoilingPoint;
 				er.property_value_units_original = ExperimentalConstants.str_C;
@@ -248,6 +253,10 @@ public class ParseChemidplus extends Parse {
 					er.reason = "Estimated";
 				}
 				
+				if (pr.Value.contains("dec")) {
+					er.updateNote(ExperimentalConstants.str_dec);
+				}
+				
 				if (!ParseUtilities.hasIdentifiers(er)) {
 					er.keep = false;
 					er.reason = "No identifiers";
@@ -279,10 +288,7 @@ public class ParseChemidplus extends Parse {
 		
 		// >=, \u2265
 		// <=, \u2264
-		if (tr.ReportedDose.contains("<") || tr.ReportedDose.contains(">") || tr.ReportedDose.contains("\u2264")
-				|| tr.ReportedDose.contains("\u2265")) {
-			er.property_value_numeric_qualifier = tr.ReportedDose.substring(0, 1);
-		}
+		
 
 		if (tr.NormalizedDose.matches(".*[a-z].*")) {
 			// finding first alphabetic
@@ -290,11 +296,8 @@ public class ParseChemidplus extends Parse {
 			Matcher m = p.matcher(tr.NormalizedDose);
 
 			if (m.find()) {
-				er.property_value_point_estimate_final = Double.parseDouble(tr.NormalizedDose.substring(0, m.start()));
-				er.property_value_units_final = tr.NormalizedDose.substring(m.start(), tr.NormalizedDose.length());												
-				
-				er.property_value_point_estimate_original=er.property_value_point_estimate_final;
-				er.property_value_units_original=er.property_value_units_final;
+				er.property_value_point_estimate_original=Double.parseDouble(tr.NormalizedDose.substring(0, m.start()));
+				er.property_value_units_original=tr.NormalizedDose.substring(m.start(), tr.NormalizedDose.length());
 			}
 		} else {
 			er.property_value_point_estimate_final = Double.parseDouble(tr.NormalizedDose);
@@ -436,7 +439,7 @@ public class ParseChemidplus extends Parse {
 	}
 
 	public static void main(String[] args) {
-		ParseChemidplus p = new ParseChemidplus("physchem");
+		ParseChemidplus p = new ParseChemidplus("toxicity");
 		p.createFiles();
 	}
 

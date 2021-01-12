@@ -478,7 +478,7 @@ public class RecordChemidplus {
 		String testType="LD50";
 		//***********************************************************************************
 
-		ParseChemidplus p=new ParseChemidplus();
+		ParseChemidplus p=new ParseChemidplus("Toxicity");
 		
 		String filePathSearchResults=p.mainFolder+File.separator+route+testType+".html";	//	
 				

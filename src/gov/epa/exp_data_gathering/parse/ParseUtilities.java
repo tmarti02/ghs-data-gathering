@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ToxRecordEChemPortalAPI;
+import gov.epa.exp_data_gathering.parse.RecordChemidplus.ToxicityRecord;
 
 public class ParseUtilities extends Parse {
 
@@ -437,6 +438,69 @@ public class ParseUtilities extends Parse {
 		return foundNumeric;
 	}
 
+	public static boolean getToxicity(ExperimentalRecord er,ToxicityRecord tr) {
+		String propertyValue = tr.NormalizedDose;
+		boolean badUnits = true;
+		int unitsIndex = -1;
+
+		if (propertyValue.toLowerCase().contains("mg/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_m3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ml/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_mL_m3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ml/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mg/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ml/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mL_kg;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ml/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("iu/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_iu_kg;
+			unitsIndex = propertyValue.toLowerCase().indexOf("iu/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("units/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_units_kg;
+			unitsIndex = propertyValue.toLowerCase().indexOf("units/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ppm")) {
+			er.property_value_units_original = ExperimentalConstants.str_ppm;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg");
+			badUnits = false;
+		}
+		
+		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		
+		String strippedReportedDose = tr.ReportedDose.replaceAll("\\s","");
+		Matcher m = Pattern.compile("\\d").matcher(strippedReportedDose);
+		if (m.find()) {
+			er.property_value_numeric_qualifier = ParseUtilities.getNumericQualifier(strippedReportedDose,m.start());
+		}
+		
+		if (strippedReportedDose.contains("H")) {
+			String strH=strippedReportedDose.substring(strippedReportedDose.lastIndexOf("/")+1,strippedReportedDose.length()-1);
+			try {
+				double h=Double.parseDouble(strH);
+				//use haber's rule that C*t=k (see DOI: 10.1093/toxsci/kfg213 that shows this might not be great approx)	
+				if (h!=4.0) {
+					er.property_value_point_estimate_original*=h/4.0;
+					er.note="Duration: "+ParseUtilities.formatDouble(h)+" H, adjusted to 4 H using Haber's law (conc*time=constant)";
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}			
+		}
+
+		return foundNumeric;
+	}
 
 	// Applicable for LogKow and pKa
 	public static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {

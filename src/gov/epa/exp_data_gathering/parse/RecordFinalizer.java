@@ -173,9 +173,9 @@ public class RecordFinalizer {
 					er.reason = "Range too wide to compute point estimate";
 				}
 			}
-		} else if ((er.property_name.contains("LC50") || er.property_name.contains("LD50")) && er.property_value_units_original!=null) {
+		} else if ((er.property_name.toLowerCase().contains("lc50") || er.property_name.toLowerCase().contains("ld50")) &&
+				er.property_value_units_original!=null) {
 			UnitConverter.convertToxicity(er);
-			
 			if (er.property_value_point_estimate_final==null && er.property_value_min_final!=null && isWithinLogTolerance(er,logTolerance)) {
 				calculateFinalValueFromMinMaxAverage(er);
 			} else if (er.property_value_min_final!=null && !isWithinLogTolerance(er,logTolerance)) {
