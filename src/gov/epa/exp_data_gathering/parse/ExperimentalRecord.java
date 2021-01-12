@@ -60,7 +60,7 @@ public class ExperimentalRecord {
 	public String Structure_InChI;
 	public String Structure_InChIKey;
 	public String Structure_Formula;
-	public String Structure_MolWt;
+	public Double Structure_MolWt;
 	public String Structure_SMILES_2D_QSAR;
 
 		
@@ -113,6 +113,7 @@ public class ExperimentalRecord {
 			"chemical_name",
 			"synonyms",
 			"smiles", 
+			"dsstox_substance_id",
 			"Substance_Name", "Substance_CASRN", "Substance_Type", "Substance_Note", "Structure_SMILES",
 			"Structure_InChI", "Structure_InChIKey", "Structure_Formula", "Structure_MolWt", "Structure_SMILES_2D_QSAR",
 			"property_name",
@@ -161,6 +162,9 @@ public class ExperimentalRecord {
 	}
 	
 	public void assignValue(String fieldName,String fieldValue) {
+		
+		if (fieldValue.isEmpty()) return;
+		
 		Field myField;
 		try {
 			myField = getClass().getDeclaredField(fieldName);

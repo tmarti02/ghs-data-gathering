@@ -42,17 +42,10 @@ public class UnitConverter {
 			er.flag=false;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppm)) {
 			
-			if (er.Structure_MolWt!=null) {				
-				try {
-					double MW=Double.parseDouble(er.Structure_MolWt);
-					conversionFactor = 0.001*MW/24.45;
-					er.flag=false;					
-					
-				} catch (Exception ex) {
-					er.flag = true;
-					er.updateNote("Conversion from ppm to mg/L not possible since cant parse mol wt");					
-				}
-				
+			if (er.Structure_MolWt!=null) {								
+				conversionFactor = 0.001*er.Structure_MolWt/24.45;
+				er.flag=false;					
+									
 			} else {
 				er.flag = true;
 				er.updateNote("Conversion from ppm to mg/L not possible since missing mol wt");

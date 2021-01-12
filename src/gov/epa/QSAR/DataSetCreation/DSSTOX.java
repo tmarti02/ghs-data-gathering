@@ -3,11 +3,8 @@ package gov.epa.QSAR.DataSetCreation;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -19,10 +16,6 @@ import java.util.Vector;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -407,6 +400,7 @@ public class DSSTOX {
 					recExp.reason="Not validated in chemreg";
 					continue;
 				}
+				recExp.dsstox_substance_id=recordChemReg.Top_HIT_DSSTox_Substance_Id;
 
 				RecordDSSTox recordDSSTox=htDSSToxSID.get(recordChemReg.Top_HIT_DSSTox_Substance_Id);
 
@@ -460,7 +454,7 @@ public class DSSTOX {
 			rec.reason="Bad Substance_Type";
 			return;
 		}
-		if (rec.Structure_MolWt==null || rec.Structure_MolWt.isEmpty()) {
+		if (rec.Structure_MolWt==null) {
 			rec.keep=false;
 			rec.reason="Missing Structure_MolWt";
 			return;			
@@ -568,7 +562,18 @@ public class DSSTOX {
 				
 				Field myFieldSrc =rDSSTox.getClass().getField(fieldName);				
 				Field myFieldDest =experimentalRecord.getClass().getField(fieldName);							
-				myFieldDest.set(experimentalRecord, myFieldSrc.get(rDSSTox));
+				
+				experimentalRecord.assignValue(fieldName, (String)myFieldSrc.get(rDSSTox));
+				
+//				if (fieldName.contentEquals("Structure_MolWt")) {
+//					 if (rDSSTox.Structure_MolWt!=null && !rDSSTox.Structure_MolWt.isEmpty()) {
+//						 Double MW=Double.valueOf(rDSSTox.Structure_MolWt);
+//						 myFieldDest.set(experimentalRecord, MW);
+//					 }
+//				} else {
+//					experimentalRecord.assignValue(fieldName, (String)myFieldSrc.get(rDSSTox));
+//				}
+				
 				
 			} catch (Exception ex){
 				ex.printStackTrace();

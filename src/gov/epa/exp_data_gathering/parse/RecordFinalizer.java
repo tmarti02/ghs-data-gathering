@@ -41,9 +41,43 @@ public class RecordFinalizer {
 			er.property_value_point_estimate_original=er.property_value_point_estimate_final;
 			finalizeRecord(er);
 		}
-		
+		finalizeRecordQSAR(er);
 	}
 	
+	
+	/**
+	 * Converts to final units and assigns point estimates for any ranges within tolerance:
+	 * @param er - ExperimentalRecord to convert units and store final values
+	 * 
+	 */
+	public static void finalizeRecordQSAR(ExperimentalRecord er) {
+		
+		if (er.property_name.equals(ExperimentalConstants.str_pKA) || er.property_name.equals(ExperimentalConstants.strLogKow)) {
+			
+		} else if ((er.property_name.equals(ExperimentalConstants.strMeltingPoint) || er.property_name.equals(ExperimentalConstants.strBoilingPoint) ||
+				er.property_name.equals(ExperimentalConstants.strFlashPoint))) {
+
+		} else if (er.property_name.equals(ExperimentalConstants.strDensity)) {
+			
+		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
+			
+		} else if (er.property_name.equals(ExperimentalConstants.strHenrysLawConstant)) {
+			
+		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility)) {
+			
+		} else if (er.property_name.contains("LC50")) {
+			
+			//need to convert units from mg/L to -log(mol/L):
+			er.property_value_point_estimate_final=-Math.log10(er.property_value_point_estimate_final/1000.0/er.Structure_MolWt);
+			er.property_value_units_final="-log10(mol/L)";
+			
+			
+		} else if (er.property_name.contains("LD50")) {
+			
+		}
+		
+		
+	}
 	
 	/**
 	 * Converts to final units and assigns point estimates for any ranges within tolerance:

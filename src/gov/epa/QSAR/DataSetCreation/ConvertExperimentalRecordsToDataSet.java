@@ -473,7 +473,7 @@ public class ConvertExperimentalRecordsToDataSet {
 	 * @param folder
 	 * @return
 	 */
-	private ExperimentalRecords mergeIsomersContinuousOmitSalts(ExperimentalRecords expRecords,String folder) {
+	private ExperimentalRecords mergeIsomersContinuousOmitSalts(ExperimentalRecords expRecords,String endpoint,String folder) {
 		ExperimentalRecords expRecordsQSAR=new ExperimentalRecords();
 
 		Hashtable<String, ExperimentalRecords> htRecordsInchiKey1 = getLookupByInchiKey1(expRecords);
@@ -499,18 +499,39 @@ public class ConvertExperimentalRecordsToDataSet {
 				if (records.size()>1) {
 					count++;
 					
-					Double finalScore=getFinalScore(inchiKey1,records);
+					ExperimentalRecords recsMedian=getMedianRecs(inchiKey1,records);
 
+					Double finalScore=null;
+					
+					if (recsMedian.size()==1) {
+						finalScore=Double.valueOf(recsMedian.get(0).property_value_point_estimate_final);
+					} else if (recsMedian.size()==2) {
+						double val1=recsMedian.get(0).property_value_point_estimate_final;
+						double val2=recsMedian.get(1).property_value_point_estimate_final;						
+						finalScore=calculateFinalValue(val1, val2, recsMedian.get(0).property_name);						
+					} else {
+						System.out.println("recs.size="+recsMedian.size());					
+					}
+										
+					
 					if (finalScore==null) {
 						System.out.println("Cant assign final value:"+"\t"+inchiKey1);						
 						countOmittedSIDS+=records.size();
 						
 					} else {
-						ExperimentalRecord recExp=new ExperimentalRecord();
-						recExp.property_value_point_estimate_final=finalScore;					
+						ExperimentalRecord recExp=recsMedian.get(0);//use first record for info
+						recExp.property_value_point_estimate_final=finalScore;
+												
+						Vector<String>IDs=new Vector<>();
+						
+						for (ExperimentalRecord rec:recsMedian) {
+							IDs.add(rec.id_physchem);
+						}
+						recExp.id_physchem=IDs.toString();
+						
 						expRecordsQSAR.add(recExp);
 						countOmittedSIDS+=records.size()-1;
-											}
+					}
 										
 					//Store isomer info:
 					fwIsomers.write(inchiKey1+"\t"+finalScore+"\r\n");
@@ -530,28 +551,64 @@ public class ConvertExperimentalRecordsToDataSet {
 			fwIsomers.flush();
 			fwIsomers.close();
 			
+			String [] fieldNames= {"id_physchem","dsstox_substance_id","casrn","Substance_Name",
+					"property_value_point_estimate_final","property_value_units_final","Structure_SMILES","Structure_SMILES_2D_QSAR"};
+			expRecordsQSAR.toExcel_File(folder+endpoint+"QSAR_flat.xlsx", fieldNames);
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-
 		return expRecordsQSAR;
 	}
 
-	private Double getFinalScore(String inchiKey1,ExperimentalRecords records) {
-		Double finalValue=null;
-		
-		if (records.size()%2==0) {
-			//even
-		} else {//odd
+	private ExperimentalRecords getMedianRecs(String inchiKey1,ExperimentalRecords records) {
 			
+		
+		ExperimentalRecords recs=new ExperimentalRecords();
+		
+		
+		if (records.size()==1) {
+			recs.add(records.get(0));
+			
+		} else if (records.size()%2==0) {
+			//even
+			int midVal=records.size()/2-1;
+									
+			recs.add(records.get(midVal));
+			recs.add(records.get(midVal+1));
+			
+					
+		} else {//odd			
+			int midVal=records.size()/2;						
+			recs.add(records.get(midVal));					
 		}
 		
-		
-		return finalValue;
+		return recs;
+				
 	}
+	
+	
+	public static Double calculateFinalValue(double val1,double val2,String property_name) {
+		double logTolerance=1.0;
+		
+		if (property_name.contains("LC50")) {
+			
+			if (Math.abs(val1-val2)<logTolerance) {
+				double finalVal=(val1+val2)/2.0;
+				return new Double(finalVal);				
+			}
+			
+		} else {
+			System.out.println("Need to handle "+property_name);
+		}
+		
+		return null;
+		
+		
+	}
+	
 
 	private Hashtable<String, ExperimentalRecords> getLookupByInchiKey1(ExperimentalRecords expRecords) {
 		Hashtable<String, ExperimentalRecords> htRecordsInchiKey1=new Hashtable<>();
@@ -616,7 +673,7 @@ public class ConvertExperimentalRecordsToDataSet {
 		System.out.println("time to get DSSToxInfo="+(t2-t1)/1000.0+" secs");
 		
 		
-//		mergeIsomersContinuousOmitSalts(recordsExperimental, folder);
+		mergeIsomersContinuousOmitSalts(recordsExperimental,property, folder);
 		
 		
 	}
