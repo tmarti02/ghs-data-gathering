@@ -19,8 +19,9 @@ public class ParseChemidplus extends Parse {
 	public ParseChemidplus() {
 		sourceName = ExperimentalConstants.strSourceChemidplus;		
 		webpageFolder="database";
-		loadDensityData();
 		super.init();
+		loadDensityData();
+
 	}
 
 	class UniqueValues {
@@ -47,7 +48,7 @@ public class ParseChemidplus extends Parse {
 	private void loadDensityData() {
 
 		ArrayList<String> lines = gov.epa.ghs_data_gathering.Utilities.Utilities
-				.readFileToArray("AA Dashboard\\Data\\Chemidplus\\density.txt");
+				.readFileToArray(mainFolder+File.separator +"density.txt");
 
 		for (int i = 1; i < lines.size(); i++) {// first line is header
 			// System.out.println(lines.get(i));
@@ -81,6 +82,11 @@ public class ParseChemidplus extends Parse {
 				RecordChemidplus r = recordsChemidplus[i];
 				addExperimentalRecords(r,recordsExperimental,uv);
 			}
+			
+			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+			d.removeDuplicatesByComboID(recordsExperimental);//TODO maybe handle elsewhere?
+
+			
 			System.out.println("Created "+recordsExperimental.size()+" Experimental Records");
 //			System.out.println(recordsExperimental.get(100).toJSON());
 
@@ -116,6 +122,12 @@ public class ParseChemidplus extends Parse {
 				ExperimentalRecord er=new ExperimentalRecord();		
 				er.casrn=r.CASRegistryNumber;
 				er.chemical_name=r.NameOfSubstance;
+								
+				if (er.chemical_name.contains("[")) {
+					er.chemical_name=er.chemical_name.substring(0,er.chemical_name.indexOf("[")).trim();
+//					System.out.println(er.chemical_name);
+				}
+				
 				er.smiles=r.Smiles;			
 				er.source_name=sourceName;
 				er.url=r.url;
@@ -125,12 +137,12 @@ public class ParseChemidplus extends Parse {
 				
 				boolean parseOK=parseAndConvertUniqueMeasurements(er, tr,MW,uv);
 				
-				if (parseOK && er.property_value_numeric_qualifier.isEmpty()) er.keep=true;
+				if (parseOK && er.property_value_numeric_qualifier==null) er.keep=true;
 				else er.keep=false;
 				
 //				System.out.println(er.property_value_numeric_qualifier.isEmpty()+"\t"+parseOK);
 				
-				if (!er.property_value_numeric_qualifier.isEmpty()) 
+				if (er.property_value_numeric_qualifier!=null && !er.property_value_numeric_qualifier.isEmpty()) 
 					er.reason="Has numeric qualifier";										
 				if (er.property_value_point_estimate_final==null) 
 					er.reason="point_estimate_final=null";														
@@ -166,7 +178,8 @@ public class ParseChemidplus extends Parse {
 		er.property_value_string=tr.NormalizedDose;
 		
 		
-		er.property_value_numeric_qualifier = "";
+//		er.property_value_numeric_qualifier = "";
+		
 		// >=, \u2265
 		// <=, \u2264
 		if (tr.ReportedDose.contains("<") || tr.ReportedDose.contains(">") || tr.ReportedDose.contains("\u2264")
@@ -327,6 +340,7 @@ public class ParseChemidplus extends Parse {
 
 	public static void main(String[] args) {
 		ParseChemidplus p = new ParseChemidplus();
+		p.generateOriginalJSONRecords=false;
 		p.createFiles();
 	}
 

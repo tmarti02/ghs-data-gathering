@@ -111,7 +111,8 @@ public class RecordChemidplus {
 
 			// if the headers contain the following strings
 			// they will execute parse method
-
+			
+			
 			if (headerTags.text().contains("Classification Codes")) {
 				parseClassificationCodes(cr, divTabs);
 			}
@@ -120,7 +121,17 @@ public class RecordChemidplus {
 				parseName(cr, divTabs);
 			} else if (innerBody.text().contains("Substance Name")) {
 				String name = innerBody.select("h1").first().text();
-				name = name.substring(16, name.indexOf("RN:")).trim();
+
+				if (name.indexOf("RN:")>-1)
+					name = name.substring(16, name.indexOf("RN:")).trim();
+				else {
+					try {
+						name=name.substring(name.indexOf(":")+1,name.indexOf("ID:")).trim();
+//							System.out.println("Couldnt trim name:"+cr.url+", name="+name);
+					} catch (Exception ex) {
+						System.out.println("Couldnt trim name:"+cr.url+", name="+name);
+					}
+				}
 
 				cr.NameOfSubstance = name;
 			}
@@ -458,13 +469,13 @@ public class RecordChemidplus {
 //		String route="inhalation";
 //		String testType="LC50";
 		//***********************************************************************************				
-		boolean startFresh=false;
-		String route="oral";
-		String testType="LD50";
-		//***********************************************************************************
 //		boolean startFresh=false;
-//				String route="skin";
+//		String route="oral";
 //		String testType="LD50";
+		//***********************************************************************************
+		boolean startFresh=false;
+				String route="skin";
+		String testType="LD50";
 		//***********************************************************************************
 
 		ParseChemidplus p=new ParseChemidplus();
@@ -519,14 +530,18 @@ public class RecordChemidplus {
 				rc.date_accessed = date.substring(0,date.indexOf(" "));
 				
 				pce.createRecordChemidplus(rc, doc);
+
 				
-				if (rc.CASRegistryNumber != null) {
-					records.add(rc);
-					counter++;
-				} else {
-					// rs.updateString("html", ExperimentalConstants.strRecordUnavailable);
-					// Updater doesn't work - JDBC version issue?
-				}
+				records.add(rc);
+				counter++;
+
+//				if (rc.CASRegistryNumber != null) {
+//					records.add(rc);
+//					counter++;
+//				} else {
+//					// rs.updateString("html", ExperimentalConstants.strRecordUnavailable);
+//					// Updater doesn't work - JDBC version issue?
+//				}
 			}
 			
 			System.out.println("Parsed "+(counter-1)+" pages");
@@ -560,6 +575,9 @@ public class RecordChemidplus {
 				
 				RawDataRecord rec=new RawDataRecord(strDate, url, "");
 				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
+
+				if (i%1000==0) System.out.println(i);
+				
 				if (!haveRecord || startFresh) {
 				
 					System.out.println(i+"\t"+url);
