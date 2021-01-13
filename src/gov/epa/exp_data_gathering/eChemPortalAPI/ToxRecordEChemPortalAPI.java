@@ -101,6 +101,9 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 								case "Effect Level":
 									rec.value = value.value;
 									break;
+								case "Value":
+									rec.value = value.value;
+									break;
 								case "Dose Descriptor":
 									rec.doseDescriptor = value.value;
 									break;

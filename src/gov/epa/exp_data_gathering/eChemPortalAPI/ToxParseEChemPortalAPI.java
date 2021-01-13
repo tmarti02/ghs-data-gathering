@@ -9,7 +9,6 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
-import gov.epa.exp_data_gathering.parse.RecordFinalizer;
 
 public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 
@@ -88,6 +87,17 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 			}
 		}
 		
+		if (r.chapter.contentEquals("Acute toxicity: inhalation")) {
+			if (!r.species.toLowerCase().contains("other")) {
+				er.property_name=r.species.replaceAll(" ","_").replaceAll(",","")+"_"+ExperimentalConstants.strInhalationLC50;
+			} else {
+				er.property_name="other_"+ExperimentalConstants.strInhalationLC50;
+				er.updateNote("Species: "+r.species.substring(r.species.indexOf(":")+1));
+			}
+		} else {
+			return;
+		}
+		
 		ParseUtilities.getToxicity(er,r);
 		er.property_value_string = "Value: "+r.value;
 		
@@ -111,7 +121,7 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 			er.property_value_string += "; "+inhalationExposureType;
 		}
 		
-		RecordFinalizer.finalizeRecord(er);
+		uc.convertRecord(er);
 		
 		if (!ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;

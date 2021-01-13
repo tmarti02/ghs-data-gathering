@@ -30,7 +30,7 @@ import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.NestedBlock;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.OriginalValue;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Result;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
-import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 public class ToxRecordEChemPortalAPIForToxVal {
 	public String name;
@@ -122,7 +122,7 @@ public class ToxRecordEChemPortalAPIForToxVal {
 						}
 						
 						if (value!=null && !value.isBlank()) { 
-							String fixValue = ExperimentalRecords.reverseFixChars(StringEscapeUtils.unescapeHtml4(value));
+							String fixValue = ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value));
 							row.createCell(j).setCellValue(fixValue);
 						}
 					}
