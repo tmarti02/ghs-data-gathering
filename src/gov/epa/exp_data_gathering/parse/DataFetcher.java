@@ -28,6 +28,7 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.QSAR.DataSetCreation.ConvertExperimentalRecordsToDataSet;
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_Utilities;
 
@@ -320,18 +321,5 @@ public class DataFetcher {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-	}
-	
-	public static void main(String[] args) {
-
-		String[] sources = {"eChemPortalAPI","LookChem","PubChem","OChem","OFMPub","OPERA","QSARDB","Bradley","ADDoPT","AqSolDB","Sander","ChemicalBook","ChemIDplus"};
-
-		DataFetcher d = new DataFetcher(sources);
-		d.createExperimentalRecordsDatabase();
-//		d.createExperimentalRecordsJSON();
-//		String[] cas = {"335-76-2","3108-42-7","3830-45-3","375-95-1","4149-60-4","307-24-4","355-46-4","3871-99-6","375-22-4","10495-86-0"};
-//		d.createExperimentalRecordsSubsetJSON(cas, "ExperimentalRecords_CPHEA_120220.json");
-//		d.createExperimentalRecordsSubsetExcel(cas, "ExperimentalRecords_CPHEA_120220.xlsx");
-//		d.createUniqueIdentifiersExcel("eChemPortal");
 	}
 }

@@ -10,6 +10,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ParseEChemPortalAPI;
 
 public class Parse {
@@ -94,60 +95,6 @@ public class Parse {
 
 		System.out.println("Going through original records");
 		ExperimentalRecords records=goThroughOriginalRecords();
-//		records.dontKeepNumericQualifierRecords();
-		records.addSourceBasedIDNumbers();
-		
-		DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
-		d.removeDuplicates(records,sourceName);	
-		
-		ExperimentalRecords recordsBad = records.dumpBadRecords();
-
-		if (writeFlatFile) {
-			System.out.println("Writing flat file for chemical records");
-			records.toFlatFile(mainFolder+File.separator+fileNameFlatExperimentalRecords,"|");
-			recordsBad.toFlatFile(mainFolder+File.separator+fileNameFlatExperimentalRecordsBad,"|");
-		}
-		
-		if (writeJsonExperimentalRecordsFile) {
-			System.out.println("Writing json file for chemical records");
-			records.toJSON_File(mainFolder+File.separator+fileNameJsonExperimentalRecords);
-			recordsBad.toJSON_File(mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
-		}
-		
-		if (writeExcelExperimentalRecordsFile) {
-			System.out.println("Writing Excel file for chemical records");
-			ExperimentalRecords merge = new ExperimentalRecords();
-			merge.addAll(records);
-			merge.addAll(recordsBad);
-			if (merge.size() <= 100000) {
-				merge.toExcel_File(mainFolder+File.separator+fileNameExcelExperimentalRecords);
-			} else {
-				ExperimentalRecords temp = new ExperimentalRecords();
-				Iterator<ExperimentalRecord> it = merge.iterator();
-				int i = 0;
-				int batch = 0;
-				while (it.hasNext()) {
-					temp.add(it.next());
-					i++;
-					if (i!=0 && i%100000==0) {
-						batch++;
-						temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
-						temp.removeAllElements();
-					}
-				}
-				batch++;
-				temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
-			}
-		}
-		
-		System.out.println("done\n");
-	}
-	
-	// Runs createFiles() process from original records file, rather than recreating original records from source data
-	public void createFilesFromOriginalRecords() {
-		System.out.println("Going through original records");
-		ExperimentalRecords records=goThroughOriginalRecords();
-//		records.dontKeepNumericQualifierRecords();
 		records.addSourceBasedIDNumbers();
 		
 		DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
@@ -219,23 +166,81 @@ public class Parse {
 		}
 	}
 	
+	public static void runParse(String sourceName,String recordTypeToParse) {
+		Parse p = null;
+		switch (sourceName) {
+		case ExperimentalConstants.strSourceADDoPT:
+			p = new ParseADDoPT();
+			break;
+		case ExperimentalConstants.strSourceAqSolDB:
+			p = new ParseAqSolDB();
+			break;
+		case ExperimentalConstants.strSourceBradley:
+			p = new ParseBradley();
+			break;
+		case ExperimentalConstants.strSourceChemBL:
+			p = new ParseChemBL();
+			break;
+		case ExperimentalConstants.strSourceChemicalBook:
+			p = new ParseChemicalBook();
+			p.generateOriginalJSONRecords = false;
+			break;
+		case ExperimentalConstants.strSourceChemidplus:
+			p = new ParseChemidplus(recordTypeToParse);
+			break;
+		case ExperimentalConstants.strSourceEChemPortal:
+			System.out.println("Warning: Parsing eChemPortal Excel download results. Did you want eChemPortal API results instead?");
+			p = new ParseEChemPortal();
+			break;
+		case ExperimentalConstants.strSourceEChemPortalAPI:
+			p = new ParseEChemPortalAPI();
+			break;
+		case ExperimentalConstants.strSourceLookChem:
+			String[] arr = {"General","PFAS"};
+			p = new ParseLookChem(arr);
+			break;
+		case ExperimentalConstants.strSourceOChem:
+			p = new ParseOChem();
+			break;
+		case ExperimentalConstants.strSourceOFMPub:
+			p = new ParseOFMPub();
+			break;
+		case ExperimentalConstants.strSourceOPERA:
+			p = new ParseOPERA();
+			p.generateOriginalJSONRecords = false;
+			break;
+		case ExperimentalConstants.strSourcePubChem:
+			p = new ParsePubChem();
+			break;
+		case ExperimentalConstants.strSourceQSARDB:
+			p = new ParseQSARDB();
+			break;
+		case ExperimentalConstants.strSourceSander:
+			p = new ParseSander();
+			break;
+		}
+		p.createFiles();
+	}
+	
 	public static void main(String[] args) {
-		ParseADDoPT.main(null);
-		ParseAqSolDB.main(null);
-		ParseBradley.main(null);
-		ParseChemicalBook.main(null);
-		ParseEChemPortalAPI.main(null);
-		String[] lookChemArgs = {"General","PFAS"};
-		ParseLookChem.main(lookChemArgs);
-		ParseOChem.main(null);
-		ParseOFMPub.main(null);
-		ParseOPERA.main(null);
-		ParsePubChem.main(null);
-		ParseQSARDB.main(null);
-		ParseChemidplus.main(null);
-		ParseSander.main(null);
-
-		DataFetcher.main(null);
+		String[] sources = {ExperimentalConstants.strSourceADDoPT,
+				ExperimentalConstants.strSourceAqSolDB,
+				ExperimentalConstants.strSourceBradley,
+				ExperimentalConstants.strSourceChemicalBook,
+				ExperimentalConstants.strSourceChemidplus,
+				ExperimentalConstants.strSourceEChemPortalAPI,
+				ExperimentalConstants.strSourceLookChem,
+				ExperimentalConstants.strSourceOChem,
+				ExperimentalConstants.strSourceOFMPub,
+				ExperimentalConstants.strSourceOPERA,
+				ExperimentalConstants.strSourcePubChem,
+				ExperimentalConstants.strSourceQSARDB,
+				ExperimentalConstants.strSourceSander};
+		for (String s:sources) {
+			runParse(s,"physchem");
+		}
+		DataFetcher d = new DataFetcher(sources);
+		d.createExperimentalRecordsDatabase();
 	}
 }
 
