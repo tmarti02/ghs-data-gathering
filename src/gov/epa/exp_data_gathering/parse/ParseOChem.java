@@ -147,7 +147,7 @@ public class ParseOChem extends Parse {
 			er.reason = "Estimated";
 		}
 		
-		RecordFinalizer.finalizeRecord(er);
+		uc.convertRecord(er);
 		records.add(er);
 	}
 	

@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -27,16 +28,13 @@ import gov.epa.QSAR.utilities.IndigoUtilities;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.exp_data_gathering.parse.DataFetcher;
-import gov.epa.exp_data_gathering.parse.DataRemoveDuplicateExperimentalValues;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
-import gov.epa.exp_data_gathering.parse.RecordFinalizer;
 
 public class ConvertExperimentalRecordsToDataSet {
 
 //	public static final String databasePathExperimentalRecords="databases/ExperimentalRecords.db";
-	public static final String databasePathExperimentalRecords="data/experimental/ExperimentalRecords.db";
+//	public static final String databasePathExperimentalRecords="Data/Experimental/ExperimentalRecords.db";
 	
 	void go2(String property) {
 ////	//Get chemreg export (needed to determine if validated)
@@ -321,7 +319,7 @@ public class ConvertExperimentalRecordsToDataSet {
 
 	
 	
-	private ExperimentalRecords getExperimentalRecordsFromDB(String property,String source_name) {
+	private ExperimentalRecords getExperimentalRecordsFromDB(String property,String source_name,String expRecordsDBPath) {
 
 		ExperimentalRecords records=new ExperimentalRecords();
 		
@@ -329,7 +327,7 @@ public class ConvertExperimentalRecordsToDataSet {
 				+ "and source_name=\""+source_name+"\"\r\n"+ "order by casrn";
 		
 		try {
-			Connection conn=SQLite_Utilities.getConnection(databasePathExperimentalRecords);
+			Connection conn=SQLite_Utilities.getConnection(expRecordsDBPath);
 			Statement stat=conn.createStatement();
 			ResultSet rs = stat.executeQuery(sql);
 			
@@ -351,7 +349,7 @@ public class ConvertExperimentalRecordsToDataSet {
 
 
 	
-	ExperimentalRecords getExperimentalRecordsFromDB(String property) {
+	ExperimentalRecords getExperimentalRecordsFromDB(String property,String expRecordsDBPath) {
 
 		ExperimentalRecords records=new ExperimentalRecords();
 		
@@ -359,7 +357,7 @@ public class ConvertExperimentalRecordsToDataSet {
 				+ "\r\n"+ "order by casrn";
 		
 		try {
-			Connection conn=SQLite_Utilities.getConnection(databasePathExperimentalRecords);
+			Connection conn=SQLite_Utilities.getConnection(expRecordsDBPath);
 			Statement stat=conn.createStatement();
 			ResultSet rs = stat.executeQuery(sql);
 			
@@ -463,14 +461,14 @@ public class ConvertExperimentalRecordsToDataSet {
 	 * 
 	 * Create flat file by merging inchiKey1 matches and omitting salts and use median prop values:
 	 * 
-	 * @param expRecords
+	 * @param qsarRecords
 	 * @param folder
 	 * @return
 	 */
-	private ExperimentalRecords mergeIsomersContinuousOmitSalts(ExperimentalRecords expRecords,String endpoint,String folder) {
-		ExperimentalRecords expRecordsQSAR=new ExperimentalRecords();
+	private List<RecordQSAR> mergeIsomersContinuousOmitSalts(List<RecordQSAR> qsarRecords,String endpoint,String folder) {
+		List<RecordQSAR> mergedRecords=new ArrayList<RecordQSAR>();
 
-		Hashtable<String, ExperimentalRecords> htRecordsInchiKey1 = getLookupByInchiKey1(expRecords);
+		Hashtable<String, List<RecordQSAR>> htRecordsInchiKey1 = getLookupByInchiKey1(qsarRecords);
 
 		Set<String> keys = htRecordsInchiKey1.keySet();
 		Iterator<String> itr = keys.iterator();
@@ -490,19 +488,19 @@ public class ConvertExperimentalRecordsToDataSet {
 			while (itr.hasNext()) {
 
 				String inchiKey1=itr.next();					
-				ExperimentalRecords records=htRecordsInchiKey1.get(inchiKey1);
+				List<RecordQSAR> records=htRecordsInchiKey1.get(inchiKey1);
 
 				count++;
 
-				ExperimentalRecords recsMedian=getMedianRecs(inchiKey1,records);
+				List<RecordQSAR> recsMedian=getMedianRecs(inchiKey1,records);
 
 				Double finalScore=null;
 
 				if (recsMedian.size()==1) {
-					finalScore=Double.valueOf(recsMedian.get(0).property_value_point_estimate_final);
+					finalScore=Double.valueOf(recsMedian.get(0).property_value_point_estimate_qsar);
 				} else if (recsMedian.size()==2) {
-					double val1=recsMedian.get(0).property_value_point_estimate_final;
-					double val2=recsMedian.get(1).property_value_point_estimate_final;						
+					double val1=recsMedian.get(0).property_value_point_estimate_qsar;
+					double val2=recsMedian.get(1).property_value_point_estimate_qsar;						
 					finalScore=calculateFinalValue(val1, val2, recsMedian.get(0).property_name);						
 				} else {
 					System.out.println("recs.size="+recsMedian.size());					
@@ -514,23 +512,23 @@ public class ConvertExperimentalRecordsToDataSet {
 					countOmittedSIDS+=records.size();
 
 				} else {
-					ExperimentalRecord recExp=recsMedian.get(0);//use first record for info
-					recExp.property_value_point_estimate_final=finalScore;
+					RecordQSAR qr=recsMedian.get(0);//use first record for info
+					qr.property_value_point_estimate_qsar=finalScore;
 
 					Vector<String>IDs=new Vector<>();
 
-					for (ExperimentalRecord rec:recsMedian) {
+					for (RecordQSAR rec:recsMedian) {
 						IDs.add(rec.id_physchem);
 					}
-					recExp.id_physchem=IDs.toString();
+					qr.id_physchem=IDs.toString();
 
-					expRecordsQSAR.add(recExp);
+					mergedRecords.add(qr);
 					countOmittedSIDS+=records.size()-1;
 				}
 
 				//Store isomer info:
 				fwIsomers.write(inchiKey1+"\t"+finalScore+"\r\n");
-				for(ExperimentalRecord rt:records) {
+				for(RecordQSAR rt:records) {
 					fwIsomers.write(rt+"\r\n");
 				}
 				fwIsomers.write("\r\n");
@@ -545,27 +543,27 @@ public class ConvertExperimentalRecordsToDataSet {
 			fwIsomers.close();
 			
 			String [] fieldNames= {"id_physchem","dsstox_substance_id","casrn","Substance_Name",
-					"property_value_point_estimate_final","property_value_units_final","Structure_SMILES","Structure_SMILES_2D_QSAR"};
-			expRecordsQSAR.toExcel_File(folder+endpoint+"QSAR_flat.xlsx", fieldNames);
+					"property_value_point_estimate_qsar","property_value_units_qsar","Structure_SMILES","Structure_SMILES_2D_QSAR"};
+			RecordQSAR.writeListToExcelFile(mergedRecords,fieldNames,folder+endpoint+"QSAR_flat.xlsx");
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		return expRecordsQSAR;
+		return mergedRecords;
 	}
 
-	private ExperimentalRecords getMedianRecs(String inchiKey1,ExperimentalRecords records) {
+	private List<RecordQSAR> getMedianRecs(String inchiKey1,List<RecordQSAR> records) {
 
 		//Sort by values:
-		Collections.sort(records, new Comparator<ExperimentalRecord>() {
+		Collections.sort(records, new Comparator<RecordQSAR>() {
 			@Override
-			public int compare(ExperimentalRecord r1, ExperimentalRecord r2) {
-				return r1.property_value_point_estimate_final.compareTo(r2.property_value_point_estimate_final);
+			public int compare(RecordQSAR r1, RecordQSAR r2) {
+				return r1.property_value_point_estimate_qsar.compareTo(r2.property_value_point_estimate_qsar);
 			}
 		});
 
-		ExperimentalRecords recs=new ExperimentalRecords();
+		List<RecordQSAR> recs=new ArrayList<RecordQSAR>();
 
 		//		for (int i=0;i<records.size();i++) {
 		//			System.out.println(i+"\t"+records.get(i).property_value_point_estimate_final);
@@ -607,27 +605,31 @@ public class ConvertExperimentalRecordsToDataSet {
 	}
 	
 
-	private Hashtable<String, ExperimentalRecords> getLookupByInchiKey1(ExperimentalRecords expRecords) {
-		Hashtable<String, ExperimentalRecords> htRecordsInchiKey1=new Hashtable<>();
+	private Hashtable<String, List<RecordQSAR>> getLookupByInchiKey1(List<RecordQSAR> qsarRecords) {
+		Hashtable<String, List<RecordQSAR>> htRecordsInchiKey1=new Hashtable<>();
 
 		//Make hashtable of records based on InChiKey1:
-		for(ExperimentalRecord recordExp:expRecords) {
+		for(RecordQSAR qr:qsarRecords) {
 			
-			if (!recordExp.keep) continue;
+			if (!qr.usable) continue;
 
 			//Use inchiKey based on original smiles:
 //			String inchiKey1=recordExp.Structure_InChIKey.substring(0,recordExp.Structure_InChIKey.indexOf("-"));
 
 			//Use qsar ready smiles to calculate inchikey:
-			String inchiKey1=IndigoUtilities.toInchiIndigo(recordExp.Structure_SMILES_2D_QSAR).inchiKey1;			
+			Inchi inchiIndigo=IndigoUtilities.toInchiIndigo(qr.Structure_SMILES_2D_QSAR);
+			
+			if (inchiIndigo==null) continue;
+			
+			String inchiKey1 = inchiIndigo.inchiKey1;
 			
 			if (htRecordsInchiKey1.get(inchiKey1)==null) {
-				ExperimentalRecords recs=new ExperimentalRecords();
-				recs.add(recordExp);
+				List<RecordQSAR> recs=new ArrayList<RecordQSAR>();
+				recs.add(qr);
 				htRecordsInchiKey1.put(inchiKey1,recs);
 			} else {
-				ExperimentalRecords recs=htRecordsInchiKey1.get(inchiKey1);
-				recs.add(recordExp);
+				List<RecordQSAR> recs=htRecordsInchiKey1.get(inchiKey1);
+				recs.add(qr);
 			}							
 
 		}
@@ -637,24 +639,29 @@ public class ConvertExperimentalRecordsToDataSet {
 	void runRatInhalationLC50() {
 		
 		String property=ExperimentalConstants.strRatInhalationLC50;		
-		String folder = "data\\DataSets\\"+property+"\\";
+		String folder = "Data\\DataSets\\"+property+"\\";
 
-		String filepathExcel="data\\experimental\\eChemPortalAPI\\eChemPortalAPI Toxicity Experimental Records.xlsx";
-		ExperimentalRecords recordsExcel = ExperimentalRecords.loadFromExcel(filepathExcel);		
-		ExperimentalRecords recordsEchemportal=getRecordsWithProperty(property, recordsExcel);			
-
-		
-		String jsonPath="data\\experimental\\ChemIDplus\\ChemIDplus Experimental Records.json";
-//		ExperimentalRecords recordsChemIDplus=getExperimentalRecordsFromDB(property,ExperimentalConstants.strSourceChemidplus);
-		ExperimentalRecords recordsJson=ExperimentalRecords.loadFromJSON(jsonPath);
-		ExperimentalRecords recordsChemIDplus=getRecordsWithProperty(property, recordsJson);
+//		String filepathExcel="Data\\Experimental\\eChemPortalAPI\\eChemPortalAPI Toxicity Experimental Records.xlsx";
+//		ExperimentalRecords recordsExcel = ExperimentalRecords.loadFromExcel(filepathExcel);		
+//		ExperimentalRecords recordsEchemportal=getRecordsWithProperty(property, recordsExcel);			
+//
+//		
+//		String jsonPath="Data\\Experimental\\ChemIDplus\\ChemIDplus Toxicity Experimental Records.json";
+////		ExperimentalRecords recordsChemIDplus=getExperimentalRecordsFromDB(property,ExperimentalConstants.strSourceChemidplus);
+//		ExperimentalRecords recordsJson=ExperimentalRecords.loadFromJSON(jsonPath);
+//		ExperimentalRecords recordsChemIDplus=getRecordsWithProperty(property, recordsJson);
 //		System.out.println("Chemidplus record count="+recordsChemIDplus.size());
-					
-		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
-		recordsExperimental.addAll(recordsEchemportal);
-		recordsExperimental.addAll(recordsChemIDplus);		
 		
-		omitBadQSARRecords(recordsExperimental);
+		String toxRecordsDBPath = "Data\\Experimental\\ToxicityRecords.db";
+		ExperimentalRecords recordsDB = getExperimentalRecordsFromDB(property,toxRecordsDBPath);
+					
+		List<RecordQSAR> recordsQSAR=new ArrayList<RecordQSAR>();
+//		recordsQSAR.addAll(RecordQSAR.getValidQSARRecordsFromExperimentalRecords(recordsEchemportal));
+//		recordsQSAR.addAll(RecordQSAR.getValidQSARRecordsFromExperimentalRecords(recordsChemIDplus));	
+		recordsQSAR.addAll(RecordQSAR.getValidQSARRecordsFromExperimentalRecords(recordsDB));
+		
+		// Bad records skipped when creating List<RecordQSAR> from ExperimentalRecords
+//		omitBadQSARRecords(recordsQSAR);
 		
 		//TODO add method to remove duplicates where have echemportal and chemidplus for same chemical!
 //		getListOfComboIDsForGoodRecords(property, records);	
@@ -669,35 +676,33 @@ public class ConvertExperimentalRecordsToDataSet {
 		
 		long t1=System.currentTimeMillis();
 		boolean omitSalts=true;
-		DSSTOX.goThroughToxRecords2(recordsExperimental,recordsChemReg,recordsDSSTox,folder,property,omitSalts);
+		DSSTOX.goThroughToxRecords2(recordsQSAR,recordsChemReg,recordsDSSTox,folder,property,omitSalts);
 		long t2=System.currentTimeMillis();
 		System.out.println("time to get DSSToxInfo="+(t2-t1)/1000.0+" secs");
 		
 		//Create flat file by merging inchiKey1 matches and omitting salts and use median prop values:
-		mergeIsomersContinuousOmitSalts(recordsExperimental,property, folder);
-		
-		
+		mergeIsomersContinuousOmitSalts(recordsQSAR,property, folder);
 	}
 
 
-	private void omitBadQSARRecords(ExperimentalRecords records) {
-		int count=0;
-		for (int i=0;i<records.size();i++) {
-			ExperimentalRecord rec=records.get(i);					
-			//Filtering QSAR worthy records:			
-			omitBadQSARRecord(count, rec);										
-			if (!rec.keep) continue;			
-			count++;
-//			System.out.println(count+"\t"+rec.property_value_point_estimate_final+"\t"+rec.property_value_units_final);
-		}
-	}
+//	private void omitBadQSARRecords(ExperimentalRecords records) {
+//		int count=0;
+//		for (int i=0;i<records.size();i++) {
+//			ExperimentalRecord rec=records.get(i);					
+//			//Filtering QSAR worthy records:			
+//			omitBadQSARRecord(count, rec);										
+//			if (!rec.keep) continue;			
+//			count++;
+////			System.out.println(count+"\t"+rec.property_value_point_estimate_final+"\t"+rec.property_value_units_final);
+//		}
+//	}
 	
 	void runWS() {
 		
 		String property=ExperimentalConstants.strWaterSolubility;		
 		String folder = "data\\DataSets\\"+property+"\\";
 					
-		ExperimentalRecords records=getExperimentalRecordsFromDB(property);
+		ExperimentalRecords records=getExperimentalRecordsFromDB(property,"Data\\Experimental\\ExperimentalRecords.db");
 		
 		int count=0;
 			
@@ -705,7 +710,7 @@ public class ConvertExperimentalRecordsToDataSet {
 			ExperimentalRecord rec=records.get(i);					
 
 			//Filtering QSAR worthy records:			
-			omitBadQSARRecord(count, rec);
+//			omitBadQSARRecord(count, rec);
 		
 			//WS depends a lot on temperature:
 			if (rec.temperature_C!=null && (rec.temperature_C>30 || rec.temperature_C<20)) {
@@ -780,28 +785,28 @@ public class ConvertExperimentalRecordsToDataSet {
 		
 	}
 
-	private void omitBadQSARRecord(int count, ExperimentalRecord rec) {
-		if (rec.property_value_numeric_qualifier!=null && !rec.property_value_numeric_qualifier.contentEquals("~")) {
+//	private void omitBadQSARRecord(int count, ExperimentalRecord rec) {
+//		if (rec.property_value_numeric_qualifier!=null && !rec.property_value_numeric_qualifier.contentEquals("~")) {
+////				System.out.println(count+"\t"+rec.toJSON());
+//			rec.keep=false;
+//			rec.reason="bad qualifier";
+//			
+//		} else if (rec.reason!=null && rec.reason.contains("Range too wide to compute point estimate")) {
+////				System.out.println(count+"\t"+rec.toJSON());
+//			rec.keep=false;
+//			
+//		} else if (rec.property_value_point_estimate_final==null && rec.property_value_max_final==null) {					
+//			rec.keep=false;
+//			rec.reason="no point estimate or max value";
+//		} else if (rec.property_value_point_estimate_final==null && rec.property_value_max_final!=null) {
+////				RecordFinalizer.finalizeRecord(rec);				
+//			if (rec.property_value_point_estimate_final==null) {
 //				System.out.println(count+"\t"+rec.toJSON());
-			rec.keep=false;
-			rec.reason="bad qualifier";
-			
-		} else if (rec.reason!=null && rec.reason.contains("Range too wide to compute point estimate")) {
-//				System.out.println(count+"\t"+rec.toJSON());
-			rec.keep=false;
-			
-		} else if (rec.property_value_point_estimate_final==null && rec.property_value_max_final==null) {					
-			rec.keep=false;
-			rec.reason="no point estimate or max value";
-		} else if (rec.property_value_point_estimate_final==null && rec.property_value_max_final!=null) {
-//				RecordFinalizer.finalizeRecord(rec);				
-			if (rec.property_value_point_estimate_final==null) {
-				System.out.println(count+"\t"+rec.toJSON());
-				rec.keep=false;
-				rec.reason="no point estimate but have max value";
-			}
-		}
-	}
+//				rec.keep=false;
+//				rec.reason="no point estimate but have max value";
+//			}
+//		}
+//	}
 	
 	
 	public static void main(String[] args) {
@@ -810,19 +815,19 @@ public class ConvertExperimentalRecordsToDataSet {
 		c.runRatInhalationLC50();
 //		c.runWS();		
 		
-		if (true) return;
-		
-		Statement stat=SQLite_Utilities.getStatement(databasePathExperimentalRecords);
-
-		
-		String property=ExperimentalConstants.strWaterSolubility;
-//		String property=ExperimentalConstants.strBoilingPoint;
-//		String property=ExperimentalConstants.strRatInhalationLC50;
-
-		String folder = "data\\DataSets\\"+property+"\\";
-
-		
-		System.out.println(property);
+//		if (true) return;
+//		
+//		Statement stat=SQLite_Utilities.getStatement("Data\\Experimental\\ExperimentalRecords.db");
+//
+//		
+//		String property=ExperimentalConstants.strWaterSolubility;
+////		String property=ExperimentalConstants.strBoilingPoint;
+////		String property=ExperimentalConstants.strRatInhalationLC50;
+//
+//		String folder = "data\\DataSets\\"+property+"\\";
+//
+//		
+//		System.out.println(property);
 
 		//Get unique list of sources for the property:
 //		Vector<String>sources=c.getSourceList(stat,property);

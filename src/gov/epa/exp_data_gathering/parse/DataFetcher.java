@@ -37,14 +37,19 @@ public class DataFetcher {
 	private static ExperimentalRecords records;
 	
 	public static final String mainFolder = "Data"+File.separator+"Experimental";
-	public static final String databasePath = mainFolder+File.separator+"ExperimentalRecords.db";
-	public static final String jsonPath = mainFolder+File.separator+"ExperimentalRecords.json";
+	public String databasePath;
+	public String jsonPath;
 	
-	public DataFetcher(String[] sources) {
+	public DataFetcher(String[] sources,String recordType) {
+		String fileName = recordType.toLowerCase().contains("tox") ? "ToxicityRecords" : "ExperimentalRecords";
+		databasePath = mainFolder+File.separator+fileName+".db";
+		jsonPath = mainFolder+File.separator+fileName+".json";
+		
 		records = new ExperimentalRecords();
 		for (String source:sources) {
-			String recordFilePath = mainFolder+File.separator+source+File.separator+source+" Experimental Records.json";
-			String badRecordFilePath = mainFolder+File.separator+source+File.separator+source+" Experimental Records-Bad.json";
+			String toxNote = recordType.toLowerCase().contains("tox") ? " Toxicity" : "";
+			String recordFilePath = mainFolder+File.separator+source+File.separator+source+toxNote+" Experimental Records.json";
+			String badRecordFilePath = mainFolder+File.separator+source+File.separator+source+toxNote+" Experimental Records-Bad.json";
 			
 			File fileRecords=new File(recordFilePath);
 			File fileBadRecords=new File(badRecordFilePath);
@@ -103,19 +108,19 @@ public class DataFetcher {
 	}
 	
 	
-	public void createExperimentalRecordsDatabase() {
+	public void createRecordsDatabase() {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		makeDatabase(records);
 	}
 	
-	public void createExperimentalRecordsJSON() {
+	public void createRecordsJSON() {
 		File json = new File(jsonPath);
 		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
 		records.toJSON_File(jsonPath);
 	}
 	
-	private ExperimentalRecords getExperimentalRecordsSubset(String[] cas) {
+	private ExperimentalRecords getRecordsSubset(String[] cas) {
 		ExperimentalRecords subsetRecords = new ExperimentalRecords();
 		for (ExperimentalRecord rec:records) {
 			String casCheck="";
@@ -131,19 +136,19 @@ public class DataFetcher {
 		return subsetRecords;
 	}
 	
-	public void createExperimentalRecordsSubsetJSON(String[] cas,String filename) {
+	public void createRecordsSubsetJSON(String[] cas,String filename) {
 		String path = mainFolder+File.separator+filename;
 		File json = new File(path);
 		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
-		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(cas);
+		ExperimentalRecords subsetRecords = getRecordsSubset(cas);
 		subsetRecords.toJSON_File(path);
 	}
 	
-	public void createExperimentalRecordsSubsetExcel(String[] cas,String filename) {
+	public void createRecordsSubsetExcel(String[] cas,String filename) {
 		String path = mainFolder+File.separator+filename;
 		File json = new File(path);
 		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
-		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(cas);
+		ExperimentalRecords subsetRecords = getRecordsSubset(cas);
 		subsetRecords.toExcel_File(path);
 	}
 	

@@ -1,10 +1,16 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.concurrent.atomic.DoubleAdder;
+import java.util.function.Function;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 public class UnitConverter {
+	Hashtable<String, Double> htDensity = new Hashtable<String, Double>(); // density look up table, densities in g/ml
 	
 	public static final double airDensitySTP = 1.2041/1000.0;
 	public static final double kPa_to_mmHg=7.50062;
@@ -24,12 +30,60 @@ public class UnitConverter {
 	}
 	
 	/**
+	 * Loads density values and stores in a hashtable
+	 */
+	public UnitConverter(String densityFilePath) {
+		ArrayList<String> lines = Utilities.readFileToArray(densityFilePath);
+		for (int i = 1; i < lines.size(); i++) {// first line is header
+			// System.out.println(lines.get(i));
+			String[] vals = lines.get(i).split("\t");
+
+			String CAS = vals[0];
+			String strDensity = vals[1];
+
+			htDensity.put(CAS, Double.parseDouble(strDensity));
+		}
+		// System.out.println(htDensity.get("7487-28-7"));
+	}
+	
+	/**
+	 * Converts to final units and assigns point estimates for any ranges within tolerance:
+	 * @param er - ExperimentalRecord to convert units and store final values
+	 * (Also does checksum and fixes leading zeroes in casrn field - convenient place to do it)
+	 */
+	public void convertRecord(ExperimentalRecord er) {
+		er.casrn = ParseUtilities.fixCASLeadingZero(er.casrn);
+		if (er.casrn!=null && !ParseUtilities.isValidCAS(er.casrn)) {
+			er.keep = false;
+			er.reason = "Invalid CAS";
+		}
+				
+		if (er.property_name.equals(ExperimentalConstants.str_pKA) || er.property_name.equals(ExperimentalConstants.strLogKow)) {
+			applyConversion(er,1.0);
+		} else if ((er.property_name.equals(ExperimentalConstants.strMeltingPoint) || er.property_name.equals(ExperimentalConstants.strBoilingPoint) ||
+				er.property_name.equals(ExperimentalConstants.strFlashPoint)) && er.property_value_units_original!=null) {
+			convertTemperature(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strDensity)) {
+			convertDensity(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure) && er.property_value_units_original!=null) {
+			convertPressure(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strHenrysLawConstant) && er.property_value_units_original!=null) {
+			convertHenrysLawConstant(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility) && er.property_value_units_original!=null) {
+			convertSolubility(er);
+		} else if ((er.property_name.toLowerCase().contains("lc50") || er.property_name.toLowerCase().contains("ld50")) &&
+				er.property_value_units_original!=null) {
+			convertToxicity(er);
+		}
+	}
+	
+	/**
 	 * TODO Gabriel check this- used for echemportal toxicity values...
 	 * 
 	 * @param er
 	 * @return
 	 */
-	public static boolean convertToxicity(ExperimentalRecord er) {
+	private boolean convertToxicity(ExperimentalRecord er) {
 		double conversionFactor = 1.0;
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)) {
 			er.property_value_units_final = ExperimentalConstants.str_mg_L;
@@ -37,21 +91,37 @@ public class UnitConverter {
 			conversionFactor = 1.0/1000.0;
 			er.property_value_units_final = ExperimentalConstants.str_mg_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_m3)) {
-			er.flag = true;
-			er.updateNote("Conversion to mg/L not possible (need density)");
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppm)) {
-			if (er.Structure_MolWt!=null) {								
-				conversionFactor = 0.001*er.Structure_MolWt/24.45;
-				er.property_value_units_final = ExperimentalConstants.str_mg_L;
-			} else {
+			if (htDensity.get(er.casrn) == null) {
 				er.flag = true;
-				er.updateNote("Conversion to mg/L not possible (need MW)");
+				er.updateNote("Conversion to mg/L not possible (missing density)");
+				return false;
+			} else {
+				conversionFactor = htDensity.get(er.casrn);
+				er.property_value_units_final = ExperimentalConstants.str_mg_L;
+				er.updateNote("Converted using density: "+conversionFactor+" g/mL");
 			}
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppm)) {
+//			if (er.Structure_MolWt!=null) {								
+//				conversionFactor = 0.001*er.Structure_MolWt/24.45;
+//				er.property_value_units_final = ExperimentalConstants.str_mg_L;
+//			} else {
+//				er.flag = true;
+//				er.updateNote("Conversion to mg/L not possible (need MW)");
+//			}
+			er.flag = true;
+			er.updateNote("Conversion to mg/L not possible (need MW)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_kg)) {
 			er.property_value_units_final = ExperimentalConstants.str_mg_kg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_kg)) {
-			er.flag = true;
-			er.updateNote("Conversion to mg/kg not possible (need density)");
+			if (htDensity.get(er.casrn) == null) {
+				er.flag = true;
+				er.updateNote("Conversion to mg/kg not possible (missing density)");
+				return false;
+			} else {
+				conversionFactor = htDensity.get(er.casrn)*1000.0;
+				er.property_value_units_final = ExperimentalConstants.str_mg_kg;
+				er.updateNote("Converted using density: "+conversionFactor/1000.0+" g/mL");
+			}
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg)) {
 			er.flag = true;
 			er.updateNote("Conversion to mg/kg not possible (unit types differ)");
@@ -61,27 +131,18 @@ public class UnitConverter {
 		}
 		
 		if (!er.flag) {
-			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
-			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
-			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
+			applyConversion(er,conversionFactor);
 		} else {
-			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original; }
-			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original; }
-			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original; }
+			applyConversion(er,1.0);
 			er.property_value_units_final = er.property_value_units_original;
 		}		
 		
 		return !er.flag;
 	}
 	
-	
-	
-	
-	public static void convertTemperature(ExperimentalRecord er) {
+	private static void convertTemperature(ExperimentalRecord er) {
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_C)) {
-			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original; }
-			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original; }
-			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original; }
+			applyConversion(er,1.0);
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_F)) {
 			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = F_to_C(er.property_value_point_estimate_original); }
 			if (er.property_value_min_original!=null) { er.property_value_min_final = F_to_C(er.property_value_min_original); }
@@ -94,7 +155,7 @@ public class UnitConverter {
 		er.property_value_units_final = ExperimentalConstants.str_C;
 	}
 	
-	public static void convertDensity(ExperimentalRecord er) {
+	private static void convertDensity(ExperimentalRecord er) {
 		double conversionFactor = 1.0;
 		if (er.property_value_units_original!=null && (er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3) ||
 				er.property_value_units_original.equals(ExperimentalConstants.str_g_L))) {
@@ -103,13 +164,11 @@ public class UnitConverter {
 				er.note.contains(ExperimentalConstants.str_relative_mixture_density))) {
 			conversionFactor = UnitConverter.airDensitySTP;
 		}
-		if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
-		if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
-		if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
+		applyConversion(er,conversionFactor);
 		er.property_value_units_final = ExperimentalConstants.str_g_cm3;
 	}
 	
-	public static void convertPressure(ExperimentalRecord er) {
+	private static void convertPressure(ExperimentalRecord er) {
 		boolean isLog = false;
 		double conversionFactor = 1.0;
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_log_mmHg)) {
@@ -135,14 +194,12 @@ public class UnitConverter {
 			conversionFactor = UnitConverter.kPa_to_mmHg;
 		}
 		if (!isLog) {
-			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
-			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
-			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
+			applyConversion(er,conversionFactor);
 			er.property_value_units_final = ExperimentalConstants.str_mmHg;
 		}
 	}
 	
-	public static boolean convertSolubility(ExperimentalRecord er) {
+	private static boolean convertSolubility(ExperimentalRecord er) {
 		boolean isConvertible = true;
 		double conversionFactor = 1.0;
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_log_mg_L)) {
@@ -164,18 +221,14 @@ public class UnitConverter {
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mM)) {
 			isConvertible = false;
 			conversionFactor = 1.0/1000.0;
-			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
-			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
-			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
+			applyConversion(er,conversionFactor);
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_nM)) {
 			isConvertible = false;
 			conversionFactor = 1.0/1000000000.0;
-			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
-			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
-			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
+			applyConversion(er,conversionFactor);
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
@@ -199,20 +252,16 @@ public class UnitConverter {
 			er.updateNote("Conversion to g/L not possible");
 		}
 		if (!er.flag && isConvertible) {
-			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
-			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
-			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
+			applyConversion(er,conversionFactor);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (isConvertible) {
-			if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original; }
-			if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original; }
-			if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original; }
+			applyConversion(er,1.0);
 			er.property_value_units_final = er.property_value_units_original;
 		}
 		return !er.flag;
 	}
 	
-	public static boolean convertHenrysLawConstant(ExperimentalRecord er) {
+	private static boolean convertHenrysLawConstant(ExperimentalRecord er) {
 		double conversionFactor = 1.0;
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_Pa_m3_mol)) {
 			er.property_value_units_final = ExperimentalConstants.str_Pa_m3_mol;
@@ -233,9 +282,19 @@ public class UnitConverter {
 			er.updateNote("Conversion to Pa-m3/mol not possible (unit types differ)");
 			er.flag=true;
 		}
+		applyConversion(er,conversionFactor);
+		return !er.flag;
+	}
+	
+	private static void applyConversion(ExperimentalRecord er,double conversionFactor) {
 		if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = er.property_value_point_estimate_original*conversionFactor; }
 		if (er.property_value_min_original!=null) { er.property_value_min_final = er.property_value_min_original*conversionFactor; }
 		if (er.property_value_max_original!=null) { er.property_value_max_final = er.property_value_max_original*conversionFactor; }
-		return !er.flag;
+	}
+	
+	private static void applyConversion(ExperimentalRecord er,Function<Double,Double> conversionMethod) {
+		if (er.property_value_point_estimate_original!=null) { er.property_value_point_estimate_final = conversionMethod.apply(er.property_value_point_estimate_original); }
+		if (er.property_value_min_original!=null) { er.property_value_min_final = conversionMethod.apply(er.property_value_min_original); }
+		if (er.property_value_max_original!=null) { er.property_value_max_final = conversionMethod.apply(er.property_value_max_original); }
 	}
 }

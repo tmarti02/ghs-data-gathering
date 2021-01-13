@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.lang.reflect.Field;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -22,9 +23,9 @@ import org.openscience.cdk.smiles.SmilesParser;
 
 import gov.epa.QSAR.utilities.ExcelUtilities;
 import gov.epa.QSAR.utilities.MolFileUtilities;
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
-import gov.epa.exp_data_gathering.parse.RecordFinalizer;
 
 
 public class DSSTOX {
@@ -278,7 +279,7 @@ public class DSSTOX {
 	 * @param folder
 	 * @param endpoint
 	 */
-	public static void goThroughToxRecords(ExperimentalRecords recordsExperimental, Vector<RecordChemReg> recordsChemReg,Vector<RecordDSSTox> recordsDSSTox,String folder,String endpoint,boolean omitSalts) {
+	public static void goThroughToxRecords(List<RecordQSAR> qsarRecords, Vector<RecordChemReg> recordsChemReg,Vector<RecordDSSTox> recordsDSSTox,String folder,String endpoint,boolean omitSalts) {
 
 		//DSSTox excel spreadsheet doesnt have validated column!
 		//ChemReg excel has validated column but doesnt have external_ID, so need to look up by CAS+Name or by CAS if that fails:
@@ -293,56 +294,56 @@ public class DSSTOX {
 								
 		try {//			
 			
-			for (ExperimentalRecord recordExperimental : recordsExperimental) {
-				if (!recordExperimental.keep) continue;
-				
+			for (RecordQSAR qr : qsarRecords) {
 				//Retrieve RecordChemReg by CAS+name (or by CAS if that fails): 
-				RecordChemReg recordChemReg=RecordChemReg.getChemRegRecord(recordExperimental,htChemRegCAS_Name,htChemRegCAS,htChemRegName);
+				RecordChemReg recordChemReg=RecordChemReg.getChemRegRecord(qr,htChemRegCAS_Name,htChemRegCAS,htChemRegName);
 								
 				if (recordChemReg==null) {
-					System.out.println("CAS="+recordExperimental.casrn+"\tName="+recordExperimental.chemical_name+"\tNo chemreg match");
-					recordExperimental.keep=false;
-					recordExperimental.reason="No chemreg match";
+					System.out.println("CAS="+qr.casrn+"\tName="+qr.chemical_name+"\tNo chemreg match");
+					qr.usable=false;
+					qr.reason="No chemreg match";
 					continue;
 				}
 				
 				if (recordChemReg.Validated==null || recordChemReg.Validated.contentEquals("FALSE")) {
-					System.out.println("CAS="+recordExperimental.casrn+"\tName="+recordExperimental.chemical_name+"\tValidated="+recordChemReg.Validated);
-					recordExperimental.keep=false;
-					recordExperimental.reason="Not validated in chemreg";
+					System.out.println("CAS="+qr.casrn+"\tName="+qr.chemical_name+"\tValidated="+recordChemReg.Validated);
+					qr.usable=false;
+					qr.reason="Not validated in chemreg";
 					continue;
 				}
 																				
-				RecordDSSTox recordDSSTox=htDSSToxID_Physchem.get(recordExperimental.id_physchem);
+				RecordDSSTox recordDSSTox=htDSSToxID_Physchem.get(qr.id_physchem);
 																
 				if (recordDSSTox==null) {
 //					System.out.println("Missing DSSTox record for "+recordChemReg.Top_HIT_DSSTox_Substance_Id);
-					recordExperimental.keep=false;
-					recordExperimental.reason="No record in DSSTox for this SID";
+					qr.usable=false;
+					qr.reason="No record in DSSTox for this SID";
 					continue;					
 				}
 
-				setDSSToxData(recordExperimental, recordDSSTox);					
-				omitBasedDSSToxRecord(recordExperimental);
+				setDSSToxData(qr, recordDSSTox);					
+				omitBasedDSSToxRecord(qr);
+				
+				if (!qr.usable) continue;
 				
 				//Stopgap measure until we have qsarready generation in place:
-				if (recordExperimental.Structure_SMILES_2D_QSAR==null) {
-					if (recordExperimental.Structure_SMILES!=null) {
-						recordExperimental.Structure_SMILES_2D_QSAR=recordExperimental.Structure_SMILES;
+				if (qr.Structure_SMILES_2D_QSAR==null) {
+					if (qr.Structure_SMILES!=null) {
+						qr.Structure_SMILES_2D_QSAR=qr.Structure_SMILES;
 					}
 				}
 								
-				if (omitSalts) 
-					omitBasedOnSmiles(recordExperimental,recordExperimental.Structure_SMILES);
-				else
-					omitBasedOnSmiles(recordExperimental,recordExperimental.Structure_SMILES_2D_QSAR);
-
+				if (omitSalts) {
+					omitBasedOnSmiles(qr,qr.Structure_SMILES);
+				} else {
+					omitBasedOnSmiles(qr,qr.Structure_SMILES_2D_QSAR);
+				}
 				
+				boolean convertedUnits = setQSARUnits(qr);
+				if (!convertedUnits) { qr.usable = false; }
 			} // end loop over tox records
 			
-			recordsExperimental.toExcel_File(folder+endpoint+"_recordsQSAR.xlsx",ExperimentalRecord.outputFieldNamesQSAR);
-			
-			
+			RecordQSAR.writeListToExcelFile(qsarRecords,folder+endpoint+"_recordsQSAR.xlsx");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -360,13 +361,13 @@ public class DSSTOX {
 	 * Only way to look up RecordChemReg is by Name/CAS (has no smiles or external_id)
 	 * RecordDSSTox can be looked up by SID or external ID (if have RecordChemReg- then have SID) 
 	 * 
-	 * @param recordsExperimental
+	 * @param qsarRecords
 	 * @param recordsChemReg
 	 * @param recordsDSSTox
 	 * @param folder
 	 * @param endpoint
 	 */
-	public static void goThroughToxRecords2(ExperimentalRecords recordsExperimental, Vector<RecordChemReg> recordsChemReg,Vector<RecordDSSTox> recordsDSSTox,String folder,String endpoint, boolean omitSalts) {
+	public static void goThroughToxRecords2(List<RecordQSAR> qsarRecords, Vector<RecordChemReg> recordsChemReg,Vector<RecordDSSTox> recordsDSSTox,String folder,String endpoint, boolean omitSalts) {
 
 		//DSSTox excel spreadsheet doesnt have validated column!
 		//ChemReg excel has validated column but doesnt have external_ID, so need to look up by CAS+Name or by CAS if that fails:
@@ -381,82 +382,74 @@ public class DSSTOX {
 
 		try {//			
 
-			for (ExperimentalRecord recExp : recordsExperimental) {
-				if (!recExp.keep) continue;
+			for (RecordQSAR qr : qsarRecords) {
 
 				//Retrieve RecordChemReg by CAS+name (or by CAS if that fails): 
-				RecordChemReg recordChemReg=RecordChemReg.getChemRegRecord(recExp,htChemRegCAS_Name,htChemRegCAS,htChemRegName);
+				RecordChemReg recordChemReg=RecordChemReg.getChemRegRecord(qr,htChemRegCAS_Name,htChemRegCAS,htChemRegName);
 
 				if (recordChemReg==null) {
-//					System.out.println("CAS="+recordExperimental.casrn+"\tName="+recordExperimental.chemical_name+"\tNo chemreg match");
-					recExp.keep=false;
-					recExp.reason="No chemreg match";
+					qr.usable=false;
+					qr.reason="No chemreg match";
 					continue;
 				}
 
 				if (recordChemReg.Validated==null || recordChemReg.Validated.contentEquals("FALSE")) {
-//					System.out.println("CAS="+recordExperimental.casrn+"\tName="+recordExperimental.chemical_name+"\tValidated="+recordChemReg.Validated);
-					recExp.keep=false;
-					recExp.reason="Not validated in chemreg";
+					qr.usable=false;
+					qr.reason="Not validated in chemreg";
 					continue;
 				}
-				recExp.dsstox_substance_id=recordChemReg.Top_HIT_DSSTox_Substance_Id;
-
+				
+				//Use RecordChemReg to retrieve RecordDSSTox
+				qr.dsstox_substance_id=recordChemReg.Top_HIT_DSSTox_Substance_Id;
 				RecordDSSTox recordDSSTox=htDSSToxSID.get(recordChemReg.Top_HIT_DSSTox_Substance_Id);
 
 				if (recordDSSTox==null) {
-//					System.out.println("Missing DSSTox record for "+recordChemReg.Top_HIT_DSSTox_Substance_Id);
-					recExp.keep=false;
-					recExp.reason="No record in DSSTox for this SID";
-					continue;					
+					qr.usable=false;
+					qr.reason="No record in DSSTox for this SID";
+					continue;				
 				}
 
-				setDSSToxData(recExp, recordDSSTox);					
-				omitBasedDSSToxRecord(recExp);
+				setDSSToxData(qr, recordDSSTox);					
+				omitBasedDSSToxRecord(qr);
 				
-				if (!recExp.keep) continue;
+				if (!qr.usable) continue;
 				
 				//Stopgap measure until we have qsarready generation in place:
-				if (recExp.Structure_SMILES_2D_QSAR==null) {
-					if (recExp.Structure_SMILES!=null) {
-						recExp.Structure_SMILES_2D_QSAR=recExp.Structure_SMILES;
+				if (qr.Structure_SMILES_2D_QSAR==null) {
+					if (qr.Structure_SMILES!=null) {
+						qr.Structure_SMILES_2D_QSAR=qr.Structure_SMILES;
 					}
 				}
 								
-				if (omitSalts) 
-					omitBasedOnSmiles(recExp,recExp.Structure_SMILES);
-				else
-					omitBasedOnSmiles(recExp,recExp.Structure_SMILES_2D_QSAR);
-
-				if (!recExp.keep) continue;
+				if (omitSalts) {
+					omitBasedOnSmiles(qr,qr.Structure_SMILES);
+				} else {
+					omitBasedOnSmiles(qr,qr.Structure_SMILES_2D_QSAR);
+				}
 				
-				RecordFinalizer.finalizeRecordAgain(recExp);
-				
-				
-
+				boolean convertedUnits = setQSARUnits(qr);
+				if (!convertedUnits) { qr.usable = false; }
 			} // end loop over tox records
 
-			recordsExperimental.toExcel_File(folder+endpoint+"_recordsQSAR.xlsx",ExperimentalRecord.outputFieldNamesQSAR);
-
-
+			RecordQSAR.writeListToExcelFile(qsarRecords,folder+endpoint+"_recordsQSAR-test.xlsx");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 	}
 
-	public static void omitBasedDSSToxRecord(ExperimentalRecord rec) {
+	public static void omitBasedDSSToxRecord(RecordQSAR qr) {
 		
-		if (rec.Substance_Type.contentEquals("Mineral/Composite")
-				|| rec.Substance_Type.contentEquals("Mixture/Formulation")
-				|| rec.Substance_Type.contentEquals("Polymer")) {
-			rec.keep=false;
-			rec.reason="Bad Substance_Type";
+		if (qr.Substance_Type.contentEquals("Mineral/Composite")
+				|| qr.Substance_Type.contentEquals("Mixture/Formulation")
+				|| qr.Substance_Type.contentEquals("Polymer")) {
+			qr.usable=false;
+			qr.reason="Bad Substance_Type";
 			return;
 		}
-		if (rec.Structure_MolWt==null) {
-			rec.keep=false;
-			rec.reason="Missing Structure_MolWt";
+		if (qr.Structure_MolWt==null) {
+			qr.usable=false;
+			qr.reason="Missing Structure_MolWt";
 			return;			
 		}
 
@@ -464,46 +457,44 @@ public class DSSTOX {
 	}
 
 
-	private static void omitBasedOnSmiles(ExperimentalRecord rec,String smiles) {
+	private static void omitBasedOnSmiles(RecordQSAR qr,String smiles) {
 		
 		if (smiles==null || smiles.isEmpty()) {
-			rec.keep=false;
-			rec.reason="Structure_SMILES is missing";
+			qr.usable=false;
+			qr.reason="Structure_SMILES is missing";
 			return;
 		}
 				
 		if (smiles.contains(".")) {
-			rec.keep=false;
-			rec.reason="Smiles indicates a salt";
+			qr.usable=false;
+			qr.reason="Smiles indicates a salt";
 			return;
-		}
-					
+		}		
 				
 		AtomContainer ac=getAtomContainer(smiles);
 
 		if (ac==null) {
-			rec.keep=false;
-			rec.reason="bad Structure_SMILES";
+			qr.usable=false;
+			qr.reason="bad Structure_SMILES";
 //			System.out.println(rec);
 			return;
 		}
-
 		
 		if (MolFileUtilities.HaveBadElement(ac))  {
-			rec.keep=false;
-			rec.reason="Structure_SMILES indicates bad element and omitSalts=true";
+			qr.usable=false;
+			qr.reason="Structure_SMILES indicates bad element and omitSalts=true";
 			return;
 		}
 
 		if (ac.getAtomCount()==1) {
-			rec.keep=false;
-			rec.reason="only 1 atom in Structure_SMILES";
+			qr.usable=false;
+			qr.reason="only 1 atom in Structure_SMILES";
 			return;
 		}
 		
 		if (!MolFileUtilities.HaveCarbon(ac)) {
-			rec.keep=false;
-			rec.reason="No carbon in Structure_SMILES";
+			qr.usable=false;
+			qr.reason="No carbon in Structure_SMILES";
 			return;
 		}
 	}
@@ -551,7 +542,7 @@ public class DSSTOX {
 	}
 
 	
-	public static void setDSSToxData(ExperimentalRecord experimentalRecord,RecordDSSTox rDSSTox) {
+	public static void setDSSToxData(RecordQSAR qr,RecordDSSTox rDSSTox) {
 		String[] fieldNames = { "Substance_Name", "Substance_CASRN", "Substance_Type", "Substance_Note",
 				"Structure_SMILES", "Structure_InChI", "Structure_InChIKey", "Structure_Formula", "Structure_MolWt",
 				"Structure_SMILES_2D_QSAR" };
@@ -561,9 +552,9 @@ public class DSSTOX {
 			try {
 				
 				Field myFieldSrc =rDSSTox.getClass().getField(fieldName);				
-				Field myFieldDest =experimentalRecord.getClass().getField(fieldName);							
+				Field myFieldDest =qr.getClass().getField(fieldName);							
 				
-				experimentalRecord.assignValue(fieldName, (String)myFieldSrc.get(rDSSTox));
+				qr.assignValue(fieldName, (String)myFieldSrc.get(rDSSTox));
 				
 //				if (fieldName.contentEquals("Structure_MolWt")) {
 //					 if (rDSSTox.Structure_MolWt!=null && !rDSSTox.Structure_MolWt.isEmpty()) {
@@ -579,7 +570,25 @@ public class DSSTOX {
 				ex.printStackTrace();
 			}
 		}
-
+	}
+	
+	private static boolean setQSARUnits(RecordQSAR qr) {
+		if (qr.Structure_MolWt==null) {
+			System.out.println("Error: Cannot convert units before looking up DSSToxData.");
+			return false;
+		}
+		
+		if (qr.property_value_units_exp.equals(ExperimentalConstants.str_mg_L)) {
+			qr.property_value_point_estimate_qsar = -Math.log10(qr.property_value_point_estimate_exp/1000.0/qr.Structure_MolWt);
+			qr.property_value_units_qsar = "-log10(mol/L)";
+			return true;
+		} else if (qr.property_value_units_exp.equals(ExperimentalConstants.str_ppm)) {
+			qr.property_value_point_estimate_qsar = -Math.log10((qr.property_value_point_estimate_exp/24.45)*0.001/1000.0);
+			qr.property_value_units_qsar = "-log10(mol/L)";
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public static Hashtable<String, RecordDashboard> parseDashboardExcel(String filePathExcel) {

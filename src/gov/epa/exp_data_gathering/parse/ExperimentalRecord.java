@@ -50,20 +50,6 @@ public class ExperimentalRecord {
 	public String dsstox_substance_id; //DSSTox substance identifier
 	public String note;//	Any additional note
 
-	
-	//DSSTox fields:
-	public String Substance_Name;
-	public String Substance_CASRN;
-	public String Substance_Type;
-	public String Substance_Note;
-	public String Structure_SMILES;
-	public String Structure_InChI;
-	public String Structure_InChIKey;
-	public String Structure_Formula;
-	public Double Structure_MolWt;
-	public String Structure_SMILES_2D_QSAR;
-
-		
 	public String url;
 	public String source_name;//use Experimental constants
 	public String original_source_name;//If specific reference/paper provided
@@ -103,39 +89,6 @@ public class ExperimentalRecord {
 			"url",
 			"date_accessed"};
 	
-	
-	public final static String [] outputFieldNamesQSAR= {
-			"id_physchem",
-			"keep",
-			"reason",			
-			"casrn",
-			"einecs",
-			"chemical_name",
-			"synonyms",
-			"smiles", 
-			"dsstox_substance_id",
-			"Substance_Name", "Substance_CASRN", "Substance_Type", "Substance_Note", "Structure_SMILES",
-			"Structure_InChI", "Structure_InChIKey", "Structure_Formula", "Structure_MolWt", "Structure_SMILES_2D_QSAR",
-			"property_name",
-			"source_name",
-			"property_value_string",
-			"property_value_numeric_qualifier",
-			"property_value_point_estimate_final",
-			"property_value_min_final",
-			"property_value_max_final",
-			"property_value_units_final",
-			"pressure_mmHg",
-			"temperature_C",
-			"pH",
-			"property_value_qualitative",
-			"measurement_method",
-			"note",
-			"flag",
-			"original_source_name",
-			"url",
-			"date_accessed"};
-
-	
 	public void setComboID(String del) {
 		String CAS=casrn;
 		if (CAS==null || CAS.trim().isEmpty()) CAS="casrn=null";//need placeholder so dont get spurious match in chemreg
@@ -168,34 +121,28 @@ public class ExperimentalRecord {
 		Field myField;
 		try {
 			myField = getClass().getDeclaredField(fieldName);
-		
-		if (myField.getType().getName().contentEquals("boolean")) {
-			myField.setBoolean(this, Boolean.parseBoolean(fieldValue));
-
-		} else if (myField.getType().getName().contentEquals("double")) {
-			myField.setDouble(this, Double.parseDouble(fieldValue));
-
-		} else if (myField.getType().getName().contentEquals("int")) {
-			myField.setInt(this, Integer.parseInt(fieldValue));
-
-		} else if (myField.getType().getName().contentEquals("java.lang.Double")) {
-			Double dval=Double.parseDouble(fieldValue);						
-			myField.set(this, dval);
-		} else if (myField.getType().getName().contentEquals("java.lang.Integer")) {
-			Integer ival=Integer.parseInt(fieldValue);
-			myField.setInt(this,ival);
-		} else if (myField.getType().getName().contentEquals("java.lang.String")) {
-			myField.set(this, fieldValue);
-		} else {
-			System.out.println("Need to implement"+myField.getType().getName());
-		}					
-
+			if (myField.getType().getName().contentEquals("boolean")) {
+				myField.setBoolean(this, Boolean.parseBoolean(fieldValue));
+			} else if (myField.getType().getName().contentEquals("double")) {
+				myField.setDouble(this, Double.parseDouble(fieldValue));
+			} else if (myField.getType().getName().contentEquals("int")) {
+				myField.setInt(this, Integer.parseInt(fieldValue));
+			} else if (myField.getType().getName().contentEquals("java.lang.Double")) {
+				Double dval=Double.parseDouble(fieldValue);						
+				myField.set(this, dval);
+			} else if (myField.getType().getName().contentEquals("java.lang.Integer")) {
+				Integer ival=Integer.parseInt(fieldValue);
+				myField.setInt(this,ival);
+			} else if (myField.getType().getName().contentEquals("java.lang.String")) {
+				myField.set(this, fieldValue);
+			} else {
+				System.out.println("Need to implement"+myField.getType().getName());
+			}					
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 
-		
 	}
 
 	public String toString() {
@@ -311,7 +258,7 @@ public class ExperimentalRecord {
 				case "java.lang.String":
 					if (myField.get(this)==null) val="";	
 					else val=myField.get(this)+"";						
-					val=ExperimentalRecords.reverseFixChars(StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'")));					
+					val=ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'")));					
 					break;
 				
 				case "java.lang.Double":

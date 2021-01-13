@@ -229,7 +229,7 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 					Field field = erClass.getDeclaredField(headers[i]);
 					Object value = field.get(er);
 					if (value!=null && !(value instanceof Double)) { 
-						String strValue = reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
+						String strValue = ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
 						row.createCell(i).setCellValue(strValue);
 					} else if (value!=null) { row.createCell(i).setCellValue((double) value); }
 				}
@@ -267,41 +267,6 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		toExcel_File(filePath,ExperimentalRecord.outputFieldNames);
 	}
 	
-	
-	public static String fixChars(String str) {
-		str=str.replace("â€“","-").replace("â€™","'");
-		str=str.replace("\uff08", "(");// ï¼ˆ
-		str=str.replace("\uff09", ")");// ï¼‰
-		str=str.replace("\uff0f", "/");// ï¼�
-		str=str.replace("\u3000", " ");//blank
-		str=str.replace("\u00a0", " ");//blank
-		str=str.replace("\u2003", " ");//blank
-		str=str.replace("\u0009", " ");//blank
-		str=str.replace("\u300c", "");// ã€Œ
-		str=str.replace("\u300d", "");// ã€�
-		str=str.replace("\u2070", "^0");// superscript 0
-		str=str.replace("\u00B9", "^1");// superscript 1
-		str=str.replace("\u00B2", "^2");// superscript 2
-		str=str.replace("\u00B3", "^3");// superscript 3
-		str=str.replace("\u2074", "^4");// superscript 4
-		str=str.replace("\u2075", "^5");// superscript 5
-		str=str.replace("\u2076", "^6");// superscript 6
-		str=str.replace("\u2077", "^7");// superscript 7
-		str=str.replace("\u2078", "^8");// superscript 8
-		str=str.replace("\u2079", "^9");// superscript 9
-		str=str.replace("\u2080", "_0");// subscript 0
-		str=str.replace("\u2081", "_1");// subscript 1
-		str=str.replace("\u2082", "_2");// subscript 2
-		str=str.replace("\u2083", "_3");// subscript 3
-		str=str.replace("\u2084", "_4");// subscript 4
-		str=str.replace("\u2085", "_5");// subscript 5
-		str=str.replace("\u2086", "_6");// subscript 6
-		str=str.replace("\u2087", "_7");// subscript 7
-		str=str.replace("\u2088", "_8");// subscript 8
-		str=str.replace("\u2089", "_9");// subscript 9
-	
-		return str;
-	}
 	
 	public void dontKeepNumericQualifierRecords() {
 		for (ExperimentalRecord record:this) {
@@ -353,30 +318,6 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 		
 		ExperimentalRecords records = loadFromExcel("data\\experimental\\eChemPortalAPI\\eChemPortalAPI Toxicity Experimental Records.xlsx");
 		
-	}
-
-	public static String reverseFixChars(String str) {
-		str=str.replace("^0","\u2070");// superscript 0
-		str=str.replace("^1","\u00B9");// superscript 1
-		str=str.replace("^2","\u00B2");// superscript 2
-		str=str.replace("^3","\u00B3");// superscript 3
-		str=str.replace("^4","\u2074");// superscript 4
-		str=str.replace("^5","\u2075");// superscript 5
-		str=str.replace("^6","\u2076");// superscript 6
-		str=str.replace("^7","\u2077");// superscript 7
-		str=str.replace("^8","\u2078");// superscript 8
-		str=str.replace("^9","\u2079");// superscript 9
-		str=str.replace("_0","\u2080");// subscript 0
-		str=str.replace("_1","\u2081");// subscript 1
-		str=str.replace("_2","\u2082");// subscript 2
-		str=str.replace("_3","\u2083");// subscript 3
-		str=str.replace("_4","\u2084");// subscript 4
-		str=str.replace("_5","\u2085");// subscript 5
-		str=str.replace("_6","\u2086");// subscript 6
-		str=str.replace("_7","\u2087");// subscript 7
-		str=str.replace("_8","\u2088");// subscript 8
-		str=str.replace("_9","\u2089");// subscript 9
-		return str;
 	}
 
 }

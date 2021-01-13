@@ -59,7 +59,7 @@ public class ParseBradley extends Parse {
 				ParseUtilities.getTemperatureCondition(er,br.notes);
 				er.property_value_string = er.property_value_string + "; Temperature: "+br.notes;
 			}
-			RecordFinalizer.finalizeRecord(er);
+			uc.convertRecord(er);
 			records.add(er);
 		}
 	}
