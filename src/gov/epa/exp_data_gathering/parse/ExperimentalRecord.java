@@ -92,30 +92,30 @@ public class ExperimentalRecord {
 			"url",
 			"date_accessed"};
 	
-//	public void setComboID(String del) {
-//		String CAS=casrn;
-//		if (CAS==null || CAS.trim().isEmpty()) CAS="casrn=null";//need placeholder so dont get spurious match in chemreg
-//		else {
-//			CAS=ParseUtilities.fixCASLeadingZero(CAS);
-//		}
-//		String name=StringEscapeUtils.escapeJava(chemical_name);
-//		
-//		String EINECS=einecs;
-//		if (EINECS==null || EINECS.trim().isEmpty()) EINECS="einecs=null";//need placeholder so dont get spurious match in chemreg
-//		EINECS=EINECS.trim();
-//		
-//		if (name==null || name.trim().isEmpty()) name="name=null";//need placeholder so dont get spurious match in chemreg
-//		name=name.trim();
-//		
-//		String SMILES=smiles;
-//		if (SMILES==null || SMILES.trim().isEmpty()) SMILES="smiles=null";//need placeholder so dont get spurious match in chemreg
-//		SMILES=SMILES.trim();
-//		
-//		//TODO omit chemicals where smiles indicates bad element....
-//		
-//		comboID=CAS+del+EINECS+del+name+del+SMILES;
-//		
-//	}
+	public void setComboID(String del) {
+		String CAS=casrn;
+		if (CAS==null || CAS.trim().isEmpty()) CAS="casrn=null";//need placeholder so dont get spurious match in chemreg
+		else {
+			CAS=ParseUtilities.fixCASLeadingZero(CAS);
+		}
+		String name=StringEscapeUtils.escapeJava(chemical_name);
+		
+		String EINECS=einecs;
+		if (EINECS==null || EINECS.trim().isEmpty()) EINECS="einecs=null";//need placeholder so dont get spurious match in chemreg
+		EINECS=EINECS.trim();
+		
+		if (name==null || name.trim().isEmpty()) name="name=null";//need placeholder so dont get spurious match in chemreg
+		name=name.trim();
+		
+		String SMILES=smiles;
+		if (SMILES==null || SMILES.trim().isEmpty()) SMILES="smiles=null";//need placeholder so dont get spurious match in chemreg
+		SMILES=SMILES.trim();
+		
+		//TODO omit chemicals where smiles indicates bad element....
+		
+		comboID=CAS+del+EINECS+del+name+del+SMILES;
+		
+	}
 	
 	public void assignValue(String fieldName,String fieldValue) {
 		
