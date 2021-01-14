@@ -155,7 +155,7 @@ public class RecordQSAR {
 	}
 
 	private static boolean isWithinLogTolerance(double min,double max,double logTolerance) {
-		if (min!=0) {
+		if (Math.abs(min) > Math.pow(10.0,-6.0)) {
 			return Math.log10(max/min) <= logTolerance;
 		} else {
 			return false;
