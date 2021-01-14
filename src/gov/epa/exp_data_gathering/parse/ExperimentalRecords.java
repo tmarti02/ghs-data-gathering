@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -39,7 +40,7 @@ import gov.epa.ghs_data_gathering.Parse.Parse;
  *
  */
 
-public class ExperimentalRecords extends Vector<ExperimentalRecord> {
+public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 
 	public JsonElement toJsonElement() {
 		String strJSON=this.toJSON();

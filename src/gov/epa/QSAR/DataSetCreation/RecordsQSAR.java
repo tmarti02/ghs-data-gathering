@@ -4,6 +4,7 @@ package gov.epa.QSAR.DataSetCreation;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -19,7 +20,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
-public class RecordsQSAR extends Vector<RecordQSAR> {
+public class RecordsQSAR extends ArrayList<RecordQSAR> {
 
 	
 	/**

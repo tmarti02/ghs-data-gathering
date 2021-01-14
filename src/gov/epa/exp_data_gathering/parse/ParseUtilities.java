@@ -1,7 +1,6 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,7 +25,7 @@ public class ParseUtilities extends Parse {
 					er.property_value_point_estimate_original = mantissa*Math.pow(10, magnitude);
 					foundNumeric = true;
 					int propertyValueIndex;
-					if ((propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
+					if (!badUnits && (propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
 						String checkSymbol = propertyValue.replaceAll("\\s","");
 						er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
 					}
@@ -44,7 +43,7 @@ public class ParseUtilities extends Parse {
 					er.property_value_max_original = range[1];
 					foundNumeric = true;
 				}
-				if (propertyValue.contains("~") || propertyValue.contains("ca.")) {
+				if (!badUnits && (propertyValue.contains("~") || propertyValue.contains("ca."))) {
 					er.property_value_numeric_qualifier = "~";
 				}
 			} catch (Exception ex) {
@@ -60,7 +59,7 @@ public class ParseUtilities extends Parse {
 					er.property_value_max_original = range[1];
 					foundNumeric = true;
 				}
-				if (propertyValue.contains("~") || propertyValue.contains("ca.")) {
+				if (!badUnits && (propertyValue.contains("~") || propertyValue.contains("ca."))) {
 					er.property_value_numeric_qualifier = "~";
 				}
 			} catch (Exception ex) {
@@ -128,9 +127,9 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/ml")) {
+		} else if (propertyValue.toLowerCase().contains("g/ml") || propertyValue.toLowerCase().contains("gm/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/m");
+			unitsIndex = propertyValue.toLowerCase().indexOf("g");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("kg/m")) {
 			er.property_value_units_original = ExperimentalConstants.str_kg_m3;
@@ -162,7 +161,9 @@ public class ParseUtilities extends Parse {
 			}
 		} else {
 			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
-			if (propertyValue.contains(":")) {
+			if (er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
+				unitsIndex = propertyValue.length();
+			} else if (propertyValue.contains(":")) {
 				unitsIndex = propertyValue.length();
 			} else if (propertyValue.contains(" ")) {
 				unitsIndex = propertyValue.indexOf(" ");

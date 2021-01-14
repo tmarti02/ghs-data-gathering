@@ -147,22 +147,24 @@ public class ToxQueryOptions extends QueryOptions {
 	 * Splits the QueryOptions object at the range midpoint to reduce query size
 	 * @return		Two QueryOptions objects that jointly cover the same range as the original
 	 */
-	protected List<ToxQueryOptions> generateSplitOptions() {
+	protected List<ToxQueryOptions> generateSplitOptions(double tolerance) {
 		List<ToxQueryOptions> splitOptions = new ArrayList<ToxQueryOptions>();
 		ToxQueryOptions lowerSplitOptions = new ToxQueryOptions(this);
 		ToxQueryOptions upperSplitOptions = new ToxQueryOptions(this);
 		double min = endpointMin==null ? Integer.MIN_VALUE : Double.parseDouble(endpointMin);
 		double max = endpointMax==null ? Integer.MAX_VALUE : Double.parseDouble(endpointMax);
-		if (min!=max) {
-			double midpoint = Math.floor((max + min)/2.0);
+		if (Math.abs(max-min) > tolerance) {
+			double midpoint = (max + min)/2.0;
 			lowerSplitOptions.endpointMax = String.valueOf(midpoint);
 			upperSplitOptions.endpointMin = String.valueOf(midpoint);
 		} else {
-			String newYear = String.valueOf(this.afterYear + (new Date()).getYear()/2);
-			lowerSplitOptions.beforeYear = newYear;
-			lowerSplitOptions.afterYear = null;
-			upperSplitOptions.beforeYear = null;
-			upperSplitOptions.afterYear = newYear;
+			Date date = new Date();
+			int thisYear = date.getYear()+1900;
+			int minYear = this.afterYear==null ? 1900 : Integer.parseInt(this.afterYear);
+			int maxYear = this.beforeYear==null ? thisYear : Integer.parseInt(this.beforeYear);
+			String midpointYear = String.valueOf((maxYear+minYear)/2);
+			lowerSplitOptions.beforeYear = midpointYear;
+			upperSplitOptions.afterYear = midpointYear;
 		}
 		splitOptions.add(lowerSplitOptions);
 		splitOptions.add(upperSplitOptions);
@@ -187,14 +189,14 @@ public class ToxQueryOptions extends QueryOptions {
 	 * @param options	Vector of QueryOptions to be resized
 	 * @return			Vector of QueryOptions of permitted size
 	 */
-	private static List<ToxQueryOptions> resizeAll(List<ToxQueryOptions> options) {
+	private static List<ToxQueryOptions> resizeAll(List<ToxQueryOptions> options,double tolerance) {
 		List<ToxQueryOptions> newOptions = new ArrayList<ToxQueryOptions>();
 		for (ToxQueryOptions o:options) {
 			int size = o.getQueryMaxSize();
-			System.out.println(o.endpointMin + " to " + o.endpointMax + ": " + size + " records");
+			System.out.println(o.endpointMin + " to " + o.endpointMax + " units, "+o.afterYear+" to "+o.beforeYear+": " + size + " records");
 			if (size >= 10000) {
-				List<ToxQueryOptions> splitOptions = o.generateSplitOptions();
-				splitOptions = resizeAll(splitOptions);
+				List<ToxQueryOptions> splitOptions = o.generateSplitOptions(tolerance);
+				splitOptions = resizeAll(splitOptions,tolerance);
 				newOptions.addAll(splitOptions);
 			} else {
 				newOptions.add(o);
@@ -211,8 +213,9 @@ public class ToxQueryOptions extends QueryOptions {
 		List<ToxQueryOptions> options = new ArrayList<ToxQueryOptions>();
 		options.add(this);
 		if (getQueryMaxSize() >= 10000) {
+			double tolerance = 1000000.0;
 			System.out.println(this.propertyName+" query too large. Resizing...");
-			options = resizeAll(options);
+			options = resizeAll(options,tolerance);
 			System.out.println("Split into "+options.size()+" queries. Optimizing...");
 			ListIterator<ToxQueryOptions> it = options.listIterator();
 			int lastSize = 0;
@@ -220,12 +223,12 @@ public class ToxQueryOptions extends QueryOptions {
 				ToxQueryOptions currentOptions = it.next();
 				int size = currentOptions.getQueryMaxSize();
 				if (it.previousIndex() > 0 && size + lastSize < 10000) {
-					it.remove();
 					ToxQueryOptions lastOptions = it.previous();
-					lastOptions.mergeOptions(currentOptions);
+					boolean success = lastOptions.mergeOptions(currentOptions);
 					it.set(lastOptions);
 					lastSize = lastOptions.getQueryMaxSize();
 					it.next();
+					if (success) { it.remove(); };
 				} else {
 					lastSize = size;
 				}

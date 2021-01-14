@@ -714,7 +714,7 @@ public class ConvertExperimentalRecordsToDataSet {
 		RecordsQSAR recordsQSARflat=mergeIsomersContinuousOmitSalts(recordsQSAR,property, folder);
 		recordsQSARflat.toExcelFile(folder+property+"_flatQSAR.xlsx",RecordQSAR.outputFieldNames);
 		
-//		calculateDescriptors(folder,flatRecords);
+		calculateDescriptors(folder,recordsQSARflat);
 		
 		
 	}

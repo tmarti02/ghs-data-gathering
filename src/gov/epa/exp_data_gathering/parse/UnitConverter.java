@@ -239,7 +239,8 @@ public class UnitConverter {
 	}
 	
 	private static boolean convertSolubility(ExperimentalRecord er) {
-		if (er.property_value_units_original.equals(ExperimentalConstants.str_g_L)) {
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_g_L) || er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL) ||
+				er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL)) {
@@ -298,8 +299,7 @@ public class UnitConverter {
 			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = er.property_value_units_original;
-		} else if (!er.property_value_units_original.equals(ExperimentalConstants.str_g_L) && !er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL) &&
-				!er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)) {
+		} else {
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (unknown units)");
 			assignFinalFieldsWithoutConverting(er);

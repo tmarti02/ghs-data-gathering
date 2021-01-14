@@ -67,8 +67,7 @@ public class RecordQSAR {
 	public String Structure_InChIKey1_QSAR_Ready;
 	public String comboID;
 	
-	public final static String [] outputFieldNames = {
-			"id_physchem",
+	public final static String [] outputFieldNames = {"id_physchem",
 			"usable",
 			"reason",			
 			"casrn",
@@ -131,6 +130,7 @@ public class RecordQSAR {
 		if (name==null || name.trim().isEmpty()) name="name=null";//need placeholder so dont get spurious match in chemreg
 		name=name.trim();
 		
+
 		String SMILES=smiles;
 		if (SMILES==null || SMILES.trim().isEmpty()) SMILES="smiles=null";//need placeholder so dont get spurious match in chemreg
 		SMILES=SMILES.trim();
@@ -142,8 +142,8 @@ public class RecordQSAR {
 	}
 	
 
-	public static boolean isWithinLogTolerance(double min,double max,double logTolerance) {
-		if (Math.abs(min) > Math.pow(10.0,-6.0)) {
+	private static boolean isWithinLogTolerance(double min,double max,double logTolerance,double zeroTolerance) {
+		if (Math.abs(min) > zeroTolerance) {
 			return Math.log10(max/min) <= logTolerance;
 		} else {
 			return false;
@@ -181,7 +181,6 @@ public class RecordQSAR {
 				System.out.println("Need to implement"+myField.getType().getName());
 			}					
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 	}

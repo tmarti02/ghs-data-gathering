@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
@@ -32,7 +33,7 @@ import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Result;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
-public class ToxRecordEChemPortalAPIForToxVal {
+public class ToxValRecordEChemPortalAPI {
 	public String name;
 	public String nameType;
 	public String number;
@@ -66,7 +67,7 @@ public class ToxRecordEChemPortalAPIForToxVal {
 			"years","guidelineQualifiers+guidelines","glpCompliance","testType","species","strain","routeOfAdministration","inhalationExposureType",
 			"coverageType","doseDescriptors","effectLevels"};
 	
-	public ToxRecordEChemPortalAPIForToxVal() {
+	public ToxValRecordEChemPortalAPI() {
 		years = new ArrayList<String>();
 		guidelineQualifiers = new ArrayList<String>();
 		guidelines = new ArrayList<String>();
@@ -74,12 +75,49 @@ public class ToxRecordEChemPortalAPIForToxVal {
 		effectLevels = new ArrayList<String>();
 	}
 	
-	public static void writeToxRecordsToExcel(List<ToxRecordEChemPortalAPIForToxVal> records, String fileName) {
+	// Checks equality of information, ignores source/URL
+	public boolean recordEquals(Object o) {
+		if (o==this) {
+			return true;
+		}
+		
+		if (!(o instanceof ToxValRecordEChemPortalAPI)) {
+			return false;
+		}
+		
+		ToxValRecordEChemPortalAPI r = (ToxValRecordEChemPortalAPI) o;
+		if (!Objects.equals(name,r.name) ||
+				!Objects.equals(nameType, r.nameType) ||
+				!Objects.equals(number, r.number) ||
+				!Objects.equals(numberType, r.numberType) ||
+				!Objects.equals(memberOfCategory, r.memberOfCategory) ||
+				!Objects.equals(infoType, r.infoType) ||
+				!Objects.equals(reliability, r.reliability) ||
+				!Objects.equals(endpoint, r.endpoint) ||
+				!Objects.equals(years, r.years) ||
+				!Objects.equals(guidelineQualifiers, r.guidelineQualifiers) ||
+				!Objects.equals(guidelines, r.guidelines) ||
+				!Objects.equals(glpCompliance, r.glpCompliance) ||
+				!Objects.equals(testType, r.testType) ||
+				!Objects.equals(species, r.species) ||
+				!Objects.equals(strain, r.strain) ||
+				!Objects.equals(routeOfAdministration, r.routeOfAdministration) ||
+				!Objects.equals(inhalationExposureType, r.inhalationExposureType) ||
+				!Objects.equals(coverageType, r.coverageType) ||
+				!Objects.equals(doseDescriptors, r.doseDescriptors) ||
+				!Objects.equals(effectLevels, r.effectLevels)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	public static void writeToxRecordsToExcel(List<ToxValRecordEChemPortalAPI> records, String fileName) {
 		Workbook wb = new XSSFWorkbook();
 		Sheet sheet = wb.createSheet("Records");
 		Row subtotalRow = sheet.createRow(0);
 		Row headerRow = sheet.createRow(1);
-		String[] headers = ToxRecordEChemPortalAPIForToxVal.headers;
+		String[] headers = ToxValRecordEChemPortalAPI.headers;
 		CellStyle style = wb.createCellStyle();
 		Font font = wb.createFont();
 		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
@@ -89,9 +127,9 @@ public class ToxRecordEChemPortalAPIForToxVal {
 			cell.setCellValue(headers[i]);
 			cell.setCellStyle(style);
 		}
-		Class clazz = ToxRecordEChemPortalAPIForToxVal.class;
+		Class clazz = ToxValRecordEChemPortalAPI.class;
 		int currentRow = 2;
-		for (ToxRecordEChemPortalAPIForToxVal rec:records) {
+		for (ToxValRecordEChemPortalAPI rec:records) {
 			String strGuidelinesQualifiers = "";
 			for (int g = 0; g < rec.guidelines.size(); g++) {
 				if (g > 0) { strGuidelinesQualifiers = strGuidelinesQualifiers + "; "; }
@@ -153,10 +191,10 @@ public class ToxRecordEChemPortalAPIForToxVal {
 		}
 	}
 	
-	public static List<ToxRecordEChemPortalAPIForToxVal> getToxResultsInDatabase(String databaseName) {
+	public static List<ToxValRecordEChemPortalAPI> getToxResultsInDatabase(String databaseName) {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		String databasePath = p.databaseFolder+File.separator+databaseName;
-		List<ToxRecordEChemPortalAPIForToxVal> records = new ArrayList<ToxRecordEChemPortalAPIForToxVal>();
+		List<ToxValRecordEChemPortalAPI> records = new ArrayList<ToxValRecordEChemPortalAPI>();
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		
 		try {
@@ -168,7 +206,7 @@ public class ToxRecordEChemPortalAPIForToxVal {
 				ResultsPage page = gson.fromJson(content,ResultsPage.class);
 				List<Result> results = page.results;
 				for (Result r:results) {
-					ToxRecordEChemPortalAPIForToxVal rec = new ToxRecordEChemPortalAPIForToxVal();
+					ToxValRecordEChemPortalAPI rec = new ToxValRecordEChemPortalAPI();
 					rec.url = r.endpointUrl;
 					rec.memberOfCategory = r.memberOfCategory;
 					rec.participant = r.participantAcronym;
@@ -244,18 +282,17 @@ public class ToxRecordEChemPortalAPIForToxVal {
 	}
 	
 	public static void downloadAndWriteAllToxicityResults(boolean startFresh) {
-		String[] routes = {"Other"};
-		String[] durations = {"AcuteToxicity"};
-		for (String r:routes) {
-			for (String d:durations) {
+		String[] durations = {"AcuteToxicity","RepeatedDoseToxicity"};
+		String[] routes = {"Oral","Dermal"};
+		for (String d:durations) {
+			for (String r:routes) {
 				String endpointKind = d + r;
-				if (endpointKind.equals("AcuteToxicityOral")) { continue; }
-				if (endpointKind.equals("AcuteToxicityDermal")) { continue; }
 				ToxQueryOptions options = ToxQueryOptions.generateCompleteToxQueryOptions(endpointKind);
 				String databaseName = "Toxicity" + File.separator + "EChemPortalAPI_" + endpointKind + "_RawJSON.db";
 				options.runDownload(databaseName, startFresh);
 				
-				List<ToxRecordEChemPortalAPIForToxVal> records = getToxResultsInDatabase(databaseName);
+				List<ToxValRecordEChemPortalAPI> records = getToxResultsInDatabase(databaseName);
+				records = ToxValRecordDeduplicator.removeDuplicates(records);
 				
 				String excelFileName = "Toxicity" + File.separator + "EChemPortalAPI_" + endpointKind + "_Records.xlsx";
 				writeToxRecordsToExcel(records,excelFileName);
