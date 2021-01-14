@@ -13,7 +13,7 @@
 	<properties>
 		<project.build.sourceEncoding>iso-8859-1</project.build.sourceEncoding>
 		<jdk.version>1.8</jdk.version>
-		<poi.version>3.16</poi.version>
+		<poi.version>4.1.2</poi.version>
 		<log4j.version>2.13.2</log4j.version>
 		<!-- Use the latest version whenever possible. -->
 		<jackson.version>2.4.4</jackson.version>
