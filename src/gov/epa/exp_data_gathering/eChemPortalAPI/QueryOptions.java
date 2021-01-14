@@ -167,17 +167,19 @@ public class QueryOptions {
 	 * Merges the endpoint range of another QueryOptions object into the current QueryOptions
 	 * @param options	The QueryOptions object to merge
 	 */
-	protected void mergeOptions(QueryOptions options) {
-		if (this.propertyName==options.propertyName) {
+	protected boolean mergeOptions(QueryOptions options) {
+		if (this.propertyName.equals(options.propertyName)) {
 			if (this.endpointMax.equals(options.endpointMin)) {
 				this.endpointMax = options.endpointMax;
+				return true;
 			} else if (this.endpointMin.equals(options.endpointMax)) {
 				this.endpointMin = options.endpointMin;
+				return true;
 			} else {
-				System.out.println("Could not complete merge.");
+				return false;
 			}
 		} else {
-			System.out.println("Could not complete merge.");
+			return false;
 		}
 	}
 	

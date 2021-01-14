@@ -64,8 +64,7 @@ public class RecordQSAR {
 	public Double Structure_MolWt;
 	public String Structure_SMILES_2D_QSAR;
 	
-	public final static String [] outputFieldNames = {
-			"id_physchem",
+	public final static String [] outputFieldNames = {"id_physchem",
 			"usable",
 			"reason",			
 			"casrn",
@@ -136,8 +135,8 @@ public class RecordQSAR {
 		double logTolerance = 1.0;//log units for properties that vary many orders of magnitude; if value was 1, then max would be 10x bigger than min
 		double temperatureTolerance = 10.0;//C For Melting point, boiling point, flash point
 		double densityTolerance = 0.1;//g/cm^3 for density
+		double zeroTolerance = Math.pow(10.0, -6.0);
 		
-		//Properties which are usually modeled as log of the property value: pKA, logKow, WS, HLC, VP, LC50, LD50
 		if (er.property_name.equals(ExperimentalConstants.str_pKA) || er.property_name.equals(ExperimentalConstants.strLogKow)) {
 			good = isWithinTolerance(er.property_value_min_final,er.property_value_max_final,logTolerance);
 		} else if ((er.property_name.equals(ExperimentalConstants.strMeltingPoint) || er.property_name.equals(ExperimentalConstants.strBoilingPoint) ||
@@ -148,14 +147,14 @@ public class RecordQSAR {
 		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure) || er.property_name.equals(ExperimentalConstants.strHenrysLawConstant) ||
 				er.property_name.equals(ExperimentalConstants.strWaterSolubility) || er.property_name.toLowerCase().contains("lc50") ||
 				er.property_name.toLowerCase().contains("ld50")) {
-			good = isWithinLogTolerance(er.property_value_min_final,er.property_value_max_final,logTolerance);
+			good = isWithinLogTolerance(er.property_value_min_final,er.property_value_max_final,logTolerance,zeroTolerance);
 		}
 		
 		return good;
 	}
 
-	private static boolean isWithinLogTolerance(double min,double max,double logTolerance) {
-		if (Math.abs(min) > Math.pow(10.0,-6.0)) {
+	private static boolean isWithinLogTolerance(double min,double max,double logTolerance,double zeroTolerance) {
+		if (Math.abs(min) > zeroTolerance) {
 			return Math.log10(max/min) <= logTolerance;
 		} else {
 			return false;
@@ -193,7 +192,6 @@ public class RecordQSAR {
 				System.out.println("Need to implement"+myField.getType().getName());
 			}					
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 	}
