@@ -86,7 +86,7 @@ public class OCHEM_AD_Stats {
 				r.pred=rowi.getCell(colNumPred).getStringCellValue();
 				if(colNameAD!=null) r.AD=rowi.getCell(colNumAD).getNumericCellValue();
 				
-				if (r.pred.isEmpty())r.AD=99999.0;
+				if (r.pred.isEmpty())r.AD=9999999.0;
 				
 //				if (r.ID.contentEquals("ADD SIDs"))r.AD=99999.0;
 //				*** add SIDs for the chemicals that are too large.***
@@ -96,7 +96,7 @@ public class OCHEM_AD_Stats {
 //				in OCHEM because "in sdf too large molecule with na>100".
 //				-Leora
 				
-				if (isTooLargeMolecule(r)) r.AD=99999.0;		
+				if (isTooLargeMolecule(r)) r.AD=9999999.0;		
 
 //				System.out.println(i+"\t"+r.ID+"\t"+r.exp+"\t"+r.pred+"\t"+r.AD);
 				records.add(r);
@@ -312,9 +312,14 @@ public class OCHEM_AD_Stats {
 				
 				if (havePred ) {
 
-					if ((r.AD!=null && r.AD<=ADcutoff) || r.AD==null)  {
+					
+//					System.out.println(r.ID+"\t"+r.AD+"\t"+ADcutoff);
+					
+					
+					if ((r.AD!=null && r.AD<ADcutoff) || r.AD==null)  {
 
-						if (haveExp) {						
+						if (haveExp) {
+							
 							predcount++;
 							if (r.exp.contentEquals("P")) sc.posPredcount++;
 							else if (r.exp.contentEquals("N")) sc.negPredcount++;

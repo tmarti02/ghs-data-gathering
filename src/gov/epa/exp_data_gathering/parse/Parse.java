@@ -2,6 +2,7 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -12,6 +13,7 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.eChemPortalAPI.ParseEChemPortalAPI;
+import gov.epa.exp_data_gathering.eChemPortalAPI.ToxParseEChemPortalAPI;
 
 public class Parse {
 	
@@ -41,6 +43,7 @@ public class Parse {
 	public static boolean writeExcelExperimentalRecordsFile=true;//all data converted to final format stored as xlsx file
 	
 	protected Gson gson=null;
+	protected UnitConverter uc=null;
 
 	public void init() {
 		fileNameJSON_Records = sourceName +" Original Records.json";
@@ -58,6 +61,8 @@ public class Parse {
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting().disableHtmlEscaping();
 		gson = builder.create();
+		
+		uc = new UnitConverter("Data" + File.separator + "density.txt");
 	}
 	
 	/**
@@ -98,7 +103,7 @@ public class Parse {
 		records.addSourceBasedIDNumbers();
 		
 		DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
-		d.removeDuplicates(records,sourceName);	
+		d.removeDuplicates(records,sourceName);
 		
 		ExperimentalRecords recordsBad = records.dumpBadRecords();
 
@@ -156,7 +161,7 @@ public class Parse {
 			FileWriter fw = new FileWriter(jsonPath);
 			String strRecords=gson.toJson(records);
 			
-			strRecords=ExperimentalRecords.fixChars(strRecords);
+			strRecords=ParseUtilities.fixChars(strRecords);
 			
 			fw.write(strRecords);
 			fw.close();
@@ -167,6 +172,11 @@ public class Parse {
 	}
 	
 	public static void runParse(String sourceName,String recordTypeToParse) {
+		String[] toxSources = {ExperimentalConstants.strSourceChemidplus,ExperimentalConstants.strSourceEChemPortalAPI};
+		if (!Arrays.asList(toxSources).contains(sourceName) && recordTypeToParse.toLowerCase().contains("tox")) {
+			System.out.println("Warning: No toxicity data in "+sourceName+".");
+			return;
+		}
 		Parse p = null;
 		switch (sourceName) {
 		case ExperimentalConstants.strSourceADDoPT:
@@ -193,7 +203,11 @@ public class Parse {
 			p = new ParseEChemPortal();
 			break;
 		case ExperimentalConstants.strSourceEChemPortalAPI:
-			p = new ParseEChemPortalAPI();
+			if (recordTypeToParse.toLowerCase().contains("tox")) {
+				p = new ToxParseEChemPortalAPI();
+			} else {
+				p = new ParseEChemPortalAPI();
+			}
 			break;
 		case ExperimentalConstants.strSourceLookChem:
 			String[] arr = {"General","PFAS"};
@@ -223,6 +237,7 @@ public class Parse {
 	}
 	
 	public static void main(String[] args) {
+		String recordType = "tox";
 		String[] sources = {ExperimentalConstants.strSourceADDoPT,
 				ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,
@@ -237,10 +252,10 @@ public class Parse {
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander};
 		for (String s:sources) {
-			runParse(s,"physchem");
+			runParse(s,recordType);
 		}
-		DataFetcher d = new DataFetcher(sources);
-		d.createExperimentalRecordsDatabase();
+		DataFetcher d = new DataFetcher(sources,recordType);
+		d.createRecordsDatabase();
 	}
 }
 

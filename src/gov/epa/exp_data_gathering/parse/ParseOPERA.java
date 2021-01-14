@@ -65,21 +65,23 @@ public class ParseOPERA extends Parse {
 			er_a.note = "qc_level= " + ro.DSSTox_QC_Level;
 			er_a.dsstox_substance_id = ro.DSSTox_Substance_Id;
 			er_a.date_accessed = dayOnly;
+			er_a.keep = true;
 
 			if(!(ro.pKa_a.equals("NaN"))) {
 				er_a.property_value_point_estimate_final=Double.parseDouble(ro.pKa_a);
 				er_a.property_name = ExperimentalConstants.str_pKAa;
 				// ParseUtilities.getLogProperty(er_a,er_a.property_value_point_estimate_final.toString()); // log quantity
-				er_a.keep = true;
+				uc.convertRecord(er_a);
 				records.add(er_a);
 
 			}
 			if ((!(ro.pKa_b.equals("NaN")))) {
 				ExperimentalRecord er_b = er_a; // makes the second experimental record for bases from the one RecordOPERA record.
+				er_b.keep = true;
 				er_b.property_value_point_estimate_final=Double.parseDouble(ro.pKa_b);
 				er_a.property_name = ExperimentalConstants.str_pKAb;
 				// ParseUtilities.getLogProperty(er_b,er_b.property_value_point_estimate_original.toString()); // log quantity
-				er_b.keep = true;
+				uc.convertRecord(er_b);
 				records.add(er_b);
 			}
 			
@@ -88,6 +90,7 @@ public class ParseOPERA extends Parse {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.chemical_name = ro.preferred_name;
 			er.source_name = ExperimentalConstants.strSourceOPERA;
+			er.keep = true;
 			er.property_name = ro.property_name;
 			er.property_value_point_estimate_original = getPropertyValueOriginal(ro);
 			if (er.property_value_point_estimate_original != null) {
@@ -101,7 +104,6 @@ public class ParseOPERA extends Parse {
 			er.smiles=ro.Original_SMILES;
 			er.note = "qc_level= " + ro.qc_level;
 			er.date_accessed = dayOnly;
-			RecordFinalizer.finalizeRecord(er);
 
 			er.original_source_name = ro.Reference;
 			if (!(ro.dsstox_compound_id == null))
@@ -112,10 +114,7 @@ public class ParseOPERA extends Parse {
 			
 			// finalizePropertyValues(er);
 			// er.finalizePropertyValues();
-			RecordFinalizer.finalizeRecord(er);
-			
-			
-			er.keep = true;
+			uc.convertRecord(er);
 			
 			records.add(er);
 		}
@@ -170,7 +169,8 @@ public class ParseOPERA extends Parse {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		ParseOPERA p = new ParseOPERA();
-		p.createFilesFromOriginalRecords();
+		p.generateOriginalJSONRecords = false;
+		p.createFiles();
 	}
 
 }

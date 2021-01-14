@@ -9,6 +9,9 @@ import org.apache.commons.text.StringEscapeUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.QSAR.DataSetCreation.RecordQSAR;
+import gov.epa.api.ExperimentalConstants;
+
 
 public class ExperimentalRecord {
 
@@ -50,20 +53,6 @@ public class ExperimentalRecord {
 	public String dsstox_substance_id; //DSSTox substance identifier
 	public String note;//	Any additional note
 
-	
-	//DSSTox fields:
-	public String Substance_Name;
-	public String Substance_CASRN;
-	public String Substance_Type;
-	public String Substance_Note;
-	public String Structure_SMILES;
-	public String Structure_InChI;
-	public String Structure_InChIKey;
-	public String Structure_Formula;
-	public Double Structure_MolWt;
-	public String Structure_SMILES_2D_QSAR;
-
-		
 	public String url;
 	public String source_name;//use Experimental constants
 	public String original_source_name;//If specific reference/paper provided
@@ -103,63 +92,30 @@ public class ExperimentalRecord {
 			"url",
 			"date_accessed"};
 	
-	
-	public final static String [] outputFieldNamesQSAR= {
-			"id_physchem",
-			"keep",
-			"reason",			
-			"casrn",
-			"einecs",
-			"chemical_name",
-			"synonyms",
-			"smiles", 
-			"dsstox_substance_id",
-			"Substance_Name", "Substance_CASRN", "Substance_Type", "Substance_Note", "Structure_SMILES",
-			"Structure_InChI", "Structure_InChIKey", "Structure_Formula", "Structure_MolWt", "Structure_SMILES_2D_QSAR",
-			"property_name",
-			"source_name",
-			"property_value_string",
-			"property_value_numeric_qualifier",
-			"property_value_point_estimate_final",
-			"property_value_min_final",
-			"property_value_max_final",
-			"property_value_units_final",
-			"pressure_mmHg",
-			"temperature_C",
-			"pH",
-			"property_value_qualitative",
-			"measurement_method",
-			"note",
-			"flag",
-			"original_source_name",
-			"url",
-			"date_accessed"};
-
-	
-	public void setComboID(String del) {
-		String CAS=casrn;
-		if (CAS==null || CAS.trim().isEmpty()) CAS="casrn=null";//need placeholder so dont get spurious match in chemreg
-		else {
-			CAS=ParseUtilities.fixCASLeadingZero(CAS);
-		}
-		String name=StringEscapeUtils.escapeJava(chemical_name);
-		
-		String EINECS=einecs;
-		if (EINECS==null || EINECS.trim().isEmpty()) EINECS="einecs=null";//need placeholder so dont get spurious match in chemreg
-		EINECS=EINECS.trim();
-		
-		if (name==null || name.trim().isEmpty()) name="name=null";//need placeholder so dont get spurious match in chemreg
-		name=name.trim();
-		
-		String SMILES=smiles;
-		if (SMILES==null || SMILES.trim().isEmpty()) SMILES="smiles=null";//need placeholder so dont get spurious match in chemreg
-		SMILES=SMILES.trim();
-		
-		//TODO omit chemicals where smiles indicates bad element....
-		
-		comboID=CAS+del+EINECS+del+name+del+SMILES;
-		
-	}
+//	public void setComboID(String del) {
+//		String CAS=casrn;
+//		if (CAS==null || CAS.trim().isEmpty()) CAS="casrn=null";//need placeholder so dont get spurious match in chemreg
+//		else {
+//			CAS=ParseUtilities.fixCASLeadingZero(CAS);
+//		}
+//		String name=StringEscapeUtils.escapeJava(chemical_name);
+//		
+//		String EINECS=einecs;
+//		if (EINECS==null || EINECS.trim().isEmpty()) EINECS="einecs=null";//need placeholder so dont get spurious match in chemreg
+//		EINECS=EINECS.trim();
+//		
+//		if (name==null || name.trim().isEmpty()) name="name=null";//need placeholder so dont get spurious match in chemreg
+//		name=name.trim();
+//		
+//		String SMILES=smiles;
+//		if (SMILES==null || SMILES.trim().isEmpty()) SMILES="smiles=null";//need placeholder so dont get spurious match in chemreg
+//		SMILES=SMILES.trim();
+//		
+//		//TODO omit chemicals where smiles indicates bad element....
+//		
+//		comboID=CAS+del+EINECS+del+name+del+SMILES;
+//		
+//	}
 	
 	public void assignValue(String fieldName,String fieldValue) {
 		
@@ -168,34 +124,28 @@ public class ExperimentalRecord {
 		Field myField;
 		try {
 			myField = getClass().getDeclaredField(fieldName);
-		
-		if (myField.getType().getName().contentEquals("boolean")) {
-			myField.setBoolean(this, Boolean.parseBoolean(fieldValue));
-
-		} else if (myField.getType().getName().contentEquals("double")) {
-			myField.setDouble(this, Double.parseDouble(fieldValue));
-
-		} else if (myField.getType().getName().contentEquals("int")) {
-			myField.setInt(this, Integer.parseInt(fieldValue));
-
-		} else if (myField.getType().getName().contentEquals("java.lang.Double")) {
-			Double dval=Double.parseDouble(fieldValue);						
-			myField.set(this, dval);
-		} else if (myField.getType().getName().contentEquals("java.lang.Integer")) {
-			Integer ival=Integer.parseInt(fieldValue);
-			myField.setInt(this,ival);
-		} else if (myField.getType().getName().contentEquals("java.lang.String")) {
-			myField.set(this, fieldValue);
-		} else {
-			System.out.println("Need to implement"+myField.getType().getName());
-		}					
-
+			if (myField.getType().getName().contentEquals("boolean")) {
+				myField.setBoolean(this, Boolean.parseBoolean(fieldValue));
+			} else if (myField.getType().getName().contentEquals("double")) {
+				myField.setDouble(this, Double.parseDouble(fieldValue));
+			} else if (myField.getType().getName().contentEquals("int")) {
+				myField.setInt(this, Integer.parseInt(fieldValue));
+			} else if (myField.getType().getName().contentEquals("java.lang.Double")) {
+				Double dval=Double.parseDouble(fieldValue);						
+				myField.set(this, dval);
+			} else if (myField.getType().getName().contentEquals("java.lang.Integer")) {
+				Integer ival=Integer.parseInt(fieldValue);
+				myField.setInt(this,ival);
+			} else if (myField.getType().getName().contentEquals("java.lang.String")) {
+				myField.set(this, fieldValue);
+			} else {
+				System.out.println("Need to implement"+myField.getType().getName());
+			}					
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 
-		
 	}
 
 	public String toString() {
@@ -204,6 +154,49 @@ public class ExperimentalRecord {
 	public String toString(String del) {
 		// TODO Auto-generated method stub
 		return toString(del,outputFieldNames);
+	}
+	
+	
+	public boolean isValidPointEstimatePossible() {
+		if (property_value_numeric_qualifier!=null && !property_value_numeric_qualifier.equals("~")) { 
+//			System.out.println("bad qualifier:"+this);
+			return false;
+		}
+		if (property_value_point_estimate_final!=null) { return true; }
+		
+		boolean hasMinAndMax = property_value_min_final!=null && property_value_max_final!=null;
+		if (!hasMinAndMax) { 
+//			System.out.println("dont have min and max:"+this);
+			return false; 
+		}
+		
+		boolean good = true;
+		
+		double logTolerance = 1.0;//log units for properties that vary many orders of magnitude; if value was 1, then max would be 10x bigger than min
+		double temperatureTolerance = 10.0;//C For Melting point, boiling point, flash point
+		double densityTolerance = 0.1;//g/cm^3 for density
+		
+		//Properties which are usually modeled as log of the property value: pKA, logKow, WS, HLC, VP, LC50, LD50
+		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
+			good = RecordQSAR.isWithinTolerance(property_value_min_final,property_value_max_final,logTolerance);
+		} else if ((property_name.equals(ExperimentalConstants.strMeltingPoint) || property_name.equals(ExperimentalConstants.strBoilingPoint) ||
+				property_name.equals(ExperimentalConstants.strFlashPoint))) {
+			good = RecordQSAR.isWithinTolerance(property_value_min_final,property_value_max_final,temperatureTolerance);
+		} else if (property_name.equals(ExperimentalConstants.strDensity)) {
+			good = RecordQSAR.isWithinTolerance(property_value_min_final,property_value_max_final,densityTolerance);
+		} else if (property_name.equals(ExperimentalConstants.strVaporPressure) || property_name.equals(ExperimentalConstants.strHenrysLawConstant) ||
+				property_name.equals(ExperimentalConstants.strWaterSolubility) || property_name.toLowerCase().contains("lc50") ||
+				property_name.toLowerCase().contains("ld50")) {
+			good = RecordQSAR.isWithinLogTolerance(property_value_min_final,property_value_max_final,logTolerance);
+			
+			if (!good) {
+//				System.out.println("dont have min and max:"+this);
+			} else {
+//				System.out.println("ok:"+this);
+			}
+		}
+		
+		return good;
 	}
 
 	public String toJSON() {
@@ -311,7 +304,7 @@ public class ExperimentalRecord {
 				case "java.lang.String":
 					if (myField.get(this)==null) val="";	
 					else val=myField.get(this)+"";						
-					val=ExperimentalRecords.reverseFixChars(StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'")));					
+					val=ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'")));					
 					break;
 				
 				case "java.lang.Double":

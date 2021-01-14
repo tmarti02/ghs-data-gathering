@@ -28,7 +28,7 @@ public class Unit {
 	 * Translates our unit identifiers to eChemPortal's Unit objects
 	 * @param unit	Desired unit from ExperimentalConstants
 	 */
-	public Unit(String unit) {
+	public Unit(String unit,String endpointKind) {
 		switch (unit) {
 		case "":
 			// For partition coefficient, pH, pKa
@@ -58,7 +58,7 @@ public class Unit {
 			phraseGroupId = "P02";
 			phraseId = "2019";
 			break;
-		case ExperimentalConstants.str_atm+"_VP":
+		case ExperimentalConstants.str_atm:
 			phraseGroupId = "P02";
 			phraseId = "1740";
 			break;
@@ -82,15 +82,15 @@ public class Unit {
 			phraseGroupId = "P02";
 			phraseId = "1616";
 			break;
-		case ExperimentalConstants.str_g_cm3+"_density":
+		case ExperimentalConstants.str_g_cm3:
 			phraseGroupId = "P18";
 			phraseId = "1929";
 			break;
-		case ExperimentalConstants.str_kg_m3+"_density":
+		case ExperimentalConstants.str_kg_m3:
 			phraseGroupId = "P18";
 			phraseId = "2022";
 			break;
-		case ExperimentalConstants.str_g_L+"_density":
+		case ExperimentalConstants.str_g_L:
 			phraseGroupId = "P18";
 			phraseId = "1935";
 			break;
@@ -101,18 +101,6 @@ public class Unit {
 		case ExperimentalConstants.str_mg_L:
 			phraseGroupId = "P08";
 			phraseId = "2098";
-			break;
-		case ExperimentalConstants.str_g_L+"_solubility":
-			phraseGroupId = "P08";
-			phraseId = "1935";
-			break;
-		case ExperimentalConstants.str_g_cm3+"_solubility":
-			phraseGroupId = "P08";
-			phraseId = "1929";
-			break;
-		case ExperimentalConstants.str_kg_m3+"_solubility":
-			phraseGroupId = "P08";
-			phraseId = "2022";
 			break;
 		case ExperimentalConstants.str_ppb:
 			phraseGroupId = "P08";
@@ -138,9 +126,46 @@ public class Unit {
 			phraseGroupId = "P101";
 			phraseId = "1853";
 			break;
-		case ExperimentalConstants.str_atm+"_H":
+		}
+		
+		switch (endpointKind) {
+		case "HenrysLawConstant":
 			phraseGroupId = "P101";
-			phraseId = "1740";
+			break;
+		case "WaterSolubility":
+			phraseGroupId = "P08";
+			break;
+		}
+	}
+	
+	public Unit(String endpointKind) {
+		switch (endpointKind) {
+		case "Melting":
+			phraseGroupId = "A102";
+			break;
+		case "BoilingPoint":
+			phraseGroupId = "A102";
+			break;
+		case "FlashPoint":
+			phraseGroupId = "A102";
+			break;
+		case "Density":
+			phraseGroupId = "P18";
+			break;
+		case "Vapour":
+			phraseGroupId = "P02";
+			break;
+		case "Partition":
+			phraseId = null;
+			break;
+		case "WaterSolubility":
+			phraseGroupId = "P08";
+			break;
+		case "DissociationConstant":
+			phraseId = null;
+			break;
+		case "HenrysLawConstant":
+			phraseGroupId = "P101";
 			break;
 		}
 	}

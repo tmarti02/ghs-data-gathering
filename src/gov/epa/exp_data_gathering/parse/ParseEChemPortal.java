@@ -152,7 +152,7 @@ public class ParseEChemPortal extends Parse {
 					ParseUtilities.getHenrysLawConstant(er,propertyValue);
 				}
 
-				RecordFinalizer.finalizeRecord(er);
+				uc.convertRecord(er);
 				
 				if (!ParseUtilities.hasIdentifiers(er)) {
 					er.keep = false;

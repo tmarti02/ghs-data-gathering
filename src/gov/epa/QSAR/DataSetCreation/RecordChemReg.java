@@ -58,7 +58,7 @@ public class RecordChemReg {
 		}
 	}
 	
-	public static RecordChemReg getChemRegRecord(ExperimentalRecord rec,
+	public static RecordChemReg getChemRegRecord(RecordQSAR rec,
 			Hashtable<String, RecordChemReg> htChemRegCAS_Name,
 			Hashtable<String, RecordChemReg> htChemRegCAS,
 			Hashtable<String, RecordChemReg> htChemRegName) {

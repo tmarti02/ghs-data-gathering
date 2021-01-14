@@ -34,6 +34,7 @@ public class QueryOptions {
 	boolean includeOtherReliability = false;
 	boolean includeAllGLPCompliances = false;
 	boolean includeAllGuidelines = false;
+	boolean includeAllUnits;
 	
 	// Default null constructor
 	QueryOptions() { }
@@ -61,6 +62,7 @@ public class QueryOptions {
 		includeNullpH = options.includeNullpH;
 		includeAllGLPCompliances = options.includeAllGLPCompliances;
 		includeAllGuidelines = options.includeAllGuidelines;
+		includeAllUnits = options.includeAllUnits;
 	}
 	
 	/**
@@ -73,35 +75,35 @@ public class QueryOptions {
 				propertyName.equals(ExperimentalConstants.strFlashPoint)) {
 			endpointMin = "0";
 			endpointMax = "10000";
-			endpointUnits = ExperimentalConstants.str_K;
+			includeAllUnits = true;
 			pressureMin = "0";
 			pressureUnits = ExperimentalConstants.str_pa;
 			includeNullPressure = true;
 		} else if (propertyName.equals(ExperimentalConstants.strDensity)) {
 			endpointMin = "0";
 			endpointMax = "1000";
-			endpointUnits = ExperimentalConstants.str_g_cm3;
+			includeAllUnits = true;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.strVaporPressure)) {
 			endpointMin = "0";
 			endpointMax = "5000000";
-			endpointUnits = ExperimentalConstants.str_pa;
+			includeAllUnits = true;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.str_pKA)) {
 			endpointMin = "-1000";
 			endpointMax = "1000";
-			endpointUnits = "";
+			includeAllUnits = true;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
 		} else if (propertyName.equals(ExperimentalConstants.strLogKow)) {
 			endpointMin = "-1000";
 			endpointMax = "126000000000"; // Largest non-log Pow value in eChemPortal
-			endpointUnits = "";
+			includeAllUnits = true;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
@@ -110,47 +112,7 @@ public class QueryOptions {
 		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility)) {
 			endpointMin = "0";
 			endpointMax = "5000";
-			endpointUnits = ExperimentalConstants.str_g_L;
-			temperatureMin = "0";
-			temperatureUnits = ExperimentalConstants.str_K;
-			includeNullTemperature = true;
-			pHMin = "-1000";
-			includeNullpH = true;
-		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility+"_g_cm3")) {
-			this.propertyName = ExperimentalConstants.strWaterSolubility;
-			endpointMin = "0";
-			endpointMax = "1000";
-			endpointUnits = ExperimentalConstants.str_g_cm3;
-			temperatureMin = "0";
-			temperatureUnits = ExperimentalConstants.str_K;
-			includeNullTemperature = true;
-			pHMin = "-1000";
-			includeNullpH = true;
-		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility+"_kg_m3")) {
-			this.propertyName = ExperimentalConstants.strWaterSolubility;
-			endpointMin = "0";
-			endpointMax = "500";
-			endpointUnits = ExperimentalConstants.str_kg_m3;
-			temperatureMin = "0";
-			temperatureUnits = ExperimentalConstants.str_K;
-			includeNullTemperature = true;
-			pHMin = "-1000";
-			includeNullpH = true;
-		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility+"_ppb")) {
-			this.propertyName = ExperimentalConstants.strWaterSolubility;
-			endpointMin = "0";
-			endpointMax = "2000";
-			endpointUnits = ExperimentalConstants.str_ppb;
-			temperatureMin = "0";
-			temperatureUnits = ExperimentalConstants.str_K;
-			includeNullTemperature = true;
-			pHMin = "-1000";
-			includeNullpH = true;
-		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility+"_%v")) {
-			this.propertyName = ExperimentalConstants.strWaterSolubility;
-			endpointMin = "0";
-			endpointMax = "500";
-			endpointUnits = ExperimentalConstants.str_pctVol;
+			includeAllUnits = true;
 			temperatureMin = "0";
 			temperatureUnits = ExperimentalConstants.str_K;
 			includeNullTemperature = true;
@@ -159,37 +121,7 @@ public class QueryOptions {
 		} else if (propertyName.equals(ExperimentalConstants.strHenrysLawConstant)) {
 			this.propertyName = ExperimentalConstants.strHenrysLawConstant;
 			endpointMin = String.valueOf(Integer.MIN_VALUE);
-			endpointUnits = ExperimentalConstants.str_Pa_m3_mol;
-			pressureMin = "0";
-			pressureUnits = ExperimentalConstants.str_pa;
-			includeNullPressure = true;
-			temperatureMin = "0";
-			temperatureUnits = ExperimentalConstants.str_K;
-			includeNullTemperature = true;
-		} else if (propertyName.equals(ExperimentalConstants.strHenrysLawConstant+"_dimensionless")) {
-			this.propertyName = ExperimentalConstants.strHenrysLawConstant;
-			endpointMin = String.valueOf(Integer.MIN_VALUE);
-			endpointUnits = ExperimentalConstants.str_dimensionless_H;
-			pressureMin = "0";
-			pressureUnits = ExperimentalConstants.str_pa;
-			includeNullPressure = true;
-			temperatureMin = "0";
-			temperatureUnits = ExperimentalConstants.str_K;
-			includeNullTemperature = true;
-		} else if (propertyName.equals(ExperimentalConstants.strHenrysLawConstant+"_dimensionless_vol")) {
-			this.propertyName = ExperimentalConstants.strHenrysLawConstant;
-			endpointMin = String.valueOf(Integer.MIN_VALUE);
-			endpointUnits = ExperimentalConstants.str_dimensionless_H_vol;
-			pressureMin = "0";
-			pressureUnits = ExperimentalConstants.str_pa;
-			includeNullPressure = true;
-			temperatureMin = "0";
-			temperatureUnits = ExperimentalConstants.str_K;
-			includeNullTemperature = true;
-		} else if (propertyName.equals(ExperimentalConstants.strHenrysLawConstant+"_atm")) {
-			this.propertyName = ExperimentalConstants.strHenrysLawConstant;
-			endpointMin = String.valueOf(Integer.MIN_VALUE);
-			endpointUnits = ExperimentalConstants.str_atm;
+			includeAllUnits = true;
 			pressureMin = "0";
 			pressureUnits = ExperimentalConstants.str_pa;
 			includeNullPressure = true;
@@ -207,18 +139,9 @@ public class QueryOptions {
 		allOptions.add(new QueryOptions(ExperimentalConstants.strDensity));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strVaporPressure));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility));
-		// Generates separate queries for non-interconvertable water solubility units
-		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_g_cm3"));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_kg_m3"));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_ppb"));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strWaterSolubility+"_%v"));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strLogKow));
 		allOptions.add(new QueryOptions(ExperimentalConstants.str_pKA));
 		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant));
-		// Generates separate queries for non-interconvertable HLC units
-		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant+"_dimensionless"));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant+"_dimensionless_vol"));
-		allOptions.add(new QueryOptions(ExperimentalConstants.strHenrysLawConstant+"_atm"));
 		return allOptions;
 	}
 	
@@ -338,24 +261,12 @@ public class QueryOptions {
 		queryBlock.addInfoTypeField();
 		queryBlock.addReliabilityField(maxReliabilityLevel,includeOtherReliability);
 		
-		// Disambiguates potential unit collisions between density and solubility, pressure and HLC
-		if (endpointUnits.equals(ExperimentalConstants.str_g_L) || endpointUnits.equals(ExperimentalConstants.str_g_cm3) ||
-				endpointUnits.equals(ExperimentalConstants.str_kg_m3)) {
-			if (endpointKind.equals("Density")) {
-				endpointUnits += "_density";
-			} else if (endpointKind.equals("WaterSolubility")) {
-				endpointUnits += "_solubility";
-			}
-		} else if (endpointUnits.equals(ExperimentalConstants.str_atm)) {
-			if (endpointKind.equals("Vapour")) {
-				endpointUnits += "_VP";
-			} else if (endpointKind.equals("HenrysLawConstant")) {
-				endpointUnits += "_H";
-			}
-		}
-		
 		// Endpoint value
-		queryBlock.addEndpointField(endpointMin,endpointMax,endpointUnits);
+		if (includeAllUnits) {
+			queryBlock.addAllUnitEndpointField(endpointMin, endpointMax);
+		} else {
+			queryBlock.addEndpointField(endpointMin,endpointMax,endpointUnits);
+		}
 		
 		// Pressure condition
 		boolean hasPressureCondition = pressureMin!=null || pressureMax!=null;

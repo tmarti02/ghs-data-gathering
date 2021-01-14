@@ -13,7 +13,6 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
-import gov.epa.exp_data_gathering.parse.RecordFinalizer;
 
 /**
  * Parses downloaded results from eChemPortal API into RecordEChemPortal API objects and translates them to ExperimentalRecords
@@ -208,11 +207,14 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 		}
 		
-		RecordFinalizer.finalizeRecord(er);
+		uc.convertRecord(er);
 		
 		if (er.keep && !ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;
 			er.reason = "No identifiers";
+		} else if (er.keep && er.property_value_point_estimate_final==null && er.property_value_min_final==null && er.property_value_max_final==null) {
+			er.keep = false;
+			er.reason = "Unhandled units";
 		}
 		
 		records.add(er);

@@ -141,11 +141,21 @@ public class ParseUtilities extends Parse {
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/l");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("relative")) {
-			unitsIndex = propertyValue.length();
+			if (er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
+				int relativeIndex = propertyValue.toLowerCase().indexOf("relative");
+				int densityIndex = propertyValue.toLowerCase().indexOf("density");
+				if (densityIndex>=0 && densityIndex<relativeIndex) {
+					unitsIndex = densityIndex;
+				} else {
+					unitsIndex = relativeIndex;
+				}
+			} else {
+				unitsIndex = propertyValue.length();
+			}
 			badUnits = false;
 			if (propertyValue.toLowerCase().contains("mixture")) {
 				er.updateNote(ExperimentalConstants.str_relative_mixture_density);
-			} else if (propertyValue.toLowerCase().contains("gas")) {
+			} else if (propertyValue.toLowerCase().contains("gas") || propertyValue.toLowerCase().contains("air")) {
 				er.updateNote(ExperimentalConstants.str_relative_gas_density);
 			} else {
 				er.updateNote(ExperimentalConstants.str_relative_density);
@@ -243,6 +253,22 @@ public class ParseUtilities extends Parse {
 		} else if (propertyValue.toLowerCase().contains("ppb")) {
 			er.property_value_units_original = ExperimentalConstants.str_ppb;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ppb");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mmol/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_mM;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mmol");
+			badUnits = false;
+		} else if (propertyValue.contains("mM")) {
+			er.property_value_units_original = ExperimentalConstants.str_mM;
+			unitsIndex = propertyValue.indexOf("mM");
+			badUnits = false;
+		} else if (propertyValue.contains("µM") || propertyValue.contains("uM")) {
+			er.property_value_units_original = ExperimentalConstants.str_uM;
+			unitsIndex = propertyValue.indexOf("M");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mol/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_M;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mol");
 			badUnits = false;
 		} else if (propertyValue.contains("M")) {
 			unitsIndex = propertyValue.indexOf("M");
@@ -402,6 +428,7 @@ public class ParseUtilities extends Parse {
 
 	public static boolean getToxicity(ExperimentalRecord er,ToxRecordEChemPortalAPI ecpr) {
 		String propertyValue = ecpr.value;
+		if (propertyValue==null) { return false; }
 		boolean badUnits = true;
 		int unitsIndex = -1;
 
@@ -418,15 +445,6 @@ public class ParseUtilities extends Parse {
 			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
 			badUnits = false;
 		}
-
-		if (ecpr.chapter.contentEquals("Acute toxicity: inhalation")) {
-			if (!ecpr.species.toLowerCase().contains("other")) {
-				er.property_name=ecpr.species.replaceAll(" ","_").replaceAll(",","")+"_"+ExperimentalConstants.strInhalationLC50;
-			} else {
-				er.property_name="other_"+ExperimentalConstants.strInhalationLC50;
-				er.updateNote("Species: "+ecpr.species.substring(ecpr.species.indexOf(":")+1));
-			}
-		}
 		
 		if (propertyValue.toLowerCase().contains("nominal")) {
 			er.updateNote("nominal units");
@@ -440,6 +458,7 @@ public class ParseUtilities extends Parse {
 
 	public static boolean getToxicity(ExperimentalRecord er,ToxicityRecord tr) {
 		String propertyValue = tr.NormalizedDose;
+		if (propertyValue == null) { return false; }
 		boolean badUnits = true;
 		int unitsIndex = -1;
 
@@ -800,6 +819,65 @@ public class ParseUtilities extends Parse {
 //			}
 		}
 		return valid;
+	}
+
+	public static String reverseFixChars(String str) {
+		str=str.replace("^0","\u2070");// superscript 0
+		str=str.replace("^1","\u00B9");// superscript 1
+		str=str.replace("^2","\u00B2");// superscript 2
+		str=str.replace("^3","\u00B3");// superscript 3
+		str=str.replace("^4","\u2074");// superscript 4
+		str=str.replace("^5","\u2075");// superscript 5
+		str=str.replace("^6","\u2076");// superscript 6
+		str=str.replace("^7","\u2077");// superscript 7
+		str=str.replace("^8","\u2078");// superscript 8
+		str=str.replace("^9","\u2079");// superscript 9
+		str=str.replace("_0","\u2080");// subscript 0
+		str=str.replace("_1","\u2081");// subscript 1
+		str=str.replace("_2","\u2082");// subscript 2
+		str=str.replace("_3","\u2083");// subscript 3
+		str=str.replace("_4","\u2084");// subscript 4
+		str=str.replace("_5","\u2085");// subscript 5
+		str=str.replace("_6","\u2086");// subscript 6
+		str=str.replace("_7","\u2087");// subscript 7
+		str=str.replace("_8","\u2088");// subscript 8
+		str=str.replace("_9","\u2089");// subscript 9
+		return str;
+	}
+
+	public static String fixChars(String str) {
+		str=str.replace("Ã¢â¬â","-").replace("Ã¢â¬â¢","'");
+		str=str.replace("\uff08", "(");// Ã¯Â¼Ë
+		str=str.replace("\uff09", ")");// Ã¯Â¼â°
+		str=str.replace("\uff0f", "/");// Ã¯Â¼ï¿½
+		str=str.replace("\u3000", " ");//blank
+		str=str.replace("\u00a0", " ");//blank
+		str=str.replace("\u2003", " ");//blank
+		str=str.replace("\u0009", " ");//blank
+		str=str.replace("\u300c", "");// Ã£â¬Å
+		str=str.replace("\u300d", "");// Ã£â¬ï¿½
+		str=str.replace("\u2070", "^0");// superscript 0
+		str=str.replace("\u00B9", "^1");// superscript 1
+		str=str.replace("\u00B2", "^2");// superscript 2
+		str=str.replace("\u00B3", "^3");// superscript 3
+		str=str.replace("\u2074", "^4");// superscript 4
+		str=str.replace("\u2075", "^5");// superscript 5
+		str=str.replace("\u2076", "^6");// superscript 6
+		str=str.replace("\u2077", "^7");// superscript 7
+		str=str.replace("\u2078", "^8");// superscript 8
+		str=str.replace("\u2079", "^9");// superscript 9
+		str=str.replace("\u2080", "_0");// subscript 0
+		str=str.replace("\u2081", "_1");// subscript 1
+		str=str.replace("\u2082", "_2");// subscript 2
+		str=str.replace("\u2083", "_3");// subscript 3
+		str=str.replace("\u2084", "_4");// subscript 4
+		str=str.replace("\u2085", "_5");// subscript 5
+		str=str.replace("\u2086", "_6");// subscript 6
+		str=str.replace("\u2087", "_7");// subscript 7
+		str=str.replace("\u2088", "_8");// subscript 8
+		str=str.replace("\u2089", "_9");// subscript 9
+	
+		return str;
 	}
 
 }

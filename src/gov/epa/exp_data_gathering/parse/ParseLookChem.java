@@ -77,7 +77,7 @@ public class ParseLookChem extends Parse {
         } 
 	}
 	
-	private static void addAppearanceRecord(RecordLookChem lcr,ExperimentalRecords records) {
+	private void addAppearanceRecord(RecordLookChem lcr,ExperimentalRecords records) {
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.date_accessed = lcr.date_accessed;
 		er.casrn=lcr.CAS;
@@ -94,7 +94,7 @@ public class ParseLookChem extends Parse {
 		String prefix = lcr.CAS.substring(0,3);
 		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
-		RecordFinalizer.finalizeRecord(er);
+		uc.convertRecord(er);
 		records.add(er);
 	}
 	
@@ -165,13 +165,14 @@ public class ParseLookChem extends Parse {
 			er.reason = "Bad data or units";
 		}
 		
-		RecordFinalizer.finalizeRecord(er);
+		uc.convertRecord(er);
 		
 		recordsExperimental.add(er);
 	}
 	
 	public static void main(String[] args) {
-		ParseLookChem p = new ParseLookChem(args);
+		String[] arr = {"General","PFAS"};
+		ParseLookChem p = new ParseLookChem(arr);
 		p.createFiles();
 	}
 }

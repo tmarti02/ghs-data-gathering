@@ -82,7 +82,7 @@ public class ParsePubChem extends Parse {
         }
 	}
 	
-	private static void addAppearanceRecord(RecordPubChem pcr,String physicalDescription,ExperimentalRecords records) {
+	private void addAppearanceRecord(RecordPubChem pcr,String physicalDescription,ExperimentalRecords records) {
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.date_accessed = pcr.date_accessed;
 		er.casrn=String.join("|", pcr.cas);
@@ -93,7 +93,7 @@ public class ParsePubChem extends Parse {
 		er.property_value_qualitative=physicalDescription.toLowerCase().replaceAll("colour","color").replaceAll("odour","odor").replaceAll("vapour","vapor");
 		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
-		RecordFinalizer.finalizeRecord(er);
+		uc.convertRecord(er);
 		records.add(er);
 	}
 	
@@ -164,7 +164,7 @@ public class ParsePubChem extends Parse {
 			er.reason = "Bad data or units";
 		}
 		
-		RecordFinalizer.finalizeRecord(er);
+		uc.convertRecord(er);
 		
 		recordsExperimental.add(er);
 	}

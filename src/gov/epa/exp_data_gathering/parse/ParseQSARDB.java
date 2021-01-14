@@ -58,7 +58,7 @@ public class ParseQSARDB extends Parse {
 			if (qr.units.contains("mgL")) { er.property_value_units_original = ExperimentalConstants.str_log_mg_L;
 			} else if (qr.units.contains("M")) { er.property_value_units_original = ExperimentalConstants.str_log_M;
 			}
-			RecordFinalizer.finalizeRecord(er);
+			uc.convertRecord(er);
 			records.add(er);
 		}
 		if (qr.mp!=null && !qr.mp.isBlank()) {
@@ -73,7 +73,7 @@ public class ParseQSARDB extends Parse {
 			er.property_value_string = "MP (C): "+qr.mp;
 			ParseUtilities.getNumericalValue(er,qr.mp,qr.mp.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_C;
-			RecordFinalizer.finalizeRecord(er);
+			uc.convertRecord(er);
 			records.add(er);
 		}
 		if (qr.mLogP!=null && !qr.mLogP.isBlank()) {
@@ -87,7 +87,7 @@ public class ParseQSARDB extends Parse {
 			er.property_name = ExperimentalConstants.strLogKow;
 			er.property_value_string = "mLogP: "+qr.mLogP;
 			ParseUtilities.getNumericalValue(er,qr.mLogP,qr.mLogP.length(),false);
-			RecordFinalizer.finalizeRecord(er);
+			uc.convertRecord(er);
 			records.add(er);
 		}
 		if (qr.vp!=null && !qr.vp.isBlank()) {
@@ -103,7 +103,7 @@ public class ParseQSARDB extends Parse {
 			ParseUtilities.getNumericalValue(er,qr.vp,qr.vp.length(),false);
 			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
 			er.property_value_units_original = ExperimentalConstants.str_log_mmHg;
-			RecordFinalizer.finalizeRecord(er);
+			uc.convertRecord(er);
 			records.add(er);
 		}
 	}

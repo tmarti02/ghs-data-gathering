@@ -135,7 +135,7 @@ public class ParseChemicalBook extends Parse {
 		}
 		
 		if (foundNumeric) {
-			RecordFinalizer.finalizeRecord(er);
+			uc.convertRecord(er);
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
@@ -173,8 +173,8 @@ public class ParseChemicalBook extends Parse {
 	
 	public static void main(String[] args) {
 		ParseChemicalBook p = new ParseChemicalBook();
-//		p.createFiles();
-		p.createFilesFromOriginalRecords();
+		p.generateOriginalJSONRecords = false;
+		p.createFiles();
 	}
 	
 	
