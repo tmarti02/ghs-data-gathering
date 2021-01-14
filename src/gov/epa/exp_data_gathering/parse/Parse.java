@@ -137,7 +137,7 @@ public class Parse {
 					if (i!=0 && i%100000==0) {
 						batch++;
 						temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
-						temp.removeAllElements();
+						temp.clear();
 					}
 				}
 				batch++;

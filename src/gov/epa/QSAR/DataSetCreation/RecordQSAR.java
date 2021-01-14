@@ -142,8 +142,9 @@ public class RecordQSAR {
 	}
 	
 
-	private static boolean isWithinLogTolerance(double min,double max,double logTolerance,double zeroTolerance) {
-		if (Math.abs(min) > zeroTolerance) {
+	public static boolean isWithinLogTolerance(double min,double max,double logTolerance) {
+        if (Math.abs(min) > Math.pow(10.0,-6.0)) {
+//		if (Math.abs(min) > zeroTolerance) {
 			return Math.log10(max/min) <= logTolerance;
 		} else {
 			return false;
