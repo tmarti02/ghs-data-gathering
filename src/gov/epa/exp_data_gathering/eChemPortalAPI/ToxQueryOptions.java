@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 public class ToxQueryOptions extends QueryOptions {
-	boolean includeAllUnits;
 	List<String> testTypes;
 	boolean includeOtherTestType;
 	boolean includeAllTestTypes;

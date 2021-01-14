@@ -266,17 +266,6 @@ public class ExperimentalRecords extends Vector<ExperimentalRecord> {
 	public void toExcel_File(String filePath) {
 		toExcel_File(filePath,ExperimentalRecord.outputFieldNames);
 	}
-	
-	
-	public void dontKeepNumericQualifierRecords() {
-		for (ExperimentalRecord record:this) {
-			if (record.keep && record.property_value_numeric_qualifier!=null && !record.property_value_numeric_qualifier.isBlank() &&
-					!record.property_value_numeric_qualifier.contentEquals("~")) {
-				record.keep=false;
-				record.reason="Has numeric qualifier";
-			}
-		}
-	}
 
 	public ExperimentalRecords dumpBadRecords() {
 		ExperimentalRecords recordsBad = new ExperimentalRecords();

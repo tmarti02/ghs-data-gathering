@@ -54,6 +54,7 @@ public class ExperimentalConstants {
 	public static final String str_M="M";
 	public static final String str_mM="mM";
 	public static final String str_nM="nM";
+	public static final String str_uM="uM";
 	public static final String str_log_M="log10(M)";
 	public static final String str_log_mg_L="log10(mg/L)";
 	public static final String str_log_mmHg="log10(mmHg)";

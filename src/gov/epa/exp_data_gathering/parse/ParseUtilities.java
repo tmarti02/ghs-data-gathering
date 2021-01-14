@@ -141,11 +141,21 @@ public class ParseUtilities extends Parse {
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/l");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("relative")) {
-			unitsIndex = propertyValue.length();
+			if (er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
+				int relativeIndex = propertyValue.toLowerCase().indexOf("relative");
+				int densityIndex = propertyValue.toLowerCase().indexOf("density");
+				if (densityIndex>=0 && densityIndex<relativeIndex) {
+					unitsIndex = densityIndex;
+				} else {
+					unitsIndex = relativeIndex;
+				}
+			} else {
+				unitsIndex = propertyValue.length();
+			}
 			badUnits = false;
 			if (propertyValue.toLowerCase().contains("mixture")) {
 				er.updateNote(ExperimentalConstants.str_relative_mixture_density);
-			} else if (propertyValue.toLowerCase().contains("gas")) {
+			} else if (propertyValue.toLowerCase().contains("gas") || propertyValue.toLowerCase().contains("air")) {
 				er.updateNote(ExperimentalConstants.str_relative_gas_density);
 			} else {
 				er.updateNote(ExperimentalConstants.str_relative_density);
@@ -243,6 +253,22 @@ public class ParseUtilities extends Parse {
 		} else if (propertyValue.toLowerCase().contains("ppb")) {
 			er.property_value_units_original = ExperimentalConstants.str_ppb;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ppb");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mmol/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_mM;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mmol");
+			badUnits = false;
+		} else if (propertyValue.contains("mM")) {
+			er.property_value_units_original = ExperimentalConstants.str_mM;
+			unitsIndex = propertyValue.indexOf("mM");
+			badUnits = false;
+		} else if (propertyValue.contains("µM") || propertyValue.contains("uM")) {
+			er.property_value_units_original = ExperimentalConstants.str_uM;
+			unitsIndex = propertyValue.indexOf("M");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mol/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_M;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mol");
 			badUnits = false;
 		} else if (propertyValue.contains("M")) {
 			unitsIndex = propertyValue.indexOf("M");

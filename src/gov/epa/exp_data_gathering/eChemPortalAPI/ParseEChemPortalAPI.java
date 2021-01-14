@@ -212,6 +212,9 @@ public class ParseEChemPortalAPI extends Parse {
 		if (er.keep && !ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;
 			er.reason = "No identifiers";
+		} else if (er.keep && er.property_value_point_estimate_final==null && er.property_value_min_final==null && er.property_value_max_final==null) {
+			er.keep = false;
+			er.reason = "Unhandled units";
 		}
 		
 		records.add(er);

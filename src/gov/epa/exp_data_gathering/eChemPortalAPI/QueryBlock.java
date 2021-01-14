@@ -120,7 +120,7 @@ public class QueryBlock {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".AtmPressure";
 		}
 		String type = "range";
-		Value atmPressureValue = new Value(type,lower,upper,new Unit(unit));
+		Value atmPressureValue = new Value(type,lower,upper,new Unit(unit,"Vapour"));
 		QueryField atmPressure = new QueryField(fieldName,type,"Pressure",atmPressureValue);
 		queryFields.add(atmPressure);
 	}
@@ -140,7 +140,7 @@ public class QueryBlock {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".TempQualifier";
 		}
 		String type = "range";
-		Value temperatureValue = new Value(type,lower,upper,new Unit(unit));
+		Value temperatureValue = new Value(type,lower,upper,new Unit(unit,"MeltingPoint"));
 		QueryField temperature = new QueryField(fieldName,type,"Temperature",temperatureValue);
 		queryFields.add(temperature);
 	}
@@ -153,7 +153,7 @@ public class QueryBlock {
 	public void addpHField(String lower,String upper) {
 		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".Ph";
 		String type = "range";
-		Value pHValue = new Value(type,lower,upper,new Unit(""));
+		Value pHValue = new Value(type,lower,upper,new Unit("","DissociationConstant"));
 		QueryField pH = new QueryField(fieldName,type,"pH",pHValue);
 		queryFields.add(pH);
 	}
@@ -167,7 +167,15 @@ public class QueryBlock {
 	public void addEndpointField(String lower,String upper,String unit) {
 		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+"."+endpointKind3;
 		String type = "range";
-		Value endpointValue = new Value(type,lower,upper,new Unit(unit));
+		Value endpointValue = new Value(type,lower,upper,new Unit(unit,endpointKind));
+		QueryField endpoint = new QueryField(fieldName,type,"Value",endpointValue);
+		queryFields.add(endpoint);
+	}
+	
+	public void addAllUnitEndpointField(String lower,String upper) {
+		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+"."+endpointKind3;
+		String type = "range";
+		Value endpointValue = new Value(type,lower,upper,new Unit(endpointKind));
 		QueryField endpoint = new QueryField(fieldName,type,"Value",endpointValue);
 		queryFields.add(endpoint);
 	}

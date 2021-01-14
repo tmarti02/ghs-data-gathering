@@ -640,24 +640,11 @@ public class ConvertExperimentalRecordsToDataSet {
 		
 		String property=ExperimentalConstants.strRatInhalationLC50;		
 		String folder = "Data\\DataSets\\"+property+"\\";
-
-//		String filepathExcel="Data\\Experimental\\eChemPortalAPI\\eChemPortalAPI Toxicity Experimental Records.xlsx";
-//		ExperimentalRecords recordsExcel = ExperimentalRecords.loadFromExcel(filepathExcel);		
-//		ExperimentalRecords recordsEchemportal=getRecordsWithProperty(property, recordsExcel);			
-//
-//		
-//		String jsonPath="Data\\Experimental\\ChemIDplus\\ChemIDplus Toxicity Experimental Records.json";
-////		ExperimentalRecords recordsChemIDplus=getExperimentalRecordsFromDB(property,ExperimentalConstants.strSourceChemidplus);
-//		ExperimentalRecords recordsJson=ExperimentalRecords.loadFromJSON(jsonPath);
-//		ExperimentalRecords recordsChemIDplus=getRecordsWithProperty(property, recordsJson);
-//		System.out.println("Chemidplus record count="+recordsChemIDplus.size());
 		
 		String toxRecordsDBPath = "Data\\Experimental\\ToxicityRecords.db";
 		ExperimentalRecords recordsDB = getExperimentalRecordsFromDB(property,toxRecordsDBPath);
 					
 		List<RecordQSAR> recordsQSAR=new ArrayList<RecordQSAR>();
-//		recordsQSAR.addAll(RecordQSAR.getValidQSARRecordsFromExperimentalRecords(recordsEchemportal));
-//		recordsQSAR.addAll(RecordQSAR.getValidQSARRecordsFromExperimentalRecords(recordsChemIDplus));	
 		recordsQSAR.addAll(RecordQSAR.getValidQSARRecordsFromExperimentalRecords(recordsDB));
 		
 		// Bad records skipped when creating List<RecordQSAR> from ExperimentalRecords
@@ -669,7 +656,6 @@ public class ConvertExperimentalRecordsToDataSet {
 		
 		//Write records to Excel file:
 //		records.toExcel_File(folder+property+"_records.xlsx");
-//		recordsExperimental.dumpBadRecords();
 		
 		Vector<RecordDSSTox>recordsDSSTox=RecordDSSTox.getDSSToxExportRecords(folder+"DSSTox_"+property+".xlsx");
 		Vector<RecordChemReg>recordsChemReg=RecordChemReg.getChemRegRecords(folder+"ChemReg_"+property+".xlsx");
