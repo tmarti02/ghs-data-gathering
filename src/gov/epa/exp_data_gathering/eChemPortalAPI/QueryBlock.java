@@ -1,6 +1,7 @@
 package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.google.gson.annotations.Expose;
@@ -95,15 +96,25 @@ public class QueryBlock {
 	public void addAfterYearField(String afterYear) {
 		Value afterYearValue = new Value("numeric","GT_EQUALS",afterYear,null);
 		QueryField afterYearField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".DataSource.Reference+LITERATURE.GeneralInfo.ReferenceYear",
-				"numeric","Year",afterYearValue);
+				"numeric","After Year",afterYearValue);
 		queryFields.add(afterYearField);
 	}
 	
 	public void addBeforeYearField(String beforeYear) {
 		Value beforeYearValue = new Value("numeric","LT",beforeYear,null);
 		QueryField beforeYearField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".DataSource.Reference+LITERATURE.GeneralInfo.ReferenceYear",
-				"numeric","Year",beforeYearValue);
+				"numeric","Before Year",beforeYearValue);
 		queryFields.add(beforeYearField);
+	}
+
+	public void addYearField(String after,String before) {
+		List<Value> yearValues = new ArrayList<Value>();
+		yearValues.add(new Value("numeric","GT_EQUALS",after,null));
+		yearValues.add(new Value("numeric","LT",before,null));
+		Value yearValue = new Value("range","0","1000000",null);
+		QueryField yearField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".DataSource.Reference+LITERATURE.GeneralInfo.ReferenceYear",
+				"range","Year",yearValue);
+		queryFields.add(yearField);
 	}
 	
 	/**

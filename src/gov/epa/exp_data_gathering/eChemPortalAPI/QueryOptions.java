@@ -175,6 +175,12 @@ public class QueryOptions {
 			} else if (this.endpointMin.equals(options.endpointMax)) {
 				this.endpointMin = options.endpointMin;
 				return true;
+			} else if (this.beforeYear.equals(options.afterYear)) {
+				this.beforeYear = options.beforeYear;
+				return true;
+			} else if (this.afterYear.equals(options.beforeYear)) {
+				this.afterYear = options.afterYear;
+				return true;
 			} else {
 				return false;
 			}

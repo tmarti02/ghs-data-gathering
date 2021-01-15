@@ -6,6 +6,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+/**
+ * Defines options for an eChemPortal API query for toxicity properties
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
 public class ToxQueryOptions extends QueryOptions {
 	List<String> testTypes;
 	boolean includeOtherTestType;
@@ -78,6 +86,10 @@ public class ToxQueryOptions extends QueryOptions {
 		includeAllEndpointTypes = options.includeAllEndpointTypes;
 	}
 	
+	/**
+	 * Creates ToxQueryOptions objects for inhalation LC50 queries requested by Todd Martin
+	 * @return				The list of associated ToxQueryOptions objects
+	 */
 	public static List<Query> generateInhalationLC50Queries() {
 		List<Query> queries = new ArrayList<Query>();
 		String[] units = {"mg/L air","mg/L air (nominal)","mg/L air (analytical)","mg/m^3 air","mg/m^3 air (nominal)","mg/m^3 air (analytical)","ppm"};
@@ -118,6 +130,11 @@ public class ToxQueryOptions extends QueryOptions {
 		return queries;
 	}
 	
+	/**
+	 * Sets defaults for a ToxQueryOptions object to retrieve all results after 1960 for any acute or repeated dose toxicity endpoint
+	 * @param endpointKind	The endpoint kind to query
+	 * @return				The associated ToxQueryOptions object
+	 */
 	public static ToxQueryOptions generateCompleteToxQueryOptions(String endpointKind) {
 		ToxQueryOptions options = new ToxQueryOptions();
 		options.propertyName = endpointKind;
@@ -144,8 +161,8 @@ public class ToxQueryOptions extends QueryOptions {
 	}
 	
 	/**
-	 * Splits the QueryOptions object at the range midpoint to reduce query size
-	 * @return		Two QueryOptions objects that jointly cover the same range as the original
+	 * Splits the QueryOptions object at the unit or time range midpoint (depending on tolerance) to reduce query size
+	 * @return		Two QueryOptions objects that jointly cover the same ranges as the original
 	 */
 	protected List<ToxQueryOptions> generateSplitOptions(double tolerance) {
 		List<ToxQueryOptions> splitOptions = new ArrayList<ToxQueryOptions>();
@@ -172,8 +189,28 @@ public class ToxQueryOptions extends QueryOptions {
 	}
 	
 	/**
+	 * Splits the QueryOptions object at the midpoint of the time range to reduce query size
+	 * @return		Two QueryOptions objects that jointly cover the same time range as the original
+	 */
+	protected List<ToxQueryOptions> generateSplitOptions() {
+		List<ToxQueryOptions> splitOptions = new ArrayList<ToxQueryOptions>();
+		ToxQueryOptions lowerSplitOptions = new ToxQueryOptions(this);
+		ToxQueryOptions upperSplitOptions = new ToxQueryOptions(this);
+		Date date = new Date();
+		int thisYear = date.getYear()+1900;
+		int minYear = this.afterYear==null ? 1900 : Integer.parseInt(this.afterYear);
+		int maxYear = this.beforeYear==null ? thisYear : Integer.parseInt(this.beforeYear);
+		String midpointYear = String.valueOf((maxYear+minYear)/2);
+		lowerSplitOptions.beforeYear = midpointYear;
+		upperSplitOptions.afterYear = midpointYear;
+		splitOptions.add(lowerSplitOptions);
+		splitOptions.add(upperSplitOptions);
+		return splitOptions;
+	}
+	
+	/**
 	 * Gets the maximum size of the query corresponding to the given options (i.e. with no conditions specified)
-	 * @return
+	 * @return	Query size
 	 */
 	private int getQueryMaxSize() {
 		Query query = new Query(limit);
@@ -185,18 +222,18 @@ public class ToxQueryOptions extends QueryOptions {
 	}
 	
 	/**
-	 * Recursively splits a vector of QueryOptions until all queries have size < 10000
-	 * @param options	Vector of QueryOptions to be resized
-	 * @return			Vector of QueryOptions of permitted size
+	 * Recursively splits a vector of ToxQueryOptions until all queries have size < 10000
+	 * @param options	Vector of ToxQueryOptions to be resized
+	 * @return			Vector of ToxQueryOptions of permitted size
 	 */
-	private static List<ToxQueryOptions> resizeAll(List<ToxQueryOptions> options,double tolerance) {
+	private static List<ToxQueryOptions> resizeAll(List<ToxQueryOptions> options) {
 		List<ToxQueryOptions> newOptions = new ArrayList<ToxQueryOptions>();
 		for (ToxQueryOptions o:options) {
 			int size = o.getQueryMaxSize();
 			System.out.println(o.endpointMin + " to " + o.endpointMax + " units, "+o.afterYear+" to "+o.beforeYear+": " + size + " records");
 			if (size >= 10000) {
-				List<ToxQueryOptions> splitOptions = o.generateSplitOptions(tolerance);
-				splitOptions = resizeAll(splitOptions,tolerance);
+				List<ToxQueryOptions> splitOptions = o.generateSplitOptions();
+				splitOptions = resizeAll(splitOptions);
 				newOptions.addAll(splitOptions);
 			} else {
 				newOptions.add(o);
@@ -213,9 +250,8 @@ public class ToxQueryOptions extends QueryOptions {
 		List<ToxQueryOptions> options = new ArrayList<ToxQueryOptions>();
 		options.add(this);
 		if (getQueryMaxSize() >= 10000) {
-			double tolerance = 1000000.0;
 			System.out.println(this.propertyName+" query too large. Resizing...");
-			options = resizeAll(options,tolerance);
+			options = resizeAll(options);
 			System.out.println("Split into "+options.size()+" queries. Optimizing...");
 			ListIterator<ToxQueryOptions> it = options.listIterator();
 			int lastSize = 0;
@@ -223,12 +259,16 @@ public class ToxQueryOptions extends QueryOptions {
 				ToxQueryOptions currentOptions = it.next();
 				int size = currentOptions.getQueryMaxSize();
 				if (it.previousIndex() > 0 && size + lastSize < 10000) {
+					it.remove();
 					ToxQueryOptions lastOptions = it.previous();
 					boolean success = lastOptions.mergeOptions(currentOptions);
-					it.set(lastOptions);
-					lastSize = lastOptions.getQueryMaxSize();
-					it.next();
-					if (success) { it.remove(); };
+					if (success) {
+						it.set(lastOptions);
+						lastSize = lastOptions.getQueryMaxSize();
+					} else {
+						it.add(currentOptions);
+						lastSize = currentOptions.getQueryMaxSize();
+					}
 				} else {
 					lastSize = size;
 				}
@@ -240,6 +280,10 @@ public class ToxQueryOptions extends QueryOptions {
 		return options;
 	}
 	
+	/**
+	 * Creates the ToxQueryBlock object corresponding to the given options
+	 * @return		The desired QueryBlock
+	 */
 	public ToxQueryBlock generateToxQueryBlock() {
 		String endpointKind = propertyName;
 		ToxQueryBlock toxQueryBlock = new ToxQueryBlock(endpointKind);
@@ -306,6 +350,10 @@ public class ToxQueryOptions extends QueryOptions {
 			toxQueryBlock.addAllEndpointTypeField();
 		}
 		
+//		if (afterYear!=null || beforeYear!=null) {
+//			toxQueryBlock.addYearField(afterYear,beforeYear);
+//		}
+		
 		if (afterYear!=null) {
 			toxQueryBlock.addAfterYearField(afterYear);
 		}
@@ -326,6 +374,8 @@ public class ToxQueryOptions extends QueryOptions {
 		Query query = new Query(limit);
 		ToxQueryBlock toxQueryBlock = generateToxQueryBlock();
 		query.addPropertyBlock(toxQueryBlock);
+//		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//		System.out.println(gson.toJson(query));
 		return query;
 	}
 	

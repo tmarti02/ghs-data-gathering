@@ -7,8 +7,10 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
@@ -45,7 +47,7 @@ public class ToxValRecordEChemPortalAPI {
 	String infoType;
 	String reliability;
 	String endpoint;
-	List<String> years;
+	Set<String> years;
 	List<String> guidelineQualifiers;
 	List<String> guidelines;
 	String glpCompliance;
@@ -68,7 +70,7 @@ public class ToxValRecordEChemPortalAPI {
 			"coverageType","doseDescriptors","effectLevels"};
 	
 	public ToxValRecordEChemPortalAPI() {
-		years = new ArrayList<String>();
+		years = new HashSet<String>();
 		guidelineQualifiers = new ArrayList<String>();
 		guidelines = new ArrayList<String>();
 		doseDescriptors = new ArrayList<String>();
@@ -220,52 +222,57 @@ public class ToxValRecordEChemPortalAPI {
 						List<NestedBlock> nestedBlocks = b.nestedBlocks;
 						for (NestedBlock nb:nestedBlocks) {
 							List<OriginalValue> originalValues = nb.originalValues;
-							for (OriginalValue value:originalValues) {
-								switch (value.name) {
+							for (OriginalValue v:originalValues) {
+								switch (v.name) {
 								case "InfoType":
-									rec.infoType = value.value;
+									rec.infoType = v.value;
 									break;
 								case "Reliability":
-									rec.reliability = value.value;
+									rec.reliability = v.value;
 									break;
 								case "Endpoint":
-									rec.endpoint = value.value;
+									rec.endpoint = v.value;
 									break;
 								case "Effect Level":
-									rec.effectLevels.add(value.value);
+									rec.effectLevels.add(v.value);
 									break;
 								case "Dose Descriptor":
-									rec.doseDescriptors.add(value.value);
+									rec.doseDescriptors.add(v.value);
 									break;
 								case "Test Type":
-									rec.testType = value.value;
+									rec.testType = v.value;
 									break;
 								case "Species":
-									rec.species = value.value;
+									rec.species = v.value;
 									break;
 								case "Strain":
-									rec.strain = value.value;
+									rec.strain = v.value;
 									break;
 								case "Route of Administration":
-									rec.routeOfAdministration = value.value;
+									rec.routeOfAdministration = v.value;
 									break;
 								case "GLP Compliance":
-									rec.glpCompliance = value.value;
+									rec.glpCompliance = v.value;
 									break;
 								case "Guideline Qualifier":
-									rec.guidelineQualifiers.add(value.value);
+									rec.guidelineQualifiers.add(v.value);
 									break;
 								case "Guideline":
-									rec.guidelines.add(value.value);
+									rec.guidelines.add(v.value);
 									break;
-								case "Year":
-									rec.years.add(value.value);
+								case "After Year":
+									String fixAfterYear = (v.value!=null && v.value.contains(";")) ? v.value.substring(v.value.indexOf(";")+1) : v.value;
+									rec.years.add(fixAfterYear);
+									break;
+								case "Before Year":
+									String fixBeforeYear = (v.value!=null && v.value.contains(";")) ? v.value.substring(v.value.indexOf(";")+1) : v.value;
+									rec.years.add(fixBeforeYear);
 									break;
 								case "Inhalation Exposure Type":
-									rec.inhalationExposureType = value.value;
+									rec.inhalationExposureType = v.value;
 									break;
 								case "Coverage Type":
-									rec.coverageType = value.value;
+									rec.coverageType = v.value;
 									break;
 								}
 							}
@@ -283,7 +290,7 @@ public class ToxValRecordEChemPortalAPI {
 	
 	public static void downloadAndWriteAllToxicityResults(boolean startFresh) {
 		String[] durations = {"AcuteToxicity","RepeatedDoseToxicity"};
-		String[] routes = {"Oral","Dermal"};
+		String[] routes = {"Oral","Inhalation","Dermal","Other"};
 		for (String d:durations) {
 			for (String r:routes) {
 				String endpointKind = d + r;
