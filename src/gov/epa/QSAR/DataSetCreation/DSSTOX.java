@@ -461,13 +461,13 @@ public class DSSTOX {
 		
 		if (smiles==null || smiles.isEmpty()) {
 			qr.usable=false;
-			qr.reason="Structure_SMILES is missing";
+			qr.reason="SMILES is missing";
 			return;
 		}
 				
 		if (smiles.contains(".")) {
 			qr.usable=false;
-			qr.reason="Smiles indicates a salt";
+			qr.reason="SMILES indicates a salt";
 			return;
 		}		
 				
@@ -475,26 +475,26 @@ public class DSSTOX {
 
 		if (ac==null) {
 			qr.usable=false;
-			qr.reason="bad Structure_SMILES";
+			qr.reason="bad SMILES";
 //			System.out.println(rec);
 			return;
 		}
 		
 		if (MolFileUtilities.HaveBadElement(ac))  {
 			qr.usable=false;
-			qr.reason="Structure_SMILES indicates bad element and omitSalts=true";
+			qr.reason="SMILES indicates bad element";
 			return;
 		}
 
 		if (ac.getAtomCount()==1) {
 			qr.usable=false;
-			qr.reason="only 1 atom in Structure_SMILES";
+			qr.reason="only 1 atom in SMILES";
 			return;
 		}
 		
 		if (!MolFileUtilities.HaveCarbon(ac)) {
 			qr.usable=false;
-			qr.reason="No carbon in Structure_SMILES";
+			qr.reason="No carbon in SMILES";
 			return;
 		}
 	}
