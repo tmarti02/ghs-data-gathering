@@ -237,7 +237,7 @@ public class Parse {
 	}
 	
 	public static void main(String[] args) {
-		String recordType = "tox";
+		String recordType = "physchem";
 		String[] sources = {ExperimentalConstants.strSourceADDoPT,
 				ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,

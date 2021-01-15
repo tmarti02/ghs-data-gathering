@@ -586,7 +586,7 @@ public class DSSTOX {
 			qr.property_value_point_estimate_qsar = -Math.log10((qr.property_value_point_estimate_exp/24.45)*0.001/1000.0);
 			qr.property_value_units_qsar = "-log10(mol/L)";
 			return true;
-		}
+		} 
 		
 		return false;
 	}

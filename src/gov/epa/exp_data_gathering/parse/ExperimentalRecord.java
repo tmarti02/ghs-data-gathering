@@ -9,7 +9,6 @@ import org.apache.commons.text.StringEscapeUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import gov.epa.QSAR.DataSetCreation.RecordQSAR;
 import gov.epa.api.ExperimentalConstants;
 
 
@@ -175,19 +174,20 @@ public class ExperimentalRecord {
 		double logTolerance = 1.0;//log units for properties that vary many orders of magnitude; if value was 1, then max would be 10x bigger than min
 		double temperatureTolerance = 10.0;//C For Melting point, boiling point, flash point
 		double densityTolerance = 0.1;//g/cm^3 for density
+		double zeroTolerance = Math.pow(10.0, -6.0);
 		
 		//Properties which are usually modeled as log of the property value: pKA, logKow, WS, HLC, VP, LC50, LD50
 		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
-			good = RecordQSAR.isWithinTolerance(property_value_min_final,property_value_max_final,logTolerance);
+			good = isWithinTolerance(logTolerance);
 		} else if ((property_name.equals(ExperimentalConstants.strMeltingPoint) || property_name.equals(ExperimentalConstants.strBoilingPoint) ||
 				property_name.equals(ExperimentalConstants.strFlashPoint))) {
-			good = RecordQSAR.isWithinTolerance(property_value_min_final,property_value_max_final,temperatureTolerance);
+			good = isWithinTolerance(temperatureTolerance);
 		} else if (property_name.equals(ExperimentalConstants.strDensity)) {
-			good = RecordQSAR.isWithinTolerance(property_value_min_final,property_value_max_final,densityTolerance);
+			good = isWithinTolerance(densityTolerance);
 		} else if (property_name.equals(ExperimentalConstants.strVaporPressure) || property_name.equals(ExperimentalConstants.strHenrysLawConstant) ||
 				property_name.equals(ExperimentalConstants.strWaterSolubility) || property_name.toLowerCase().contains("lc50") ||
 				property_name.toLowerCase().contains("ld50")) {
-			good = RecordQSAR.isWithinLogTolerance(property_value_min_final,property_value_max_final,logTolerance);
+			good = isWithinLogTolerance(logTolerance,zeroTolerance);
 			
 			if (!good) {
 //				System.out.println("dont have min and max:"+this);
@@ -383,6 +383,22 @@ public class ExperimentalRecord {
 				Objects.equals(this.property_value_point_estimate_original, er.property_value_point_estimate_original) &&
 				Objects.equals(this.property_value_units_original, er.property_value_units_original)) {
 			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public double rangeAverage() {
+		return (property_value_min_final + property_value_max_final)/2.0;
+	}
+
+	public boolean isWithinTolerance(double tolerance) {		
+		return property_value_max_final-property_value_min_final <= tolerance;
+	}
+
+	public boolean isWithinLogTolerance(double logTolerance,double zeroTolerance) {
+		if (Math.abs(property_value_min_final) > zeroTolerance) {
+			return Math.log10(property_value_max_final/property_value_min_final) <= logTolerance;
 		} else {
 			return false;
 		}

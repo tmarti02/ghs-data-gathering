@@ -122,6 +122,7 @@ public class ParseChemidplus extends Parse {
 				er.smiles=r.Smiles;			
 				er.source_name=sourceName;
 				er.url=r.url;
+				er.date_accessed=r.date_accessed;
 				
 				if (tr.Organism.contains("(")) {
 					er.property_name=tr.Organism.substring(0,tr.Organism.indexOf("(")).trim();
@@ -411,7 +412,7 @@ public class ParseChemidplus extends Parse {
 //	}
 
 	public static void main(String[] args) {
-		ParseChemidplus p = new ParseChemidplus("tox");
+		ParseChemidplus p = new ParseChemidplus("physchem");
 		p.createFiles();
 	}
 
