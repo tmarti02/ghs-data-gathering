@@ -110,7 +110,7 @@ public class RecordQSAR {
 		pH = er.pH;
 		
 		property_value_units_exp = er.property_value_units_final;
-		property_value_point_estimate_exp = er.property_value_point_estimate_final==null ? rangeAverage(er) : er.property_value_point_estimate_final;
+		property_value_point_estimate_exp = er.property_value_point_estimate_final==null ? er.rangeAverage() : er.property_value_point_estimate_final;
 		
 		
 	}
@@ -139,23 +139,6 @@ public class RecordQSAR {
 		
 		comboID=CAS+del+EINECS+del+name+del+SMILES;
 		
-	}
-	
-
-	private static boolean isWithinLogTolerance(double min,double max,double logTolerance,double zeroTolerance) {
-		if (Math.abs(min) > zeroTolerance) {
-			return Math.log10(max/min) <= logTolerance;
-		} else {
-			return false;
-		}
-	}
-
-	public static boolean isWithinTolerance(double min,double max,double tolerance) {		
-		return max-min <= tolerance;
-	}
-
-	private static double rangeAverage(ExperimentalRecord er) {
-		return (er.property_value_min_final + er.property_value_max_final)/2.0;
 	}
 	
 	public void assignValue(String fieldName,String fieldValue) {

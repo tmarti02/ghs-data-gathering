@@ -137,7 +137,7 @@ public class Parse {
 					if (i!=0 && i%100000==0) {
 						batch++;
 						temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
-						temp.removeAllElements();
+						temp.clear();
 					}
 				}
 				batch++;
@@ -237,7 +237,7 @@ public class Parse {
 	}
 	
 	public static void main(String[] args) {
-		String recordType = "tox";
+		String recordType = "physchem";
 		String[] sources = {ExperimentalConstants.strSourceADDoPT,
 				ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,
