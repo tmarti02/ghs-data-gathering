@@ -5,16 +5,34 @@ import java.util.List;
 
 public class ToxQueryBlock extends QueryBlock {
 	
+	private transient String effectLevelString;
+	private transient String effectLevelString2;
+	private transient String speciesString;
+	
 	public ToxQueryBlock(String endpointKind) {
 		this.endpointKind = endpointKind;
+		effectLevelString2 = ".EffectLevel";
 		if (endpointKind.contains("AcuteToxicity")) {
 			effectLevelString = "EffectLevels";
 		} else if (endpointKind.contains("RepeatedDoseToxicity")) {
 			effectLevelString = "EffectLevels.Efflevel";
+		} else if (endpointKind.equals(EChemPortalAPIConstants.reproductiveToxicityP0)) {
+			effectLevelString = "ResultsOfExaminationsParentalAnimals.EffectLevelsP0.Efflevel";
+			this.endpointKind = "ToxicityReproduction";
+		} else if (endpointKind.equals(EChemPortalAPIConstants.reproductiveToxicityF1)) {
+			effectLevelString = "ResultsOfExaminationsOffspring.EffectLevelsF1.Efflevel";
+			this.endpointKind = "ToxicityReproduction";
+		} else if (endpointKind.equals(EChemPortalAPIConstants.aquaticAlgaeToxicity)) {
+			effectLevelString = "EffectConcentrations";
+			effectLevelString2 = ".EffectConc";
+		}
+		
+		if (endpointKind.equals(EChemPortalAPIConstants.aquaticAlgaeToxicity)) {
+			speciesString = "TestOrganisms.TestOrganismsSpecies";
+		} else {
+			speciesString = "TestAnimals.Species";
 		}
 	}
-	
-	private transient String effectLevelString;
 	
 	/**
 	 * Adds a QueryField to set endpoint value bounds
@@ -23,7 +41,7 @@ public class ToxQueryBlock extends QueryBlock {
 	 * @param unit		Desired endpoint value unit from ExperimentalConstants
 	 */
 	public void addEffectLevelField(String lower,String upper,String unit) {
-		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".EffectLevel";
+		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+effectLevelString2;
 		String type = "range";
 		Value endpointValue = new Value(type,lower,upper,new ToxUnit(unit,endpointKind));
 		QueryField endpoint = new QueryField(fieldName,type,"Effect Level",endpointValue);
@@ -31,9 +49,9 @@ public class ToxQueryBlock extends QueryBlock {
 	}
 	
 	public void addAllUnitEffectLevelField(String lower,String upper) {
-		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".EffectLevel";
+		String fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+effectLevelString2;
 		String type = "range";
-		Value endpointValue = new Value(type,lower,upper,new ToxUnit(endpointKind));
+		Value endpointValue = new Value(type,lower,upper,null);
 		QueryField endpoint = new QueryField(fieldName,type,"Effect Level",endpointValue);
 		queryFields.add(endpoint);
 	}
@@ -72,13 +90,13 @@ public class ToxQueryBlock extends QueryBlock {
 		if (includeOther) {
 			speciesValues.add(new Value("LIKE","other:*"));
 		}
-		QueryField speciesField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.TestAnimals.Species","string","Species",speciesValues);
+		QueryField speciesField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods."+speciesString,"string","Species",speciesValues);
 		queryFields.add(speciesField);
 	}
 	
 	public void addAllSpeciesField() {
 		Value speciesValue = new Value("LIKE","*");
-		QueryField speciesField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods.TestAnimals.Species","string","Species",speciesValue);
+		QueryField speciesField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".MaterialsAndMethods."+speciesString,"string","Species",speciesValue);
 		queryFields.add(speciesField);
 	}
 	
@@ -201,5 +219,52 @@ public class ToxQueryBlock extends QueryBlock {
 		QueryField endpointTypeField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".AdministrativeData.Endpoint",
 				"string","Endpoint",endpointTypeValue);
 		queryFields.add(endpointTypeField);
+	}
+	
+	public void addHistoFindingsField(List<String> histoFindings,boolean includeOther) {
+		List<Value> histoFindingsValues = new ArrayList<Value>();
+		for (String h:histoFindings) {
+			histoFindingsValues.add(new Value("EQUALS",h));
+		}
+		if (includeOther) {
+			histoFindingsValues.add(new Value("LIKE","other:*"));
+		}
+		QueryField histoFindingsField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion.ResultsOfExaminations.ObservHistopatholNeoplastic",
+				"string","Histopathological Findings: Neoplastic",histoFindingsValues);
+		queryFields.add(histoFindingsField);
+	}
+	
+	public void addAllHistoFindingsField() {
+		Value histoFindingsValue = new Value("LIKE","*");
+		QueryField histoFindingsField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion.ResultsOfExaminations.ObservHistopatholNeoplastic",
+				"string","Histopathological Findings: Neoplastic",histoFindingsValue);
+		queryFields.add(histoFindingsField);
+	}
+	
+	public void addAllDurationField() {
+		Value durationValue = new Value("numeric","GT_EQUALS","0",null);
+		QueryField durationField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".Duration",
+				"numeric","Duration",durationValue);
+		queryFields.add(durationField);
+	}
+	
+	public void addBasisForEffectField(List<String> basisForEffect,boolean includeOther) {
+		List<Value> basisForEffectValues = new ArrayList<Value>();
+		for (String b:basisForEffect) {
+			basisForEffectValues.add(new Value("EQUALS",b));
+		}
+		if (includeOther) {
+			basisForEffectValues.add(new Value("LIKE","other:*"));
+		}
+		QueryField basisForEffectField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".BasisForEffect",
+				"string","Basis for Effect",basisForEffectValues);
+		queryFields.add(basisForEffectField);
+	}
+	
+	public void addAllBasisForEffectField() {
+		Value basisForEffectValue = new Value("LIKE","*");
+		QueryField basisForEffectField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+effectLevelString+".BasisForEffect",
+				"string","Basis for Effect",basisForEffectValue);
+		queryFields.add(basisForEffectField);
 	}
 }

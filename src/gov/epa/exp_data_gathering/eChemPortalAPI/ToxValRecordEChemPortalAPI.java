@@ -59,15 +59,16 @@ public class ToxValRecordEChemPortalAPI {
 	String coverageType;
 	List<String> doseDescriptors;
 	List<String> effectLevels;
+	String histoFindings;
 	
 	public String dateAccessed;
 	
 	private static String[] headers = {"Name","Name Type","Number","Number Type","Member of Category","Participant","URL","Info Type","Reliability","Endpoint",
 			"Years","Guidelines & Qualifiers","GLP Compliance","Test Type","Species","Strain","Route of Administration","Inhalation Exposure Type",
-			"Coverage Type","Dose Descriptor","Effect Level"};
+			"Coverage Type","Dose Descriptor","Effect Level","Histopathological Findings: Neoplastic"};
 	private static String[] fieldNames = {"name","nameType","number","numberType","memberOfCategory","participant","url","infoType","reliability","endpoint",
 			"years","guidelineQualifiers+guidelines","glpCompliance","testType","species","strain","routeOfAdministration","inhalationExposureType",
-			"coverageType","doseDescriptors","effectLevels"};
+			"coverageType","doseDescriptors","effectLevels","histoFindings"};
 	
 	public ToxValRecordEChemPortalAPI() {
 		years = new HashSet<String>();
@@ -107,7 +108,8 @@ public class ToxValRecordEChemPortalAPI {
 				!Objects.equals(inhalationExposureType, r.inhalationExposureType) ||
 				!Objects.equals(coverageType, r.coverageType) ||
 				!Objects.equals(doseDescriptors, r.doseDescriptors) ||
-				!Objects.equals(effectLevels, r.effectLevels)) {
+				!Objects.equals(effectLevels, r.effectLevels) ||
+				!Objects.equals(histoFindings, r.histoFindings)) {
 			return false;
 		} else {
 			return true;
@@ -139,7 +141,8 @@ public class ToxValRecordEChemPortalAPI {
 			}
 			String strYears = String.join("; ", rec.years);
 			try {
-				for (int i = 0; i < rec.doseDescriptors.size(); i++) {
+				int size = (rec.doseDescriptors==null || rec.doseDescriptors.isEmpty()) ? 1 : rec.doseDescriptors.size();
+				for (int i = 0; i < size; i++) {
 					Row row = null;
 					row = sheet.createRow(currentRow);
 					currentRow++;
@@ -150,9 +153,9 @@ public class ToxValRecordEChemPortalAPI {
 						if (header.equals("Guidelines & Qualifiers")) {
 							value = strGuidelinesQualifiers;
 						} else if (header.equals("Dose Descriptor")) {
-							value = rec.doseDescriptors.get(i);
+							value = (rec.doseDescriptors==null || rec.doseDescriptors.isEmpty()) ? null : rec.doseDescriptors.get(i);
 						} else if (header.equals("Effect Level")) {
-							value = rec.effectLevels.get(i);
+							value = (rec.effectLevels==null || rec.effectLevels.isEmpty()) ? null : rec.effectLevels.get(i);
 						} else if (header.equals("Years")) {
 							value = strYears;
 						} else {
@@ -274,6 +277,9 @@ public class ToxValRecordEChemPortalAPI {
 								case "Coverage Type":
 									rec.coverageType = v.value;
 									break;
+								case "Histopathological Findings: Neoplastic":
+									rec.histoFindings = v.value;
+									break;
 								}
 							}
 						}
@@ -289,21 +295,33 @@ public class ToxValRecordEChemPortalAPI {
 	}
 	
 	public static void downloadAndWriteAllToxicityResults(boolean startFresh) {
-		String[] durations = {"AcuteToxicity","RepeatedDoseToxicity"};
-		String[] routes = {"Oral","Inhalation","Dermal","Other"};
-		for (String d:durations) {
-			for (String r:routes) {
-				String endpointKind = d + r;
-				ToxQueryOptions options = ToxQueryOptions.generateCompleteToxQueryOptions(endpointKind);
-				String databaseName = "Toxicity" + File.separator + "EChemPortalAPI_" + endpointKind + "_RawJSON.db";
-				options.runDownload(databaseName, startFresh);
-				
-				List<ToxValRecordEChemPortalAPI> records = getToxResultsInDatabase(databaseName);
-				records = ToxValRecordDeduplicator.removeDuplicates(records);
-				
-				String excelFileName = "Toxicity" + File.separator + "EChemPortalAPI_" + endpointKind + "_Records.xlsx";
-				writeToxRecordsToExcel(records,excelFileName);
-			}
+//		String[] durations = {"AcuteToxicity","RepeatedDoseToxicity"};
+//		String[] routes = {"Oral","Inhalation","Dermal","Other"};
+//		for (String d:durations) {
+//			for (String r:routes) {
+//				String endpointKind = d + r;
+//				ToxQueryOptions options = ToxQueryOptions.generateCompleteToxQueryOptions(endpointKind);
+//				String databaseName = "Toxicity" + File.separator + "EChemPortalAPI_" + endpointKind + "_RawJSON.db";
+//				options.runDownload(databaseName, startFresh);
+//				
+//				List<ToxValRecordEChemPortalAPI> records = getToxResultsInDatabase(databaseName);
+//				records = ToxValRecordDeduplicator.removeDuplicates(records);
+//				
+//				String excelFileName = "Toxicity" + File.separator + "EChemPortalAPI_" + endpointKind + "_Records.xlsx";
+//				writeToxRecordsToExcel(records,excelFileName);
+//			}
+//		}
+		String[] endpointKinds = {/*"Carcinogenicity","ToxicityReproductionP0",*/ "ToxicityReproductionF1","ToxicityToAquaticAlgae"};
+		for (String e:endpointKinds) {
+			ToxQueryOptions options = ToxQueryOptions.generateCompleteToxQueryOptions(e);
+			String databaseName = "Toxicity" + File.separator + "EChemPortalAPI_" + e + "_RawJSON.db";
+			options.runDownload(databaseName, startFresh);
+			
+			List<ToxValRecordEChemPortalAPI> records = getToxResultsInDatabase(databaseName);
+			records = ToxValRecordDeduplicator.removeDuplicates(records);
+			
+			String excelFileName = "Toxicity" + File.separator + "EChemPortalAPI_" + e + "_Records.xlsx";
+			writeToxRecordsToExcel(records,excelFileName);
 		}
 	}
 	

@@ -129,10 +129,10 @@ public class Unit {
 		}
 		
 		switch (endpointKind) {
-		case "HenrysLawConstant":
+		case EChemPortalAPIConstants.henrysLawConstant:
 			phraseGroupId = "P101";
 			break;
-		case "WaterSolubility":
+		case EChemPortalAPIConstants.waterSolubility:
 			phraseGroupId = "P08";
 			break;
 		}
@@ -140,31 +140,31 @@ public class Unit {
 	
 	public Unit(String endpointKind) {
 		switch (endpointKind) {
-		case "Melting":
+		case EChemPortalAPIConstants.meltingPoint:
 			phraseGroupId = "A102";
 			break;
-		case "BoilingPoint":
+		case EChemPortalAPIConstants.boilingPoint:
 			phraseGroupId = "A102";
 			break;
-		case "FlashPoint":
+		case EChemPortalAPIConstants.flashPoint:
 			phraseGroupId = "A102";
 			break;
-		case "Density":
+		case EChemPortalAPIConstants.density:
 			phraseGroupId = "P18";
 			break;
-		case "Vapour":
+		case EChemPortalAPIConstants.vaporPressure:
 			phraseGroupId = "P02";
 			break;
-		case "Partition":
+		case EChemPortalAPIConstants.partitionCoefficient:
 			phraseId = null;
 			break;
-		case "WaterSolubility":
+		case EChemPortalAPIConstants.waterSolubility:
 			phraseGroupId = "P08";
 			break;
-		case "DissociationConstant":
+		case EChemPortalAPIConstants.dissociationConstant:
 			phraseId = null;
 			break;
-		case "HenrysLawConstant":
+		case EChemPortalAPIConstants.henrysLawConstant:
 			phraseGroupId = "P101";
 			break;
 		}

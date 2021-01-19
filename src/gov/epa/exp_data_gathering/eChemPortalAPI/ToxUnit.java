@@ -99,19 +99,19 @@ public class ToxUnit extends Unit {
 		}
 		
 		switch (endpointKind) {
-		case "AcuteToxicityOther":
+		case EChemPortalAPIConstants.acuteToxicityOther:
 			phraseGroupId = "T12";
 			break;
-		case "RepeatedDoseToxicityOral":
+		case EChemPortalAPIConstants.repeatedDoseToxicityOral:
 			phraseGroupId = "T28-1";
 			break;
-		case "RepeatedDoseToxicityInhalation":
+		case EChemPortalAPIConstants.repeatedDoseToxicityInhalation:
 			phraseGroupId = "T28-2";
 			break;
-		case "RepeatedDoseToxicityDermal":
+		case EChemPortalAPIConstants.repeatedDoseToxicityDermal:
 			phraseGroupId = "T28-3";
 			break;
-		case "RepeatedDoseToxicityOther":
+		case EChemPortalAPIConstants.repeatedDoseToxicityOther:
 			phraseGroupId = "T28-5";
 			break;
 		}
@@ -119,28 +119,28 @@ public class ToxUnit extends Unit {
 	
 	public ToxUnit(String endpointKind) {
 		switch (endpointKind) {
-		case "AcuteToxicityOral":
+		case EChemPortalAPIConstants.acuteToxicityOral:
 			phraseGroupId = "T04";
 			break;
-		case "AcuteToxicityInhalation":
+		case EChemPortalAPIConstants.acuteToxicityInhalation:
 			phraseGroupId = "T07";
 			break;
-		case "AcuteToxicityDermal":
+		case EChemPortalAPIConstants.acuteToxicityDermal:
 			phraseGroupId = "T04";
 			break;
-		case "AcuteToxicityOther":
+		case EChemPortalAPIConstants.acuteToxicityOther:
 			phraseGroupId = "T12";
 			break;
-		case "RepeatedDoseToxicityOral":
+		case EChemPortalAPIConstants.repeatedDoseToxicityOral:
 			phraseGroupId = "T28-1";
 			break;
-		case "RepeatedDoseToxicityInhalation":
+		case EChemPortalAPIConstants.repeatedDoseToxicityInhalation:
 			phraseGroupId = "T28-2";
 			break;
-		case "RepeatedDoseToxicityDermal":
+		case EChemPortalAPIConstants.repeatedDoseToxicityDermal:
 			phraseGroupId = "T28-3";
 			break;
-		case "RepeatedDoseToxicityOther":
+		case EChemPortalAPIConstants.repeatedDoseToxicityOther:
 			phraseGroupId = "T28-5";
 			break;
 		}

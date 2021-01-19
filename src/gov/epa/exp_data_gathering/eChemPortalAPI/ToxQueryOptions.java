@@ -36,6 +36,9 @@ public class ToxQueryOptions extends QueryOptions {
 	List<String> doseDescriptors;
 	boolean includeOtherDoseDescriptor;
 	boolean includeAllDoseDescriptors;
+	List<String> histoFindings;
+	boolean includeOtherHistoFindings;
+	boolean includeAllHistoFindings;
 	boolean includeAllEndpointTypes;
 	
 	// Default null constructor
@@ -49,41 +52,10 @@ public class ToxQueryOptions extends QueryOptions {
 		doseDescriptors = new ArrayList<String>();
 	}
 	
-	// Duplicate constructor
-	ToxQueryOptions(ToxQueryOptions options) {
-		limit = options.limit;
-		propertyName = options.propertyName;
-		maxReliabilityLevel = options.maxReliabilityLevel;
-		afterYear = options.afterYear;
-		beforeYear = options.beforeYear;
-		endpointMin = options.endpointMin;
-		endpointMax = options.endpointMax;
-		endpointUnits = options.endpointUnits;
-		includeAllUnits = options.includeAllUnits;
-		testTypes = options.testTypes;
-		species = options.species;
-		strains = options.strains;
-		routesOfAdministration = options.routesOfAdministration;
-		inhalationTypes = options.inhalationTypes;
-		coverageTypes = options.coverageTypes;
-		doseDescriptors = options.doseDescriptors;
-		includeOtherTestType = options.includeOtherTestType;
-		includeOtherSpecies = options.includeOtherSpecies;
-		includeOtherStrain = options.includeOtherStrain;
-		includeOtherRoute = options.includeOtherRoute;
-		includeOtherInhalationType = options.includeOtherInhalationType;
-		includeOtherCoverageType = options.includeOtherCoverageType;
-		includeOtherDoseDescriptor = options.includeOtherDoseDescriptor;
-		includeAllTestTypes = options.includeAllTestTypes;
-		includeAllSpecies = options.includeAllSpecies;
-		includeAllStrains = options.includeAllStrains;
-		includeAllRoutes = options.includeAllRoutes;
-		includeAllInhalationTypes = options.includeAllInhalationTypes;
-		includeAllCoverageTypes = options.includeAllCoverageTypes;
-		includeAllGLPCompliances = options.includeAllGLPCompliances;
-		includeAllGuidelines = options.includeAllGuidelines;
-		includeAllDoseDescriptors = options.includeAllDoseDescriptors;
-		includeAllEndpointTypes = options.includeAllEndpointTypes;
+	public ToxQueryOptions copy() {
+		Gson gson = new GsonBuilder().create();
+		String optionsJSON = gson.toJson(this);
+		return gson.fromJson(optionsJSON,ToxQueryOptions.class);
 	}
 	
 	/**
@@ -98,7 +70,7 @@ public class ToxQueryOptions extends QueryOptions {
 		
 		for (String unit:units) {
 			ToxQueryOptions simple = new ToxQueryOptions();
-			simple.propertyName = "AcuteToxicityInhalation";
+			simple.propertyName = EChemPortalAPIConstants.acuteToxicityInhalation;
 			simple.endpointMin = "0";
 			simple.endpointMax = String.valueOf(Integer.MAX_VALUE);
 			simple.endpointUnits = unit;
@@ -107,7 +79,7 @@ public class ToxQueryOptions extends QueryOptions {
 			simple.doseDescriptors = Arrays.asList(lc50);
 			
 			ToxQueryOptions complex = new ToxQueryOptions();
-			complex.propertyName = "AcuteToxicityInhalation";
+			complex.propertyName = EChemPortalAPIConstants.acuteToxicityInhalation;
 			complex.endpointMin = "0";
 			complex.endpointMax = String.valueOf(Integer.MAX_VALUE);
 			complex.endpointUnits = unit;
@@ -138,25 +110,28 @@ public class ToxQueryOptions extends QueryOptions {
 	public static ToxQueryOptions generateCompleteToxQueryOptions(String endpointKind) {
 		ToxQueryOptions options = new ToxQueryOptions();
 		options.propertyName = endpointKind;
-		options.endpointMin = "0";
-		options.endpointMax = "1000000";
-		options.includeAllUnits = true;
+		if (!endpointKind.equals(EChemPortalAPIConstants.carcinogenicity)) {
+			options.endpointMin = "0";
+			options.endpointMax = "1000000";
+			options.includeAllUnits = true;
+			options.includeAllDoseDescriptors = true;
+		}
 		options.maxReliabilityLevel = 4;
 		options.includeOtherReliability = true;
 		options.afterYear = "1960";
 		options.includeAllGuidelines = true;
 		options.includeAllGLPCompliances = true;
 		if (endpointKind.contains("AcuteToxicity") && !endpointKind.contains("Other")) { options.includeAllTestTypes = true; }
-		if (endpointKind.contains("RepeatedDoseToxicity")) { options.includeAllEndpointTypes = true; }
+		if (!endpointKind.contains("AcuteToxicity")) { options.includeAllEndpointTypes = true; }
 		options.includeAllSpecies = true;
-		options.includeAllStrains = true;
+		if (!endpointKind.equals(EChemPortalAPIConstants.aquaticAlgaeToxicity)) { options.includeAllStrains = true; }
 		if (endpointKind.contains("Dermal")) {
 			options.includeAllCoverageTypes = true;
 		} else {
 			options.includeAllRoutes = true;
 		}
 		if (endpointKind.contains("Inhalation")) { options.includeAllInhalationTypes = true; }
-		options.includeAllDoseDescriptors = true;
+		if (endpointKind.equals(EChemPortalAPIConstants.carcinogenicity)) { options.includeAllHistoFindings = true; }
 		return options;
 	}
 	
@@ -166,8 +141,8 @@ public class ToxQueryOptions extends QueryOptions {
 	 */
 	protected List<ToxQueryOptions> generateSplitOptions(double tolerance) {
 		List<ToxQueryOptions> splitOptions = new ArrayList<ToxQueryOptions>();
-		ToxQueryOptions lowerSplitOptions = new ToxQueryOptions(this);
-		ToxQueryOptions upperSplitOptions = new ToxQueryOptions(this);
+		ToxQueryOptions lowerSplitOptions = this.copy();
+		ToxQueryOptions upperSplitOptions = this.copy();
 		double min = endpointMin==null ? Integer.MIN_VALUE : Double.parseDouble(endpointMin);
 		double max = endpointMax==null ? Integer.MAX_VALUE : Double.parseDouble(endpointMax);
 		if (Math.abs(max-min) > tolerance) {
@@ -194,8 +169,8 @@ public class ToxQueryOptions extends QueryOptions {
 	 */
 	protected List<ToxQueryOptions> generateSplitOptions() {
 		List<ToxQueryOptions> splitOptions = new ArrayList<ToxQueryOptions>();
-		ToxQueryOptions lowerSplitOptions = new ToxQueryOptions(this);
-		ToxQueryOptions upperSplitOptions = new ToxQueryOptions(this);
+		ToxQueryOptions lowerSplitOptions = this.copy();
+		ToxQueryOptions upperSplitOptions = this.copy();
 		Date date = new Date();
 		int thisYear = date.getYear()+1900;
 		int minYear = this.afterYear==null ? 1900 : Integer.parseInt(this.afterYear);
@@ -292,7 +267,7 @@ public class ToxQueryOptions extends QueryOptions {
 		
 		if (includeAllUnits) {
 			toxQueryBlock.addAllUnitEffectLevelField(endpointMin, endpointMax);
-		} else {
+		} else if (endpointMin!=null || endpointMax!=null || endpointUnits!=null) {
 			toxQueryBlock.addEffectLevelField(endpointMin,endpointMax,endpointUnits);
 		}
 
@@ -336,6 +311,12 @@ public class ToxQueryOptions extends QueryOptions {
 			toxQueryBlock.addAllDoseDescriptorField();
 		} else if (doseDescriptors!=null && !doseDescriptors.isEmpty()) {
 			toxQueryBlock.addDoseDescriptorField(doseDescriptors, includeOtherDoseDescriptor);
+		}
+		
+		if (includeAllHistoFindings) {
+			toxQueryBlock.addAllHistoFindingsField();
+		} else if (histoFindings!=null && !histoFindings.isEmpty()) {
+			toxQueryBlock.addHistoFindingsField(histoFindings, includeOtherHistoFindings);
 		}
 		
 		if (includeAllGLPCompliances) {

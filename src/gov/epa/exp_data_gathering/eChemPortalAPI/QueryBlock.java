@@ -32,29 +32,29 @@ public class QueryBlock {
 	public QueryBlock(String endpointKind) {
 		this.endpointKind = endpointKind;
 		
-		if (this.endpointKind.equals("Melting")) {
+		if (this.endpointKind.equals(EChemPortalAPIConstants.meltingPoint)) {
 			endpointKind2 = "MeltingPoint";
-		} else if (this.endpointKind.equals("Vapour")) {
+		} else if (this.endpointKind.equals(EChemPortalAPIConstants.vaporPressure)) {
 			endpointKind2 = "Vapourpr";
-		} else if (this.endpointKind.equals("Partition")) {
+		} else if (this.endpointKind.equals(EChemPortalAPIConstants.partitionCoefficient)) {
 			endpointKind2 = "Partcoeff";
-		} else if (this.endpointKind.equals("HenrysLawConstant")) {
+		} else if (this.endpointKind.equals(EChemPortalAPIConstants.henrysLawConstant)) {
 			endpointKind2 = "HenrysLawConstantH";
 		} else {
 			endpointKind2 = this.endpointKind;
 		}
 		
-		if (this.endpointKind.equals("FlashPoint")) {
+		if (this.endpointKind.equals(EChemPortalAPIConstants.flashPoint)) {
 			endpointKind3 = "FPoint";
-		} else if (this.endpointKind.equals("Vapour")) {
+		} else if (this.endpointKind.equals(EChemPortalAPIConstants.vaporPressure)) {
 			endpointKind3 = "Pressure";
-		} else if (this.endpointKind.equals("WaterSolubility")) {
+		} else if (this.endpointKind.equals(EChemPortalAPIConstants.waterSolubility)) {
 			endpointKind3 = "Solubility";
-		} else if (this.endpointKind.equals("DissociationConstant")) {
+		} else if (this.endpointKind.equals(EChemPortalAPIConstants.dissociationConstant)) {
 			endpointKind3 = "pka";
-		} else if (this.endpointKind.equals("HenrysLawConstant")) {
+		} else if (this.endpointKind.equals(EChemPortalAPIConstants.henrysLawConstant)) {
 			endpointKind3 = "H";
-		} else if (this.endpointKind.equals("Partition")) {
+		} else if (this.endpointKind.equals(EChemPortalAPIConstants.partitionCoefficient)) {
 			endpointKind3 = this.endpointKind;
 		} else {
 			endpointKind3 = endpointKind2;
@@ -106,16 +106,6 @@ public class QueryBlock {
 				"numeric","Before Year",beforeYearValue);
 		queryFields.add(beforeYearField);
 	}
-
-	public void addYearField(String after,String before) {
-		List<Value> yearValues = new ArrayList<Value>();
-		yearValues.add(new Value("numeric","GT_EQUALS",after,null));
-		yearValues.add(new Value("numeric","LT",before,null));
-		Value yearValue = new Value("range","0","1000000",null);
-		QueryField yearField = new QueryField("ENDPOINT_STUDY_RECORD."+endpointKind+".DataSource.Reference+LITERATURE.GeneralInfo.ReferenceYear",
-				"range","Year",yearValue);
-		queryFields.add(yearField);
-	}
 	
 	/**
 	 * Adds a QueryField to set pressure condition bounds
@@ -125,9 +115,9 @@ public class QueryBlock {
 	 */
 	public void addAtmPressureField(String lower,String upper,String unit) {
 		String fieldName = "";
-		if (endpointKind.equals("Melting") || endpointKind.equals("BoilingPoint")) {
+		if (endpointKind.equals(EChemPortalAPIConstants.meltingPoint) || endpointKind.equals(EChemPortalAPIConstants.boilingPoint)) {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".Pressure";
-		} else if (endpointKind.equals("FlashPoint") || endpointKind.equals("HenrysLawConstant")) {
+		} else if (endpointKind.equals(EChemPortalAPIConstants.flashPoint) || endpointKind.equals(EChemPortalAPIConstants.henrysLawConstant)) {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".AtmPressure";
 		}
 		String type = "range";
@@ -144,10 +134,11 @@ public class QueryBlock {
 	 */
 	public void addTemperatureField(String lower,String upper,String unit) {
 		String fieldName = "";
-		if (endpointKind.equals("Density") || endpointKind.equals("Partition") || endpointKind.equals("WaterSolubility") || endpointKind.equals("DissociationConstant") ||
-				endpointKind.equals("HenrysLawConstant")) {
+		if (endpointKind.equals(EChemPortalAPIConstants.density) || endpointKind.equals(EChemPortalAPIConstants.partitionCoefficient) || 
+				endpointKind.equals(EChemPortalAPIConstants.waterSolubility) || endpointKind.equals(EChemPortalAPIConstants.dissociationConstant) ||
+				endpointKind.equals(EChemPortalAPIConstants.henrysLawConstant)) {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".Temp";
-		} else if (endpointKind.equals("Vapour")) {
+		} else if (endpointKind.equals(EChemPortalAPIConstants.vaporPressure)) {
 			fieldName = "ENDPOINT_STUDY_RECORD."+endpointKind+".ResultsAndDiscussion."+endpointKind2+".TempQualifier";
 		}
 		String type = "range";

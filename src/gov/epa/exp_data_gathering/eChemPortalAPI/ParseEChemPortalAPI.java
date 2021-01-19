@@ -102,27 +102,27 @@ public class ParseEChemPortalAPI extends Parse {
 		}
 		
 		switch (r.endpointKind) {
-		case "Melting":
+		case EChemPortalAPIConstants.meltingPoint:
 			er.property_name = ExperimentalConstants.strMeltingPoint;
 			ParseUtilities.getTemperatureProperty(er,r.value);
 			break;
-		case "BoilingPoint":
+		case EChemPortalAPIConstants.boilingPoint:
 			er.property_name = ExperimentalConstants.strBoilingPoint;
 			ParseUtilities.getTemperatureProperty(er,r.value);
 			break;
-		case "FlashPoint":
+		case EChemPortalAPIConstants.flashPoint:
 			er.property_name = ExperimentalConstants.strFlashPoint;
 			ParseUtilities.getTemperatureProperty(er,r.value);
 			break;
-		case "Density":
+		case EChemPortalAPIConstants.density:
 			er.property_name = ExperimentalConstants.strDensity;
 			ParseUtilities.getDensity(er,r.value);
 			break;
-		case "Vapour":
+		case EChemPortalAPIConstants.vaporPressure:
 			er.property_name = ExperimentalConstants.strVaporPressure;
 			ParseUtilities.getVaporPressure(er,r.value);
 			break;
-		case "Partition":
+		case EChemPortalAPIConstants.partitionCoefficient:
 			er.property_name = ExperimentalConstants.strLogKow;
 			ParseUtilities.getLogProperty(er,r.value);
 			if (!r.value.contains("log Pow")) {
@@ -130,15 +130,15 @@ public class ParseEChemPortalAPI extends Parse {
 				er.reason = "Possible non-log Pow value";
 			}
 			break;
-		case "WaterSolubility":
+		case EChemPortalAPIConstants.waterSolubility:
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 			ParseUtilities.getWaterSolubility(er,r.value,sourceName);
 			break;
-		case "DissociationConstant":
+		case EChemPortalAPIConstants.dissociationConstant:
 			er.property_name = ExperimentalConstants.str_pKA;
 			ParseUtilities.getLogProperty(er,r.value);
 			break;
-		case "HenrysLawConstant":
+		case EChemPortalAPIConstants.henrysLawConstant:
 			er.property_name = ExperimentalConstants.strHenrysLawConstant;
 			ParseUtilities.getHenrysLawConstant(er,r.value);
 			break;

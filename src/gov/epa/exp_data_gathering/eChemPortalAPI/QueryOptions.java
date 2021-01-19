@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import gov.epa.api.ExperimentalConstants;
 
 /**
@@ -34,35 +37,15 @@ public class QueryOptions {
 	boolean includeOtherReliability = false;
 	boolean includeAllGLPCompliances = false;
 	boolean includeAllGuidelines = false;
-	boolean includeAllUnits;
+	boolean includeAllUnits = false;
 	
 	// Default null constructor
 	QueryOptions() { }
 	
-	// Duplicate constructor
-	QueryOptions(QueryOptions options) {
-		limit = options.limit;
-		propertyName = options.propertyName;
-		maxReliabilityLevel = options.maxReliabilityLevel;
-		afterYear = options.afterYear;
-		beforeYear = options.beforeYear;
-		endpointMin = options.endpointMin;
-		endpointMax = options.endpointMax;
-		endpointUnits = options.endpointUnits;
-		pressureMin = options.pressureMin;
-		pressureMax = options.pressureMax;
-		pressureUnits = options.pressureUnits;
-		includeNullPressure = options.includeNullPressure;
-		temperatureMin = options.temperatureMin;
-		temperatureMax = options.temperatureMax;
-		temperatureUnits = options.temperatureUnits;
-		includeNullTemperature = options.includeNullTemperature;
-		pHMin = options.pHMin;
-		pHMax = options.pHMax;
-		includeNullpH = options.includeNullpH;
-		includeAllGLPCompliances = options.includeAllGLPCompliances;
-		includeAllGuidelines = options.includeAllGuidelines;
-		includeAllUnits = options.includeAllUnits;
+	public QueryOptions copy() {
+		Gson gson = new GsonBuilder().create();
+		String optionsJSON = gson.toJson(this);
+		return gson.fromJson(optionsJSON,QueryOptions.class);
 	}
 	
 	/**
@@ -151,8 +134,8 @@ public class QueryOptions {
 	 */
 	private List<QueryOptions> generateSplitOptions() {
 		List<QueryOptions> splitOptions = new ArrayList<QueryOptions>();
-		QueryOptions lowerSplitOptions = new QueryOptions(this);
-		QueryOptions upperSplitOptions = new QueryOptions(this);
+		QueryOptions lowerSplitOptions = this.copy();
+		QueryOptions upperSplitOptions = this.copy();
 		double min = endpointMin==null ? Integer.MIN_VALUE : Double.parseDouble(endpointMin);
 		double max = endpointMax==null ? Integer.MAX_VALUE : Double.parseDouble(endpointMax);
 		double midpoint = min + (max - min)/2.0;
@@ -278,8 +261,10 @@ public class QueryOptions {
 		
 		// Pressure condition
 		boolean hasPressureCondition = pressureMin!=null || pressureMax!=null;
-		if (!removePressureField && hasPressureCondition && (endpointKind.equals("Melting") || endpointKind.equals("BoilingPoint") || endpointKind.equals("FlashPoint") ||
-				endpointKind.equals("HenrysLawConstant"))) {
+		if (!removePressureField && hasPressureCondition && (endpointKind.equals(EChemPortalAPIConstants.meltingPoint) || 
+				endpointKind.equals(EChemPortalAPIConstants.boilingPoint) || 
+				endpointKind.equals(EChemPortalAPIConstants.flashPoint) ||
+				endpointKind.equals(EChemPortalAPIConstants.henrysLawConstant))) {
 			queryBlock.addAtmPressureField(pressureMin,pressureMax,pressureUnits);
 		} else if (hasPressureCondition && !removePressureField) {
 			System.out.println("Warning: Pressure condition not supported for "+propertyName+". Non-null values ignored.");
@@ -287,8 +272,12 @@ public class QueryOptions {
 		
 		// Temperature condition
 		boolean hasTemperatureCondition = temperatureMin!=null || temperatureMax!=null;
-		if (!removeTemperatureField && hasTemperatureCondition && (endpointKind.equals("Density") || endpointKind.equals("Vapour") || endpointKind.equals("Partition") || 
-				endpointKind.equals("WaterSolubility") || endpointKind.equals("DissociationConstant") || endpointKind.equals("HenrysLawConstant"))) {
+		if (!removeTemperatureField && hasTemperatureCondition && (endpointKind.equals("Density") ||
+				endpointKind.equals(EChemPortalAPIConstants.vaporPressure) ||
+				endpointKind.equals(EChemPortalAPIConstants.partitionCoefficient) || 
+				endpointKind.equals(EChemPortalAPIConstants.waterSolubility) ||
+				endpointKind.equals(EChemPortalAPIConstants.dissociationConstant) ||
+				endpointKind.equals(EChemPortalAPIConstants.henrysLawConstant))) {
 			queryBlock.addTemperatureField(temperatureMin,temperatureMax,temperatureUnits);
 		} else if (hasTemperatureCondition && !removeTemperatureField) {
 			System.out.println("Warning: Temperature condition not supported for "+propertyName+". Non-null values ignored.");
@@ -296,16 +285,17 @@ public class QueryOptions {
 		
 		// pH condition
 		boolean haspHCondition = pHMin!=null || pHMax!=null;
-		if (!removepHField && haspHCondition && (endpointKind.equals("Partition") || endpointKind.equals("WaterSolubility"))) {
+		if (!removepHField && haspHCondition && (endpointKind.equals(EChemPortalAPIConstants.partitionCoefficient) || 
+				endpointKind.equals(EChemPortalAPIConstants.waterSolubility))) {
 			queryBlock.addpHField(pHMin,pHMax);
 		} else if (haspHCondition && !removepHField) {
 			System.out.println("Warning: pH condition not supported for "+propertyName+". Non-null values ignored.");
 		}
 		
 		// Endpoint-specific conditions
-		if (endpointKind.equals("Partition")) {
+		if (endpointKind.equals(EChemPortalAPIConstants.partitionCoefficient)) {
 			queryBlock.addPartitionCoefficientFields();
-		} else if (endpointKind.equals("WaterSolubility")) {
+		} else if (endpointKind.equals(EChemPortalAPIConstants.waterSolubility)) {
 			queryBlock.addWaterSolubilityFields();
 		}
 		
@@ -389,31 +379,31 @@ public class QueryOptions {
 		String endpointKind = "";
 		switch (propertyName) {
 		case ExperimentalConstants.strMeltingPoint:
-			endpointKind = "Melting";
+			endpointKind = EChemPortalAPIConstants.meltingPoint;
 			break;
 		case ExperimentalConstants.strBoilingPoint:
-			endpointKind = "BoilingPoint";
+			endpointKind = EChemPortalAPIConstants.boilingPoint;
 			break;
 		case ExperimentalConstants.strFlashPoint:
-			endpointKind = "FlashPoint";
+			endpointKind = EChemPortalAPIConstants.flashPoint;
 			break;
 		case ExperimentalConstants.strDensity:
-			endpointKind = "Density";
+			endpointKind = EChemPortalAPIConstants.density;
 			break;
 		case ExperimentalConstants.strVaporPressure:
-			endpointKind = "Vapour";
+			endpointKind = EChemPortalAPIConstants.vaporPressure;
 			break;
 		case ExperimentalConstants.strLogKow:
-			endpointKind = "Partition";
+			endpointKind = EChemPortalAPIConstants.partitionCoefficient;
 			break;
 		case ExperimentalConstants.strWaterSolubility:
-			endpointKind = "WaterSolubility";
+			endpointKind = EChemPortalAPIConstants.waterSolubility;
 			break;
 		case ExperimentalConstants.str_pKA:
-			endpointKind = "DissociationConstant";
+			endpointKind = EChemPortalAPIConstants.dissociationConstant;
 			break;
 		case ExperimentalConstants.strHenrysLawConstant:
-			endpointKind = "HenrysLawConstant";
+			endpointKind = EChemPortalAPIConstants.henrysLawConstant;
 			break;
 		}
 		return endpointKind;
