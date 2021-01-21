@@ -12,8 +12,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ParseEChemPortalAPI;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ToxParseEChemPortalAPI;
 
 public class Parse {
 	

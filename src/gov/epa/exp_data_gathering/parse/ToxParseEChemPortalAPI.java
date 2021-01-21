@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.eChemPortalAPI;
+package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileReader;
@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
-import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
-import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 

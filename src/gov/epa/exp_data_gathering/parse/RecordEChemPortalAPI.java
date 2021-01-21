@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.eChemPortalAPI;
+package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.sql.ResultSet;
@@ -15,11 +15,8 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Block;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.NestedBlock;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.OriginalValue;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Result;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
+import gov.epa.eChemPortalAPI.Processing.FinalRecord;
+import gov.epa.eChemPortalAPI.Query.APIJSONs.*;
 
 /**
  * Stores data downloaded from eChemPortal API
@@ -52,18 +49,11 @@ public class RecordEChemPortalAPI {
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 	
-	public static void downloadAllPhyschemResultsToDatabase(boolean startFresh) {
-		List<QueryOptions> allOptions = QueryOptions.generateAllQueryOptions();
+	public static void downloadAllPhyschemResults(boolean startFresh) {
 		String databaseName = sourceName+"_raw_json.db";
-		int counter = 0;
-		for (QueryOptions options:allOptions) {
-			if (counter==0) {
-				options.runDownload(databaseName,startFresh);
-			} else {
-				options.runDownload(databaseName,false);
-			}
-			counter++;
-		}
+		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
+		String databasePath = p.databaseFolder+File.separator+databaseName;
+		FinalRecord.downloadAllPhyschemResultsToDatabase(databasePath,startFresh);
 	}
 	
 	/**
@@ -117,6 +107,7 @@ public class RecordEChemPortalAPI {
 						for (OriginalValue value:originalValues) {
 							switch (value.name) {
 							case "Value":
+							case "Endpoint":
 								rec.value = value.value;
 								break;
 							case "Pressure":
@@ -197,6 +188,6 @@ public class RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
-		downloadAllPhyschemResultsToDatabase(true);
+		downloadAllPhyschemResults(true);
 	}
 }

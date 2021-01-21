@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.eChemPortalAPI;
+package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileReader;
@@ -9,10 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
-import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
-import gov.epa.exp_data_gathering.parse.Parse;
-import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.eChemPortalAPI.Query.APIConstants;
 
 /**
  * Parses downloaded results from eChemPortal API into RecordEChemPortal API objects and translates them to ExperimentalRecords
@@ -101,28 +98,30 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 		}
 		
+		if (r.value==null) { return; }
+		
 		switch (r.endpointKind) {
-		case EChemPortalAPIConstants.meltingPoint:
+		case APIConstants.meltingPoint:
 			er.property_name = ExperimentalConstants.strMeltingPoint;
 			ParseUtilities.getTemperatureProperty(er,r.value);
 			break;
-		case EChemPortalAPIConstants.boilingPoint:
+		case APIConstants.boilingPoint:
 			er.property_name = ExperimentalConstants.strBoilingPoint;
 			ParseUtilities.getTemperatureProperty(er,r.value);
 			break;
-		case EChemPortalAPIConstants.flashPoint:
+		case APIConstants.flashPoint:
 			er.property_name = ExperimentalConstants.strFlashPoint;
 			ParseUtilities.getTemperatureProperty(er,r.value);
 			break;
-		case EChemPortalAPIConstants.density:
+		case APIConstants.density:
 			er.property_name = ExperimentalConstants.strDensity;
 			ParseUtilities.getDensity(er,r.value);
 			break;
-		case EChemPortalAPIConstants.vaporPressure:
+		case APIConstants.vaporPressure:
 			er.property_name = ExperimentalConstants.strVaporPressure;
 			ParseUtilities.getVaporPressure(er,r.value);
 			break;
-		case EChemPortalAPIConstants.partitionCoefficient:
+		case APIConstants.partitionCoefficient:
 			er.property_name = ExperimentalConstants.strLogKow;
 			ParseUtilities.getLogProperty(er,r.value);
 			if (!r.value.contains("log Pow")) {
@@ -130,15 +129,15 @@ public class ParseEChemPortalAPI extends Parse {
 				er.reason = "Possible non-log Pow value";
 			}
 			break;
-		case EChemPortalAPIConstants.waterSolubility:
+		case APIConstants.waterSolubility:
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 			ParseUtilities.getWaterSolubility(er,r.value,sourceName);
 			break;
-		case EChemPortalAPIConstants.dissociationConstant:
+		case APIConstants.dissociationConstant:
 			er.property_name = ExperimentalConstants.str_pKA;
 			ParseUtilities.getLogProperty(er,r.value);
 			break;
-		case EChemPortalAPIConstants.henrysLawConstant:
+		case APIConstants.henrysLawConstant:
 			er.property_name = ExperimentalConstants.strHenrysLawConstant;
 			ParseUtilities.getHenrysLawConstant(er,r.value);
 			break;
@@ -223,6 +222,5 @@ public class ParseEChemPortalAPI extends Parse {
 	public static void main(String[] args) {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		p.createFiles();
-//		p.benchmarkParse(5);
 	}
 }

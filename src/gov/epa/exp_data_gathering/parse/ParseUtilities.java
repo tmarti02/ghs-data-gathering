@@ -5,7 +5,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ToxRecordEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.RecordChemidplus.ToxicityRecord;
 
 public class ParseUtilities extends Parse {

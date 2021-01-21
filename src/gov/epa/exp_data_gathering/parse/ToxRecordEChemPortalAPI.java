@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.eChemPortalAPI;
+package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.sql.ResultSet;
@@ -14,11 +14,9 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Block;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.NestedBlock;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.OriginalValue;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Result;
-import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
+import gov.epa.eChemPortalAPI.Processing.FinalRecord;
+import gov.epa.eChemPortalAPI.Query.APIConstants;
+import gov.epa.eChemPortalAPI.Query.APIJSONs.*;
 
 public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 	public String doseDescriptor;
@@ -30,19 +28,11 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 
-	public static void downloadInhalationLC50ResultsToDatabase(boolean startFresh) {
-		List<Query> queries = ToxQueryOptions.generateInhalationLC50Queries();
+	public static void downloadInhalationLC50Results(boolean startFresh) {
 		String databaseName = sourceName+"_raw_inhalationlc50_json.db";
-		QueryHandler handler = new QueryHandler(1000,10);
-		int counter = 0;
-		for (Query q:queries) {
-			if (counter==0) {
-				handler.downloadQueryResultsToDatabase(q,databaseName,startFresh);
-			} else {
-				handler.downloadQueryResultsToDatabase(q,databaseName,false);
-			}
-			counter++;
-		}
+		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
+		String databasePath = p.databaseFolder+File.separator+databaseName;
+		FinalRecord.downloadInhalationLC50ResultsToDatabase(databasePath, startFresh);
 	}
 	
 	/**
@@ -98,28 +88,28 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 								case "Reliability":
 									rec.reliability = value.value;
 									break;
-								case "Effect Level":
+								case APIConstants.effectLevel:
 									rec.value = value.value;
 									break;
 								case "Value":
 									rec.value = value.value;
 									break;
-								case "Dose Descriptor":
+								case APIConstants.doseDescriptor:
 									rec.doseDescriptor = value.value;
 									break;
-								case "Test Type":
+								case APIConstants.testType:
 									rec.testType = value.value;
 									break;
-								case "Species":
+								case APIConstants.species:
 									rec.species = value.value;
 									break;
-								case "Strain":
+								case APIConstants.strain:
 									rec.strain = value.value;
 									break;
-								case "Route of Administration":
+								case APIConstants.routeOfAdministration:
 									rec.routeOfAdministration = value.value;
 									break;
-								case "Inhalation Exposure Type":
+								case APIConstants.inhalationExposureType:
 									rec.inhalationExposureType = value.value;
 									break;
 								}
@@ -180,7 +170,7 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 //	}
 	
 	public static void main(String[] args) {
-		// TODO
+		downloadInhalationLC50Results(true);
 	}
 	
 }
