@@ -21,7 +21,8 @@ public class OCHEM_AD_Stats {
 	static final String strClassLag="CLASS-LAG";
 	static final String strASNN_STDEV="ASNN-STDEV";
 	static final String strASNN_CORREL="ASNN-CORREL";
-	static final String strBaggingSTD="BAGGING-STD";
+//	static final String strBaggingSTD="BAGGING-STD";
+//	static final String strConsensusSTD="CONSENSUS-STD";
 					
 	class RecordOCHEM {
 		String ID;
@@ -86,7 +87,7 @@ public class OCHEM_AD_Stats {
 				r.pred=rowi.getCell(colNumPred).getStringCellValue();
 				if(colNameAD!=null) r.AD=rowi.getCell(colNumAD).getNumericCellValue();
 				
-				if (r.pred.isEmpty())r.AD=99999.0;
+				if (r.pred.isEmpty())r.AD=99999999.0;
 				
 //				if (r.ID.contentEquals("ADD SIDs"))r.AD=99999.0;
 //				*** add SIDs for the chemicals that are too large.***
@@ -96,7 +97,7 @@ public class OCHEM_AD_Stats {
 //				in OCHEM because "in sdf too large molecule with na>100".
 //				-Leora
 				
-				if (isTooLargeMolecule(r)) r.AD=99999.0;		
+				if (isTooLargeMolecule(r)) r.AD=9999999.0;		
 
 //				System.out.println(i+"\t"+r.ID+"\t"+r.exp+"\t"+r.pred+"\t"+r.AD);
 				records.add(r);
@@ -188,7 +189,7 @@ public class OCHEM_AD_Stats {
 			double product=sb.balancedAccuracy*sb.coverage;
 						
 			System.out.println(file.getName()+"\t"+colNameAD+"\t"+fracTrainingInsideAD+"\t"+df.format(sb.balancedAccuracy)+"\t"+df.format(sb.coverage)+"\t"+df.format(product));
-			
+			// Add method where get descriptor name and QSAR method and print it out
 
 		}
 		
@@ -237,8 +238,12 @@ public class OCHEM_AD_Stats {
 				
 		System.out.println("file\tAD_Name\tFrac training\tBA prediction set\tCoverage prediction set\tProduct");
 							
-		String [] adnames= {strProbStd,strClassLag,strASNN_CORREL,strASNN_STDEV, strBaggingSTD};
+		String [] adnames= {strProbStd,strClassLag,strASNN_CORREL,strASNN_STDEV};
+	//	String [] adnames= {strBaggingSTD};
 		String method="asnn";
+		
+	//	String [] adnames= {strConsensusSTD};
+	//	String method="consensus";
 		
 		o.getStatsForFolder(folderPath,null, 1.0,method);
 		
@@ -250,9 +255,9 @@ public class OCHEM_AD_Stats {
 			o.getStatsForFolder(folderPath,adname, 1.0,method);	
 		}
 					
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 0.95,"xgboost");
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 1.0,"xgboost");
-		o.getStatsForFolder(folderPath, null, 1.0,"xgboost");//if dont have AD use null
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 0.95,"xgboost");
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 1.0,"xgboost");
+//		o.getStatsForFolder(folderPath, null, 1.0,"xgboost");//if dont have AD use null
 		
 //		String [] dm = {strBaggingSTD};
 //		String method2 = "KNN";
@@ -266,11 +271,25 @@ public class OCHEM_AD_Stats {
 //			o.getStatsForFolder(folderPath,distance, 1.0,method2);	
 //		}
 		
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"KNN");
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"KNN");
-		o.getStatsForFolder(folderPath, null, 1.0,"KNN");//if dont have AD use null
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"ann");
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"ann");
+//		o.getStatsForFolder(folderPath, null, 1.0,"ann");//if dont have AD use null
 		
-//  *** The BaggingSTD for KNN isn't working.  Above is my attempt to fix it but so far it isn't working.		
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"asnn");
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"asnn");
+//		o.getStatsForFolder(folderPath, null, 1.0,"asnn");//if dont have AD use null
+		
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"libsvm");
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"libsvm");
+//		o.getStatsForFolder(folderPath, null, 1.0,"libsvm");//if dont have AD use null
+		
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"weka");
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"weka");
+//		o.getStatsForFolder(folderPath, null, 1.0,"weka");//if dont have AD use null
+		
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strConsensusSTD, 0.95,"consensus");
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strConsensusSTD, 1.0,"consensus");
+//		o.getStatsForFolder(folderPath, null, 1.0,"consensus");//if dont have AD use null		
 	
 	}
 	
@@ -325,7 +344,8 @@ public class OCHEM_AD_Stats {
 				
 				if (havePred ) {
 
-					if ((r.AD!=null && r.AD<=ADcutoff) || r.AD==null)  {
+					if ((r.AD!=null && r.AD<ADcutoff) || r.AD==null)  {
+						//< instead of <=
 
 						if (haveExp) {						
 							predcount++;
