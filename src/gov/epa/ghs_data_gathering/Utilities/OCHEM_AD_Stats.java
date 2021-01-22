@@ -180,9 +180,10 @@ public class OCHEM_AD_Stats {
 		DecimalFormat df=new DecimalFormat("0.000");
 		
 		for (File file:files) {
-			
 			if (!file.getName().toLowerCase().contains(".xls")) continue;
 			if (!file.getName().toLowerCase().contains("_"+methodName+"_")) continue;
+			
+//			System.out.println(file.getName()+"\t"+colNameAD);
 			
 			StatsBinary sb=getStats(file.getAbsolutePath(), colNameAD, fracTrainingInsideAD);
 						
@@ -238,6 +239,7 @@ public class OCHEM_AD_Stats {
 				
 		System.out.println("file\tAD_Name\tFrac training\tBA prediction set\tCoverage prediction set\tProduct");
 							
+
 		String [] adnames= {strProbStd,strClassLag,strASNN_CORREL,strASNN_STDEV};
 	//	String [] adnames= {strBaggingSTD};
 		String method="asnn";
@@ -265,11 +267,13 @@ public class OCHEM_AD_Stats {
 //		o.getStatsForFolder(folderPath,null, 1.0,method2);
 //		for (String distance:dm) {
 //			o.getStatsForFolder(folderPath,distance, 0.95,method2);	
+
 //		}
-				
-//		for (String distance:dm) {
-//			o.getStatsForFolder(folderPath,distance, 1.0,method2);	
+//				
+//		for (String adname:adnames) {
+//			o.getStatsForFolder(folderPath,adname, 1.0,method);	
 //		}
+
 		
 //		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"ann");
 //		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"ann");
@@ -291,6 +295,7 @@ public class OCHEM_AD_Stats {
 //		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strConsensusSTD, 1.0,"consensus");
 //		o.getStatsForFolder(folderPath, null, 1.0,"consensus");//if dont have AD use null		
 	
+
 	}
 	
 	public class StatsBinary {
@@ -344,10 +349,13 @@ public class OCHEM_AD_Stats {
 				
 				if (havePred ) {
 
+
 					if ((r.AD!=null && r.AD<ADcutoff) || r.AD==null)  {
 						//< instead of <=
 
-						if (haveExp) {						
+
+						if (haveExp) {
+							
 							predcount++;
 							if (r.exp.contentEquals("P")) sc.posPredcount++;
 							else if (r.exp.contentEquals("N")) sc.negPredcount++;
