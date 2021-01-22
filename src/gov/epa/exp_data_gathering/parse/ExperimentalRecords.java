@@ -11,6 +11,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
@@ -30,6 +32,9 @@ import com.google.gson.JsonElement;
 
 import gov.epa.QSAR.DataSetCreation.RecordQSAR;
 import gov.epa.QSAR.DataSetCreation.RecordsQSAR;
+import gov.epa.api.ExperimentalConstants;
+import gov.epa.eChemPortalAPI.Processing.FinalRecord;
+import gov.epa.eChemPortalAPI.Query.APIConstants;
 import gov.epa.ghs_data_gathering.Parse.Parse;
 
 
@@ -41,6 +46,52 @@ import gov.epa.ghs_data_gathering.Parse.Parse;
  */
 
 public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
+	
+	public ExperimentalRecords() { }
+	
+	public ExperimentalRecords(FinalRecord rec) {
+		int recordCount = rec.effectLevels.size();
+		for (int i = 0; i < recordCount; i++) {
+			ExperimentalRecord er = new ExperimentalRecord();
+			er.source_name = ExperimentalConstants.strSourceEChemPortalAPI;
+			er.url = rec.url;
+			er.original_source_name = rec.participant;
+			er.date_accessed = rec.dateAccessed;
+			er.reliability = rec.reliability;
+			
+			if (!rec.name.equals("-") && !rec.name.contains("unnamed")) {
+				er.chemical_name = rec.name;
+			}
+			
+			if (rec.numberType!=null) {
+				switch (rec.numberType) {
+				case "CAS Number":
+					er.casrn = rec.number;
+					break;
+				case "EC Number":
+					er.einecs = rec.number;
+					break;
+				}
+			}
+			
+			if (rec.propertyName.contentEquals(APIConstants.acuteToxicityInhalation)) {
+				if (!rec.species.toLowerCase().contains("other")) {
+					er.property_name=rec.species.replaceAll(" ","_").replaceAll(",","")+"_"+rec.propertyName+"_"+rec.doseDescriptors.get(i);
+				} else {
+					er.property_name="other_"+rec.propertyName+"_"+rec.doseDescriptors.get(i);
+					er.updateNote("Species: "+rec.species.substring(rec.species.indexOf(":")+1));
+				}
+			} else {
+				return;
+			}
+			
+			String value = rec.effectLevels.get(i);
+			ParseUtilities.getToxicity(er,value);
+			er.property_value_string = "Value: "+value;
+			
+			this.add(er);
+		}
+	}
 
 	public JsonElement toJsonElement() {
 		String strJSON=this.toJSON();

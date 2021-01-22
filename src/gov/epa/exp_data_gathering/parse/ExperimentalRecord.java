@@ -3,6 +3,8 @@ package gov.epa.exp_data_gathering.parse;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.text.StringEscapeUtils;
 
@@ -10,6 +12,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.eChemPortalAPI.Processing.FinalRecord;
+import gov.epa.eChemPortalAPI.Query.APIConstants;
 
 
 public class ExperimentalRecord {

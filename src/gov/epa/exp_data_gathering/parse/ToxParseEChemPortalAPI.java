@@ -95,7 +95,7 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 			return;
 		}
 		
-		ParseUtilities.getToxicity(er,r);
+		ParseUtilities.getToxicity(er,r.value);
 		er.property_value_string = "Value: "+r.value;
 		
 		if (r.testType!=null && !r.testType.isBlank()) {

@@ -426,8 +426,7 @@ public class ParseUtilities extends Parse {
 		return foundNumeric;
 	}
 
-	public static boolean getToxicity(ExperimentalRecord er,ToxRecordEChemPortalAPI ecpr) {
-		String propertyValue = ecpr.value;
+	public static boolean getToxicity(ExperimentalRecord er,String propertyValue) {
 		if (propertyValue==null) { return false; }
 		boolean badUnits = true;
 		int unitsIndex = -1;
