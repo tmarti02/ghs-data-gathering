@@ -1,4 +1,4 @@
-package gov.epa.QSAR.database;
+package gov.epa.database;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,10 +28,10 @@ import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import gov.epa.QSAR.utilities.CSVUtils;
-import gov.epa.QSAR.utilities.FileUtilities;
-import gov.epa.QSAR.utilities.LineSplitter;
-import gov.epa.QSAR.utilities.TESTConstants;
+//import gov.epa.QSAR.utilities.CSVUtils;
+//import gov.epa.QSAR.utilities.FileUtilities;
+//import gov.epa.QSAR.utilities.LineSplitter;
+//import gov.epa.QSAR.utilities.TESTConstants;
 
 
 
@@ -57,196 +57,196 @@ public class SQLite_Utilities {
 	 * @param filepath
 	 * @return
 	 */
-	public static void createDatabaseFromTextFile(String filepathDatabase, String textFilePath,String del,String tableName,String [] fieldNames) {
-
-		try {
-			System.out.println("Creating AA dashboard SQlite table");
-
-			Connection conn= SQLite_Utilities.getConnection(filepathDatabase);
-			Statement stat = SQLite_Utilities.getStatement(conn);
-
-			conn.setAutoCommit(true);
-
-
-			stat.executeUpdate("drop table if exists "+tableName+";");
-
-			stat.executeUpdate("VACUUM;");//compress db now that have deleted the table
-
-			//			MySQL_DB.create_table(stat, tableName, fields);
-
-			//Need CAS as the primary key if we are doing lots of searches- otherwise searches will be like 1 second each!
-			SQLite_CreateTable.create_table_key_with_duplicates(stat, tableName, fieldNames,"CAS");//need unique values in the table for key field for this to work!
-
-			conn.setAutoCommit(false);
-
-			Scanner scanner = new Scanner(new FileReader(textFilePath));
-
-			String header = scanner.nextLine();
-
-			String s = "insert into " + tableName + " values (";
-
-			for (int i = 1; i <= fieldNames.length; i++) {
-				s += "?";
-				if (i < fieldNames.length)
-					s += ",";
-			}
-			s += ");";
-
-
-			int counter = 0;
-
-			PreparedStatement prep = conn.prepareStatement(s);
-
-
-			while (scanner.hasNext()) {
-				String Line = scanner.nextLine();
-
-				counter++;
-
-				//				if (counter==100) break;
-
-
-				if (!Line.isEmpty()) {
-
-					List<String>list=CSVUtils.parseLine(Line,del);
-
-					if (list.size()!=fieldNames.length) {
-						System.out.println("*wrong number of values: "+Line);
-					}
-
-					//					 System.out.println(Line);
-
-					for (int i = 0; i < list.size(); i++) {
-						prep.setString(i + 1, list.get(i));
-						//						 System.out.println((i+1)+"\t"+list.get(i));
-					}
-
-					prep.addBatch();
-				}
-
-				if (counter % 1000 == 0) {
-					// System.out.println(counter);
-					prep.executeBatch();
-				}
-
-			}
-
-			int[] count = prep.executeBatch();// do what's left
-
-			conn.setAutoCommit(true);
-
-			String sqlAddIndex="CREATE INDEX idx_CAS ON "+tableName+" (CAS)";
-			stat.executeUpdate(sqlAddIndex);			
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-
-	}
-
-
-
-
-
-
-
-
-	/**
-	 * Create sqlite database table with CAS as primary key (needs unique values for this to work)
-	 * 
-	 * Can search by any field in table but CAS is much faster since primary key
-	 * 
-	 * See http://sqlitebrowser.org/ for user friendly sqlite GUI to look at the database once it's created
-	 * 
-	 * @param filepath
-	 * @return
-	 */
-	public static void createDatabaseWithPrimaryKeyFromTextFile(String textFilePath,String dbPath,String del,String tableName,String [] fieldNames) {
-
-		try {
-			System.out.println("Creating AA dashboard SQlite table");
-
-			Connection conn= SQLite_Utilities.getConnection(dbPath);
-			Statement stat = SQLite_Utilities.getStatement(conn);
-
-			conn.setAutoCommit(true);
-
-
-			stat.executeUpdate("drop table if exists "+tableName+";");
-
-			stat.executeUpdate("VACUUM;");//compress db now that have deleted the table
-
-			//			MySQL_DB.create_table(stat, tableName, fields);
-
-			//Need CAS as the primary key if we are doing lots of searches- otherwise searches will be like 1 second each!
-			SQLite_CreateTable.create_table(stat, tableName, fieldNames,"CAS");//need unique values in the table for key field for this to work!
-
-			conn.setAutoCommit(false);
-
-			List<String>lines=FileUtilities.readFile(textFilePath);
-			String header=lines.remove(0);
-			Collections.sort(lines);
-
-			String s = "insert into " + tableName + " values (";
-
-			for (int i = 1; i <= fieldNames.length; i++) {
-				s += "?";
-				if (i < fieldNames.length)
-					s += ",";
-			}
-			s += ");";
-
-
-			int counter = 0;
-
-			PreparedStatement prep = conn.prepareStatement(s);
-
-			String CAS="";
-
-			String records="";
-
-			int count=0;
-
-			for (String Line:lines) {
-				//				System.out.println(Line);
-
-				String currentCAS=Line.substring(0,Line.indexOf(del));
-
-				if (!CAS.equals(currentCAS)) {
-
-					if (!CAS.isEmpty()) { 
-						count++;
-						prep.setString(1, CAS);
-						prep.setString(2, records);
-						prep.addBatch();
-
-						if (counter % 1000 == 0) {
-							// System.out.println(counter);
-							prep.executeBatch();
-						}
-					}
-
-					records=Line;
-					CAS=currentCAS;
-				} else {
-					records+=Line+"\r\n";//separate records in Records field with a carriage return
-				}
-			}
-
-			prep.setString(1, CAS);
-			prep.setString(2, records);
-			prep.addBatch();
-
-			prep.executeBatch();// do what's left
-
-
-			conn.setAutoCommit(true);
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-
-	}
+//	public static void createDatabaseFromTextFile(String filepathDatabase, String textFilePath,String del,String tableName,String [] fieldNames) {
+//
+//		try {
+//			System.out.println("Creating AA dashboard SQlite table");
+//
+//			Connection conn= SQLite_Utilities.getConnection(filepathDatabase);
+//			Statement stat = SQLite_Utilities.getStatement(conn);
+//
+//			conn.setAutoCommit(true);
+//
+//
+//			stat.executeUpdate("drop table if exists "+tableName+";");
+//
+//			stat.executeUpdate("VACUUM;");//compress db now that have deleted the table
+//
+//			//			MySQL_DB.create_table(stat, tableName, fields);
+//
+//			//Need CAS as the primary key if we are doing lots of searches- otherwise searches will be like 1 second each!
+//			SQLite_CreateTable.create_table_key_with_duplicates(stat, tableName, fieldNames,"CAS");//need unique values in the table for key field for this to work!
+//
+//			conn.setAutoCommit(false);
+//
+//			Scanner scanner = new Scanner(new FileReader(textFilePath));
+//
+//			String header = scanner.nextLine();
+//
+//			String s = "insert into " + tableName + " values (";
+//
+//			for (int i = 1; i <= fieldNames.length; i++) {
+//				s += "?";
+//				if (i < fieldNames.length)
+//					s += ",";
+//			}
+//			s += ");";
+//
+//
+//			int counter = 0;
+//
+//			PreparedStatement prep = conn.prepareStatement(s);
+//
+//
+//			while (scanner.hasNext()) {
+//				String Line = scanner.nextLine();
+//
+//				counter++;
+//
+//				//				if (counter==100) break;
+//
+//
+//				if (!Line.isEmpty()) {
+//
+//					List<String>list=CSVUtils.parseLine(Line,del);
+//
+//					if (list.size()!=fieldNames.length) {
+//						System.out.println("*wrong number of values: "+Line);
+//					}
+//
+//					//					 System.out.println(Line);
+//
+//					for (int i = 0; i < list.size(); i++) {
+//						prep.setString(i + 1, list.get(i));
+//						//						 System.out.println((i+1)+"\t"+list.get(i));
+//					}
+//
+//					prep.addBatch();
+//				}
+//
+//				if (counter % 1000 == 0) {
+//					// System.out.println(counter);
+//					prep.executeBatch();
+//				}
+//
+//			}
+//
+//			int[] count = prep.executeBatch();// do what's left
+//
+//			conn.setAutoCommit(true);
+//
+//			String sqlAddIndex="CREATE INDEX idx_CAS ON "+tableName+" (CAS)";
+//			stat.executeUpdate(sqlAddIndex);			
+//
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//		}
+//
+//	}
+//
+//
+//
+//
+//
+//
+//
+//
+//	/**
+//	 * Create sqlite database table with CAS as primary key (needs unique values for this to work)
+//	 * 
+//	 * Can search by any field in table but CAS is much faster since primary key
+//	 * 
+//	 * See http://sqlitebrowser.org/ for user friendly sqlite GUI to look at the database once it's created
+//	 * 
+//	 * @param filepath
+//	 * @return
+//	 */
+//	public static void createDatabaseWithPrimaryKeyFromTextFile(String textFilePath,String dbPath,String del,String tableName,String [] fieldNames) {
+//
+//		try {
+//			System.out.println("Creating AA dashboard SQlite table");
+//
+//			Connection conn= SQLite_Utilities.getConnection(dbPath);
+//			Statement stat = SQLite_Utilities.getStatement(conn);
+//
+//			conn.setAutoCommit(true);
+//
+//
+//			stat.executeUpdate("drop table if exists "+tableName+";");
+//
+//			stat.executeUpdate("VACUUM;");//compress db now that have deleted the table
+//
+//			//			MySQL_DB.create_table(stat, tableName, fields);
+//
+//			//Need CAS as the primary key if we are doing lots of searches- otherwise searches will be like 1 second each!
+//			SQLite_CreateTable.create_table(stat, tableName, fieldNames,"CAS");//need unique values in the table for key field for this to work!
+//
+//			conn.setAutoCommit(false);
+//
+//			List<String>lines=FileUtilities.readFile(textFilePath);
+//			String header=lines.remove(0);
+//			Collections.sort(lines);
+//
+//			String s = "insert into " + tableName + " values (";
+//
+//			for (int i = 1; i <= fieldNames.length; i++) {
+//				s += "?";
+//				if (i < fieldNames.length)
+//					s += ",";
+//			}
+//			s += ");";
+//
+//
+//			int counter = 0;
+//
+//			PreparedStatement prep = conn.prepareStatement(s);
+//
+//			String CAS="";
+//
+//			String records="";
+//
+//			int count=0;
+//
+//			for (String Line:lines) {
+//				//				System.out.println(Line);
+//
+//				String currentCAS=Line.substring(0,Line.indexOf(del));
+//
+//				if (!CAS.equals(currentCAS)) {
+//
+//					if (!CAS.isEmpty()) { 
+//						count++;
+//						prep.setString(1, CAS);
+//						prep.setString(2, records);
+//						prep.addBatch();
+//
+//						if (counter % 1000 == 0) {
+//							// System.out.println(counter);
+//							prep.executeBatch();
+//						}
+//					}
+//
+//					records=Line;
+//					CAS=currentCAS;
+//				} else {
+//					records+=Line+"\r\n";//separate records in Records field with a carriage return
+//				}
+//			}
+//
+//			prep.setString(1, CAS);
+//			prep.setString(2, records);
+//			prep.addBatch();
+//
+//			prep.executeBatch();// do what's left
+//
+//
+//			conn.setAutoCommit(true);
+//
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//		}
+//
+//	}
 
 	
 	

@@ -2,13 +2,6 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Vector;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -57,7 +50,7 @@ public class RecordOChem {
 			if (filename.endsWith(".xls")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
-					String date = Parse.getStringCreationDate(filepath);
+					String date = DownloadWebpageUtilities.getStringCreationDate(filepath);
 					if (!date.equals(lastUpdated)) {
 						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
 					}
@@ -107,14 +100,14 @@ public class RecordOChem {
 						RecordOChem ocr = new RecordOChem();
 						ocr.smiles = betterGetCellValue(row,smilesIndex);
 						ocr.casrn = betterGetCellValue(row,casrnIndex);
-						String name1 = betterGetCellValue(row,nameIndex1);
-						String name2 = betterGetCellValue(row,nameIndex2);
+						String name1 = StringEscapeUtils.escapeHtml4(betterGetCellValue(row,nameIndex1));
+						String name2 = StringEscapeUtils.escapeHtml4(betterGetCellValue(row,nameIndex2));
 						if (name1!=null && !name1.isBlank() && name2!=null && !name2.isBlank()) {
-							ocr.name = StringEscapeUtils.escapeHtml4(name1)+"|"+StringEscapeUtils.escapeHtml4(name2);
+							ocr.name = name1+"|"+name2;
 						} else if (name1!=null && !name1.isBlank()) {
-							ocr.name = StringEscapeUtils.escapeHtml4(name1);
+							ocr.name = name1;
 						} else if (name2!=null && !name2.isBlank()) {
-							ocr.name = StringEscapeUtils.escapeHtml4(name2);
+							ocr.name = name2;
 						}
 						ocr.propertyName = propertyName;
 						ocr.propertyValue = betterGetCellValue(row,propertyValueIndex);

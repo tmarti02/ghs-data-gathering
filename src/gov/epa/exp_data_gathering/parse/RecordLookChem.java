@@ -16,11 +16,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 
 
@@ -52,12 +50,15 @@ public class RecordLookChem {
 	 * @param start		The index in the list to start downloading
 	 * @param end		The index in the list to stop downloading
 	 */
-	public static void downloadWebpagesFromExcelToZipFile(String filename,int start,int end) {
-		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+	public static void downloadWebpagesFromExcelToZipFile(String filename,String version,int start,int end) {
+		Vector<RecordDashboard> records = DownloadWebpageUtilities.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
-		ParseLookChem p = new ParseLookChem();
-		p.downloadWebpagesToZipFile(urls);	
+		String[] arrVersion = {version};
+		ParseLookChem p = new ParseLookChem(arrVersion);
+		p.mainFolder = p.mainFolder + File.separator + "LookChem "+version;
+		p.webpageFolder = p.mainFolder + File.separator + "web pages";
+		DownloadWebpageUtilities.downloadWebpagesToZipFile(urls,p.webpageFolder);	
 	}
 	
 	/**
@@ -68,14 +69,16 @@ public class RecordLookChem {
 	 * @param end			The index in the list to stop downloading
 	 * @param startFresh	True to remake database table completely, false to append new records to existing table
 	 */
-	public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end,boolean startFresh) {
-		Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+	public static void downloadWebpagesFromExcelToDatabase(String filename,String version,int start,int end,boolean startFresh) {
+		Vector<RecordDashboard> records = DownloadWebpageUtilities.getDashboardRecordsFromExcel(filename);
 		Vector<String> urls = getURLsFromDashboardRecords(records,start,end);
 
-		ParseLookChem p = new ParseLookChem();
-		p.mainFolder = p.mainFolder + File.separator + "LookChem PFAS";
+		String[] arrVersion = {version};
+		ParseLookChem p = new ParseLookChem(arrVersion);
+		p.mainFolder = p.mainFolder + File.separator + "LookChem "+version;
 		p.databaseFolder = p.mainFolder;
-		p.downloadWebpagesToDatabaseAdaptive(urls,".reir_l_info_table",sourceName,startFresh);		
+		String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+		DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptive(urls,".reir_l_info_table",databasePath,sourceName,startFresh);		
 	}
 	
 	/**
@@ -193,18 +196,18 @@ public class RecordLookChem {
 	 * Parses the HTML strings in the raw HTML database to RecordLookChem objects
 	 * @return	A vector of RecordLookChem objects containing the data from the raw HTML database
 	 */
-	public static Vector<RecordLookChem> parseWebpagesInDatabase() {
-		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "LookChem PFAS";
+	public static Vector<RecordLookChem> parseWebpagesInDatabase(String version) {
+		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "LookChem "+version;
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 		Vector<RecordLookChem> records = new Vector<>();
 
 		try {
-			Statement stat = MySQL_DB.getStatement(databasePath);
-			ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceLookChem);
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = SQLite_GetRecords.getAllRecords(stat, ExperimentalConstants.strSourceLookChem);
 
 			int counter = 1;
 			while (rs.next()) {
-				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
+				// if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 				
 				String html = rs.getString("content");
 				String url = rs.getString("url");
@@ -226,7 +229,7 @@ public class RecordLookChem {
 				}
 			}
 			
-			System.out.println("Parsed "+(counter-1)+" pages");
+			// System.out.println("Parsed "+(counter-1)+" pages");
 			return records;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -247,13 +250,13 @@ public class RecordLookChem {
 			if (!rows.isEmpty()) {
 				for (Element row:rows) {
 					String header = row.getElementsByTag("th").text();
-					String data = row.getElementsByTag("td").text();
+					String data = row.getElementsByTag("td").text().replaceAll("-", "-");
 					// Will need to check & adjust these conditions as necessary if other pages formatted differently
 					if (header.contains("CAS No")) { lcr.CAS = data;
 					} else if (header.contains("Name")) { lcr.chemicalName = StringEscapeUtils.escapeHtml4(data);
 					} else if (header.contains("Formula")) { lcr.formula = data;
 					} else if (header.contains("Molecular Weight")) { lcr.molecularWeight = data;
-					} else if (header.contains("Synonyms")) { lcr.synonyms = data;
+					} else if (header.contains("Synonyms")) { lcr.synonyms = StringEscapeUtils.escapeHtml4(data);
 					} else if (header.contains("EINECS")) { lcr.EINECS = data;
 					} else if (header.contains("Density")) { lcr.density = data;
 					} else if (header.contains("Melting Point")) { lcr.meltingPoint = data;
@@ -270,7 +273,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx",47000,50000,false);
+		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx","General",47000,50000,false);
 	}
 	
 }

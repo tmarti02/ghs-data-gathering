@@ -67,8 +67,16 @@ public class RecordOPERA {
 	String DSSTox_QC_Level;
 	String DSSTox_Substance_Id;
 	
+	// the many forms of property value string
 	public String property_name;
-	public Double property_value_point_estimate_original;//each property in OPERA stores the property value in a different field- so need field to store all of them
+	public String LogHL;
+	public String LogP;
+	public String MP;
+	public String LogVP;
+	public String BP;
+	public String LogMolar;
+	
+	
 	public String property_value_units_original;//sometimes it will take some work to figure this out by comparing to data values from other sources
 		
 	String Temperature;//Map to ExperimentalRecord.temperature_C
@@ -103,12 +111,14 @@ public class RecordOPERA {
 			AtomContainer ac=(AtomContainer)acs.getAtomContainer(i);
 			RecordOPERA ro = createRecordOpera(ac);
 			ro.property_name = endpoint;
+			
 
 			//Print out:
 			// if (ro.Substance_CASRN.contentEquals("71-43-2")) System.out.println(ro.toJSON());
 			// if (ro.CAS.contentEquals("71-43-2")) System.out.println(ro.toJSON());
-			if (i == 4) System.out.println(ac.getProperties());
-			
+			if (ro.CAS != null) { // only added because pka printing for benzene doesn't work
+			if (ro.CAS.contentEquals("71-43-2")) System.out.println(ac.getProperties());
+			}
 
 			
 			records.add(ro);
@@ -159,32 +169,34 @@ public class RecordOPERA {
 			String value=(String)entry.getValue();
 
 			if (key.contains("cdk")) continue;
-
-//			System.out.println("Key = " + key + 
-//					", Value = " + value);
 			
 			if (key.contentEquals("LogMolar")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
-				ro.property_value_units_original="log10_M";//Note: later to get M need to use Math.pow(10,value)					
-			
+				// ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_name=ExperimentalConstants.strWaterSolubility;
+				ro.property_value_units_original=ExperimentalConstants.str_log_M;//Note: later to get M need to use Math.pow(10,value)					
+				ro.LogMolar=value;
 			} else if (key.contentEquals("LogHL")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
-				ro.property_value_units_original="log10_dimensionless";//TODO- determine what "?" is 	
+				ro.property_value_units_original=ExperimentalConstants.str_log_atm_m3_mol;//TODO- determine what "?" is
+				ro.property_name=ExperimentalConstants.strHenrysLawConstant;
+				ro.LogHL=value;
+				
 			} else if (key.contentEquals("LogP")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
-				ro.property_value_units_original="log10_dimensionless";
+				ro.property_name=ExperimentalConstants.strLogKow;
+				ro.LogP=value;
 			} else if (key.contentEquals("MP")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_name=ExperimentalConstants.strMeltingPoint;
 				ro.property_value_units_original=ExperimentalConstants.str_C;
+				ro.MP=value;
 			} else if (key.contentEquals("LogVP")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
-				ro.property_value_units_original="log10_" + ExperimentalConstants.str_mmHg;
+				ro.property_name=ExperimentalConstants.strVaporPressure;
+				ro.property_value_units_original=ExperimentalConstants.str_log_mmHg;
+				ro.LogVP=value;
 			} else if (key.contentEquals("BP")) {
-				ro.property_value_point_estimate_original=Double.parseDouble(value);
+				ro.property_name=ExperimentalConstants.strBoilingPoint;
 				ro.property_value_units_original=ExperimentalConstants.str_C;
+				ro.BP=value;
 			} else if (key.contains("Reference")) {
 				ro.Reference=value;
-				
 			} else if (key.contains("Temperature")) {
 				ro.Temperature=value;
 				
@@ -255,7 +267,7 @@ public class RecordOPERA {
 	public static Vector<RecordOPERA> parseOperaSdf() {
 		Vector<RecordOPERA> records=new Vector<>();
 		// have to figure out a smart way to handle ExperimentalConstants.str_pKA
-		String [] endpoints = {ExperimentalConstants.strBoilingPoint,ExperimentalConstants.strHenrysLawConstant,ExperimentalConstants.strLogKow,ExperimentalConstants.strMeltingPoint, ExperimentalConstants.strVaporPressure,ExperimentalConstants.strWaterSolubility};
+		String [] endpoints = {ExperimentalConstants.strBoilingPoint,ExperimentalConstants.strHenrysLawConstant,ExperimentalConstants.strLogKow,ExperimentalConstants.strMeltingPoint, ExperimentalConstants.strVaporPressure,ExperimentalConstants.strWaterSolubility,ExperimentalConstants.str_pKA};
 		for (int i = 0; i < endpoints.length; i++) {
 		records.addAll(parseOPERA_SDF(endpoints[i]));
 		}
@@ -267,6 +279,6 @@ public class RecordOPERA {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		parseOPERA_SDF(ExperimentalConstants.str_pKA);
+		parseOPERA_SDF(ExperimentalConstants.strWaterSolubility);
 	}
 }

@@ -18,7 +18,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
@@ -53,10 +54,9 @@ public static void downloadWebpagesHTML() {
 	}
 	System.out.println(urls.size());
 	ParseSander p = new ParseSander();
-	p.mainFolder = p.mainFolder + File.separator + "General";
-	p.databaseFolder = p.mainFolder;
 	Vector<String> html = parsePropertyLinksInDatabase();
-	p.downloadWebpagesToDatabaseAdaptive(urls,"tbody", sourceName,false);
+	String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+	DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptive(urls,"tbody", databasePath,sourceName,false);
 
 }
 	// regex, to be used later depending on whether Todd wants full reference list
@@ -111,14 +111,14 @@ private static Vector<String> ObtainWebpages() {
 
 	// returns all html from the websites downloaded to the database
 public static Vector<String> parsePropertyLinksInDatabase() {
-	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
+	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 	String databasePath = databaseFolder+File.separator+ExperimentalConstants.strSourceSander + "_raw_html.db";
 	Vector<String> records = new Vector<>();
 	System.out.println(databasePath);
 
 	try {
-		Statement stat = MySQL_DB.getStatement(databasePath);
-		ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceSander);
+		Statement stat = SQLite_Utilities.getStatement(databasePath);
+		ResultSet rs = SQLite_GetRecords.getAllRecords(stat, ExperimentalConstants.strSourceSander);
 		
 		int counter = 1;
 		
@@ -185,13 +185,13 @@ private static void getExperimentalTable(Document doc, RecordSander rs) {
  * @return	A vector of RecordSander objects containing the data from the raw HTML database
  */
 public static Vector<RecordSander> parseWebpagesInDatabase() {
-	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
+	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 	String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 	Vector<RecordSander> records = new Vector<>();
 
 	try {
-		Statement stat = MySQL_DB.getStatement(databasePath);
-		ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceSander);
+		Statement stat = SQLite_Utilities.getStatement(databasePath);
+		ResultSet rs = SQLite_GetRecords.getAllRecords(stat, ExperimentalConstants.strSourceSander);
 		
 		int counter = 1;
 	

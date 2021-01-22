@@ -7,10 +7,12 @@ import java.util.Vector;
 import gov.epa.api.ExperimentalConstants;
 
 public class ParseLookChem extends Parse {
+	String[] versions;
 	
-	public ParseLookChem() {
+	public ParseLookChem(String[] versions) {
 		sourceName = ExperimentalConstants.strSourceLookChem;
 		this.init();
+		this.versions = versions;
 	}
 	
 	/**
@@ -19,7 +21,10 @@ public class ParseLookChem extends Parse {
 	@Override
 	protected void createRecords() {
 		// Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInZipFile();
-		Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInDatabase();
+		Vector<RecordLookChem> records = new Vector<RecordLookChem>();
+		for (String v:versions) {
+			records.addAll(RecordLookChem.parseWebpagesInDatabase(v));
+		}
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -72,7 +77,7 @@ public class ParseLookChem extends Parse {
         } 
 	}
 	
-	private static void addAppearanceRecord(RecordLookChem lcr,ExperimentalRecords records) {
+	private void addAppearanceRecord(RecordLookChem lcr,ExperimentalRecords records) {
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.date_accessed = lcr.date_accessed;
 		er.casrn=lcr.CAS;
@@ -89,11 +94,7 @@ public class ParseLookChem extends Parse {
 		String prefix = lcr.CAS.substring(0,3);
 		if (prefix.charAt(2)=='-') { prefix = prefix.substring(0,2); }
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
-		
-		er.keep = true;
-		er.reason = null;
-		er.flag = false;
-		
+		uc.convertRecord(er);
 		records.add(er);
 	}
 	
@@ -123,30 +124,28 @@ public class ParseLookChem extends Parse {
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
 
 		boolean foundNumeric = false;
-		propertyValue = propertyValue.replaceAll(",", ".");
+		propertyValue = propertyValue.replaceAll(",", ".").replaceAll("-", "-");
 		if (propertyName==ExperimentalConstants.strDensity) {
-			foundNumeric = getDensity(er, propertyValue);
-			getPressureCondition(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
 				propertyName==ExperimentalConstants.strFlashPoint) {
-			foundNumeric = getTemperatureProperty(er,propertyValue);
-			getPressureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = getWaterSolubility(er, propertyValue);
-			getTemperatureCondition(er,propertyValue);
-			getQualitativeSolubility(er, propertyValue);
+			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			ParseUtilities.getQualitativeSolubility(er, propertyValue,sourceName);
 		}
 		
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		if (foundNumeric) {
-			er.finalizePropertyValues();
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
 			// Warns if there may be a problem with an entry
-			er.flag = false;
 			if (propertyName.contains("?")) {
 				er.flag = true;
 				er.reason = "Question mark";
@@ -166,14 +165,14 @@ public class ParseLookChem extends Parse {
 			er.reason = "Bad data or units";
 		}
 		
+		uc.convertRecord(er);
+		
 		recordsExperimental.add(er);
 	}
 	
 	public static void main(String[] args) {
-		ParseLookChem p = new ParseLookChem();
-		p.mainFolder = p.mainFolder + File.separator + "LookChem PFAS";
-		p.databaseFolder = p.mainFolder;
-		p.jsonFolder= p.mainFolder;
+		String[] arr = {"General","PFAS"};
+		ParseLookChem p = new ParseLookChem(arr);
 		p.createFiles();
 	}
 }

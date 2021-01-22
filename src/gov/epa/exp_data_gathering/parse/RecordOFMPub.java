@@ -14,7 +14,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 
 public class RecordOFMPub {
 	String endpoint;
@@ -85,7 +86,8 @@ public class RecordOFMPub {
 		}
 		
 		ParseOFMPub p = new ParseOFMPub();
-		p.downloadWebpagesToDatabaseAdaptiveNonUnicode(urls,sourceName,startFresh);
+		String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+		DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptiveNonUnicode(urls,databasePath,sourceName,startFresh);
 	}
 	
 	public static void downloadWebpagesToDatabaseFromIndex(boolean startFresh,int start,int end) {
@@ -101,7 +103,8 @@ public class RecordOFMPub {
 		List<String> urlListSubset = urls.subList(start, end);
 		Vector<String> urlSubset = new Vector<String>(urlListSubset);
 		ParseOFMPub p = new ParseOFMPub();
-		p.downloadWebpagesToDatabaseAdaptiveNonUnicode(urlSubset,sourceName,startFresh);
+		String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+		DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptiveNonUnicode(urlSubset,databasePath,sourceName,startFresh);
 	}
 	
 	public static Vector<RecordOFMPub> parseWebpagesInDatabase() {
@@ -110,12 +113,12 @@ public class RecordOFMPub {
 		Vector<RecordOFMPub> records = new Vector<>();
 
 		try {
-			Statement stat = MySQL_DB.getStatement(databasePath);
-			ResultSet rs = MySQL_DB.getAllRecords(stat, ExperimentalConstants.strSourceOFMPub);
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = SQLite_GetRecords.getAllRecords(stat, ExperimentalConstants.strSourceOFMPub);
 
 			int counter = 1;
 			while (rs.next()) {
-				if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
+				// if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
 				
 				String html = rs.getString("content");
 				String url = rs.getString("url");
@@ -128,7 +131,7 @@ public class RecordOFMPub {
 				counter++;
 			}
 			
-			System.out.println("Parsed "+(counter-1)+" pages");
+			// System.out.println("Parsed "+(counter-1)+" pages");
 			return records;
 		} catch (Exception e) {
 			e.printStackTrace();

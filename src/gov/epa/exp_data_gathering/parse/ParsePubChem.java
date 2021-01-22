@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.Vector;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import gov.epa.api.ExperimentalConstants;
 
 public class ParsePubChem extends Parse {
@@ -39,6 +41,7 @@ public class ParsePubChem extends Parse {
 				RecordPubChem r = recordsPubChem[i];
 				addExperimentalRecords(r,recordsExperimental);
 			}
+			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -79,21 +82,18 @@ public class ParsePubChem extends Parse {
         }
 	}
 	
-	private static void addAppearanceRecord(RecordPubChem pcr,String physicalDescription,ExperimentalRecords records) {
+	private void addAppearanceRecord(RecordPubChem pcr,String physicalDescription,ExperimentalRecords records) {
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.date_accessed = pcr.date_accessed;
 		er.casrn=String.join("|", pcr.cas);
-		er.chemical_name=pcr.iupacName;
+		er.chemical_name=StringEscapeUtils.escapeHtml4(pcr.iupacName);
 		if (pcr.synonyms != null) { er.synonyms=pcr.synonyms; }
 		er.property_name=ExperimentalConstants.strAppearance;
 		er.property_value_string=physicalDescription;
 		er.property_value_qualitative=physicalDescription.toLowerCase().replaceAll("colour","color").replaceAll("odour","odor").replaceAll("vapour","vapor");
 		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
-		er.keep = true;
-		er.reason = null;
-		er.flag = false;
-		
+		uc.convertRecord(er);
 		records.add(er);
 	}
 	
@@ -110,33 +110,31 @@ public class ParsePubChem extends Parse {
 		er.property_value_string=propertyValue;
 		er.url="https://pubchem.ncbi.nlm.nih.gov/compound/"+pcr.cid;
 		er.source_name=ExperimentalConstants.strSourcePubChem;
-		er.keep=true;
-		er.reason = null;
 		
 		boolean foundNumeric = false;
 		propertyValue = propertyValue.replaceAll("greater than( or equal to )?", ">");
 		propertyValue = propertyValue.replaceAll("less than( or equal to )?", "<");
 		if (propertyName==ExperimentalConstants.strDensity) {
-			foundNumeric = getDensity(er,propertyValue);
-			getPressureCondition(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getDensity(er,propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
 				propertyName==ExperimentalConstants.strFlashPoint) {
-			foundNumeric = getTemperatureProperty(er,propertyValue);
-			getPressureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
+			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 			if (propertyValue.contains("closed cup") || propertyValue.contains("c.c.")) { er.measurement_method = "closed cup"; }
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = getWaterSolubility(er, propertyValue);
-			getTemperatureCondition(er,propertyValue);
-			getQualitativeSolubility(er, propertyValue);
+			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			ParseUtilities.getQualitativeSolubility(er, propertyValue,sourceName);
 		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
-			foundNumeric = getVaporPressure(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strHenrysLawConstant) {
-			foundNumeric = getHenrysLawConstant(er,propertyValue);
+			foundNumeric = ParseUtilities.getHenrysLawConstant(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strLogKow || propertyName==ExperimentalConstants.str_pKA) {
-			foundNumeric = getLogProperty(er,propertyValue);
-			getTemperatureCondition(er,propertyValue);
+			foundNumeric = ParseUtilities.getLogProperty(er,propertyValue);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		}
 		
 		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
@@ -153,20 +151,20 @@ public class ParsePubChem extends Parse {
 			er.reason = "Estimated";
 		}
 		// Warns if there may be a problem with an entry
-		er.flag = false;
 		if (propertyValue.contains("?")) {
 			er.flag = true;
 			er.reason = "Question mark";
 		}
-		
-		if (foundNumeric) { er.finalizePropertyValues(); }
-		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep!=false) {
+
+		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep) {
 			er.keep = true;
 			er.reason = null;
 		} else {
 			er.keep = false;
 			er.reason = "Bad data or units";
 		}
+		
+		uc.convertRecord(er);
 		
 		recordsExperimental.add(er);
 	}

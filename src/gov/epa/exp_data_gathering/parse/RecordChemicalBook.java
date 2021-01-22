@@ -1,7 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 import gov.epa.api.RawDataRecord;
-import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
@@ -153,8 +153,8 @@ public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
 	Vector<RecordChemicalBook> records = new Vector<>();
 
 	try {
-		Statement stat = MySQL_DB.getStatement(databasePath);
-		ResultSet rs = MySQL_DB.getAllRecords(stat, "ChemicalBook");
+		Statement stat = SQLite_Utilities.getStatement(databasePath);
+		ResultSet rs = SQLite_GetRecords.getAllRecords(stat, "ChemicalBook");
 		
 		int counter = 1;
 	
@@ -204,8 +204,8 @@ public static Vector<String> parsePropertyLinksInDatabase() {
 	Vector<String> records = new Vector<>();
 
 	try {
-		Statement stat = MySQL_DB.getStatement(databasePath);
-		ResultSet rs = MySQL_DB.getAllRecords(stat, "searchAndPropertyLinks"); //hardcoded for now
+		Statement stat = SQLite_Utilities.getStatement(databasePath);
+		ResultSet rs = SQLite_GetRecords.getAllRecords(stat, "searchAndPropertyLinks"); //hardcoded for now
 		
 		int counter = 1;
 	
@@ -226,18 +226,17 @@ public static Vector<String> parsePropertyLinksInDatabase() {
 }
 
 public static void downloadWebpagesFromExcelToDatabase(String filename,int start,int end, int excelFinalRecord, boolean startFresh) {
-	Vector<RecordDashboard> records = Parse.getDashboardRecordsFromExcel(filename);
+	Vector<RecordDashboard> records = DownloadWebpageUtilities.getDashboardRecordsFromExcel(filename);
 	Vector<String> searchURLs = getSearchURLsFromDashboardRecords(records,1,excelFinalRecord);
 	ParseChemicalBook p = new ParseChemicalBook();
-	p.mainFolder = p.mainFolder + File.separator + "General";
-	p.databaseFolder = p.mainFolder;
 	// p.downloadPropertyLinksToDatabase(searchURLs,"searchAndPropertyLinks", start, end, startFresh);
 	Vector<String> propertyURLs = parsePropertyLinksInDatabase();
 	Vector<String> downloadedURLs = new Vector<String>();
 	for (int i = 3001; i < 5000; i++) {
 		downloadedURLs.add(propertyURLs.get(i));
 	}
-	p.downloadWebpagesToDatabaseAdaptive(downloadedURLs,"div.RFQbox ~ table",sourceName,false);		
+	String databasePath = p.databaseFolder + File.separator + sourceName + "_raw_html.db";
+	DownloadWebpageUtilities.downloadWebpagesToDatabaseAdaptive(downloadedURLs,"div.RFQbox ~ table",databasePath,sourceName,false);		
 }
 
 public static void main(String[] args) {

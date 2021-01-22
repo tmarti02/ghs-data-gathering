@@ -27,59 +27,100 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+import gov.epa.QSAR.DataSetCreation.ConvertExperimentalRecordsToDataSet;
+import gov.epa.api.ExperimentalConstants;
+import gov.epa.database.SQLite_CreateTable;
+import gov.epa.database.SQLite_Utilities;
 
 public class DataFetcher {
 	
 	private static ExperimentalRecords records;
 	
 	public static final String mainFolder = "Data"+File.separator+"Experimental";
-	public static final String databasePath = mainFolder+File.separator+"ExperimentalRecords.db";
-	public static final String jsonPath = mainFolder+File.separator+"ExperimentalRecords.json";
+	public String databasePath;
+	public String jsonPath;
 	
-	public DataFetcher(String[] sources) {
+	public DataFetcher(String[] sources,String recordType) {
+		String fileName = recordType.toLowerCase().contains("tox") ? "ToxicityRecords" : "ExperimentalRecords";
+		databasePath = mainFolder+File.separator+fileName+".db";
+		jsonPath = mainFolder+File.separator+fileName+".json";
+		
 		records = new ExperimentalRecords();
 		for (String source:sources) {
-			String recordFileName = mainFolder+File.separator+source+" Experimental Records.json";
-			String badRecordFileName = mainFolder+File.separator+source+" Experimental Records-Bad.json";
-			try {
-				System.out.println("Fetching data from "+source.substring(source.lastIndexOf("\\")+1));
-				ExperimentalRecords sourceRecords = ExperimentalRecords.loadFromJSON(recordFileName);
-				if (sourceRecords==null) {
-					sourceRecords = new ExperimentalRecords();
-					int i = 1;
-					ExperimentalRecords temp = new ExperimentalRecords();
-					while (temp!=null) {
-						temp = ExperimentalRecords.loadFromJSON(mainFolder+File.separator+source+" Experimental Records "+i+".json");
-						
-						if (temp==null) break;
-						sourceRecords.addAll(temp);
-						i++;
-					}
-				}
-				ExperimentalRecords badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFileName);
-				records.addAll(sourceRecords);
-				if(badSourceRecords!=null) records.addAll(badSourceRecords);
-				
-			} catch (Exception ex) {
-				ex.printStackTrace();
+			String toxNote = recordType.toLowerCase().contains("tox") ? " Toxicity" : "";
+			String recordFilePath = mainFolder+File.separator+source+File.separator+source+toxNote+" Experimental Records.json";
+			String badRecordFilePath = mainFolder+File.separator+source+File.separator+source+toxNote+" Experimental Records-Bad.json";
+			
+			File fileRecords=new File(recordFilePath);
+			File fileBadRecords=new File(badRecordFilePath);
+			
+			ExperimentalRecords sourceRecords=null;
+			
+			if (fileRecords.exists()) {
+				sourceRecords = ExperimentalRecords.loadFromJSON(recordFilePath);	
 			}
+			
+			if (fileBadRecords.exists()) {
+				ExperimentalRecords badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFilePath);				
+				sourceRecords.addAll(badSourceRecords);
+			}
+
+//			if (sourceRecords==null) {
+			//TMM- there doesnt seem to be any numbered files...
+//				sourceRecords = getRecordsFromNumberedFiles(source);
+//			}
+			
+			if (sourceRecords==null) {
+				System.out.println("No file for "+source);
+				continue;
+			}
+			
+			System.out.println("Fetching data from "+source);
+
+//			addSourceBasedIDNumbers(sourceRecords);			
+			records.addAll(sourceRecords);
+				
+			
+			
+			
 		}
 	}
+
 	
-	public void createExperimentalRecordsDatabase() {
+
+	
+	
+	private ExperimentalRecords getRecordsFromNumberedFiles(String source) {
+		ExperimentalRecords sourceRecords;
+		sourceRecords = new ExperimentalRecords();
+		int i = 1;
+		ExperimentalRecords temp = new ExperimentalRecords();
+		
+		while (temp!=null) {
+			File ftemp=new File(mainFolder+File.separator+source+" Experimental Records "+i+".json");					
+			System.out.println(ftemp.getName()+"\t"+ftemp.exists());						
+			temp = ExperimentalRecords.loadFromJSON(mainFolder+File.separator+source+" Experimental Records "+i+".json");
+			if (temp==null) break;
+			sourceRecords.addAll(temp);
+			i++;
+		}
+		return sourceRecords;
+	}
+	
+	
+	public void createRecordsDatabase() {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		makeDatabase(records);
 	}
 	
-	public void createExperimentalRecordsJSON() {
+	public void createRecordsJSON() {
 		File json = new File(jsonPath);
 		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
 		records.toJSON_File(jsonPath);
 	}
 	
-	private ExperimentalRecords getExperimentalRecordsSubset(String[] cas) {
+	private ExperimentalRecords getRecordsSubset(String[] cas) {
 		ExperimentalRecords subsetRecords = new ExperimentalRecords();
 		for (ExperimentalRecord rec:records) {
 			String casCheck="";
@@ -95,19 +136,19 @@ public class DataFetcher {
 		return subsetRecords;
 	}
 	
-	public void createExperimentalRecordsSubsetJSON(String[] cas,String filename) {
+	public void createRecordsSubsetJSON(String[] cas,String filename) {
 		String path = mainFolder+File.separator+filename;
 		File json = new File(path);
 		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
-		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(cas);
+		ExperimentalRecords subsetRecords = getRecordsSubset(cas);
 		subsetRecords.toJSON_File(path);
 	}
 	
-	public void createExperimentalRecordsSubsetExcel(String[] cas,String filename) {
+	public void createRecordsSubsetExcel(String[] cas,String filename) {
 		String path = mainFolder+File.separator+filename;
 		File json = new File(path);
 		if(!json.getParentFile().exists()) { json.getParentFile().mkdirs(); }
-		ExperimentalRecords subsetRecords = getExperimentalRecordsSubset(cas);
+		ExperimentalRecords subsetRecords = getRecordsSubset(cas);
 		subsetRecords.toExcel_File(path);
 	}
 	
@@ -116,13 +157,13 @@ public class DataFetcher {
 		String tableName = "records";
 		System.out.println("Creating database at "+databasePath+" with fields:\n"+String.join("\n",fieldNames));
 		try {
-			Connection conn= MySQL_DB.getConnection(databasePath);
-			Statement stat = MySQL_DB.getStatement(conn);			
+			Connection conn= SQLite_Utilities.getConnection(databasePath);
+			Statement stat = SQLite_Utilities.getStatement(conn);			
 			conn.setAutoCommit(true);		
 			stat.executeUpdate("drop table if exists "+tableName+";");
 			stat.executeUpdate("VACUUM;");
 			
-			MySQL_DB.create_table_key_with_duplicates(stat, tableName, fieldNames,"casrn");
+			SQLite_CreateTable.create_table_key_with_duplicates(stat, tableName, fieldNames,"casrn");
 			conn.setAutoCommit(false);
 
 			String s = "insert into " + tableName + " values (";
@@ -141,9 +182,14 @@ public class DataFetcher {
 			
 			for (ExperimentalRecord rec:records) {				
 				counter++;
-				rec.id_physchem=counter;
+//				rec.id_physchem=counter;
 				
-				String[] list = rec.toStringArray( ExperimentalRecord.outputFieldNames);
+//				String[] list = rec.toStringArray(ExperimentalRecord.outputFieldNames);
+				if (counter%50000==0) System.out.println("Added "+counter+" entries...");
+				rec.setComboID("|");
+
+				
+				String[] list = rec.toStringArray( fieldNames);
 
 				if (list.length!=fieldNames.length) {//probably wont happen now that list is based on names array
 					System.out.println("Wrong number of values: "+list[0]);
@@ -179,7 +225,7 @@ public class DataFetcher {
 			String sqlAddIndex="CREATE INDEX idx_casrn ON "+tableName+" (casrn)";
 			stat.executeUpdate(sqlAddIndex);
 			
-			System.out.println("Created database with "+counter+" entries");
+			System.out.println("Created database with "+counter+" entries. Done!");
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -280,17 +326,5 @@ public class DataFetcher {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-	}
-	
-	public static void main(String[] args) {
-		String[] sources = {"eChemPortalAPI\\eChemPortalAPI","LookChem\\LookChem PFAS\\LookChem","PubChem\\PubChem","OChem\\OChem","OFMPub\\OFMPub","QSARDB\\QSARDB",
-				"Bradley\\Bradley","ADDoPT\\ADDoPT","AqSolDB\\AqSolDB"};
-		DataFetcher d = new DataFetcher(sources);
-		d.createExperimentalRecordsDatabase();
-		d.createExperimentalRecordsJSON();
-//		String[] cas = {"335-76-2","3108-42-7","3830-45-3","375-95-1","4149-60-4","307-24-4","355-46-4","3871-99-6","375-22-4","10495-86-0"};
-//		d.createExperimentalRecordsSubsetJSON(cas, "ExperimentalRecords_CPHEA_120220.json");
-//		d.createExperimentalRecordsSubsetExcel(cas, "ExperimentalRecords_CPHEA_120220.xlsx");
-//		d.createUniqueIdentifiersExcel("eChemPortal");
 	}
 }

@@ -6,6 +6,8 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import gov.epa.api.ExperimentalConstants;
 
 /**
@@ -58,34 +60,36 @@ public class ParseEChemPortal extends Parse {
 				if (cas.length()!=0 && !cas.equals("unknown")) { er.casrn = cas;
 				} else if (einecs.length()!=0 && !einecs.equals("unknown")) { er.einecs = einecs; }
 				if (ecpr.substanceName!=null && !ecpr.substanceName.equals("-") && !ecpr.substanceName.contains("unnamed")) {
-					er.chemical_name = ecpr.substanceName;
+					er.chemical_name = StringEscapeUtils.escapeHtml4(ecpr.substanceName);
 				}
 				er.url = ecpr.url;
 				if (ecpr.method!=null && !ecpr.method.isBlank()) {
 					er.measurement_method = ecpr.method;
 				}
-				er.property_value_string = ecpr.values.get(i);
-				String propertyValue = ecpr.values.get(i);
+				er.property_value_string = ecpr.values.get(i).replaceAll("—", "-");
+				String propertyValue = er.property_value_string;
 				if (!ecpr.temperature.isEmpty() && ecpr.temperature.get(i)!=null) { 
-					getTemperatureCondition(er,ecpr.temperature.get(i));
-					er.property_value_string = er.property_value_string + ";" + ecpr.temperature.get(i);
+					String temp = ecpr.temperature.get(i).replaceAll("—", "-");
+					ParseUtilities.getTemperatureCondition(er,temp);
+					er.property_value_string = er.property_value_string + ";" + temp;
 				}
 				if (!ecpr.pressure.isEmpty() && ecpr.pressure.get(i)!=null) {
-					getPressureCondition(er,ecpr.pressure.get(i));
-					er.property_value_string = er.property_value_string + ";" + ecpr.pressure.get(i);
+					String pressure = ecpr.pressure.get(i).replaceAll("—", "-");
+					ParseUtilities.getPressureCondition(er,pressure,sourceName);
+					er.property_value_string = er.property_value_string + ";" + pressure;
 				}
 				if (!ecpr.pH.isEmpty() && ecpr.pH.get(i)!=null) { 
-					String pHStr = ecpr.pH.get(i);
+					String pHStr = ecpr.pH.get(i).replaceAll("—", "-");
 					er.property_value_string = er.property_value_string + ";" + pHStr;
 					boolean foundpH = false;
 					try {
-						double[] range = Parse.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
+						double[] range = ParseUtilities.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
 						er.pH = range[0]+"-"+range[1];
 						foundpH = true;
 					} catch (Exception ex) { }
 					if (!foundpH) {
 						try {
-							double[] range = Parse.extractAltFormatRangeFromString(pHStr,pHStr.length());
+							double[] range = ParseUtilities.extractAltFormatRangeFromString(pHStr,pHStr.length());
 							er.pH = range[0]+"-"+range[1];
 							foundpH = true;
 						} catch (Exception ex) { }
@@ -106,13 +110,13 @@ public class ParseEChemPortal extends Parse {
 					}
 					if (!foundpH) {
 						try {
-							double pHDouble = Parse.extractDoubleFromString(pHStr,pHStr.length());
+							double pHDouble = ParseUtilities.extractDoubleFromString(pHStr,pHStr.length());
 							String pHDoubleStr = Double.toString(pHDouble);
 							String numQual = "";
 							if (pHDouble >= 0 && pHDouble < 1) {
-								numQual = getNumericQualifier(pHStr,pHStr.indexOf("0"));
+								numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf("0"));
 							} else {
-								numQual = getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
+								numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
 							}
 							er.pH = numQual+pHDoubleStr;
 							foundpH = true;
@@ -121,41 +125,40 @@ public class ParseEChemPortal extends Parse {
 				}
 				if (ecpr.section.equals("Density")) {
 					er.property_name = ExperimentalConstants.strDensity;
-					getDensity(er,propertyValue);
+					ParseUtilities.getDensity(er,propertyValue);
 				} else if (ecpr.section.equals("Melting / freezing point")) {
 					er.property_name = ExperimentalConstants.strMeltingPoint;
-					getTemperatureProperty(er,propertyValue);
+					ParseUtilities.getTemperatureProperty(er,propertyValue);
 				} else if (ecpr.section.equals("Boiling point")) {
 					er.property_name = ExperimentalConstants.strBoilingPoint;
-					getTemperatureProperty(er,propertyValue);
+					ParseUtilities.getTemperatureProperty(er,propertyValue);
 				} else if (ecpr.section.equals("Flash point")) {
 					er.property_name = ExperimentalConstants.strFlashPoint;
-					getTemperatureProperty(er,propertyValue);
+					ParseUtilities.getTemperatureProperty(er,propertyValue);
 				} else if (ecpr.section.equals("Water solubility")) {
 					er.property_name = ExperimentalConstants.strWaterSolubility;
-					getWaterSolubility(er,propertyValue);
+					ParseUtilities.getWaterSolubility(er,propertyValue,sourceName);
 				} else if (ecpr.section.equals("Vapour pressure")) {
 					er.property_name = ExperimentalConstants.strVaporPressure;
-					getVaporPressure(er,propertyValue);
+					ParseUtilities.getVaporPressure(er,propertyValue);
 				} else if (ecpr.section.equals("Partition coefficient")) {
 					er.property_name = ExperimentalConstants.strLogKow;
-					getLogProperty(er,propertyValue);
+					ParseUtilities.getLogProperty(er,propertyValue);
 				} else if (ecpr.section.equals("Dissociation constant")) {
 					er.property_name = ExperimentalConstants.str_pKA;
-					getLogProperty(er,propertyValue);
+					ParseUtilities.getLogProperty(er,propertyValue);
 				} else if (ecpr.section.equals("Henry's Law constant")) {
 					er.property_name = ExperimentalConstants.strHenrysLawConstant;
-					getHenrysLawConstant(er,propertyValue);
+					ParseUtilities.getHenrysLawConstant(er,propertyValue);
 				}
-				er.finalizePropertyValues();
-				if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
-						(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
+
+				uc.convertRecord(er);
+				
+				if (!ParseUtilities.hasIdentifiers(er)) {
 					er.keep = false;
 					er.reason = "No identifiers";
-				} else {
-					er.keep = true;
-					er.reason = null;
 				}
+				
 				er.reliability = ecpr.reliability;
 				records.add(er);
 			}
