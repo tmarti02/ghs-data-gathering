@@ -15,7 +15,7 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.eChemPortalAPI.Processing.FinalRecord;
+import gov.epa.eChemPortalAPI.eChemPortalAPI;
 import gov.epa.eChemPortalAPI.Query.APIJSONs.*;
 
 /**
@@ -49,11 +49,11 @@ public class RecordEChemPortalAPI {
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 	
-	public static void downloadAllPhyschemResults(boolean startFresh) {
+	public static void downloadAllPhyschemResults() {
 		String databaseName = sourceName+"_raw_json.db";
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		String databasePath = p.databaseFolder+File.separator+databaseName;
-		FinalRecord.downloadAllPhyschemResultsToDatabase(databasePath,startFresh);
+		eChemPortalAPI.downloadAllDashboardPhyschemResults(databasePath);
 	}
 	
 	/**
@@ -188,6 +188,6 @@ public class RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
-		downloadAllPhyschemResults(true);
+		downloadAllPhyschemResults();
 	}
 }

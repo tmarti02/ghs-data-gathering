@@ -14,7 +14,7 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.eChemPortalAPI.Processing.FinalRecord;
+import gov.epa.eChemPortalAPI.eChemPortalAPI;
 import gov.epa.eChemPortalAPI.Query.APIConstants;
 import gov.epa.eChemPortalAPI.Query.APIJSONs.*;
 
@@ -28,11 +28,11 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 
-	public static void downloadInhalationLC50Results(boolean startFresh) {
+	public static void downloadInhalationLC50Results() {
 		String databaseName = sourceName+"_raw_inhalationlc50_json.db";
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		String databasePath = p.databaseFolder+File.separator+databaseName;
-		FinalRecord.downloadInhalationLC50ResultsToDatabase(databasePath, startFresh);
+		eChemPortalAPI.downloadInhalationLC50Results(databasePath);
 	}
 	
 	/**
@@ -170,7 +170,7 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 //	}
 	
 	public static void main(String[] args) {
-		downloadInhalationLC50Results(true);
+		downloadInhalationLC50Results();
 	}
 	
 }
