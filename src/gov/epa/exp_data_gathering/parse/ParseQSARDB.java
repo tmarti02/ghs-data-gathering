@@ -53,12 +53,14 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 			er.property_value_string = "LogS: "+qr.logS;
-			ParseUtilities.getNumericalValue(er,qr.logS,qr.logS.length(),false);
+			getNumericalValue(er,qr.logS,qr.logS.length(),false);
 			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
 			if (qr.units.contains("mgL")) { er.property_value_units_original = ExperimentalConstants.str_log_mg_L;
 			} else if (qr.units.contains("M")) { er.property_value_units_original = ExperimentalConstants.str_log_M;
 			}
-			uc.convertRecord(er);
+			er.finalizePropertyValues();
+			er.keep = true;
+			er.flag = false;
 			records.add(er);
 		}
 		if (qr.mp!=null && !qr.mp.isBlank()) {
@@ -71,9 +73,11 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strMeltingPoint;
 			er.property_value_string = "MP (C): "+qr.mp;
-			ParseUtilities.getNumericalValue(er,qr.mp,qr.mp.length(),false);
+			getNumericalValue(er,qr.mp,qr.mp.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_C;
-			uc.convertRecord(er);
+			er.finalizePropertyValues();
+			er.keep = true;
+			er.flag = false;
 			records.add(er);
 		}
 		if (qr.mLogP!=null && !qr.mLogP.isBlank()) {
@@ -86,8 +90,10 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strLogKow;
 			er.property_value_string = "mLogP: "+qr.mLogP;
-			ParseUtilities.getNumericalValue(er,qr.mLogP,qr.mLogP.length(),false);
-			uc.convertRecord(er);
+			getNumericalValue(er,qr.mLogP,qr.mLogP.length(),false);
+			er.finalizePropertyValues();
+			er.keep = true;
+			er.flag = false;
 			records.add(er);
 		}
 		if (qr.vp!=null && !qr.vp.isBlank()) {
@@ -100,10 +106,12 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strVaporPressure;
 			er.property_value_string = "LogVP: "+qr.vp;
-			ParseUtilities.getNumericalValue(er,qr.vp,qr.vp.length(),false);
+			getNumericalValue(er,qr.vp,qr.vp.length(),false);
 			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
 			er.property_value_units_original = ExperimentalConstants.str_log_mmHg;
-			uc.convertRecord(er);
+			er.finalizePropertyValues();
+			er.keep = true;
+			er.flag = false;
 			records.add(er);
 		}
 	}

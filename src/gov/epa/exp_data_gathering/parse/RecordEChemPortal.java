@@ -64,7 +64,7 @@ public class RecordEChemPortal {
 			if (filename.endsWith(".xls")) {
 				try {
 					String filepath = excelFilePath+File.separator+filename;
-					String date = DownloadWebpageUtilities.getStringCreationDate(filepath);
+					String date = Parse.getStringCreationDate(filepath);
 					if (!date.equals(lastUpdated)) {
 						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
 					}
@@ -105,11 +105,11 @@ public class RecordEChemPortal {
 		for (String entry:entryArray) {
 			if (entry!=null && entry.contains(":")) {
 				entry = entry.trim();
-				String data = entry.substring(entry.indexOf(":")+1).trim().replaceAll("Â","").replaceAll("â","-").replaceAll("—", "-");
+				String data = entry.substring(entry.indexOf(":")+1).trim().replaceAll("�","").replaceAll("—","-");
 				if (entry.startsWith("Reliability")) { reliability = data;
 				} else if (entry.startsWith("Type of method")) { method = data;
 				} else if (entry.startsWith(section+", "+section.split(" ")[0]) || entry.startsWith(section+", pKa")
-						|| entry.startsWith(section+" H, H") || entry.startsWith("Effect levels, Effect level")) { values.add(data);
+						|| entry.startsWith(section+" H, H")) { values.add(data);
 				} else if (entry.startsWith(section+", Atm. press.")) { pressure.add(data);
 				} else if (entry.startsWith(section+", Temp.")) { temperature.add(data);
 				} else if (entry.startsWith(section+", pH")) { pH.add(data);

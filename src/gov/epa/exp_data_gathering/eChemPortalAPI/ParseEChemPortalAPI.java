@@ -1,15 +1,19 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.io.File;
 import java.io.FileReader;
-//import java.util.Arrays;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.eChemPortalAPI.Query.APIConstants;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.Parse;
 
 /**
  * Parses downloaded results from eChemPortal API into RecordEChemPortal API objects and translates them to ExperimentalRecords
@@ -26,16 +30,16 @@ public class ParseEChemPortalAPI extends Parse {
 		folderNameExcel=null;
 	}
 	
-//	private void benchmarkParse(int reps) {
-//		double[] results = new double[reps];
-//		for (int i = 0; i < reps; i++) {
-//			long start = System.currentTimeMillis();
-//			RecordEChemPortalAPI.parseResultsInDatabase();
-//			long end = System.currentTimeMillis();
-//			results[i] = (double) (end-start)/1000.0;
-//		}
-//		System.out.println("Time to parse all records (s): "+Arrays.toString(results));
-//	}
+	private void benchmarkParse(int reps) {
+		double[] results = new double[reps];
+		for (int i = 0; i < reps; i++) {
+			long start = System.currentTimeMillis();
+			RecordEChemPortalAPI.parseResultsInDatabase();
+			long end = System.currentTimeMillis();
+			results[i] = (double) (end-start)/1000.0;
+		}
+		System.out.println("Time to parse all records (s): "+Arrays.toString(results));
+	}
 	
 	/**
 	 * Parses JSON entries in database to RecordPubChem objects, then saves them to a JSON file
@@ -61,8 +65,7 @@ public class ParseEChemPortalAPI extends Parse {
 			for (int i = 0; i < recordsEChemPortalAPI.length; i++) {
 				RecordEChemPortalAPI r = recordsEChemPortalAPI[i];
 				addExperimentalRecords(r,recordsExperimental);
-			}	
-
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -98,79 +101,73 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 		}
 		
-		if (r.value==null) { return; }
-		
 		switch (r.endpointKind) {
-		case APIConstants.meltingPoint:
+		case "Melting":
 			er.property_name = ExperimentalConstants.strMeltingPoint;
-			ParseUtilities.getTemperatureProperty(er,r.value);
+			getTemperatureProperty(er,r.value);
 			break;
-		case APIConstants.boilingPoint:
+		case "BoilingPoint":
 			er.property_name = ExperimentalConstants.strBoilingPoint;
-			ParseUtilities.getTemperatureProperty(er,r.value);
+			getTemperatureProperty(er,r.value);
 			break;
-		case APIConstants.flashPoint:
+		case "FlashPoint":
 			er.property_name = ExperimentalConstants.strFlashPoint;
-			ParseUtilities.getTemperatureProperty(er,r.value);
+			getTemperatureProperty(er,r.value);
 			break;
-		case APIConstants.density:
+		case "Density":
 			er.property_name = ExperimentalConstants.strDensity;
-			ParseUtilities.getDensity(er,r.value);
+			getDensity(er,r.value);
 			break;
-		case APIConstants.vaporPressure:
+		case "Vapour":
 			er.property_name = ExperimentalConstants.strVaporPressure;
-			ParseUtilities.getVaporPressure(er,r.value);
+			getVaporPressure(er,r.value);
 			break;
-		case APIConstants.partitionCoefficient:
+		case "Partition":
 			er.property_name = ExperimentalConstants.strLogKow;
-			ParseUtilities.getLogProperty(er,r.value);
-			if (!r.value.contains("log Pow")) {
-				er.flag = true;
-				er.reason = "Possible non-log Pow value";
-			}
+			getLogProperty(er,r.value);
 			break;
-		case APIConstants.waterSolubility:
+		case "WaterSolubility":
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			ParseUtilities.getWaterSolubility(er,r.value,sourceName);
+			getWaterSolubility(er,r.value);
 			break;
-		case APIConstants.dissociationConstant:
+		case "DissociationConstant":
 			er.property_name = ExperimentalConstants.str_pKA;
-			ParseUtilities.getLogProperty(er,r.value);
+			getLogProperty(er,r.value);
 			break;
-		case APIConstants.henrysLawConstant:
+		case "HenrysLawConstant":
 			er.property_name = ExperimentalConstants.strHenrysLawConstant;
-			ParseUtilities.getHenrysLawConstant(er,r.value);
+			getHenrysLawConstant(er,r.value);
 			break;
 		}
 		er.property_value_string = "Value: "+r.value;
 		
 		if (r.pressure!=null) {
-			ParseUtilities.getPressureCondition(er,r.pressure,sourceName);
-			er.property_value_string = er.property_value_string + "; Pressure: " + r.pressure;
+			getPressureCondition(er,r.pressure);
+			er.property_value_string = er.property_value_string + ";Pressure: " + r.pressure;
 		}
 		
 		if (r.temperature!=null) {
 			try {
 				er.temperature_C = Double.parseDouble(r.temperature);
 			} catch (NumberFormatException ex) {
-				ParseUtilities.getTemperatureCondition(er,r.temperature);
+				getTemperatureCondition(er,r.temperature);
 			}
-			er.property_value_string = er.property_value_string + "; Temperature: " + r.temperature;
+			er.property_value_string = er.property_value_string + ";Temperature: " + r.temperature;
 		}
 		
 		// Handles all kinds of weird pH formatting
 		if (r.pH!=null) {
 			String pHStr = r.pH;
-			er.property_value_string = er.property_value_string + "; pH: " + pHStr;
+			er.property_value_string = er.property_value_string + ";pH: " + pHStr;
 			boolean foundpH = false;
 			try {
-				double[] range = ParseUtilities.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
+				double[] range = Parse.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
 				er.pH = range[0]+"-"+range[1];
 				foundpH = true;
 			} catch (Exception ex) { }
 			if (!foundpH) {
 				try {
-					double[] range = ParseUtilities.extractAltFormatRangeFromString(pHStr,pHStr.length());
+					double[] range = Parse.extractAltFormatRangeFromString(pHStr,pHStr.length());
 					er.pH = range[0]+"-"+range[1];
 					foundpH = true;
 				} catch (Exception ex) { }
@@ -192,13 +189,13 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 			if (!foundpH) {
 				try {
-					double pHDouble = ParseUtilities.extractDoubleFromString(pHStr,pHStr.length());
+					double pHDouble = Parse.extractDoubleFromString(pHStr,pHStr.length());
 					String pHDoubleStr = Double.toString(pHDouble);
 					String numQual = "";
 					if (pHDouble >= 0 && pHDouble < 1) {
-						numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf("0"));
+						numQual = getNumericQualifier(pHStr,pHStr.indexOf("0"));
 					} else {
-						numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
+						numQual = getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
 					}
 					er.pH = numQual+pHDoubleStr;
 					foundpH = true;
@@ -206,14 +203,15 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 		}
 		
-		uc.convertRecord(er);
+		er.finalizePropertyValues();
 		
-		if (er.keep && !ParseUtilities.hasIdentifiers(er)) {
+		if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
+				(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
 			er.keep = false;
 			er.reason = "No identifiers";
-		} else if (er.keep && er.property_value_point_estimate_final==null && er.property_value_min_final==null && er.property_value_max_final==null) {
-			er.keep = false;
-			er.reason = "Unhandled units";
+		} else {
+			er.keep = true;
+			er.reason = null;
 		}
 		
 		records.add(er);
@@ -222,5 +220,6 @@ public class ParseEChemPortalAPI extends Parse {
 	public static void main(String[] args) {
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		p.createFiles();
+//		p.benchmarkParse(5);
 	}
 }

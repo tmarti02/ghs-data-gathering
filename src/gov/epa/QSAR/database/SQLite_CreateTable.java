@@ -1,11 +1,8 @@
-package gov.epa.database;
+package gov.epa.QSAR.database;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.Arrays;
-
-import com.fasterxml.jackson.databind.ser.std.StdArraySerializers.FloatArraySerializer;
 
 public class SQLite_CreateTable {
 
@@ -166,41 +163,6 @@ public class SQLite_CreateTable {
 	
 	
 	
-	}
-	
-	public static Connection create_table(String databaseFilePath,String tableName,String [] fieldNames, boolean startFresh) {
-
-		Connection conn=null;
-		
-		try {
-			conn= SQLite_Utilities.getConnection(databaseFilePath);
-			conn.setAutoCommit(true);
-			
-			if (startFresh) {
-				System.out.println("Creating "+tableName+" table");
-				Statement stat1 = SQLite_Utilities.getStatement(conn);
-				stat1.executeUpdate("drop table if exists "+tableName+";");
-				stat1.close();
-				Statement stat2 = SQLite_Utilities.getStatement(conn);
-				stat2.executeUpdate("VACUUM;");//compress db now that have deleted the table
-				stat2.close();
-				Statement stat3 = SQLite_Utilities.getStatement(conn);
-				create_table(stat3, tableName, fieldNames);
-			}
-			
-			if (Arrays.asList(fieldNames).contains("url") && startFresh) {
-				conn.setAutoCommit(true);
-				Statement stat4 = SQLite_Utilities.getStatement(conn);
-				String sqlAddIndex="CREATE INDEX idx_url ON "+tableName+" (url)";
-				stat4.executeUpdate(sqlAddIndex);
-			}
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-		return conn;
-
 	}
 
 	public static void create_table_key_with_duplicates (Statement stat,String table,String []fields,String keyFieldName) {

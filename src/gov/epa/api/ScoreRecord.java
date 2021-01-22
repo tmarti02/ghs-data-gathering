@@ -18,10 +18,9 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Vector;
 
-import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
+import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 //Revised version of this class removed need to have FlatFileRecord class
@@ -397,21 +396,6 @@ public class ScoreRecord {
 		return r;
 	}
 
-	
-	/**
-	 * Output chemical as a json string
-	 * @return
-	 */
-	public String toJSONString() {
-		
-		GsonBuilder builder = new GsonBuilder();
-//		builder.setPrettyPrinting().serializeNulls();
-		builder.setPrettyPrinting();
-//		builder.disableHtmlEscaping();
-			
-		Gson gson = builder.create();
-		return gson.toJson(this);
-	}
 
 	//convert to string by reflection:
 	public String toString(String d) {

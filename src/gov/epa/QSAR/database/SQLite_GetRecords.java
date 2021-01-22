@@ -1,4 +1,4 @@
-package gov.epa.database;
+package gov.epa.QSAR.database;
 
 import java.lang.reflect.Field;
 import java.sql.ResultSet;

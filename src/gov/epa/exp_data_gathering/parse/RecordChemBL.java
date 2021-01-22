@@ -17,10 +17,9 @@ import com.google.gson.annotations.SerializedName;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
-import gov.epa.database.SQLite_CreateTable;
-import gov.epa.database.SQLite_GetRecords;
-import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.JSONsForChemBL.ActivityData;
+import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
+import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 public class RecordChemBL {
@@ -130,7 +129,7 @@ public class RecordChemBL {
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().disableHtmlEscaping().create();
-		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, sourceName, RawDataRecord.fieldNames, startFresh);
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, sourceName, RawDataRecord.fieldNames, startFresh);
 		
 		try {
 			int counter = 0;
@@ -184,8 +183,8 @@ public class RecordChemBL {
 		Vector<RecordChemBL> records = new Vector<RecordChemBL>();
 		
 		try {
-			Statement stat = SQLite_Utilities.getStatement(databasePath);
-			ResultSet rs = SQLite_GetRecords.getAllRecords(stat,sourceName);
+			Statement stat = MySQL_DB.getStatement(databasePath);
+			ResultSet rs = MySQL_DB.getAllRecords(stat,sourceName);
 
 			int counter = 0;
 			while (rs.next()) {

@@ -36,7 +36,6 @@ public class ParseOFMPub extends Parse {
 					addExperimentalRecord(r,recordsExperimental);
 				}
 			}
-			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -50,7 +49,9 @@ public class ParseOFMPub extends Parse {
 		er.date_accessed = opr.date_accessed;
 		er.url = opr.url;
 		er.reliability = opr.reliability;
-
+		er.keep = true;
+		er.reason = null;
+		er.flag = false;
 		if (opr.testSubstanceName!=null && !opr.testSubstanceName.isBlank() && opr.testSubstanceCAS!=null && !opr.testSubstanceCAS.isBlank()) {
 			er.casrn = opr.testSubstanceCAS;
 			er.chemical_name = opr.testSubstanceName;
@@ -89,8 +90,8 @@ public class ParseOFMPub extends Parse {
 			break;
 		}
 		
-		er.property_value_string = "Value: "+opr.value;
-		if (opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) { er.property_value_string = er.property_value_string + "; Remarks: " + opr.resultRemarks; }
+		er.property_value_string = opr.value;
+		if (opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) { er.property_value_string = er.property_value_string + ";" + opr.resultRemarks; }
 		
 		boolean foundNumeric = false;
 		String propertyName = er.property_name;
@@ -98,10 +99,10 @@ public class ParseOFMPub extends Parse {
 		String remarks = opr.resultRemarks.toLowerCase();
 		if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint) {
 			propertyValue = propertyValue.replaceAll("Other @", "K @");
-			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
-			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+			foundNumeric = getTemperatureProperty(er,propertyValue);
+			getPressureCondition(er,propertyValue);
 			if ((er.pressure_mmHg==null || er.pressure_mmHg.isBlank()) && remarks.contains("pressure:")) {
-				ParseUtilities.getPressureCondition(er,opr.resultRemarks,sourceName);
+				getPressureCondition(er,opr.resultRemarks);
 			}
 			if (opr.indicator.contains("Decomposes") || (remarks.contains("decomposition: yes")
 					&& !(remarks.contains("no [x") || remarks.contains("no [ x")))) {
@@ -112,29 +113,29 @@ public class ParseOFMPub extends Parse {
 				er.updateNote(ExperimentalConstants.str_subl);
 			}
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
+			foundNumeric = getWaterSolubility(er, propertyValue);
 			if (!foundNumeric && opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) {
-				foundNumeric = ParseUtilities.getWaterSolubility(er, opr.resultRemarks.replaceAll(" per ","/"),sourceName);
+				foundNumeric = getWaterSolubility(er, opr.resultRemarks.replaceAll(" per ","/"));
 			}
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
 			if (er.temperature_C==null && remarks.contains("temperature:")) {
-				ParseUtilities.getTemperatureCondition(er,opr.resultRemarks);
+				getTemperatureCondition(er,opr.resultRemarks);
 			}
 			er.property_value_qualitative = opr.indicator.toLowerCase();
 		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
-			foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);
+			foundNumeric = getVaporPressure(er,propertyValue);
 			if (!foundNumeric && opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) {
-				foundNumeric = ParseUtilities.getVaporPressure(er, opr.resultRemarks);
+				foundNumeric = getVaporPressure(er, opr.resultRemarks);
 			}
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
 			if (er.temperature_C==null && remarks.contains("temperature:")) {
-				ParseUtilities.getTemperatureCondition(er,opr.resultRemarks);
+				getTemperatureCondition(er,opr.resultRemarks);
 			}
 		} else if (propertyName==ExperimentalConstants.strLogKow) {
-			foundNumeric = ParseUtilities.getLogProperty(er,propertyValue);
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			foundNumeric = getLogProperty(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
 			if (er.temperature_C==null && remarks.contains("temperature:")) {
-				ParseUtilities.getTemperatureCondition(er,opr.resultRemarks);
+				getTemperatureCondition(er,opr.resultRemarks);
 			}
 		}
 		
@@ -208,7 +209,7 @@ public class ParseOFMPub extends Parse {
 			}
 		}
 		
-		uc.convertRecord(er);
+		er.finalizePropertyValues();
 		records.add(er);
 	}
 	

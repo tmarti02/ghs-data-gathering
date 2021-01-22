@@ -1,10 +1,13 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.eChemPortalAPI;
 
 import java.io.File;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Objects;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -13,10 +16,19 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
+<<<<<<< HEAD:src/gov/epa/exp_data_gathering/parse/RecordEChemPortalAPI.java
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.eChemPortalAPI.eChemPortalAPI;
 import gov.epa.eChemPortalAPI.Query.APIJSONs.*;
+=======
+import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Block;
+import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.NestedBlock;
+import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.OriginalValue;
+import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.Result;
+import gov.epa.exp_data_gathering.eChemPortalAPI.ResultsJSONs.ResultsPage;
+import gov.epa.ghs_data_gathering.Database.MySQL_DB;
+>>>>>>> ca69be602ca2cb41888fda912e63d9301e372421:src/gov/epa/exp_data_gathering/eChemPortalAPI/RecordEChemPortalAPI.java
 
 /**
  * Stores data downloaded from eChemPortal API
@@ -24,36 +36,50 @@ import gov.epa.eChemPortalAPI.Query.APIJSONs.*;
  *
  */
 public class RecordEChemPortalAPI {
-	public String baseURL;
-	public String chapter;
-	public String endpointKey;
-	public String endpointKind;
-	public String endpointURL;
-	public boolean memberOfCategory;
-	public String infoType;
-	public String reliability;
-	public String value;
-	public String pressure;
-	public String temperature;
-	public String pH;
-	public String participantID;
-	public String participantAcronym;
-	public String participantURL;
-	public String substanceID;
-	public String name;
-	public String nameType;
-	public String number;
-	public String substanceURL;
-	public String numberType;
-	public String dateAccessed;
+	String baseURL;
+	String chapter;
+	String endpointKey;
+	String endpointKind;
+	String endpointURL;
+	boolean memberOfCategory;
+	String infoType;
+	String reliability;
+	String value;
+	String pressure;
+	String temperature;
+	String pH;
+	String participantID;
+	String participantAcronym;
+	String participantURL;
+	String substanceID;
+	String name;
+	String nameType;
+	String number;
+	String substanceURL;
+	String numberType;
+	String dateAccessed;
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 	
+<<<<<<< HEAD:src/gov/epa/exp_data_gathering/parse/RecordEChemPortalAPI.java
 	public static void downloadAllPhyschemResults() {
 		String databaseName = sourceName+"_raw_json.db";
 		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
 		String databasePath = p.databaseFolder+File.separator+databaseName;
 		eChemPortalAPI.downloadAllDashboardPhyschemResults(databasePath);
+=======
+	public static void downloadAllResultsToDatabase(boolean startFresh) {
+		List<QueryOptions> allOptions = QueryOptions.generateAllQueryOptions();
+		int counter = 0;
+		for (QueryOptions options:allOptions) {
+			if (counter==0) {
+				options.runDownload(startFresh);
+			} else {
+				options.runDownload(false);
+			}
+			counter++;
+		}
+>>>>>>> ca69be602ca2cb41888fda912e63d9301e372421:src/gov/epa/exp_data_gathering/eChemPortalAPI/RecordEChemPortalAPI.java
 	}
 	
 	/**
@@ -68,12 +94,12 @@ public class RecordEChemPortalAPI {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		
 		try {
-//			int count = 0;
-//			int countEliminated = 0;
+			int count = 0;
+			int countEliminated = 0;
 			// Uses a HashSet to speed up duplicate checking by URL
-//			HashSet<String> urlCheck = new HashSet<String>();
-			Statement stat = SQLite_Utilities.getStatement(databasePath);
-			ResultSet rs = SQLite_GetRecords.getAllRecords(stat,"results");
+			HashSet<String> urlCheck = new HashSet<String>();
+			Statement stat = MySQL_DB.getStatement(databasePath);
+			ResultSet rs = MySQL_DB.getAllRecords(stat,"results");
 			while (rs.next()) {
 				String date = rs.getString("date");
 				String content = rs.getString("content");
@@ -107,7 +133,6 @@ public class RecordEChemPortalAPI {
 						for (OriginalValue value:originalValues) {
 							switch (value.name) {
 							case "Value":
-							case "Endpoint":
 								rec.value = value.value;
 								break;
 							case "Pressure":
@@ -119,42 +144,36 @@ public class RecordEChemPortalAPI {
 							case "pH":
 								rec.pH = value.value;
 								break;
-							case "isLog":
-								rec.value = rec.value + " (" + value.value +")";
-								break;
 							}
 						}
-						records.add(rec);
-//						count++;
-						// Now handled by general deduplication code
-//						if (urlCheck.add(rec.endpointURL)) {
-//							// If URL not seen before, adds the record immediately and moves on
-//							records.add(rec);
-//							count++;
-//						} else {
-//							// Otherwise, iterates and checks all records deeply for equivalence
-//							boolean haveRecord = false;
-//							ListIterator<RecordEChemPortalAPI> it = records.listIterator(records.size());
-//							while (it.hasPrevious() && !haveRecord) {
-//								RecordEChemPortalAPI existingRec = it.previous();
-//								if (rec.recordEquals(existingRec)) {
-//									haveRecord = true;
-//								}
-//							}
-//							if (!haveRecord) {
-//								// Adds new record if it is not a duplicate
-//								records.add(rec);
-//								count++;
-//							} else {
-//								// Counts the number of records eliminated
-//								countEliminated++;
-//							}
-//						}
+						if (urlCheck.add(rec.endpointURL)) {
+							// If URL not seen before, adds the record immediately and moves on
+							records.add(rec);
+							count++;
+						} else {
+							// Otherwise, iterates and checks all records deeply for equivalence
+							boolean haveRecord = false;
+							ListIterator<RecordEChemPortalAPI> it = records.listIterator(records.size());
+							while (it.hasPrevious() && !haveRecord) {
+								RecordEChemPortalAPI existingRec = it.previous();
+								if (rec.recordEquals(existingRec)) {
+									haveRecord = true;
+								}
+							}
+							if (!haveRecord) {
+								// Adds new record if it is not a duplicate
+								records.add(rec);
+								count++;
+							} else {
+								// Counts the number of records eliminated
+								countEliminated++;
+							}
+						}
 						// if (count % 10000==0) { System.out.println("Added "+count+" records..."); }
 					}
 				}
 			}
-//			System.out.println("Added "+count+" records; eliminated "+countEliminated+" records. Done!");
+			System.out.println("Added "+count+" records; eliminated "+countEliminated+" records. Done!");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -162,7 +181,7 @@ public class RecordEChemPortalAPI {
 		return records;
 	}
 	
-	protected boolean recordEquals(RecordEChemPortalAPI rec) {
+	private boolean recordEquals(RecordEChemPortalAPI rec) {
 		if (rec==null) {
 			return false;
 		} else if (Objects.equals(this.baseURL, rec.baseURL) &&
@@ -188,6 +207,10 @@ public class RecordEChemPortalAPI {
 	}
 	
 	public static void main(String[] args) {
+<<<<<<< HEAD:src/gov/epa/exp_data_gathering/parse/RecordEChemPortalAPI.java
 		downloadAllPhyschemResults();
+=======
+		downloadAllResultsToDatabase(true);
+>>>>>>> ca69be602ca2cb41888fda912e63d9301e372421:src/gov/epa/exp_data_gathering/eChemPortalAPI/RecordEChemPortalAPI.java
 	}
 }

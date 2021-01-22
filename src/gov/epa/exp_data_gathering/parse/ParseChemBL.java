@@ -79,9 +79,7 @@ public class ParseChemBL extends Parse {
 			if (cbr.standardValue!=null && !cbr.standardValue.isBlank()) {
 				er.property_value_point_estimate_original = Double.parseDouble(cbr.standardValue);
 			}
-			sensiblepkaRangeCheck(cbr.standardValue, er); // puts records with pka outside the -10 to 25 range into bad
-			functionalGroupAI(cbr.assayDescription, er);
-			pKACheck(cbr.assayDescription, er); // removes records with solvents other than water specified.
+			sensiblePkaCheck(cbr.standardValue, er); // puts records with pka outside the -10 to 25 range into bad
 		}	
 			
 			else if (cbr.standardType.toLowerCase().equals("solubility") && (desc.contains("water") || desc.contains("aq")) && cbr.standardUnits!=null ||
@@ -131,10 +129,10 @@ public class ParseChemBL extends Parse {
 		Matcher pHMatcher = Pattern.compile("ph (value )?(of )?([-]?[ ]?[0-9]*\\.?[0-9]+)( to )?([-]?[ ]?[0-9]*\\.?[0-9]+)?").matcher(desc);
 		if (pHMatcher.find()) {
 			double min = Double.parseDouble(pHMatcher.group(3));
-			er.pH = ParseUtilities.formatDouble(min);
+			er.pH = Parse.formatDouble(min);
 			if (pHMatcher.group(5)!=null) {
 				double max = Double.parseDouble(pHMatcher.group(5));
-				er.pH += "-" + ParseUtilities.formatDouble(max);
+				er.pH += "-" + Parse.formatDouble(max);
 			}
 		}
 		
@@ -146,7 +144,7 @@ public class ParseChemBL extends Parse {
 		}
 		
 		er.original_source_name = cbr.documentJournal + " " + cbr.documentYear;
-		if (er.keep && !ParseUtilities.hasIdentifiers(er)) {
+		if (er.keep && (er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {
 			er.keep = false;
 			er.reason = "No identifiers";
 		} else if (er.keep && er.property_value_point_estimate_original==null) {
@@ -168,7 +166,7 @@ public class ParseChemBL extends Parse {
 			er.reason = "Extrapolated";
 		}
 		er.flag = false;
-		uc.convertRecord(er);
+		er.finalizePropertyValues();
 		records.add(er);
 	}
 	
@@ -177,7 +175,7 @@ public class ParseChemBL extends Parse {
 		p.createFiles();
 	}
 
-	public static void sensiblepkaRangeCheck(String standardVal, ExperimentalRecord er) {
+	public static void sensiblePkaCheck(String standardVal, ExperimentalRecord er) {
 		if ((!(standardVal == null)) && !standardVal.isBlank()) {
 		if ((Double.parseDouble(standardVal) > 25 || Double.parseDouble(standardVal) < -10) ) {
 			er.keep = false;
@@ -186,89 +184,4 @@ public class ParseChemBL extends Parse {
 		}
 	}
 	
-	
-	public static void pKACheck(String assayDescription, ExperimentalRecord er) {
-		String badRecordFeature[] = {"lipophilicity","log d","log p","partition coefficient","pharmacokinetic","photostability","catalytic rate","gadolinium(iii) stability"};
-		for (int i = 0; i < badRecordFeature.length; i++) {
-			if (assayDescription.toLowerCase().contains(badRecordFeature[i])) {
-				er.keep=false;
-				er.reason="incorrect property measured";
-			}
-		}
-		String badSolventList[] = {"dmf","etoh","ethanol","ethyl alcohol","meoh","methanol","dmso"};
-		for (int j = 0; j < badSolventList.length; j++) {
-			if (assayDescription.toLowerCase().contains(badSolventList[j])) {
-				er.keep=false;
-				er.reason="other solvent specified";
-			}
-		}
-	}
-	
-	public static void functionalGroupAI(String assayDescription, ExperimentalRecord er) {
-		if (assayDescription.contains("carboxyl")) {
-			er.updateNote("carboxyl");
-		}	else if (assayDescription.contains("urea")) {
-			er.updateNote("urea");
-		}	else if (assayDescription.contains("amino")) {
-			er.updateNote("amino");
-		} 	else if (assayDescription.contains("guanidine")) {
-			er.updateNote("guanidine");
-		}	else if (assayDescription.contains("oxime")) {
-			er.updateNote("oxime");
-		}	else if (assayDescription.contains("quinoline")) {
-			er.updateNote("quinoline");
-		}	else if (assayDescription.contains("P(O)O-OH")) {
-			er.updateNote("P(O)O-OH");
-		}	else if (assayDescription.contains("NH group")) {
-			er.updateNote("NHgroup");
-		}	else if (assayDescription.contains("OH group")) {
-			er.updateNote("OHgroup");
-		}	else if (assayDescription.contains("sulfonamide")) {
-			er.updateNote("sulfonamide");
-		}	else if (assayDescription.contains("Amine")) {
-			er.updateNote("amine");
-		}	else if (assayDescription.contains("aliphatic nitrogen")) {
-			er.updateNote("aliphaticnitrogen");
-		}	else if (assayDescription.contains("hydroxyimine methyl acid")) {
-			er.updateNote("hydroxyiminemethylacid");
-		}	else if (assayDescription.contains("pyrophosphate")) {
-			er.updateNote("tbd"); // TODO figure out what should go here
-		}	else if (assayDescription.contains("formamidine")) {
-			er.updateNote("formamidinering");
-		}	else if (assayDescription.contains("imidazole")) {
-			er.updateNote("imidazolering");
-		}	else if (assayDescription.contains("pyridinium")) {
-			er.updateNote("pyridinium");
-		}	else if (assayDescription.contains("Ar-COOH")) {
-			er.updateNote("Ar-COOH");
-
-		}	else if (assayDescription.contains("OH/C-ring")) {
-			er.updateNote("OH/C-ring");
-		}	else if (assayDescription.contains("N-1")) {
-			er.updateNote("N-1");
-		}	else if (assayDescription.contains("polyamino carboxylate")) {
-			er.updateNote("polyamino carboxylate");
-		}	else if (assayDescription.contains("benzimidazole")) {
-			er.updateNote("benzimidazole");
-		}	else if (assayDescription.contains("Phenolic")) { // sorted, this is where all the weird stuff starts showing up
-			er.updateNote("phenolic");
-		}	else if (assayDescription.contains("benzyl amine")) {
-			er.updateNote("benzylamine");
-		}	else if (assayDescription.contains("piperdine amine")) {
-			er.updateNote("piperdineamine");
-		}	else if (assayDescription.contains("heterocyclic component")) {
-			er.updateNote("heterocyclic_component");
-		}	else if (assayDescription.contains("of nitrogen -")) {
-			er.updateNote("nitrogen");
-		}	else if (assayDescription.contains("Sugar COOH")) {
-			er.updateNote("sugarCOOH");
-		}	else if (assayDescription.contains("carboxylic acid")) {
-			er.updateNote("carboxylic acid");
-		}	else if (assayDescription.contains("sulfonamido")) {
-			er.updateNote("sulfonamido");
-			}
-		
-			
-		}
 }
-	

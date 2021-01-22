@@ -19,7 +19,7 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
-import gov.epa.database.SQLite_CreateTable;
+import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
 
 /**
  * @author CRAMSLAN
@@ -108,18 +108,18 @@ public class ParseChemicalBook extends Parse {
 		propertyValue = propertyValue.replaceAll(",", ".");
 
 		if (propertyName==ExperimentalConstants.strDensity) {
-			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
-			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			foundNumeric = getDensity(er, propertyValue);
+			getPressureCondition(er,propertyValue);
+			getTemperatureCondition(er,propertyValue);
 			if (propertyValue.contains("±")) {
 				getUncertaintyRange(er,propertyValue);
 			}
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ) {
-			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
-			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+			foundNumeric = getTemperatureProperty(er,propertyValue);
+			getPressureCondition(er,propertyValue);
 			// performs the missing temperature check
-			ParseUtilities.getTemperatureProperty(er,propertyValue);
-			String temp = ParseUtilities.getTemperatureUnits(propertyValue);
+			getTemperatureProperty(er,propertyValue);
+			String temp = getTemperatureUnits(propertyValue);
 			if (temp.matches("")) {
 				er.reason = "missing temperature units";
 			}
@@ -129,13 +129,13 @@ public class ParseChemicalBook extends Parse {
 			}
 			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			foundNumeric = getWaterSolubility(er, propertyValue);
+			getTemperatureCondition(er,propertyValue);
 			getQualitativeSolubility(er, propertyValue);
 		}
 		
 		if (foundNumeric) {
-			uc.convertRecord(er);
+			er.finalizePropertyValues();
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
 			if (propertyValue.contains("dec.")) { er.updateNote(ExperimentalConstants.str_dec); }
 			if (propertyValue.contains("subl.")) { er.updateNote(ExperimentalConstants.str_subl); }
@@ -173,7 +173,9 @@ public class ParseChemicalBook extends Parse {
 	
 	public static void main(String[] args) {
 		ParseChemicalBook p = new ParseChemicalBook();
-		p.generateOriginalJSONRecords = false;
+		p.mainFolder = p.mainFolder + File.separator + "PFAS";
+		p.databaseFolder = p.mainFolder;
+		p.jsonFolder= p.mainFolder;
 		p.createFiles();
 	}
 	
@@ -204,7 +206,7 @@ public class ParseChemicalBook extends Parse {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
-		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
 		Random rand = new Random();
 		
 		try {
@@ -328,6 +330,7 @@ public class ParseChemicalBook extends Parse {
 	 * @param er
 	 * @param propertyValue
 	 */
+	@Override
 	void getQualitativeSolubility(ExperimentalRecord er, String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
 		String solventMatcherStr = "";

@@ -15,10 +15,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.database.SQLite_CreateTable;
-import gov.epa.database.SQLite_GetRecords;
-import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.JSONsForPubChem.*;
+import gov.epa.ghs_data_gathering.Database.CreateGHS_Database;
+import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
@@ -130,7 +129,7 @@ public class RecordPubChem {
 		String databasePath = p.databaseFolder+File.separator+databaseName;
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
-		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecordPubChem.fieldNames, startFresh);
+		java.sql.Connection conn=CreateGHS_Database.createDatabaseTable(databasePath, tableName, RawDataRecordPubChem.fieldNames, startFresh);
 		
 		try {
 			int counterSuccess = 0;
@@ -202,8 +201,8 @@ public class RecordPubChem {
 		Vector<RecordPubChem> records = new Vector<>();
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		try {
-			Statement stat = SQLite_Utilities.getStatement(databasePath);
-			ResultSet rs = SQLite_GetRecords.getAllRecords(stat,sourceName);
+			Statement stat = MySQL_DB.getStatement(databasePath);
+			ResultSet rs = MySQL_DB.getAllRecords(stat,sourceName);
 			while (rs.next()) {
 				String date = rs.getString("date");
 				String experimental = rs.getString("experimental");
@@ -274,7 +273,7 @@ public class RecordPubChem {
 	}
 	
 	public static void main(String[] args) {
-		Vector<RecordDashboard> drs = DownloadWebpageUtilities.getDashboardRecordsFromExcel("Data"+"/PFASSTRUCT.xls");
+		Vector<RecordDashboard> drs = Parse.getDashboardRecordsFromExcel("Data"+"/PFASSTRUCT.xls");
 		Vector<String> cids = getCIDsFromDashboardRecords(drs,"Data"+"/CIDDICT.csv",1,8164);
 		downloadJSONsToDatabase(cids,false);
 	}
