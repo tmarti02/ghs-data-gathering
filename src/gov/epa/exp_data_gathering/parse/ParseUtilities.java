@@ -194,12 +194,16 @@ public class ParseUtilities extends Parse {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
-		if (propertyValue.toLowerCase().contains("mg/l")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_L;
+		if (propertyValue.toLowerCase().contains("in benzene") && propertyValue.toLowerCase().contains("in water") &&
+				propertyValue.toLowerCase().indexOf("benzene") < propertyValue.toLowerCase().indexOf("water")) {
+			propertyValue = propertyValue.substring(propertyValue.toLowerCase().indexOf("benzene")+8);
+		}
+		if (propertyValue.toLowerCase().contains("mg/ml")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/ml")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
+		} else if (propertyValue.toLowerCase().contains("mg/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("µg/ml")) {
@@ -282,14 +286,18 @@ public class ParseUtilities extends Parse {
 			unitsIndex = propertyValue.length();
 		}
 
-		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.toLowerCase().contains("water") || propertyValue.toLowerCase().contains("h2o")) &&
-				!(propertyValue.toLowerCase().contains("ca") || propertyValue.toLowerCase().contains("circa") || propertyValue.contains(">") ||
-						propertyValue.contains("<") || propertyValue.contains("=") || propertyValue.contains("~"))) {
+		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.toLowerCase().startsWith("water") || propertyValue.toLowerCase().startsWith("h2o")) &&
+				!(propertyValue.toLowerCase().startsWith("ca") || propertyValue.toLowerCase().startsWith("circa") || propertyValue.startsWith(">") ||
+						propertyValue.startsWith("<") || propertyValue.startsWith("=") || propertyValue.startsWith("~"))) {
+			er.keep = false;
+			er.reason = "Non-aqueous solubility";
+		} else if (propertyValue.toLowerCase().contains("m naoh")) {
 			er.keep = false;
 			er.reason = "Non-aqueous solubility";
 		}
 
-		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
+		boolean foundNumeric = false;
+		if (er.keep) { foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits); }
 		return foundNumeric;
 	}
 
@@ -297,15 +305,15 @@ public class ParseUtilities extends Parse {
 		propertyValue = propertyValue.toLowerCase();
 		String solventMatcherStr = "";
 		if (sourceName.equals(ExperimentalConstants.strSourceLookChem)) {
-			solventMatcherStr = "(([a-zA-Z0-9\s-]+?)(,| and|\\.|\\z|[ ]?\\(|;))?";
+			solventMatcherStr = "(([a-zA-Z0-9\s-%]+?)(,| and|\\.|\\z|[ ]?\\(|;))?";
 		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| at| and only|\\(|;))?";
 		}
-		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?uble|miscible))( (in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
+		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?(uble)]?|miscible))( (in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
 		while (solubilityMatcher.find()) {
 			String qualifier = solubilityMatcher.group(1);
 			qualifier = qualifier.equals("souble") ? "soluble" : qualifier;
-			String prep = solubilityMatcher.group(6);
+			String prep = solubilityMatcher.group(7);
 			String solvent = solubilityMatcher.group(9);
 			if (solvent==null || solvent.length()==0 || solvent.contains("water")) {
 				er.property_value_qualitative = qualifier;
@@ -339,7 +347,8 @@ public class ParseUtilities extends Parse {
 			}
 		}
 
-		if (er.property_value_qualitative!=null || er.note!=null) {
+		if ((er.reason==null || !er.reason.toLowerCase().contains("non-aqueous solubility")) &&
+				(er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
 			er.reason = null;
 		}
@@ -675,7 +684,7 @@ public class ParseUtilities extends Parse {
 	 * @throws IllegalStateException	If no number range is found in the given range
 	 */
 	public static double[] extractFirstDoubleRangeFromString(String str,int end) throws IllegalStateException {
-		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([—]|[-]{1}|to|ca\\.[\\?])[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
+		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([—]|[-]{1}|to|ca\\.|[\\?])[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		if (anyRangeMatcher.find()) {
 			String strMin = anyRangeMatcher.group(1).replace(" ","");
 			String strMax = anyRangeMatcher.group(3).replace(" ","");

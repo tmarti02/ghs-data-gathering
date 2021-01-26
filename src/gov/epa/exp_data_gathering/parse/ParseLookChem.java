@@ -164,6 +164,9 @@ public class ParseLookChem extends Parse {
 				|| (er.property_value_units_original==null && er.property_value_qualitative==null && er.note==null)) {
 			er.keep = false;
 			er.reason = "Bad data or units";
+		} else if (propertyValue.toLowerCase().contains("predicted")) {
+			er.keep = false;
+			er.reason = "Predicted";
 		}
 		
 		uc.convertRecord(er);
