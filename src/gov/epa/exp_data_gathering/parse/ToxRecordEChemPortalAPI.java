@@ -94,7 +94,7 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 								case "Value":
 									rec.value = value.value;
 									break;
-								case APIConstants.doseDescriptor:
+								case APIConstants.valueType:
 									rec.doseDescriptor = value.value;
 									break;
 								case APIConstants.testType:

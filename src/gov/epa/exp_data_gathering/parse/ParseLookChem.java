@@ -88,6 +88,8 @@ public class ParseLookChem extends Parse {
 		er.property_value_string=lcr.appearance;
 		er.property_value_qualitative=lcr.appearance.toLowerCase().replaceAll("colour","color").replaceAll("odour","odor").replaceAll("vapour","vapor");
 		er.source_name=ExperimentalConstants.strSourceLookChem;
+		er.keep = true;
+		er.flag = false;
 		
 		// Constructs a LookChem URL from the CAS RN
 		String baseURL = "https://www.lookchem.com/cas-";
@@ -116,6 +118,8 @@ public class ParseLookChem extends Parse {
 		er.property_name=propertyName;
 		er.property_value_string=propertyValue;
 		er.source_name=ExperimentalConstants.strSourceLookChem;
+		er.keep = true;
+		er.flag = false;
 		
 		// Constructs a LookChem URL from the CAS RN
 		String baseURL = "https://www.lookchem.com/cas-";
@@ -156,11 +160,8 @@ public class ParseLookChem extends Parse {
 			er.temperature_C = null;
 		}
 		
-		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
-				&& (er.property_value_units_original!=null || er.property_value_qualitative!=null || er.note!=null)) {
-			er.keep = true;
-			er.reason = null;
-		} else {
+		if ((propertyValue.toLowerCase().contains("tox") && er.property_value_units_original==null)
+				|| (er.property_value_units_original==null && er.property_value_qualitative==null && er.note==null)) {
 			er.keep = false;
 			er.reason = "Bad data or units";
 		}

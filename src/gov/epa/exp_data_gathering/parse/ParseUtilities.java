@@ -282,8 +282,8 @@ public class ParseUtilities extends Parse {
 			unitsIndex = propertyValue.length();
 		}
 
-		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.contains("water") || propertyValue.contains("h2o")) &&
-				!(propertyValue.contains("ca") || propertyValue.contains("circa") || propertyValue.contains(">") ||
+		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.toLowerCase().contains("water") || propertyValue.toLowerCase().contains("h2o")) &&
+				!(propertyValue.toLowerCase().contains("ca") || propertyValue.toLowerCase().contains("circa") || propertyValue.contains(">") ||
 						propertyValue.contains("<") || propertyValue.contains("=") || propertyValue.contains("~"))) {
 			er.keep = false;
 			er.reason = "Non-aqueous solubility";
@@ -751,17 +751,23 @@ public class ParseUtilities extends Parse {
 	 */
 	public static String getTemperatureUnits(String propertyValue) {
 		propertyValue=propertyValue.replaceAll(" ","");
+		propertyValue = correctDegreeSymbols(propertyValue);
 		String units = "";
-		if (propertyValue.contains("°C") || propertyValue.contains("ºC") || propertyValue.contains("oC")
+		if (propertyValue.contains("\u00B0C") || propertyValue.contains("oC")
 				|| (propertyValue.indexOf("C") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1)))) {
 			units = ExperimentalConstants.str_C;
-		} else if (propertyValue.contains("°F") || propertyValue.contains("ºF") || propertyValue.contains("oF")
+		} else if (propertyValue.contains("\u00B0F") || propertyValue.contains("oF")
 				|| (propertyValue.indexOf("F") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("F")-1)))) {
 			units = ExperimentalConstants.str_F;
 		} else if ((propertyValue.indexOf("K") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("K")-1)))) {
 			units = ExperimentalConstants.str_K;
 		} 
 		return units;
+	}
+	
+	private static String correctDegreeSymbols(String s) {
+		s = s.replaceAll("[\u00BA\u1D52\u02DA\u309C\u18DE\u2070\u2218\u29B5\u1BC85\u26AC]","\u00B0");
+		return s;
 	}
 	
 	public static boolean hasIdentifiers(ExperimentalRecord er) {
