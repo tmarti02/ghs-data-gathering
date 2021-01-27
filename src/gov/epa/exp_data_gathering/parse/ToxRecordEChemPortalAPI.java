@@ -27,13 +27,6 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 	public String inhalationExposureType;
 	
 	private static final String sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
-
-	public static void downloadInhalationLC50Results() {
-		String databaseName = sourceName+"_raw_inhalationlc50_json.db";
-		ParseEChemPortalAPI p = new ParseEChemPortalAPI();
-		String databasePath = p.databaseFolder+File.separator+databaseName;
-		eChemPortalAPI.downloadInhalationLC50Results(databasePath);
-	}
 	
 	/**
 	 * Parses raw JSON search results from a database into a vector of RecordEChemPortalAPI objects
@@ -168,9 +161,4 @@ public class ToxRecordEChemPortalAPI extends RecordEChemPortalAPI {
 //			return false;
 //		}
 //	}
-	
-	public static void main(String[] args) {
-		downloadInhalationLC50Results();
-	}
-	
 }

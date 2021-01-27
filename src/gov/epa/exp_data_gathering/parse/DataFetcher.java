@@ -31,6 +31,8 @@ import gov.epa.QSAR.DataSetCreation.ConvertExperimentalRecordsToDataSet;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.eChemPortalAPI.Processing.FinalRecord;
+import gov.epa.eChemPortalAPI.Processing.FinalRecords;
 
 public class DataFetcher {
 	
@@ -39,8 +41,12 @@ public class DataFetcher {
 	public static final String mainFolder = "Data"+File.separator+"Experimental";
 	public String databasePath;
 	public String jsonPath;
+	public String[] sources;
+	public String recordType;
 	
 	public DataFetcher(String[] sources,String recordType) {
+		this.sources = sources;
+		this.recordType = recordType;
 		String fileName = recordType.toLowerCase().contains("tox") ? "ToxicityRecords" : "ExperimentalRecords";
 		databasePath = mainFolder+File.separator+fileName+".db";
 		jsonPath = mainFolder+File.separator+fileName+".json";
@@ -79,16 +85,9 @@ public class DataFetcher {
 
 //			addSourceBasedIDNumbers(sourceRecords);			
 			records.addAll(sourceRecords);
-				
-			
-			
 			
 		}
 	}
-
-	
-
-	
 	
 	private ExperimentalRecords getRecordsFromNumberedFiles(String source) {
 		ExperimentalRecords sourceRecords;
@@ -154,7 +153,7 @@ public class DataFetcher {
 	
 	private void makeDatabase(ExperimentalRecords records) {
 		String[] fieldNames = ExperimentalRecord.outputFieldNames;
-		String tableName = "records";
+		String tableName = "ExperimentalRecords";
 		System.out.println("Creating database at "+databasePath+" with fields:\n"+String.join("\n",fieldNames));
 		try {
 			Connection conn= SQLite_Utilities.getConnection(databasePath);
@@ -221,9 +220,101 @@ public class DataFetcher {
 			int[] count = prep.executeBatch();// do what's left
 			
 			conn.setAutoCommit(true);
+			
+			try {
+				String sqlAddIndex="CREATE INDEX idx_casrn ON "+tableName+" (casrn)";
+				stat.executeUpdate(sqlAddIndex);
+			} catch (Exception ex_idx_exists) {
+				// Throws exception if index already exists
+				// We don't care
+			}
+			
+			System.out.println("Created database with "+counter+" entries. Done!");
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		if (Arrays.asList(sources).contains(ExperimentalConstants.strSourceEChemPortalAPI) && recordType.toLowerCase().contains("tox")) {
+			addFinalRecordsTableToDatabase();
+		}
+	}
+	
+	private void addFinalRecordsTableToDatabase() {
+		String[] fieldNames = FinalRecord.outputFieldNames;
+		String tableName = "FinalRecords";
+		String finalRecordFilePath = mainFolder+File.separator+"eChemPortalAPI"+File.separator+"eChemPortalAPI Toxicity Original Records.json";
+		try {
+			Connection conn= SQLite_Utilities.getConnection(databasePath);
+			Statement stat = SQLite_Utilities.getStatement(conn);			
+			conn.setAutoCommit(true);		
+			stat.executeUpdate("drop table if exists "+tableName+";");
+			stat.executeUpdate("VACUUM;");
+			
+			SQLite_CreateTable.create_table_key_with_duplicates(stat, tableName, fieldNames,"number");
+			conn.setAutoCommit(false);
+
+			String s = "insert into " + tableName + " values (";
+
+			for (int i = 1; i <= fieldNames.length; i++) {
+				s += "?";
+				if (i < fieldNames.length)
+					s += ",";
+			}
+			s += ");";
+
+			int counter = 0;
+			int batchCounter = 0;
+			PreparedStatement prep = conn.prepareStatement(s);
+			
+			FinalRecords records = FinalRecords.loadFromJSON(finalRecordFilePath);
+			for (FinalRecord rec:records) {				
+				counter++;
+//				rec.id_physchem=counter;
+				
+//				String[] list = rec.toStringArray(ExperimentalRecord.outputFieldNames);
+				if (counter%50000==0) System.out.println("Added "+counter+" entries to FinalRecords...");
+				
+				String[] list = rec.toStringArray(fieldNames);
+
+				if (list.length!=fieldNames.length) {//probably wont happen now that list is based on names array
+					System.out.println("Wrong number of values: "+list[0]);
+					break;
+				}
+
+								
+				for (int i = 0; i < list.length; i++) {
+					if (list[i]!=null && !list[i].isBlank()) {
+						prep.setString(i + 1, list[i]);
+					} else {
+						prep.setString(i + 1, null);
+					}
+				}
+				
+				try {
+					prep.addBatch();
+				} catch (Exception ex) {
+					System.out.println("Failed to add: "+String.join(",", list));
+				}
+				
+				if (counter % 1000 == 0) {
+					prep.executeBatch();
+					batchCounter++;
+				}
+
+			}
+
+			int[] count = prep.executeBatch();// do what's left
+			
+			conn.setAutoCommit(true);
 						
-			String sqlAddIndex="CREATE INDEX idx_casrn ON "+tableName+" (casrn)";
-			stat.executeUpdate(sqlAddIndex);
+			try {
+				String sqlAddIndex="CREATE INDEX idx_number ON "+tableName+" (number)";
+				stat.executeUpdate(sqlAddIndex);
+			} catch (Exception ex_idx_exists) {
+				// Throws exception if index already exists
+				// We don't care
+			}
 			
 			System.out.println("Created database with "+counter+" entries. Done!");
 
