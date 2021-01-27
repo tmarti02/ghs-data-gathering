@@ -158,7 +158,25 @@ public class ExperimentalRecord {
 		// TODO Auto-generated method stub
 		return toString(del,outputFieldNames);
 	}
-	
+
+	public boolean isValidConditions() {
+		
+		if (property_name.contentEquals(ExperimentalConstants.strWaterSolubility)) {			
+			if (temperature_C==null) return true;			
+			else if (temperature_C>=20 && temperature_C<=30) {
+				return true;
+			} else {
+				return false;
+			}
+			
+		} else {
+			System.out.println("Need to add condition criteria for "+property_name);
+			return false;
+		}
+		
+		
+	}
+
 	
 	public boolean isValidPointEstimatePossible() {
 		if (property_value_numeric_qualifier!=null && !property_value_numeric_qualifier.equals("~")) { 

@@ -4,6 +4,11 @@ package gov.epa.QSAR.DataSetCreation;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -18,6 +23,10 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import gov.epa.TEST.Descriptors.DatabaseUtilities.SQLite_GetRecords;
+import gov.epa.api.ExperimentalConstants;
+import gov.epa.database.SQLite_CreateTable;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 public class RecordsQSAR extends ArrayList<RecordQSAR> {
@@ -30,7 +39,8 @@ public class RecordsQSAR extends ArrayList<RecordQSAR> {
 	/**
 	 * 
 	 */	
-
+	public static final String tableNameOverallSet="OverallSets";
+	
 
 	public void toExcelFile(String filePath) {
 		toExcelFile(filePath, RecordQSAR.outputFieldNames);
@@ -106,5 +116,114 @@ public class RecordsQSAR extends ArrayList<RecordQSAR> {
 		}
 	}
 	
+	
+	public void addFlatQSARRecordsToDB() {		
+		
+		try {
+			Connection conn=SQLite_Utilities.getConnection(DataSetDatabaseUtilities.pathDataSetDB);
+			Statement stat=conn.createStatement();			
+
+			//This assumes all records are for same property:
+			String property=get(0).property_name;
+			
+			SQLite_CreateTable.create_table(stat, tableNameOverallSet, RecordQSAR.outputFieldNamesDB);
+			SQLite_Utilities.deleteRecords(tableNameOverallSet, "property_name", property, stat);			
+			addRecordsBatch(conn, tableNameOverallSet, RecordQSAR.outputFieldNamesDB);
+						
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+	}
+
+	
+	public void addRecordsBatch (Connection conn,String tableName,String []fieldNames) {
+		try {
+			
+			conn.setAutoCommit(false);
+
+			String s = SQLite_CreateTable.create_sql_insert(fieldNames, tableNameOverallSet);
+
+			int counter = 0;
+			int batchCounter = 0;
+			PreparedStatement prep = conn.prepareStatement(s);
+			
+			
+			for (RecordQSAR rec:this) {				
+				counter++;
+//				rec.id_physchem=counter;
+				
+//				String[] list = rec.toStringArray(ExperimentalRecord.outputFieldNames);
+				if (counter%50000==0) System.out.println("Added "+counter+" entries...");
+				rec.setComboID("|");
+
+				
+				String[] list = rec.toStringArray( fieldNames);
+
+				if (list.length!=fieldNames.length) {//probably wont happen now that list is based on names array
+					System.out.println("Wrong number of values: "+list[0]);
+					break;
+				}
+
+								
+				for (int i = 0; i < list.length; i++) {
+					if (list[i]!=null && !list[i].isBlank()) {
+						prep.setString(i + 1, list[i]);
+					} else {
+						prep.setString(i + 1, null);
+					}
+				}
+				
+				try {
+					prep.addBatch();
+				} catch (Exception ex) {
+					System.out.println("Failed to add: "+String.join(",", list));
+				}
+				
+				if (counter % 1000 == 0) {
+					prep.executeBatch();
+					batchCounter++;
+				}
+
+			}
+
+			int[] count = prep.executeBatch();// do what's left
+			
+			conn.setAutoCommit(true);
+									
+			System.out.println("Added "+counter+" entries. Done!");
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public static RecordsQSAR getExperimentalRecordsFromDB(String property) {
+
+		RecordsQSAR records = new RecordsQSAR();
+
+		try {
+			
+			String sql = "select * from "+tableNameOverallSet+" WHERE property_name=\"" + property + "\"\r\n"
+					+ "order by DSSTox_Structure_Id";
+
+			
+			Connection conn = SQLite_Utilities.getConnection(DataSetDatabaseUtilities.pathDataSetDB);
+			Statement stat = conn.createStatement();
+			ResultSet rs = stat.executeQuery(sql);
+
+			while (rs.next()) {
+				RecordQSAR record = new RecordQSAR();
+				SQLite_GetRecords.createRecord(rs, record);
+				records.add(record);
+			}
+			System.out.println(records.size() + " records for " + property);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return records;
+	}
+
 	
 }
