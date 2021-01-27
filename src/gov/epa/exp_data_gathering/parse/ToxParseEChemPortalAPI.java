@@ -2,16 +2,20 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileReader;
-import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.eChemPortalAPI.eChemPortalAPI;
+import gov.epa.eChemPortalAPI.Processing.FinalRecords;
+import gov.epa.eChemPortalAPI.Processing.FinalRecord;
 
 public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
+	boolean downloadNew;
 
-	public ToxParseEChemPortalAPI() {
+	public ToxParseEChemPortalAPI(boolean downloadNew) {
 		sourceName = ExperimentalConstants.strSourceEChemPortalAPI;
 		this.init();
+		this.downloadNew = downloadNew;
 		fileNameSourceExcel=null;
 		folderNameWebpages=null;
 		folderNameExcel=null;
@@ -23,13 +27,20 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 		fileNameExcelExperimentalRecords = sourceName +" Toxicity Experimental Records.xlsx";
 	}
 	
+	public void downloadInhalationLC50Results() {
+		String databaseName = sourceName+"_raw_inhalationlc50_json.db";
+		String databasePath = databaseFolder+File.separator+databaseName;
+		eChemPortalAPI.downloadInhalationLC50Results(databasePath);
+	}
+	
 	/**
 	 * Parses JSON entries in database to RecordPubChem objects, then saves them to a JSON file
 	 */
 	@Override
 	protected void createRecords() {
-		List<ToxRecordEChemPortalAPI> records = ToxRecordEChemPortalAPI.parseToxResultsInDatabase(sourceName+"_raw_inhalationlc50_json.db");
-		writeOriginalRecordsToFile(new Vector<ToxRecordEChemPortalAPI>(records));
+		if (downloadNew) { downloadInhalationLC50Results(); }
+		FinalRecords records = FinalRecords.getToxResultsInDatabase(databaseFolder + File.separator + sourceName+"_raw_inhalationlc50_json.db");
+		writeOriginalRecordsToFile(new Vector<FinalRecord>(records));
 	}
 	
 	/**
@@ -42,10 +53,10 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 		try {
 			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
 			
-			ToxRecordEChemPortalAPI[] toxRecordsEChemPortalAPI = gson.fromJson(new FileReader(jsonFile), ToxRecordEChemPortalAPI[].class);
+			FinalRecord[] finalRecordsArr = gson.fromJson(new FileReader(jsonFile), FinalRecord[].class);
 			
-			for (int i = 0; i < toxRecordsEChemPortalAPI.length; i++) {
-				ToxRecordEChemPortalAPI r = toxRecordsEChemPortalAPI[i];
+			for (int i = 0; i < finalRecordsArr.length; i++) {
+				FinalRecord r = finalRecordsArr[i];
 				addExperimentalRecords(r,recordsExperimental);
 			}
 			
@@ -61,75 +72,23 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 	 * @param r			The RecordEChemPortalAPI object to translate
 	 * @param records	The ExperimentalRecords to add created record to
 	 */
-	private void addExperimentalRecords(ToxRecordEChemPortalAPI r, ExperimentalRecords records) {
-		ExperimentalRecord er = new ExperimentalRecord();
-		er.source_name = sourceName;
-		er.url = r.endpointURL;
-		er.original_source_name = r.participantAcronym;
-		er.date_accessed = r.dateAccessed;
-		er.reliability = r.reliability;
+	private void addExperimentalRecords(FinalRecord r, ExperimentalRecords records) {
+		ExperimentalRecords ers = new ExperimentalRecords(r);
 		
-		if (!r.name.equals("-") && !r.name.contains("unnamed")) {
-			er.chemical_name = r.name;
-		}
-		
-		if (r.numberType!=null) {
-			switch (r.numberType) {
-			case "CAS Number":
-				er.casrn = r.number;
-				break;
-			case "EC Number":
-				er.einecs = r.number;
-				break;
+		for (ExperimentalRecord er:ers) {
+			uc.convertRecord(er);
+			
+			if (!ParseUtilities.hasIdentifiers(er)) {
+				er.keep = false;
+				er.reason = "No identifiers";
 			}
 		}
 		
-		if (r.chapter.contentEquals("Acute toxicity: inhalation")) {
-			if (!r.species.toLowerCase().contains("other")) {
-				er.property_name=r.species.replaceAll(" ","_").replaceAll(",","")+"_"+ExperimentalConstants.strInhalationLC50;
-			} else {
-				er.property_name="other_"+ExperimentalConstants.strInhalationLC50;
-				er.updateNote("Species: "+r.species.substring(r.species.indexOf(":")+1));
-			}
-		} else {
-			return;
-		}
-		
-		ParseUtilities.getToxicity(er,r.value);
-		er.property_value_string = "Value: "+r.value;
-		
-		if (r.testType!=null && !r.testType.isBlank()) {
-			String testType = "Test Type: "+r.testType;
-			er.property_value_string += "; "+testType;
-		}
-		
-		if (r.strain!=null && !r.strain.isBlank()) {
-			String strain = "Strain: "+r.strain;
-			er.property_value_string += "; "+strain;
-		}
-		
-		if (r.routeOfAdministration!=null && !r.routeOfAdministration.isBlank()) {
-			String route = "Route of Administration: "+r.routeOfAdministration;
-			er.property_value_string += "; "+route;
-		}
-		
-		if (r.inhalationExposureType!=null && !r.inhalationExposureType.isBlank()) {
-			String inhalationExposureType = "Inhalation Exposure Type: "+r.inhalationExposureType;
-			er.property_value_string += "; "+inhalationExposureType;
-		}
-		
-		uc.convertRecord(er);
-		
-		if (!ParseUtilities.hasIdentifiers(er)) {
-			er.keep = false;
-			er.reason = "No identifiers";
-		}
-		
-		records.add(er);
+		records.addAll(ers);
 	}
 	
 	public static void main(String[] args) {
-		ToxParseEChemPortalAPI p = new ToxParseEChemPortalAPI();
+		ToxParseEChemPortalAPI p = new ToxParseEChemPortalAPI(false);
 		p.createFiles();
 	}
 }

@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Vector;
@@ -138,12 +139,24 @@ public class RecordPubChem {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecordPubChem.fieldNames, startFresh);
+		HashSet<String> cidsAlreadyQueried = new HashSet<String>();
+		ResultSet rs = SQLite_GetRecords.getAllRecords(SQLite_Utilities.getStatement(conn), tableName);
+		try {
+			long start = System.currentTimeMillis();
+			while (rs.next()) {
+				cidsAlreadyQueried.add(rs.getString("cid"));
+			}
+			long end = System.currentTimeMillis();
+			System.out.println(cidsAlreadyQueried.size()+" CIDs already queried ("+(end-start)+" ms)");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 		
 		try {
 			int counterSuccess = 0;
 			int counterTotal = 0;
-			int counterNew = 0;
 			int counterMissingExpData = 0;
+			long start = System.currentTimeMillis();
 			for (String cid:cids) {
 				String experimentalURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/"+cid+"/JSON?heading=Experimental+Properties";
 				String idURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid="+cid;
@@ -154,10 +167,9 @@ public class RecordPubChem {
 				Date date = new Date();  
 				String strDate=formatter.format(date);
 				
-				counterTotal++;
 				RawDataRecordPubChem rec=new RawDataRecordPubChem(strDate, cid, "", "", "", "");
-				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
-				if (!haveRecord || startFresh) {
+				if (cidsAlreadyQueried.add(cid) || startFresh) {
+					counterTotal++;
 					boolean keepLooking = true;
 					try {
 						rec.experimental=StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(experimentalURL));
@@ -187,22 +199,21 @@ public class RecordPubChem {
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 					}
-					counterNew++;
 					if (rec.experimental!=null && !rec.experimental.isBlank()) {
 						rec.addRecordToDatabase(tableName, conn);
 						counterSuccess++;
 					}
-					if (counterTotal % 100==0) {
+					if (counterTotal % 1000==0) {
+						long batchEnd = System.currentTimeMillis();
 						System.out.println("Attempted: "+counterTotal);
-						System.out.println("New: "+counterNew);
 						System.out.println("Succeeded: "+counterSuccess);
 						System.out.println("Failed - no experimental properties: "+counterMissingExpData);
-						System.out.println("~~~~~~~~~~");
+						System.out.println("---------- ("+(batchEnd-start)/1000+" s)");
+						start = batchEnd;
 					}
 				}
 			}
 			System.out.println("Attempted: "+counterTotal);
-			System.out.println("New: "+counterNew);
 			System.out.println("Succeeded: "+counterSuccess);
 			System.out.println("Failed - no experimental properties: "+counterMissingExpData);
 		} catch (Exception ex) {
@@ -292,7 +303,6 @@ public class RecordPubChem {
 //		Vector<String> cids = getCIDsFromDashboardRecords(drs,"Data"+"/CIDDICT.csv",1,8164);
 		List<String> cidsList = gov.epa.QSAR.utilities.FileUtilities.readFile("Data\\Experimental\\PubChem\\solubilitycids.txt");
 		Vector<String> cids = new Vector<String>(cidsList);
-		cids = new Vector<String>(cids.subList(1100, cids.size()+1)); // left off at 1100 on 1/26
 		downloadJSONsToDatabase(cids,false);
 	}
 }

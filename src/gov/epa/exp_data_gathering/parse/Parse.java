@@ -202,7 +202,7 @@ public class Parse {
 			break;
 		case ExperimentalConstants.strSourceEChemPortalAPI:
 			if (recordTypeToParse.toLowerCase().contains("tox")) {
-				p = new ToxParseEChemPortalAPI();
+				p = new ToxParseEChemPortalAPI(true);
 			} else {
 				p = new ParseEChemPortalAPI();
 			}
@@ -235,7 +235,7 @@ public class Parse {
 	}
 	
 	public static void main(String[] args) {
-		String recordType = "physchem";
+		String recordType = "tox";
 		String[] sources = {ExperimentalConstants.strSourceADDoPT,
 				ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,

@@ -75,11 +75,14 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			}
 			
 			if (rec.propertyName.contentEquals(APIConstants.acuteToxicityInhalation)) {
-				if (!rec.species.toLowerCase().contains("other")) {
-					er.property_name=rec.species.replaceAll(" ","_").replaceAll(",","")+"_"+rec.propertyName+"_"+rec.valueTypes.get(i);
+				String species = rec.species.get(0);
+				if (!species.toLowerCase().contains("other")) {
+					String valueType = (rec.valueTypes==null || rec.valueTypes.isEmpty()) ? "" : "_"+rec.valueTypes.get(i);
+					er.property_name=species.replaceAll(" ","_").replaceAll(",","")+"_"+rec.propertyName+valueType;
 				} else {
-					er.property_name="other_"+rec.propertyName+"_"+rec.valueTypes.get(i);
-					er.updateNote("Species: "+rec.species.substring(rec.species.indexOf(":")+1));
+					String valueType = (rec.valueTypes==null || rec.valueTypes.isEmpty()) ? "" : "_"+rec.valueTypes.get(i);
+					er.property_name="other_"+rec.propertyName+valueType;
+					er.updateNote("Species: "+species.substring(rec.species.indexOf(":")+1));
 				}
 			} else {
 				return;
