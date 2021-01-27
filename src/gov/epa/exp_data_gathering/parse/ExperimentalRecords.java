@@ -111,6 +111,8 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			} else if (!er.isValidPointEstimatePossible()) {
 //				System.out.println(er);
 				continue;
+			} else if (!er.isValidConditions()) {
+				continue;
 			} else {
 //				System.out.println("good"+er);
 				RecordQSAR qr = new RecordQSAR(er);
