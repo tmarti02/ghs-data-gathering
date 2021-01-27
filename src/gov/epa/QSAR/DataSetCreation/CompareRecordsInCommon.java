@@ -15,6 +15,7 @@ import org.apache.poi.ss.usermodel.charts.AxisCrosses;
 import org.apache.poi.ss.usermodel.charts.AxisPosition;
 import org.apache.poi.ss.usermodel.charts.ChartDataSource;
 import org.apache.poi.ss.usermodel.charts.DataSources;
+import org.apache.poi.ss.usermodel.charts.LegendPosition;
 import org.apache.poi.ss.usermodel.charts.ScatterChartSeries;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.util.Units;
@@ -23,6 +24,7 @@ import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.charts.XSSFChartLegend;
 import org.apache.poi.xssf.usermodel.charts.XSSFScatterChartData;
 import org.apache.poi.xssf.usermodel.charts.XSSFValueAxis;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTTitle;
@@ -77,17 +79,14 @@ public class CompareRecordsInCommon {
 		
 		for (String source2:sources) {
 			if (!source2.contentEquals(source1)) {				
-				compare(wb,source1, source2, recordsQSAR, htDashboard);				
+				compare(wb,property,source1, source2, recordsQSAR, htDashboard);				
 			}
 		}
 		
 //		String source2=ExperimentalConstants.strSourceADDoPT;//change to EPISUITE later
 //		compare(wb,source1, source2, recordsQSAR, htDashboard);
 		
-		try {
-			File folder2=new File(folder+"compare");
-			folder2.mkdirs();
-			
+		try {			
 			OutputStream fos = new FileOutputStream(folder+property+"_compare_sources.xlsx");
 			wb.write(fos);
 			wb.close();
@@ -97,7 +96,7 @@ public class CompareRecordsInCommon {
 	}
 
 
-	private void compare(Workbook wb,String source1, String source2, RecordsQSAR recordsQSAR,
+	private void compare(Workbook wb,String property,String source1, String source2, RecordsQSAR recordsQSAR,
 			Hashtable<String, RecordDashboard> htDashboard) {
 		
 		
@@ -185,19 +184,20 @@ public class CompareRecordsInCommon {
 			row.createCell(j++).setCellValue(rec.rec1.temperature_C+"");
 			row.createCell(j++).setCellValue(rec.rec2.temperature_C+"");
 		}
-		GenerateChart(sheet,source1,source2);
+		GenerateChart(sheet,source1,source2,property,recordsInCommon.get(0).rec1.property_value_units_qsar);
 		
 		
 	}
 	
 	
-	public void GenerateChart(XSSFSheet sheet,String source1,String source2) {
+	public void GenerateChart(XSSFSheet sheet,String source1,String source2,String property,String units) {
 	    XSSFDrawing drawing = sheet.createDrawingPatriarch();
 	    XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 10, 0, 20, 30);
 
 	    XSSFChart chart = drawing.createChart(anchor);
-//	    XSSFChartLegend legend = chart.getOrCreateLegend();
-//	    legend.setPosition(LegendPosition.TOP_RIGHT);
+
+	    if (chart instanceof XSSFChart) ((XSSFChart)chart).setTitleText(property+": "+source1+" vs. "+source2);
+
 
 	    XSSFValueAxis bottomAxis = chart.createValueAxis(AxisPosition.BOTTOM);
 	    XSSFValueAxis leftAxis = chart.createValueAxis(AxisPosition.LEFT);
@@ -224,8 +224,9 @@ public class CompareRecordsInCommon {
 	    //Set axis titles:
 	    CTValAx valAx = chart.getCTChart().getPlotArea().getValAxArray(0);
 	    CTValAx valAy = chart.getCTChart().getPlotArea().getValAxArray(1);
-	    setAxisTitle(source1, valAx);
-	    setAxisTitle(source2, valAy);
+	    setAxisTitle(source1+" "+units, valAx);
+	    setAxisTitle(source2+" "+units, valAy);
+	    
 
 	    
 	    //set properties of first scatter chart data series to not smooth the line:
@@ -242,12 +243,14 @@ public class CompareRecordsInCommon {
 		chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0).getSpPr().getLn().setNoFill(CTNoFillProperties.Factory.newInstance());
 		
 		
+		chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0)
+		 .addNewTrendline()
+		 .addNewTrendlineType()
+		 .setVal(org.openxmlformats.schemas.drawingml.x2006.chart.STTrendlineType.LINEAR);
 		
-		
-//		 .addNewTrendline()
-//		 .addNewTrendlineType()
-//		 .setVal(org.openxmlformats.schemas.drawingml.x2006.chart.STTrendlineType.LINEAR);	    
-		
+	    XSSFChartLegend legend = chart.getOrCreateLegend();
+	    legend.setPosition(LegendPosition.BOTTOM);
+
 	    //set properties of first scatter chart to not vary the colors:
 	    ((XSSFChart)chart).getCTChart().getPlotArea().getScatterChartArray(0)
 	     .addNewVaryColors().setVal(false);
@@ -319,8 +322,6 @@ public class CompareRecordsInCommon {
 	
 	public static void main(String[] args) {
 		CompareRecordsInCommon c=new CompareRecordsInCommon();
-
-
 		c.runWS();
 	}
 	
