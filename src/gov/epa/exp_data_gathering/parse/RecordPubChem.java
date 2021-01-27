@@ -11,6 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Vector;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -18,7 +20,12 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.exp_data_gathering.parse.JSONsForPubChem.*;
+import gov.epa.exp_data_gathering.parse.JSONsForPubChem.Data;
+import gov.epa.exp_data_gathering.parse.JSONsForPubChem.IdentifierData;
+import gov.epa.exp_data_gathering.parse.JSONsForPubChem.Information;
+import gov.epa.exp_data_gathering.parse.JSONsForPubChem.Property;
+import gov.epa.exp_data_gathering.parse.JSONsForPubChem.Section;
+import gov.epa.exp_data_gathering.parse.JSONsForPubChem.StringWithMarkup;
 import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
@@ -153,7 +160,8 @@ public class RecordPubChem {
 				if (!haveRecord || startFresh) {
 					boolean keepLooking = true;
 					try {
-						rec.experimental=FileUtilities.getText_UTF8(experimentalURL).replaceAll("'", "\'");
+						rec.experimental=StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(experimentalURL));
+						rec.experimental = rec.experimental.replaceAll("'", "''").replaceAll(";", "\\;");
 					} catch (Exception ex) { 
 						counterMissingExpData++;
 						keepLooking = false;
@@ -161,15 +169,21 @@ public class RecordPubChem {
 					Thread.sleep(200);
 					if (keepLooking) {
 						try {
-							rec.cas=FileUtilities.getText_UTF8(casURL).replaceAll("'", "\'");
+//							rec.cas=FileUtilities.getText_UTF8(casURL).replaceAll("'", "\'").replaceAll(";", "\\;");
+							rec.cas=StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(casURL));
+							rec.cas = rec.cas.replaceAll("'", "''").replaceAll(";", "\\;");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 						try {
-							rec.identifiers=FileUtilities.getText_UTF8(idURL).replaceAll("'", "\'");
+//							rec.identifiers=FileUtilities.getText_UTF8(idURL).replaceAll("'", "\'").replaceAll(";", "\\;");
+							rec.identifiers=StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(idURL));
+							rec.identifiers = rec.identifiers.replaceAll("'", "''").replaceAll(";", "\\;");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 						try {
-							rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replaceAll("'", "\'");
+//							rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replaceAll("'", "\'").replaceAll(";", "\\;");
+							rec.synonyms=StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(synonymURL));
+							rec.synonyms = rec.synonyms.replaceAll("'", "''").replaceAll(";", "\\;");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 					}
@@ -274,8 +288,11 @@ public class RecordPubChem {
 	}
 	
 	public static void main(String[] args) {
-		Vector<RecordDashboard> drs = DownloadWebpageUtilities.getDashboardRecordsFromExcel("Data"+"/PFASSTRUCT.xls");
-		Vector<String> cids = getCIDsFromDashboardRecords(drs,"Data"+"/CIDDICT.csv",1,8164);
+//		Vector<RecordDashboard> drs = DownloadWebpageUtilities.getDashboardRecordsFromExcel("Data"+"/PFASSTRUCT.xls");
+//		Vector<String> cids = getCIDsFromDashboardRecords(drs,"Data"+"/CIDDICT.csv",1,8164);
+		List<String> cidsList = gov.epa.QSAR.utilities.FileUtilities.readFile("Data\\Experimental\\PubChem\\solubilitycids.txt");
+		Vector<String> cids = new Vector<String>(cidsList);
+		cids = new Vector<String>(cids.subList(1100, cids.size()+1)); // left off at 1100 on 1/26
 		downloadJSONsToDatabase(cids,false);
 	}
 }

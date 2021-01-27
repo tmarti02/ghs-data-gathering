@@ -104,6 +104,8 @@ public class ParseUtilities extends Parse {
 		if (index > 0) {
 			if (str.charAt(index-1)=='>') {
 				symbol = ">";
+			} else if (str.charAt(index-1)=='?') {
+				symbol = "?";
 			} else if (str.charAt(index-1)=='<') {
 				symbol = "<";
 			} else if (str.charAt(index-1)=='~' || str.contains("ca.") || str.contains("circa")) {
@@ -291,7 +293,7 @@ public class ParseUtilities extends Parse {
 						propertyValue.startsWith("<") || propertyValue.startsWith("=") || propertyValue.startsWith("~"))) {
 			er.keep = false;
 			er.reason = "Non-aqueous solubility";
-		} else if (propertyValue.toLowerCase().contains("m naoh")) {
+		} else if (propertyValue.toLowerCase().contains("m naoh") || propertyValue.toLowerCase().contains("m hcl")) {
 			er.keep = false;
 			er.reason = "Non-aqueous solubility";
 		}

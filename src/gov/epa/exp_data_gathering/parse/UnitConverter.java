@@ -70,6 +70,10 @@ public class UnitConverter {
 			er.keep = false;
 			er.reason = "Invalid CAS";
 		}
+		if (er.property_value_numeric_qualifier!=null && er.property_value_numeric_qualifier.equals("?")) {
+			er.keep = false;
+			er.reason = "Undetermined numeric qualifier";
+		}
 				
 		if (er.property_name.equals(ExperimentalConstants.str_pKA) || er.property_name.equals(ExperimentalConstants.strLogKow)) {
 			assignFinalFieldsWithoutConverting(er);

@@ -289,9 +289,9 @@ public class SQLite_CreateTable {
 		//		Example:
 		//		INSERT INTO Customers (CustomerName, ContactName, Address, City, PostalCode, Country)
 		//		VALUES ('Cardinal','Tom B. Erichsen','Skagen 21','Stavanger','4006','Norway');
-	
+		String sql = "";
 		try {
-			String sql = "INSERT INTO " + tableName + " (";
+			sql = "INSERT INTO " + tableName + " (";
 	
 			for (int i = 0; i < fieldNames.length; i++) {
 				sql+=fieldNames[i];				
@@ -314,6 +314,7 @@ public class SQLite_CreateTable {
 			stat.executeUpdate(sql);
 	
 		} catch (Exception ex) {
+			System.out.println(sql);
 			ex.printStackTrace();
 		}
 	
