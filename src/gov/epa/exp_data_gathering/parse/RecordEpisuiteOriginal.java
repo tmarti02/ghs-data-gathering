@@ -16,12 +16,12 @@ public class RecordEpisuiteOriginal {
 	String CAS;
 	String Name;
 	String Sheet;
-	String MolWT;
-	String WsolmgL;
-	String LogWsol;
-	String LogEstimated;
-	String Error;
-	String Temp;
+	Double MolWT;
+	Double WsolmgL;
+	Double LogWsol;
+	Double LogEstimated;
+	Double Error;
+	double Temp;
 	String Reference;
 	
 	static final String sourceName="EpisuiteOriginal";
@@ -29,6 +29,8 @@ public class RecordEpisuiteOriginal {
 	
 	private static Vector<RecordEpisuiteOriginal> getRecords(String filepath, int sheetnum){
 		Vector<RecordEpisuiteOriginal> records = new Vector<>();
+		
+	
 		
 		try {
 			FileInputStream fis = new FileInputStream(new File(filepath));
@@ -49,7 +51,7 @@ public class RecordEpisuiteOriginal {
 			for (int i=0;i<row.getLastCellNum();i++) {
 				String colName=row.getCell(i).getStringCellValue();
 				colNames.add(colName);
-				System.out.println(i+"\t"+colName);
+				// System.out.println(i+"\t"+colName);
 			}
 			
 			int colNumCAS = -1;
@@ -66,15 +68,17 @@ public class RecordEpisuiteOriginal {
 				if (colNames.get(i).contains("CAS")) colNumCAS=i;
 				if (colNames.get(i).contains("Name")) colNumName=i;
 				if ((colNames.get(i).contains("Mol Wt") || colNames.get(i).contains("MW"))) colNumMW=i;
-				if (colNames.get(i).contains("Wsol (mg/L)")) colNumWSmgL=i;
+				if (colNames.get(i).contains("Wsol mg/L") || colNames.get(i).contains("Wsol (mg/L)")) colNumWSmgL=i;
 				if ((colNames.get(i).contains("Log Wsol (moles/L)") || colNames.get(i).contains("Log WS moles/L"))) colNumLogWSM=i;
-				if (colNames.get(i).contains("Log Estimated moles/L")) colNumEstM=i;
+				if (colNames.get(i).contains("Log Estimated moles/L") || colNames.get(i).contains("Estimated")) colNumEstM=i;
 				if (colNames.get(i).contains("Error")) colNumError=i;
 				if (colNames.get(i).contains("Temp")) colNumTemp=i;
 				if (colNames.get(i).contains("Reference")) colNumReference=i;
 			}
 			
-
+			
+			// System.out.println("colNumTemp =" + colNumTemp);
+			
 			for (int i=1;i<sheet.getLastRowNum();i++) {
 				
 				Row rowi = sheet.getRow(i);
@@ -83,16 +87,26 @@ public class RecordEpisuiteOriginal {
 				
 				r.CAS = rowi.getCell(colNumCAS).getStringCellValue();
 				r.Name = rowi.getCell(colNumName).getStringCellValue();
-				r.MolWT = rowi.getCell(colNumMW).getStringCellValue();
-				r.WsolmgL = rowi.getCell(colNumWSmgL).getStringCellValue();
-				r.LogWsol = rowi.getCell(colNumLogWSM).getStringCellValue();
-				r.LogEstimated = rowi.getCell(colNumEstM).getStringCellValue();
-				r.Error = rowi.getCell(colNumError).getStringCellValue();
-				if (colNumTemp > -1)
-					r.Temp = rowi.getCell(colNumTemp).getStringCellValue();
-				else 
-					r.Temp = null;
+				r.MolWT = rowi.getCell(colNumMW).getNumericCellValue();
+				r.WsolmgL = rowi.getCell(colNumWSmgL).getNumericCellValue();
+				r.LogWsol = rowi.getCell(colNumLogWSM).getNumericCellValue();
+				r.LogEstimated = rowi.getCell(colNumEstM).getNumericCellValue();
+				r.Error = rowi.getCell(colNumError).getNumericCellValue();
+				// sometimes the temperature cells are empty
+				if (colNumTemp > 0) {
+					if (rowi.getCell(colNumTemp)!=null) {
+						r.Temp = rowi.getCell(colNumTemp).getNumericCellValue();
+					}
+				}	
 				r.Reference = rowi.getCell(colNumReference).getStringCellValue();
+				
+				// specify which sheet in the recordEpisuite object
+				if (sheetnum == 1)
+					r.Sheet="Validation Data";
+				else if (sheetnum == 0)
+					r.Sheet="Training Data";
+					
+				
 				
 				records.add(r);
 
@@ -106,14 +120,26 @@ public class RecordEpisuiteOriginal {
 		return records;
 	}
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+	public static Vector<RecordEpisuiteOriginal> recordWaterFragmentData() {
+		Vector<RecordEpisuiteOriginal> records = new Vector<>();
+
+		
 		String ExcelFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 		String ExcelPath = ExcelFolder+File.separator + "WaterFragmentDataFiles.xls";
 		Vector<RecordEpisuiteOriginal> recordsTraining = getRecords(ExcelPath, 0);
 		Vector<RecordEpisuiteOriginal> recordsValidation = getRecords(ExcelPath, 1);
-
-
+		
+		records.addAll(recordsTraining);
+		records.addAll(recordsValidation);
+		
+		
+		System.out.println(records.get(4).CAS);
+		return(records);
 	}
 
+	
+	public static void main (String[] args) {
+		Vector<RecordEpisuiteOriginal> records = recordWaterFragmentData();
+		
+	}
 }
