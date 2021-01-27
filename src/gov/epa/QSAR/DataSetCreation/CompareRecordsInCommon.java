@@ -27,8 +27,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.charts.XSSFChartLegend;
 import org.apache.poi.xssf.usermodel.charts.XSSFScatterChartData;
 import org.apache.poi.xssf.usermodel.charts.XSSFValueAxis;
+import org.openxmlformats.schemas.drawingml.x2006.chart.CTMarkerStyle;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTTitle;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTValAx;
+import org.openxmlformats.schemas.drawingml.x2006.chart.STMarkerStyle;
 import org.openxmlformats.schemas.drawingml.x2006.main.CTNoFillProperties;
 import org.openxmlformats.schemas.drawingml.x2006.main.CTTextBody;
 import org.openxmlformats.schemas.drawingml.x2006.main.CTTextParagraph;
@@ -131,8 +133,8 @@ public class CompareRecordsInCommon {
 					rec1.setQSARUnits();
 					rec2.setQSARUnits();
 					
-					if (rec2.property_value_point_estimate_qsar==null) {
-						System.out.println(rec2.casrn+" missing final value");
+					if (!rec2.usable) {
+						System.out.println(rec2.casrn+"\t"+rec2.reason);
 						continue;
 					}
 					
@@ -153,6 +155,14 @@ public class CompareRecordsInCommon {
 		
 		Collections.sort(recordsInCommon);
 			
+		XSSFSheet sheet = addRowsToSpreadsheet(wb, source2, recordsInCommon);
+		GenerateChart(sheet,source1,source2,property,recordsInCommon.get(0).rec1.property_value_units_qsar);
+		
+		
+	}
+
+
+	private XSSFSheet addRowsToSpreadsheet(Workbook wb, String source2, Vector<RecordInCommon> recordsInCommon) {
 		Class clazz = RecordQSAR.class;
 
 		XSSFSheet sheet = (XSSFSheet) wb.createSheet(source2);
@@ -168,7 +178,11 @@ public class CompareRecordsInCommon {
 		row0.createCell(jj++).setCellValue("rec2.property_value_string");
 		row0.createCell(jj++).setCellValue("rec1.temperature_C");
 		row0.createCell(jj++).setCellValue("rec2.temperature_C");
-
+		row0.createCell(jj++).setCellValue("rec2.pH");
+		row0.createCell(jj++).setCellValue("rec2.original_source_name");
+		row0.createCell(jj++).setCellValue("rec1.chemical_name");
+		row0.createCell(jj++).setCellValue("rec2.chemical_name");
+		row0.createCell(jj++).setCellValue("rec2.url");
 		
 		for (int i=0;i < recordsInCommon.size();i++) {
 			Row row=sheet.createRow(i+1);			
@@ -183,10 +197,13 @@ public class CompareRecordsInCommon {
 			row.createCell(j++).setCellValue(rec.rec2.property_value_string);
 			row.createCell(j++).setCellValue(rec.rec1.temperature_C+"");
 			row.createCell(j++).setCellValue(rec.rec2.temperature_C+"");
+			row.createCell(j++).setCellValue(rec.rec2.pH+"");
+			row.createCell(j++).setCellValue(rec.rec2.original_source_name+"");
+			row.createCell(j++).setCellValue(rec.rec1.chemical_name+"");
+			row.createCell(j++).setCellValue(rec.rec2.chemical_name+"");
+			row.createCell(j++).setCellValue(rec.rec2.url+"");
 		}
-		GenerateChart(sheet,source1,source2,property,recordsInCommon.get(0).rec1.property_value_units_qsar);
-		
-		
+		return sheet;
 	}
 	
 	
@@ -201,24 +218,23 @@ public class CompareRecordsInCommon {
 
 	    XSSFValueAxis bottomAxis = chart.createValueAxis(AxisPosition.BOTTOM);
 	    XSSFValueAxis leftAxis = chart.createValueAxis(AxisPosition.LEFT);
-	    leftAxis.setCrosses(AxisCrosses.AUTO_ZERO);
-
-	    
+	    leftAxis.setCrosses(AxisCrosses.AUTO_ZERO);	    
 	    
 	    CellRangeAddress crXData = new CellRangeAddress(1, sheet.getLastRowNum(), 2, 2);
 	    CellRangeAddress crYData = new CellRangeAddress(1, sheet.getLastRowNum(), 3, 3);
 	    CellReference crTitle = new CellReference(0,1);
-	    Cell cell = sheet.getRow(crTitle.getRow()).getCell(crTitle.getCol());
+//	    Cell cell = sheet.getRow(crTitle.getRow()).getCell(crTitle.getCol());
 
 	    ChartDataSource<Number> dsXData = DataSources.fromNumericCellRange(sheet, crXData);
 	    ChartDataSource<Number> dsYData = DataSources.fromNumericCellRange(sheet, crYData);
 
 	    XSSFScatterChartData data = chart.getChartDataFactory().createScatterChartData();
 
-	    ScatterChartSeries seriesTitler = data.addSerie(dsXData, dsYData);
-	    
+	    ScatterChartSeries series1 = data.addSerie(dsXData, dsYData);
+	    ScatterChartSeries series2 = data.addSerie(dsXData, dsXData);
 	        
-	    seriesTitler.setTitle(cell.getStringCellValue());
+	    series1.setTitle("Exp. Data");
+	    series2.setTitle("Y=X");
 	    chart.plot(data, bottomAxis, leftAxis);
 
 	    //Set axis titles:
@@ -227,7 +243,6 @@ public class CompareRecordsInCommon {
 	    setAxisTitle(source1+" "+units, valAx);
 	    setAxisTitle(source2+" "+units, valAy);
 	    
-
 	    
 	    //set properties of first scatter chart data series to not smooth the line:
 	    ((XSSFChart)chart).getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0)
@@ -235,23 +250,25 @@ public class CompareRecordsInCommon {
 	    	    
 //	    System.out.println(chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0).getSpPr());
 	    
-	   
-		chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0).addNewSpPr();		
-		chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0).getSpPr().addNewLn();
-		chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0).getSpPr().getLn().setW(Units.pixelToEMU(0));
+	   //Set series line to no fill:		
+		chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0)
+	    .addNewSpPr().addNewLn().addNewNoFill();
+	
+		chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(1)
+	    .addNewMarker().addNewSymbol().setVal(STMarkerStyle.NONE);
+
 		
-		chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0).getSpPr().getLn().setNoFill(CTNoFillProperties.Factory.newInstance());
-		
-		
+		//Add linear trend line:
 		chart.getCTChart().getPlotArea().getScatterChartArray(0).getSerArray(0)
 		 .addNewTrendline()
 		 .addNewTrendlineType()
 		 .setVal(org.openxmlformats.schemas.drawingml.x2006.chart.STTrendlineType.LINEAR);
 		
+		
 	    XSSFChartLegend legend = chart.getOrCreateLegend();
 	    legend.setPosition(LegendPosition.BOTTOM);
 
-	    //set properties of first scatter chart to not vary the colors:
+	    //set properties of first scatter chart series to not vary the colors:
 	    ((XSSFChart)chart).getCTChart().getPlotArea().getScatterChartArray(0)
 	     .addNewVaryColors().setVal(false);
 	    
@@ -326,3 +343,5 @@ public class CompareRecordsInCommon {
 	}
 	
 }
+
+
