@@ -23,6 +23,7 @@ public class RecordQSAR {
 	public String chemical_name;//	Most systematic name (only if provided in the reference)
 	public String smiles;//Simplified Molecular Input Line Entry System for molecular structure (only if provided in the reference)
 	public String source_name;
+	public String original_source_name;
 	public String url;
 	public String date_accessed;
 	
@@ -114,6 +115,7 @@ public class RecordQSAR {
 		smiles = er.smiles;
 		DSSTox_Substance_Id = er.dsstox_substance_id;
 		source_name = er.source_name;
+		original_source_name=er.original_source_name;
 		url = er.url;
 		date_accessed = er.date_accessed;
 		property_name = er.property_name;
@@ -134,11 +136,43 @@ public class RecordQSAR {
 	}
 
 	public boolean setQSARUnits() {
+				
+		if (property_name.contentEquals(ExperimentalConstants.strWaterSolubility)) {//Need to do it by property so can detect bad data points which are probably a different property			
+			return convertToNegLog10_M();			
+		} else {
+			System.out.println("need qsar units conversion for "+property_name);
+			
+//			else if (property_value_units_exp.equals(ExperimentalConstants.str_ppm)) {//TODO might have different conversion depending on the property
+//				property_value_point_estimate_qsar = -Math.log10((property_value_point_estimate_exp/24.45)*0.001/1000.0);
+//				property_value_units_qsar = "-log10(mol/L)";
+//				return true;
+
+			usable=false;
+			reason="can't convert units";
+			return false;
+		}
+	}
+
+	private boolean convertToNegLog10_M() {
+		if (property_value_units_exp.equals(ExperimentalConstants.str_M)) {
+			property_value_point_estimate_qsar = -Math.log10(property_value_point_estimate_exp);
+			property_value_units_qsar = "-log10(mol/L)";
+			return true;
+		}	
+		
 		if (Structure_MolWt==null) {
 			System.out.println("Error: Cannot convert units before looking up DSSToxData.");
+			usable=false;
+			reason="MW is missing";
 			return false;
 		}
 		
+		if (property_value_point_estimate_exp==0) {
+			property_value_point_estimate_qsar=null;
+			usable=false;
+			reason="value is zero";
+			return false;
+		}
 		if (property_value_units_exp.equals(ExperimentalConstants.str_mg_L)) {
 			property_value_point_estimate_qsar = -Math.log10(property_value_point_estimate_exp/1000.0/Structure_MolWt);
 			property_value_units_qsar = "-log10(mol/L)";
@@ -148,20 +182,13 @@ public class RecordQSAR {
 				property_value_point_estimate_qsar = -Math.log10(property_value_point_estimate_exp/Structure_MolWt);
 				property_value_units_qsar = "-log10(mol/L)";
 				return true;
-
-		} else if (property_value_units_exp.equals(ExperimentalConstants.str_ppm)) {//TODO might have different conversion depending on the property
-			property_value_point_estimate_qsar = -Math.log10((property_value_point_estimate_exp/24.45)*0.001/1000.0);
-			property_value_units_qsar = "-log10(mol/L)";
-			return true;
-		} else if (property_value_units_exp.equals(ExperimentalConstants.str_M)) {
-			property_value_point_estimate_qsar = -Math.log10(property_value_point_estimate_exp);
-			property_value_units_qsar = "-log10(mol/L)";
-			
+		
 		} else {
 			System.out.println("need qsar units conversion for "+property_value_units_exp);
+			usable=false;
+			reason="can't convert units";
+			return false;
 		}
-		
-		return false;
 	}
 
 	
