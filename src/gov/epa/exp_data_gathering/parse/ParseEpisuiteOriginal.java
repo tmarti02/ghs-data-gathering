@@ -57,7 +57,7 @@ public class ParseEpisuiteOriginal extends Parse {
 		er.chemical_name = reo.Name;
 		er.property_value_point_estimate_original = reo.LogWsol;
 		er.property_value_units_original = ExperimentalConstants.str_log_M;
-		er.source_name = ExperimentalConstants.strSourceEpisuiteOriginal;
+		er.source_name = ExperimentalConstants.strSourceEpisuite;
 		
 		uc.convertRecord(er);
 		
