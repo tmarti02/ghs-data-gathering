@@ -3,22 +3,18 @@ package gov.epa.QSAR.DataSetCreation;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.hssf.util.CellReference;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.charts.AxisCrosses;
 import org.apache.poi.ss.usermodel.charts.AxisPosition;
 import org.apache.poi.ss.usermodel.charts.ChartDataSource;
 import org.apache.poi.ss.usermodel.charts.DataSources;
-import org.apache.poi.ss.usermodel.charts.LegendPosition;
 import org.apache.poi.ss.usermodel.charts.ScatterChartSeries;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.util.Units;
@@ -27,7 +23,6 @@ import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.xssf.usermodel.charts.XSSFChartLegend;
 import org.apache.poi.xssf.usermodel.charts.XSSFScatterChartData;
 import org.apache.poi.xssf.usermodel.charts.XSSFValueAxis;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTTitle;
@@ -38,7 +33,6 @@ import org.openxmlformats.schemas.drawingml.x2006.main.CTTextParagraph;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
-import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 public class CompareRecordsInCommon {
 	
@@ -305,23 +299,23 @@ public class CompareRecordsInCommon {
 		}
 	}
 	
-	private void showChart(String source1, String source2, Vector<Double> xvec, Vector<Double> yvec) {
-		double [] x=new double[xvec.size()];
-		double [] y=new double[yvec.size()];
-	
-		for (int i=0;i<xvec.size();i++) {
-			x[i]=xvec.get(i);
-			y[i]=yvec.get(i);
-//			System.out.println(i+"\t"+x[i]+"\t"+y[i]);
-		}
-		String title=source1+" vs "+source2;
-		String xtitle=source1;
-		String ytitle=source2;
-		fraChart fc = new fraChart(x,y,xtitle,ytitle);
-		fc.jlChart.doDrawLegend=false;
-		fc.jlChart.doDrawStatsMAE=false;
-		fc.setVisible(true);
-	}
+//	private void showChart(String source1, String source2, Vector<Double> xvec, Vector<Double> yvec) {
+//		double [] x=new double[xvec.size()];
+//		double [] y=new double[yvec.size()];
+//	
+//		for (int i=0;i<xvec.size();i++) {
+//			x[i]=xvec.get(i);
+//			y[i]=yvec.get(i);
+////			System.out.println(i+"\t"+x[i]+"\t"+y[i]);
+//		}
+//		String title=source1+" vs "+source2;
+//		String xtitle=source1;
+//		String ytitle=source2;
+//		fraChart fc = new fraChart(x,y,xtitle,ytitle);
+//		fc.jlChart.doDrawLegend=false;
+//		fc.jlChart.doDrawStatsMAE=false;
+//		fc.setVisible(true);
+//	}
 	
 	public static void main(String[] args) {
 		CompareRecordsInCommon c=new CompareRecordsInCommon();
