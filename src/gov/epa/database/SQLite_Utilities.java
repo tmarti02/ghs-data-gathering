@@ -400,7 +400,18 @@ public class SQLite_Utilities {
 	}
 
 	
-
+	public static void deleteRecords(String tableName, String fieldName,String fieldValue, Statement stat) {
+		
+		try {
+			String sql="DELETE FROM "+tableName+" WHERE "+fieldName+" = \""+fieldValue+"\";";
+			System.out.println(sql);
+			stat.execute(sql);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 	
 
 

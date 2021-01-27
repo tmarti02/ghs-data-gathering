@@ -25,6 +25,9 @@ import java.util.Vector;
 
 import gov.epa.QSAR.utilities.Inchi;
 import gov.epa.QSAR.utilities.IndigoUtilities;
+import gov.epa.TEST.Descriptors.DatabaseUtilities.DescriptorDatabaseUtilities;
+import gov.epa.TEST.Descriptors.DatabaseUtilities.RecordDescriptors;
+import gov.epa.TEST.Descriptors.DatabaseUtilities.RecordDescriptorsMetadata;
 import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorData;
 import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorsFromSmiles;
 import gov.epa.api.ExperimentalConstants;
@@ -332,7 +335,7 @@ public class ConvertExperimentalRecordsToDataSet {
 
 	}
 
-	ExperimentalRecords getExperimentalRecordsFromDB(String property, String expRecordsDBPath) {
+	public static ExperimentalRecords getExperimentalRecordsFromDB(String property, String expRecordsDBPath) {
 
 		ExperimentalRecords records = new ExperimentalRecords();
 
@@ -496,12 +499,15 @@ public class ConvertExperimentalRecordsToDataSet {
 					System.out.println("Cant assign final value since median values don't agree:" + "\t" + inchiKey1);
 					countOmittedSIDS += records.size();
 					for (RecordQSAR rec : records) {
-						System.out.println(rec.dsstox_substance_id + "\t" + rec.property_value_point_estimate_qsar);
+						System.out.println(rec.DSSTox_Structure_Id + "\t" + rec.property_value_point_estimate_qsar);
 					}
 
 				} else {
 					RecordQSAR qr = recsMedian.get(0);// use first record for info
-					qr.property_value_point_estimate_qsar = finalScore;
+					qr.property_value_point_estimate_qsar = finalScore;				
+					
+					if (recsMedian.size()==2) 
+						qr.property_value_exp+="; "+recsMedian.get(1).property_value_exp;
 
 					Vector<String> IDs = new Vector<>();
 
@@ -529,12 +535,6 @@ public class ConvertExperimentalRecordsToDataSet {
 			fwIsomers.flush();
 			fwIsomers.close();
 
-			// TODO add cid
-			String[] fieldNames = { "id_physchem", "dsstox_substance_id", "casrn", "Substance_Name",
-					"property_value_point_estimate_qsar", "property_value_units_qsar", "Structure_SMILES",
-					"Structure_SMILES_2D_QSAR" };
-
-//			mergedRecords.toExcelFile(folder+endpoint+"QSAR_flat.xlsx",fieldNames);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -635,16 +635,24 @@ public class ConvertExperimentalRecordsToDataSet {
 
 			fw2.write("ID\t" + DescriptorData.toStringDescriptorNames() + "\r\n");
 
-			Connection conn = DescriptorsFromSmiles.getConnection();
+			
+			String descriptorSoftware=RecordDescriptorsMetadata.softwareTEST;
+			String descriptorNames=DescriptorData.toStringDescriptorNames();
 
-			for (RecordQSAR er : records) {
+			Connection conn = DescriptorDatabaseUtilities.getConnection(descriptorSoftware,descriptorNames);
+
+			for (RecordQSAR rq : records) {
 //				System.out.println(er.Structure_SMILES_2D_QSAR+"\t"+er.Structure_InChIKey1_QSAR_Ready);
 
-				String strDescriptors = DescriptorsFromSmiles.goDescriptors(er.Structure_SMILES_2D_QSAR,
-						er.Structure_InChIKey1_QSAR_Ready, conn);
+				String fieldName=RecordDescriptors.fieldNameKey;
+				String fieldValue=(String)rq.getValue(fieldName);
+				
+				String strDescriptors = DescriptorsFromSmiles.goDescriptors(rq.Structure_SMILES_2D_QSAR,fieldValue,conn);
 
-				fw.write(er.Structure_SMILES_2D_QSAR + "\t" + er.Structure_InChIKey1_QSAR_Ready + "\r\n");
-				fw2.write(er.Structure_InChIKey1_QSAR_Ready + "\t" + strDescriptors + "\r\n");
+				String key=rq.DSSTox_Structure_Id;
+				String smiles=rq.Structure_SMILES_2D_QSAR;
+				fw.write(smiles + "\t" + key+ "\r\n");
+				fw2.write(key + "\t" + strDescriptors + "\r\n");
 
 				fw.flush();
 				fw2.flush();
@@ -698,19 +706,32 @@ public class ConvertExperimentalRecordsToDataSet {
 		String property = ExperimentalConstants.strWaterSolubility;
 		String dbpath = databasePathExperimentalRecords;
 		processPropertyRecords(property, dbpath);
+		
 	}
 
 	private void processPropertyRecords(String property, String dbpath) {
+		
+		boolean writeExcel=true;		
 		String folder = "Data\\DataSets\\" + property + "\\";
 
+				
 		ExperimentalRecords recordsDB = getExperimentalRecordsFromDB(property, dbpath);
-		recordsDB.toExcel_File(folder + property + "_records.xlsx");
+		if (writeExcel) recordsDB.toExcel_File(folder + property + "_records.xlsx");
 
 		RecordsQSAR recordsQSAR = recordsDB.getValidQSARRecords();
 
+		if (writeExcel) recordsQSAR.toExcelFile(folder + property + "_unmapped_qsar_records.xlsx");
+				
+		
 //		getListOfComboIDsForGoodRecords(property, records);	
 		getListOfUniqueIdentifiersForGoodRecords(folder, property, recordsQSAR);
 
+		File fDSSTox=new File(folder + "DSSTox_" + property + ".xlsx");
+		if (!fDSSTox.exists()) {
+			System.out.println("DSSTox excel missing");
+			return;
+		}
+		
 		Vector<RecordDSSTox> recordsDSSTox = RecordDSSTox
 				.getDSSToxExportRecords(folder + "DSSTox_" + property + ".xlsx");
 		Vector<RecordChemReg> recordsChemReg = RecordChemReg
@@ -721,15 +742,28 @@ public class ConvertExperimentalRecordsToDataSet {
 		DSSTOX.goThroughToxRecords2(recordsQSAR, recordsChemReg, recordsDSSTox, folder, property, omitSalts);
 		long t2 = System.currentTimeMillis();
 		System.out.println("time to get DSSToxInfo=" + (t2 - t1) / 1000.0 + " secs");
-		recordsQSAR.toExcelFile(folder + property + "_QSAR.xlsx", RecordQSAR.outputFieldNames);
+		if (writeExcel) recordsQSAR.toExcelFile(folder + property + "_QSAR.xlsx", RecordQSAR.outputFieldNames);
 
 //		//Create flat file by merging inchiKey1 matches and omitting salts and use median prop values:
 		RecordsQSAR recordsQSARflat = mergeIsomersContinuousOmitSalts(recordsQSAR, property, folder);
-		recordsQSARflat.toExcelFile(folder + property + "_flatQSAR.xlsx", RecordQSAR.outputFieldNames);
+		if (writeExcel) recordsQSARflat.toExcelFile(folder + property + "_flatQSAR.xlsx", RecordQSAR.outputFieldNames);
 
+		recordsQSARflat.addFlatQSARRecordsToDB();		
+		CreatingTrainingPredictionSplittings.createNFoldPredictionSets(5,property,recordsQSARflat);
 		calculateDescriptors(folder, recordsQSARflat);
+		
+		//TODO random splitting/rational design - store splittings in a db
+
 	}
 
+	
+	
+	
+
+	
+	
+	
+	
 	private void getChemRegInputForCASNotInProdDashboard(String folder, String endpoint) {
 		Vector<RecordDashboard> recsDashboard = RecordDashboard
 				.getDashboardRecordsFromTextFile(folder + "RecordsDashboard.txt");
@@ -801,8 +835,8 @@ public class ConvertExperimentalRecordsToDataSet {
 	public static void main(String[] args) {
 		ConvertExperimentalRecordsToDataSet c = new ConvertExperimentalRecordsToDataSet();
 
-		c.runRatInhalationLC50();
-//		c.runWS();		
+//		c.runRatInhalationLC50();
+		c.runWS();		
 
 //		if (true) return;
 //		

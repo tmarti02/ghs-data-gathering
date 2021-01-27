@@ -35,7 +35,7 @@ public class RecordDSSTox {
 	public String DateModified;
 	
 
-	static String[] varlist = { "External_ID","DSSTox_Substance_Id","DSSTox_Source_Record_Id","DSSTox_Structure_Id","DSSTox_QC_Level",
+	public static String[] varlist = { "External_ID","DSSTox_Substance_Id","DSSTox_Source_Record_Id","DSSTox_Structure_Id","DSSTox_QC_Level",
 			"Substance_Name","Substance_CASRN","Substance_Type","Substance_Note","Structure_SMILES","Structure_InChI","Structure_InChIKey","Structure_Formula",
 			"Structure_MolWt","Structure_SMILES_2D_QSAR","DateModified"};
 	

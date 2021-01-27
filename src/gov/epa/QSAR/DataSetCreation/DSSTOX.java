@@ -339,7 +339,7 @@ public class DSSTOX {
 					omitBasedOnSmiles(qr,qr.Structure_SMILES_2D_QSAR);
 				}
 				
-				boolean convertedUnits = setQSARUnits(qr);
+				boolean convertedUnits = qr.setQSARUnits();
 				if (!convertedUnits) { qr.usable = false; }
 			} // end loop over tox records
 			
@@ -400,7 +400,7 @@ public class DSSTOX {
 				}
 				
 				//Use RecordChemReg to retrieve RecordDSSTox
-				rq.dsstox_substance_id=recordChemReg.Top_HIT_DSSTox_Substance_Id;
+				rq.DSSTox_Substance_Id=recordChemReg.Top_HIT_DSSTox_Substance_Id;
 				RecordDSSTox recordDSSTox=htDSSToxSID.get(recordChemReg.Top_HIT_DSSTox_Substance_Id);
 
 				if (recordDSSTox==null) {
@@ -427,7 +427,7 @@ public class DSSTOX {
 					omitBasedOnSmiles(rq,rq.Structure_SMILES_2D_QSAR);
 				}
 				
-				boolean convertedUnits = setQSARUnits(rq);
+				boolean convertedUnits = rq.setQSARUnits();
 				if (!convertedUnits) { rq.usable = false; }
 			} // end loop over tox records
 
@@ -501,70 +501,24 @@ public class DSSTOX {
 	
 	
 	
-	private static void createLookupForDSSToxRecords(Vector<RecordDSSTox> recordsDSSTox,
-			Hashtable<String, RecordDSSTox> htCAS_Name, Hashtable<String, RecordDSSTox> htCAS,
-			Hashtable<String, RecordDSSTox> htName,Hashtable<String, RecordDSSTox> htSID) {
-		
-		for (RecordDSSTox recordDSSTOX : recordsDSSTox) {
-			
-			
-			if (recordDSSTOX.DSSTox_Substance_Id==null) {
-				continue;
-			}
-			
-			String cas=recordDSSTOX.Substance_CASRN.trim();
-			String name=recordDSSTOX.Substance_Name.toLowerCase().trim();
-
-//			System.out.println(recordDSSTOX.DSSTox_Substance_Id+"\t"+recordDSSTOX.Substance_CASRN+"\t"+recordDSSTOX.Substance_Name);
-			
-			String key = cas + "_" + name;
-			
-//			if (recordDSSTOX.Substance_CASRN.contentEquals("129050-29-9")) System.out.println(key);
-		
-			
-			if (cas!=null  && !cas.isEmpty()) {
-				htCAS_Name.put(key, recordDSSTOX);
-				htCAS.put(cas, recordDSSTOX);				
-			}
-									
-			htName.put(name, recordDSSTOX);
-			htSID.put(recordDSSTOX.DSSTox_Structure_Id,recordDSSTOX);
-			
-//			if (recordDSSTOX.Substance_Name.contentEquals("(2S)-6-fluoro-2-(oxiran-2-yl)chromane")) {
-//				System.out.println(recordDSSTOX);
-//			}
-			
-//			System.out.println("*"+recordDSSTOX.Substance_Name+"*");
-			
-			
-			//					System.out.println(recordChemReg.Query_Casrn);
-		}
-	}
-
 	
 	public static void setDSSToxData(RecordQSAR qr,RecordDSSTox rDSSTox) {
-		String[] fieldNames = { "Substance_Name", "Substance_CASRN", "Substance_Type", "Substance_Note",
-				"Structure_SMILES", "Structure_InChI", "Structure_InChIKey", "Structure_Formula", "Structure_MolWt",
-				"Structure_SMILES_2D_QSAR" };
+		
+		String[] fieldNames = RecordDSSTox.varlist;
 
 		for (String fieldName:fieldNames) {
 			
 			try {
+
+				//Skip extra DSSTox fields not in RecordQSAR
+				if (fieldName.contentEquals("External_ID")) continue;
+				if (fieldName.contentEquals("DSSTox_Source_Record_Id")) continue;
+				if (fieldName.contentEquals("DSSTox_QC_Level")) continue;
+				if (fieldName.contentEquals("DateModified")) continue;
+				
 				
 				Field myFieldSrc =rDSSTox.getClass().getField(fieldName);				
-				Field myFieldDest =qr.getClass().getField(fieldName);							
-				
 				qr.assignValue(fieldName, (String)myFieldSrc.get(rDSSTox));
-				
-//				if (fieldName.contentEquals("Structure_MolWt")) {
-//					 if (rDSSTox.Structure_MolWt!=null && !rDSSTox.Structure_MolWt.isEmpty()) {
-//						 Double MW=Double.valueOf(rDSSTox.Structure_MolWt);
-//						 myFieldDest.set(experimentalRecord, MW);
-//					 }
-//				} else {
-//					experimentalRecord.assignValue(fieldName, (String)myFieldSrc.get(rDSSTox));
-//				}
-				
 				
 			} catch (Exception ex){
 				ex.printStackTrace();
@@ -572,24 +526,6 @@ public class DSSTOX {
 		}
 	}
 	
-	private static boolean setQSARUnits(RecordQSAR qr) {
-		if (qr.Structure_MolWt==null) {
-			System.out.println("Error: Cannot convert units before looking up DSSToxData.");
-			return false;
-		}
-		
-		if (qr.property_value_units_exp.equals(ExperimentalConstants.str_mg_L)) {
-			qr.property_value_point_estimate_qsar = -Math.log10(qr.property_value_point_estimate_exp/1000.0/qr.Structure_MolWt);
-			qr.property_value_units_qsar = "-log10(mol/L)";
-			return true;
-		} else if (qr.property_value_units_exp.equals(ExperimentalConstants.str_ppm)) {
-			qr.property_value_point_estimate_qsar = -Math.log10((qr.property_value_point_estimate_exp/24.45)*0.001/1000.0);
-			qr.property_value_units_qsar = "-log10(mol/L)";
-			return true;
-		} 
-		
-		return false;
-	}
 	
 	public static Hashtable<String, RecordDashboard> parseDashboardExcel(String filePathExcel) {
 		Hashtable<String, RecordDashboard> records = new Hashtable<>();
@@ -638,92 +574,92 @@ public class DSSTOX {
 	
 	
 	
-	public static  void find2dMatchesFromInChiKey(Hashtable<String, RecordDashboard> recordsDashboard,
-			TreeMap<String, String> htInChi) {
-		
-		try {
-
-			
-			Set set = htInChi.entrySet();
-			// Get an iterator
-			Iterator i = set.iterator();
-			// Display elements
-			while(i.hasNext()) {
-				Map.Entry me = (Map.Entry)i.next();
-
-				if (!i.hasNext()) break; 
-
-				Map.Entry me2 = (Map.Entry)i.next();
-
-				String inchi1=(String)me.getKey();
-				String inchi2=(String)me2.getKey();
-
-				String bob1=inchi1.substring(0,inchi1.indexOf("-"));
-				String bob2=inchi2.substring(0,inchi2.indexOf("-"));
-
-				if (bob1.contentEquals(bob2)) {
-
-					String SID1=(String)me.getValue();
-					String SID2=(String)me2.getValue();
-
-					RecordDashboard recordDashboard1 = recordsDashboard.get(SID1);
-					RecordDashboard recordDashboard2 = recordsDashboard.get(SID2);
-
-				}
-
-			}
-
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-	}
-	public static  void find2dMatchesFromInChiKey(Hashtable<String, RecordDashboard> recordsDashboard,
-			TreeMap<String, String> htInChi,String outputFilePath) {
-		
-		try {
-
-			FileWriter fw=new FileWriter(outputFilePath);
-			
-			Set set = htInChi.entrySet();
-			// Get an iterator
-			Iterator i = set.iterator();
-			// Display elements
-			while(i.hasNext()) {
-				Map.Entry me = (Map.Entry)i.next();
-
-				if (!i.hasNext()) break; 
-
-				Map.Entry me2 = (Map.Entry)i.next();
-
-				String inchi1=(String)me.getKey();
-				String inchi2=(String)me2.getKey();
-
-				String bob1=inchi1.substring(0,inchi1.indexOf("-"));
-				String bob2=inchi2.substring(0,inchi2.indexOf("-"));
-
-				if (bob1.contentEquals(bob2)) {
-
-					String SID1=(String)me.getValue();
-					String SID2=(String)me2.getValue();
-
-					RecordDashboard recordDashboard1 = recordsDashboard.get(SID1);
-					RecordDashboard recordDashboard2 = recordsDashboard.get(SID2);
-
-					fw.write(SID1+"\t"+SID2+"\t"+recordDashboard1.IUPAC_NAME+"\t"+recordDashboard2.IUPAC_NAME+"\r\n");
-					fw.flush();
-				}
-
-			}
-			fw.close();
-
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-	}
+//	public static  void find2dMatchesFromInChiKey(Hashtable<String, RecordDashboard> recordsDashboard,
+//			TreeMap<String, String> htInChi) {
+//		
+//		try {
+//
+//			
+//			Set set = htInChi.entrySet();
+//			// Get an iterator
+//			Iterator i = set.iterator();
+//			// Display elements
+//			while(i.hasNext()) {
+//				Map.Entry me = (Map.Entry)i.next();
+//
+//				if (!i.hasNext()) break; 
+//
+//				Map.Entry me2 = (Map.Entry)i.next();
+//
+//				String inchi1=(String)me.getKey();
+//				String inchi2=(String)me2.getKey();
+//
+//				String bob1=inchi1.substring(0,inchi1.indexOf("-"));
+//				String bob2=inchi2.substring(0,inchi2.indexOf("-"));
+//
+//				if (bob1.contentEquals(bob2)) {
+//
+//					String SID1=(String)me.getValue();
+//					String SID2=(String)me2.getValue();
+//
+//					RecordDashboard recordDashboard1 = recordsDashboard.get(SID1);
+//					RecordDashboard recordDashboard2 = recordsDashboard.get(SID2);
+//
+//				}
+//
+//			}
+//
+//
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//		}
+//		
+//	}
+//	public static  void find2dMatchesFromInChiKey(Hashtable<String, RecordDashboard> recordsDashboard,
+//			TreeMap<String, String> htInChi,String outputFilePath) {
+//		
+//		try {
+//
+//			FileWriter fw=new FileWriter(outputFilePath);
+//			
+//			Set set = htInChi.entrySet();
+//			// Get an iterator
+//			Iterator i = set.iterator();
+//			// Display elements
+//			while(i.hasNext()) {
+//				Map.Entry me = (Map.Entry)i.next();
+//
+//				if (!i.hasNext()) break; 
+//
+//				Map.Entry me2 = (Map.Entry)i.next();
+//
+//				String inchi1=(String)me.getKey();
+//				String inchi2=(String)me2.getKey();
+//
+//				String bob1=inchi1.substring(0,inchi1.indexOf("-"));
+//				String bob2=inchi2.substring(0,inchi2.indexOf("-"));
+//
+//				if (bob1.contentEquals(bob2)) {
+//
+//					String SID1=(String)me.getValue();
+//					String SID2=(String)me2.getValue();
+//
+//					RecordDashboard recordDashboard1 = recordsDashboard.get(SID1);
+//					RecordDashboard recordDashboard2 = recordsDashboard.get(SID2);
+//
+//					fw.write(SID1+"\t"+SID2+"\t"+recordDashboard1.IUPAC_NAME+"\t"+recordDashboard2.IUPAC_NAME+"\r\n");
+//					fw.flush();
+//				}
+//
+//			}
+//			fw.close();
+//
+//
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//		}
+//		
+//	}
 	
 //	public static String getOmitReason(String SID,Hashtable<String, RecordDashboard> recordsDashboard) {
 //		
@@ -828,3 +764,4 @@ public class DSSTOX {
 	}
 
 }
+

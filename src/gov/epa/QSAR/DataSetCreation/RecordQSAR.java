@@ -1,25 +1,12 @@
 package gov.epa.QSAR.DataSetCreation;
 
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
-import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 public class RecordQSAR {
@@ -41,8 +28,11 @@ public class RecordQSAR {
 	
 	public String property_name;//	Name of the property (use  "options_property_names" lookup table to consistently populate the field)
 
-	public Double property_value_point_estimate_exp;// Point estimate of the property (when a single value is given)
-	public String property_value_units_exp;//The units for the property value (convert to defined values in ExperimentalConstants class)
+	public String property_value_exp;// Point estimate and units
+	public String property_value_string;//original string
+	
+	public Double property_value_point_estimate_exp;
+	public String property_value_units_exp;
 	
 	public Double property_value_point_estimate_qsar;// Point estimate of the property (when a single value is given)
 	public String property_value_units_qsar;//The units for the property value (convert to defined values in ExperimentalConstants class)
@@ -52,7 +42,9 @@ public class RecordQSAR {
 	public String pH;
 	
 	//DSSTox fields:
-	public String dsstox_substance_id; //DSSTox substance identifier
+	
+	public String DSSTox_Substance_Id;//SID
+	public String DSSTox_Structure_Id;//CID
 	public String Substance_Name;
 	public String Substance_CASRN;
 	public String Substance_Type;
@@ -67,19 +59,39 @@ public class RecordQSAR {
 	public String Structure_InChIKey1_QSAR_Ready;
 	public String comboID;
 	
-	public final static String [] outputFieldNames = {"id_physchem",
+	public final static String [] outputFieldNames = {
+			"property_name","source_name",
+			"id_physchem",
 			"usable",
 			"reason",			
 			"casrn",
 			"einecs",
 			"chemical_name",
 			"smiles", 
-			"dsstox_substance_id",
+			"DSSTox_Substance_Id","DSSTox_Structure_Id",
 			"Substance_Name", "Substance_CASRN", "Substance_Type", "Substance_Note", "Structure_SMILES",
 			"Structure_InChI", "Structure_InChIKey", "Structure_Formula", "Structure_MolWt", "Structure_SMILES_2D_QSAR",
 			"Structure_InChIKey_QSAR_Ready", "Structure_InChIKey1_QSAR_Ready",			
-			"property_value_point_estimate_exp",
-			"property_value_units_exp",
+			"property_value_exp",
+			"property_value_point_estimate_qsar",
+			"property_value_units_qsar",
+			"pressure_mmHg",
+			"temperature_C",
+			"pH",
+			"url",
+			"date_accessed"};
+	
+	public final static String [] outputFieldNamesDB = {
+			"property_name","source_name",
+			"id_physchem",
+			"casrn",
+			"chemical_name",
+			"smiles", 
+			"DSSTox_Substance_Id","DSSTox_Structure_Id",
+			"Substance_Name", "Substance_CASRN", "Substance_Type", "Substance_Note", "Structure_SMILES",
+			"Structure_InChI", "Structure_InChIKey", "Structure_Formula", "Structure_MolWt", "Structure_SMILES_2D_QSAR",
+			"Structure_InChIKey_QSAR_Ready", "Structure_InChIKey1_QSAR_Ready",			
+			"property_value_exp",
 			"property_value_point_estimate_qsar",
 			"property_value_units_qsar",
 			"pressure_mmHg",
@@ -100,7 +112,7 @@ public class RecordQSAR {
 		einecs = er.einecs;
 		chemical_name = er.chemical_name;
 		smiles = er.smiles;
-		dsstox_substance_id = er.dsstox_substance_id;
+		DSSTox_Substance_Id = er.dsstox_substance_id;
 		source_name = er.source_name;
 		url = er.url;
 		date_accessed = er.date_accessed;
@@ -109,11 +121,49 @@ public class RecordQSAR {
 		temperature_C = er.temperature_C;
 		pH = er.pH;
 		
-		property_value_units_exp = er.property_value_units_final;
-		property_value_point_estimate_exp = er.property_value_point_estimate_final==null ? er.rangeAverage() : er.property_value_point_estimate_final;
+		property_value_units_exp=er.property_value_units_final;
+		property_value_point_estimate_exp=er.property_value_point_estimate_final == null ? er.rangeAverage()
+				: er.property_value_point_estimate_final;
 		
-		
+		property_value_exp = property_value_point_estimate_exp+" "+property_value_units_exp;		
+		property_value_string=er.property_value_string;
 	}
+	
+	public RecordQSAR() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public boolean setQSARUnits() {
+		if (Structure_MolWt==null) {
+			System.out.println("Error: Cannot convert units before looking up DSSToxData.");
+			return false;
+		}
+		
+		if (property_value_units_exp.equals(ExperimentalConstants.str_mg_L)) {
+			property_value_point_estimate_qsar = -Math.log10(property_value_point_estimate_exp/1000.0/Structure_MolWt);
+			property_value_units_qsar = "-log10(mol/L)";
+			return true;
+
+		} else if (property_value_units_exp.equals(ExperimentalConstants.str_g_L)) {
+				property_value_point_estimate_qsar = -Math.log10(property_value_point_estimate_exp/Structure_MolWt);
+				property_value_units_qsar = "-log10(mol/L)";
+				return true;
+
+		} else if (property_value_units_exp.equals(ExperimentalConstants.str_ppm)) {//TODO might have different conversion depending on the property
+			property_value_point_estimate_qsar = -Math.log10((property_value_point_estimate_exp/24.45)*0.001/1000.0);
+			property_value_units_qsar = "-log10(mol/L)";
+			return true;
+		} else if (property_value_units_exp.equals(ExperimentalConstants.str_M)) {
+			property_value_point_estimate_qsar = -Math.log10(property_value_point_estimate_exp);
+			property_value_units_qsar = "-log10(mol/L)";
+			
+		} else {
+			System.out.println("need qsar units conversion for "+property_value_units_exp);
+		}
+		
+		return false;
+	}
+
 	
 	public void setComboID(String del) {
 		String CAS=casrn;
@@ -167,6 +217,106 @@ public class RecordQSAR {
 			e.printStackTrace();
 		} 
 	}
+	
+	public Object getValue(String fieldName) {
+		
+
+		
+		Field myField;
+		try {
+			myField = getClass().getDeclaredField(fieldName);
+						
+			if (myField.getType().getName().contentEquals("boolean")) {
+				return myField.getBoolean(this);
+			} else if (myField.getType().getName().contentEquals("double")) {
+				return Double.valueOf(myField.getDouble(this));
+			} else if (myField.getType().getName().contentEquals("int")) {
+				return Integer.valueOf(myField.getInt(this));
+			} else if (myField.getType().getName().contentEquals("java.lang.Double")) {
+				return myField.get(this);										
+			} else if (myField.getType().getName().contentEquals("java.lang.Integer")) {
+				return myField.get(this);				
+			} else if (myField.getType().getName().contentEquals("java.lang.String")) {
+				return myField.get(this);
+			} else {
+				System.out.println("Need to implement"+myField.getType().getName());
+				return null;
+			}					
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		} 
+
+	}
+	
+	/**
+	 * Flexible method that converts ExperimentalRecord to string array (useful for writing to excel and sqlite)
+	 *  
+	 * @param fieldNames
+	 * @return
+	 */
+	public String [] toStringArray(String [] fieldNames) {
+
+		String Line = "";
+
+		String [] array=new String [fieldNames.length];
+
+		for (int i = 0; i < fieldNames.length; i++) {
+			try {
+
+				Field myField = this.getClass().getDeclaredField(fieldNames[i]);
+
+				String val=null;
+				String type=myField.getType().getName();
+
+				
+				switch (type) {
+				
+				case "java.lang.String":
+					if (myField.get(this)==null) val="";	
+					else val=myField.get(this)+"";						
+					val=ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'")));					
+					break;
+				
+				case "java.lang.Double":
+					if (myField.get(this)==null) val="";	
+					else {
+						val=ParseUtilities.formatDouble((Double)myField.get(this));						
+					}										
+					break;
+					
+				case "java.lang.Integer":
+				case "java.lang.Boolean": 							
+					if (myField.get(this)==null) val="";	
+					else val=myField.get(this)+"";						
+					break;					
+				case "boolean":
+					val=myField.getBoolean(this)+"";
+					break;
+				case "int":
+					val=myField.getInt(this)+"";
+					break;
+				case "double": 
+					val=myField.getDouble(this)+"";
+
+				}
+
+				val=val.trim();
+				val=val.replace("\r\n","<br>");
+				val=val.replace("\n","<br>");
+
+				array[i]=val;
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		return array;
+	}
+
 	
 	
 }

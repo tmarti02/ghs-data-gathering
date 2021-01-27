@@ -7,8 +7,25 @@ import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.ser.std.StdArraySerializers.FloatArraySerializer;
 
+import gov.epa.QSAR.DataSetCreation.RecordQSAR;
+import gov.epa.QSAR.DataSetCreation.RecordsQSAR;
+
 public class SQLite_CreateTable {
 
+	
+	public static String create_sql_insert(String[] fields, String table) {
+		String s = "insert into "+table+" values (";
+
+		for (int i = 1; i <= fields.length; i++) {
+			s += "?";
+			if (i < fields.length)
+				s += ",";
+		}
+		s += ");";
+		return s;
+	}
+	
+	
 	public static void create_table (Statement stat,String table,String []fields) {
 	
 		try {
