@@ -50,7 +50,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	public ExperimentalRecords() { }
 	
 	public ExperimentalRecords(FinalRecord rec) {
-		int recordCount = rec.effectLevels.size();
+		int recordCount = rec.experimentalValues.size();
 		for (int i = 0; i < recordCount; i++) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.source_name = ExperimentalConstants.strSourceEChemPortalAPI;
@@ -76,16 +76,16 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			
 			if (rec.propertyName.contentEquals(APIConstants.acuteToxicityInhalation)) {
 				if (!rec.species.toLowerCase().contains("other")) {
-					er.property_name=rec.species.replaceAll(" ","_").replaceAll(",","")+"_"+rec.propertyName+"_"+rec.doseDescriptors.get(i);
+					er.property_name=rec.species.replaceAll(" ","_").replaceAll(",","")+"_"+rec.propertyName+"_"+rec.valueTypes.get(i);
 				} else {
-					er.property_name="other_"+rec.propertyName+"_"+rec.doseDescriptors.get(i);
+					er.property_name="other_"+rec.propertyName+"_"+rec.valueTypes.get(i);
 					er.updateNote("Species: "+rec.species.substring(rec.species.indexOf(":")+1));
 				}
 			} else {
 				return;
 			}
 			
-			String value = rec.effectLevels.get(i);
+			String value = rec.experimentalValues.get(i);
 			ParseUtilities.getToxicity(er,value);
 			er.property_value_string = "Value: "+value;
 			
