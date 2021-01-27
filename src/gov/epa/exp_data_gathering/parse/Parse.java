@@ -230,12 +230,15 @@ public class Parse {
 		case ExperimentalConstants.strSourceSander:
 			p = new ParseSander();
 			break;
+		case ExperimentalConstants.strSourceEpisuite:
+			p = new ParseEpisuiteOriginal();
+			break;
 		}
 		p.createFiles();
 	}
 	
 	public static void main(String[] args) {
-		String recordType = "tox";
+		String recordType = "physchem";
 		String[] sources = {ExperimentalConstants.strSourceADDoPT,
 				ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,
@@ -248,7 +251,8 @@ public class Parse {
 				ExperimentalConstants.strSourceOPERA,
 				ExperimentalConstants.strSourcePubChem,
 				ExperimentalConstants.strSourceQSARDB,
-				ExperimentalConstants.strSourceSander};
+				ExperimentalConstants.strSourceSander,
+				ExperimentalConstants.strSourceEpisuite};
 		for (String s:sources) {
 			runParse(s,recordType);
 		}

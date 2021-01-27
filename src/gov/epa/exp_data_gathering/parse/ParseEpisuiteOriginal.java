@@ -11,7 +11,7 @@ import gov.epa.api.ExperimentalConstants;
 public class ParseEpisuiteOriginal extends Parse {
 	
 	public ParseEpisuiteOriginal() {
-		sourceName = "EpisuiteOriginal";
+		sourceName = ExperimentalConstants.strSourceEpisuite;
 		this.init();
 	}
 	
