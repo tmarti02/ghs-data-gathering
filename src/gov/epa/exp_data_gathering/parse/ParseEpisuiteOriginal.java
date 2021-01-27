@@ -45,7 +45,6 @@ public class ParseEpisuiteOriginal extends Parse {
 		Date date = new Date();  
 		String strDate=formatter.format(date);
 		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
-
 		
 		ExperimentalRecord er = new ExperimentalRecord();
 		
@@ -53,10 +52,12 @@ public class ParseEpisuiteOriginal extends Parse {
 		er.property_name=ExperimentalConstants.strWaterSolubility;
 		er.date_accessed = dayOnly;
 		er.temperature_C = reo.Temp;
-		er.casrn = reo.CAS;
+		String temp = ParseUtilities.fixCASLeadingZero(reo.CAS);
+		er.casrn = temp;
 		er.chemical_name = reo.Name;
 		er.property_value_point_estimate_original = reo.LogWsol;
 		er.property_value_units_original = ExperimentalConstants.str_log_M;
+		er.source_name = ExperimentalConstants.strSourceEpisuiteOriginal;
 		
 		uc.convertRecord(er);
 		
@@ -65,6 +66,7 @@ public class ParseEpisuiteOriginal extends Parse {
 	
 	public static void main(String[] args) {
 		ParseEpisuiteOriginal p = new ParseEpisuiteOriginal();
+		p.generateOriginalJSONRecords = false;
 		p.createFiles();
 	}
 
