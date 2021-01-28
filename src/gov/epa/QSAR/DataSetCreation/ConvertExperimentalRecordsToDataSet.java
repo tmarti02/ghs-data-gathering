@@ -339,7 +339,7 @@ public class ConvertExperimentalRecordsToDataSet {
 
 		ExperimentalRecords records = new ExperimentalRecords();
 
-		String sql = "select * from records where property_name=\"" + property + "\" and keep=\"true\" " + "\r\n"
+		String sql = "select * from ExperimentalRecords where property_name=\"" + property + "\" and keep=\"true\" " + "\r\n"
 				+ "order by casrn";
 
 		try {

@@ -205,15 +205,15 @@ public class RecordPubChem {
 					}
 					if (counterTotal % 1000==0) {
 						long batchEnd = System.currentTimeMillis();
-						System.out.println("Attempted: "+counterTotal);
+						System.out.println("Attempted: "+counterTotal+" ("+cidsAlreadyQueried.size()+" total)");
 						System.out.println("Succeeded: "+counterSuccess);
 						System.out.println("Failed - no experimental properties: "+counterMissingExpData);
-						System.out.println("---------- ("+(batchEnd-start)/1000+" s)");
+						System.out.println("---------- (~"+(batchEnd-start)/60000+" min)");
 						start = batchEnd;
 					}
 				}
 			}
-			System.out.println("Attempted: "+counterTotal);
+			System.out.println("Attempted: "+counterTotal+" ("+cidsAlreadyQueried.size()+" total)");
 			System.out.println("Succeeded: "+counterSuccess);
 			System.out.println("Failed - no experimental properties: "+counterMissingExpData);
 		} catch (Exception ex) {

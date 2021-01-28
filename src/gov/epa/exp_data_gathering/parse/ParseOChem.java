@@ -2,6 +2,9 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
@@ -12,10 +15,17 @@ import gov.epa.api.ExperimentalConstants;
  *
  */
 public class ParseOChem extends Parse {
+	Map<String,Double> hmTEST;
 
 	public ParseOChem() {
 		sourceName = ExperimentalConstants.strSourceOChem;
 		this.init();
+		hmTEST = new HashMap<String,Double>();
+		List<String> lines = gov.epa.QSAR.utilities.FileUtilities.readFile("Data\\Experimental\\OChem\\excel files\\TESTRecordsToRemove.csv");
+		for (int i = 1; i < lines.size(); i++) {
+			String[] cells = lines.get(i).split(",");
+			hmTEST.put(cells[0], Double.parseDouble(cells[2]));
+		}
 	}
 	
 	@Override
@@ -32,18 +42,20 @@ public class ParseOChem extends Parse {
 			
 			RecordOChem[] recordsOChem = gson.fromJson(new FileReader(jsonFile), RecordOChem[].class);
 			
+			int countRemoved = 0;
 			for (int i = 0; i < recordsOChem.length; i++) {
 				RecordOChem rec = recordsOChem[i];
-				addExperimentalRecords(rec,recordsExperimental);
+				boolean removed = addExperimentalRecords(rec,recordsExperimental);
+				if (removed) countRemoved++;
 			}
-			
+			System.out.println("Removed "+countRemoved+" records with sign errors");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		return recordsExperimental;
 	}
 	
-	private void addExperimentalRecords(RecordOChem ocr,ExperimentalRecords records) {
+	private boolean addExperimentalRecords(RecordOChem ocr,ExperimentalRecords records) {
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.date_accessed = RecordOChem.lastUpdated;
 		er.casrn = ocr.casrn;
@@ -136,6 +148,20 @@ public class ParseOChem extends Parse {
 			er.pH = ocr.pH;
 		}
 		
+		boolean removed = false;
+		if (er.property_name.equals(ExperimentalConstants.strWaterSolubility) && er.casrn!=null) {
+			Double trueWS = hmTEST.get(er.casrn);
+			if (trueWS!=null) {
+				Double logTrueWS = Math.log10(trueWS/1000.0);
+				Double logNewWS = Math.log10(er.property_value_point_estimate_original);
+				if (Math.abs(logNewWS-(-logTrueWS))<0.5) {
+					er.keep = false;
+					er.reason = "Sign error in OChem record";
+					removed = true;
+				}
+			}
+		}
+		
 		if (!ParseUtilities.hasIdentifiers(er)) {
 			er.keep = false;
 			er.reason = "No identifiers";
@@ -149,6 +175,7 @@ public class ParseOChem extends Parse {
 		
 		uc.convertRecord(er);
 		records.add(er);
+		return removed;
 	}
 	
 	public static void main(String[] args) {
