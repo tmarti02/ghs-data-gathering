@@ -172,7 +172,7 @@ public class RecordPubChem {
 					counterTotal++;
 					boolean keepLooking = true;
 					try {
-						rec.experimental=StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(experimentalURL));
+						rec.experimental=FileUtilities.getText_UTF8(experimentalURL);
 						rec.experimental = rec.experimental.replaceAll("'", "''").replaceAll(";", "\\;");
 					} catch (Exception ex) { 
 						counterMissingExpData++;
@@ -182,13 +182,13 @@ public class RecordPubChem {
 					if (keepLooking) {
 						try {
 //							rec.cas=FileUtilities.getText_UTF8(casURL).replaceAll("'", "\'").replaceAll(";", "\\;");
-							rec.cas=StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(casURL));
+							rec.cas=FileUtilities.getText_UTF8(casURL);
 							rec.cas = rec.cas.replaceAll("'", "''").replaceAll(";", "\\;");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
 						try {
 //							rec.identifiers=FileUtilities.getText_UTF8(idURL).replaceAll("'", "\'").replaceAll(";", "\\;");
-							rec.identifiers=StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(idURL));
+							rec.identifiers=FileUtilities.getText_UTF8(idURL);
 							rec.identifiers = rec.identifiers.replaceAll("'", "''").replaceAll(";", "\\;");
 						} catch (Exception ex) { }
 						Thread.sleep(200);
