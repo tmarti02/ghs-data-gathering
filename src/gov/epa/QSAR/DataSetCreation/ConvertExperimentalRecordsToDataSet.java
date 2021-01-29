@@ -40,6 +40,7 @@ public class ConvertExperimentalRecordsToDataSet {
 
 	public static final String databasePathExperimentalRecords = "data/experimental/ExperimentalRecords.db";
 	public static final String databasePathToxicityExperimentalRecords = "data/experimental/ToxicityRecords.db";
+	public static final String strTableNameExperimentalRecords="ExperimentalRecords"; 
 
 	void go2(String property) {
 ////	//Get chemreg export (needed to determine if validated)
@@ -339,7 +340,7 @@ public class ConvertExperimentalRecordsToDataSet {
 
 		ExperimentalRecords records = new ExperimentalRecords();
 
-		String sql = "select * from ExperimentalRecords where property_name=\"" + property + "\" and keep=\"true\" " + "\r\n"
+		String sql = "select * from "+strTableNameExperimentalRecords+" where property_name=\"" + property + "\" and keep=\"true\" " + "\r\n"
 				+ "order by casrn";
 
 		try {
@@ -364,7 +365,7 @@ public class ConvertExperimentalRecordsToDataSet {
 	private Vector<String> getSourceList(Statement stat, String property) {
 		Vector<String> sources = new Vector<>();
 
-		String sql = "select distinct source_name from records" + " where property_name=\"" + property
+		String sql = "select distinct source_name from "+strTableNameExperimentalRecords+" where property_name=\"" + property
 				+ "\" and keep=\"true\"";
 
 		try {
@@ -741,6 +742,10 @@ public class ConvertExperimentalRecordsToDataSet {
 		boolean omitSalts = true;
 		DSSTOX.goThroughToxRecords2(recordsQSAR, recordsChemReg, recordsDSSTox, folder, property, omitSalts);
 		long t2 = System.currentTimeMillis();
+		
+		//TODO here add code to exclude records with same SID from same source where the values have too high of Stdev
+		//TODO add code to find impossible WS values such as > 2 g/cm3
+		
 		System.out.println("time to get DSSToxInfo=" + (t2 - t1) / 1000.0 + " secs");
 		if (writeExcel) recordsQSAR.toExcelFile(folder + property + "_QSAR.xlsx", RecordQSAR.outputFieldNames);
 

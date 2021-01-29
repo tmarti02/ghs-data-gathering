@@ -45,7 +45,7 @@ public class CompareRecordsInCommon {
 	
 	private void comparePropertyRecords(String property, String dbpath) {
 
-		String source1=ExperimentalConstants.strSourceOPERA;//change to EPISUITE later
+		String source1=ExperimentalConstants.strSourceEpisuite;//change to EPISUITE later
 		
 		boolean writeExcel=true;		
 		String folder = "Data\\DataSets\\" + property + "\\";
@@ -103,15 +103,29 @@ public class CompareRecordsInCommon {
 		
 		
 		RecordsQSAR recordsQSAR1=new RecordsQSAR();
-		RecordsQSAR recordsQSAR2=new RecordsQSAR();
+		Hashtable<String,RecordsQSAR> htRecordsQSAR2=new Hashtable<>();//store Records from source 2 as hashtable with cas as key
 		
 		for (RecordQSAR rec:recordsQSAR) {
+			if (rec.casrn==null) continue;
+			
 			if (rec.source_name.contentEquals(source1)) recordsQSAR1.add(rec);
-			if (rec.source_name.contentEquals(source2)) recordsQSAR2.add(rec);
+			
+			if (rec.source_name.contentEquals(source2) && rec.casrn!=null) {
+				
+				if (htRecordsQSAR2.get(rec.casrn)==null) {
+					RecordsQSAR records=new RecordsQSAR();
+					records.add(rec);
+					htRecordsQSAR2.put(rec.casrn,records);
+					
+				} else {
+					RecordsQSAR records=htRecordsQSAR2.get(rec.casrn);
+					records.add(rec);
+				}
+			}
 		}
 		
 		System.out.println("# records source 1 ="+recordsQSAR1.size());
-		System.out.println("# records source 2 ="+recordsQSAR2.size());
+		System.out.println("# records source 2 ="+htRecordsQSAR2.size());
 		
 		Vector<Double>xvec=new Vector<>();
 		Vector<Double>yvec=new Vector<>();
@@ -119,35 +133,56 @@ public class CompareRecordsInCommon {
 		
 		
 		for (RecordQSAR rec1:recordsQSAR1) {
+			
+			if (htRecordsQSAR2.get(rec1.casrn)==null) continue;
+
+			if (htDashboard.get(rec1.casrn)==null) {
+				System.out.println("Need dashboard record for\t"+rec1.casrn);
+				continue;
+			}
+
+			if (htDashboard.get(rec1.casrn).AVERAGE_MASS.contentEquals("-")) {
+				System.out.println("Dont have MW for "+rec1.casrn);
+				continue;
+			}
+
+			rec1.Structure_MolWt=Double.parseDouble(htDashboard.get(rec1.casrn).AVERAGE_MASS);
+			rec1.setQSARUnits();
+			
+			RecordsQSAR recordsQSAR2=htRecordsQSAR2.get(rec1.casrn);
+			
+			Vector<Double>values2=new Vector<>();
+
 			for (RecordQSAR rec2:recordsQSAR2) {
-				
-				if (rec2.casrn==null) continue;
-				
-				if (rec1.casrn.contentEquals(rec2.casrn)) {
-					if (htDashboard.get(rec1.casrn)==null) {
-						System.out.println("Need dashboard record for\t"+rec1.casrn);
-						continue;
-					}
-					rec1.Structure_MolWt=Double.parseDouble(htDashboard.get(rec1.casrn).AVERAGE_MASS);
-					rec2.Structure_MolWt=rec1.Structure_MolWt;
-					rec1.setQSARUnits();
-					rec2.setQSARUnits();
-					
-					if (!rec2.usable) {
-						System.out.println(rec2.casrn+"\t"+rec2.reason);
-						continue;
-					}
-					
-					xvec.add(rec1.property_value_point_estimate_qsar);
-					yvec.add(rec2.property_value_point_estimate_qsar);
-					
-					RecordInCommon rec=new RecordInCommon(rec1,rec2);
-					recordsInCommon.add(rec);
-					
-//					System.out.println(rec1.casrn+"\t"+rec1.property_value_point_estimate_exp+"\t"+rec2.property_value_point_estimate_exp);
-//					System.out.println(rec1.casrn+"\t"+rec1.property_value_point_estimate_qsar+"\t"+rec2.property_value_point_estimate_qsar+"\t"+rec1.property_value_units_qsar);
-					
+				rec2.Structure_MolWt=rec1.Structure_MolWt;				
+				rec2.setQSARUnits();
+
+				if (!rec2.usable) {
+					System.out.println(rec2.casrn+"\t"+rec2.reason);
+					continue;
 				}
+				values2.add(Double.valueOf(rec2.property_value_point_estimate_qsar));
+			}
+			
+			if (values2.size()>1) {
+				double stdev=calcStdDev(values2);				
+				if (stdev>0.5) {
+					System.out.println(rec1.casrn+"\t"+stdev+"\t"+values2.size());		
+					continue;
+				}				
+			}
+						
+			for (RecordQSAR rec2:recordsQSAR2) {
+				if (!rec2.usable) continue;			
+				xvec.add(rec1.property_value_point_estimate_qsar);
+				yvec.add(rec2.property_value_point_estimate_qsar);
+
+				RecordInCommon rec=new RecordInCommon(rec1,rec2);
+				recordsInCommon.add(rec);
+
+				//					System.out.println(rec1.casrn+"\t"+rec1.property_value_point_estimate_exp+"\t"+rec2.property_value_point_estimate_exp);
+				//					System.out.println(rec1.casrn+"\t"+rec1.property_value_point_estimate_qsar+"\t"+rec2.property_value_point_estimate_qsar+"\t"+rec1.property_value_units_qsar);
+
 			}
 		}
 		
@@ -161,7 +196,27 @@ public class CompareRecordsInCommon {
 		
 	}
 
-
+	double calcStdDev(Vector<Double>input) {
+	
+		double sum=0;
+		double mean;
+		
+		int n=input.size();
+		
+		for(int i=0;i<n;i++) sum=sum+input.get(i);
+		
+		mean=sum/(double)n;
+//       	System.out.println("Mean :"+mean);
+       	
+		sum=0;  
+       	for(int i=0;i<n;i++) sum+=Math.pow((input.get(i)-mean),2);	
+       	
+       	mean=sum/(n-1);
+       	double deviation=Math.sqrt(mean);
+       	return deviation;
+	}
+	
+	
 	private XSSFSheet addRowsToSpreadsheet(Workbook wb, String source2, Vector<RecordInCommon> recordsInCommon) {
 		Class clazz = RecordQSAR.class;
 
@@ -201,7 +256,8 @@ public class CompareRecordsInCommon {
 			row.createCell(j++).setCellValue(rec.rec2.original_source_name+"");
 			row.createCell(j++).setCellValue(rec.rec1.chemical_name+"");
 			row.createCell(j++).setCellValue(rec.rec2.chemical_name+"");
-			row.createCell(j++).setCellValue(rec.rec2.url+"");
+//			row.createCell(j++).setCellValue(rec.rec2.url+"");
+			row.createCell(j++).setCellFormula("HYPERLINK(\""+rec.rec2.url+"\")");
 		}
 		return sheet;
 	}

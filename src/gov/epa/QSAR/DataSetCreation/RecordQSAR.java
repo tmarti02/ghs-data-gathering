@@ -140,7 +140,7 @@ public class RecordQSAR {
 		if (property_name.contentEquals(ExperimentalConstants.strWaterSolubility)) {//Need to do it by property so can detect bad data points which are probably a different property			
 			return convertToNegLog10_M();			
 		} else {
-			System.out.println("need qsar units conversion for "+property_name);
+//			System.out.println("need qsar units conversion for "+property_name);
 			
 //			else if (property_value_units_exp.equals(ExperimentalConstants.str_ppm)) {//TODO might have different conversion depending on the property
 //				property_value_point_estimate_qsar = -Math.log10((property_value_point_estimate_exp/24.45)*0.001/1000.0);
