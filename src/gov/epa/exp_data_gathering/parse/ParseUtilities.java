@@ -15,7 +15,7 @@ public class ParseUtilities extends Parse {
 		boolean foundNumeric = false;
 		if (!foundNumeric) {
 			try {
-				Matcher sciMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?(e|x10)[ ]?([-|\\+]?[ ]?[0-9]+)").matcher(propertyValue.toLowerCase().substring(0,unitsIndex));
+				Matcher sciMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?(e|x[ ]?10\\^?|\\*?10\\^)[ ]?[\\(]?([-|\\+]?[ ]?[0-9]+)[\\)]?").matcher(propertyValue.toLowerCase().substring(0,unitsIndex));
 				if (sciMatcher.find()) {
 					String strMantissa = sciMatcher.group(1);
 					String strMagnitude = sciMatcher.group(3);
@@ -24,8 +24,9 @@ public class ParseUtilities extends Parse {
 					er.property_value_point_estimate_original = mantissa*Math.pow(10, magnitude);
 					foundNumeric = true;
 					int propertyValueIndex;
-					if (!badUnits && (propertyValueIndex = propertyValue.indexOf(strMantissa)) > 0) {
+					if (!badUnits && propertyValue.indexOf(strMantissa) > 0) {
 						String checkSymbol = propertyValue.replaceAll("\\s","");
+						propertyValueIndex = checkSymbol.indexOf(strMantissa);
 						er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
 					}
 				}
@@ -208,13 +209,13 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_mg_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("Âµg/ml")) {
+		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("µg/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("Âµg/") : propertyValue.toLowerCase().indexOf("ug/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("Âµg/l")) {
+		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("µg/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("Âµg/") : propertyValue.toLowerCase().indexOf("ug/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_mL;

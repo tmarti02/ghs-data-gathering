@@ -92,6 +92,16 @@ public class UnitConverter {
 				er.property_value_units_original!=null) {
 			convertToxicity(er);
 		}
+		
+		if (er.property_value_units_final!=null && !er.property_value_units_final.isBlank() &&
+				!er.property_value_units_final.equals(ExperimentalConstants.str_C) && !er.property_value_units_final.equals(ExperimentalConstants.str_dimensionless_H)) {
+			if ((er.property_value_point_estimate_final!=null && er.property_value_point_estimate_final < 0) ||
+					(er.property_value_min_final!=null && er.property_value_min_final < 0) ||
+					(er.property_value_max_final!=null && er.property_value_max_final < 0)) {
+				er.keep = false;
+				er.reason = "Negative value not plausible";
+			}
+		}
 	}
 	
 	/**

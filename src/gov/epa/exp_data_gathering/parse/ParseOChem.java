@@ -2,6 +2,9 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
@@ -36,7 +39,6 @@ public class ParseOChem extends Parse {
 				RecordOChem rec = recordsOChem[i];
 				addExperimentalRecords(rec,recordsExperimental);
 			}
-			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -134,6 +136,23 @@ public class ParseOChem extends Parse {
 		if (ocr.pH!=null && !ocr.pH.isBlank()) {
 			er.property_value_string = er.property_value_string + "; pH: " + ocr.pH;
 			er.pH = ocr.pH;
+		}
+		
+		if (ocr.articleID!=null && ocr.articleID.equals("A5643")) {
+			er.keep = false;
+			er.reason = "EPI Suite data";
+		}
+		
+		if (ocr.articleID!=null && ocr.articleID.equals("A111278")) {
+			er.keep = false;
+			er.reason = "OPERA data";
+		}
+		
+		if (er.property_name.equals(ExperimentalConstants.strWaterSolubility) && 
+				ocr.articleID!=null && ocr.articleID.equals("A108291") &&
+				ocr.introducer!=null && ocr.introducer.equals("mvashurina")) {
+			er.keep = false;
+			er.reason = "Bad TEST upload";
 		}
 		
 		if (!ParseUtilities.hasIdentifiers(er)) {

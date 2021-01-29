@@ -40,7 +40,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 
 public class CompareRecordsInCommon {
 	
-	public static final String databasePathExperimentalRecords = "data/experimental/ExperimentalRecords.db";
+	public static final String databasePathExperimentalRecords = "Data/Experimental/ExperimentalRecords.db";
 	
 	
 	private void comparePropertyRecords(String property, String dbpath) {
