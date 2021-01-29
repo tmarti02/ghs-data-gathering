@@ -181,10 +181,12 @@ public class DriverOChem {
 			// Select export options
 			WebElement externalID = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("EXTERNAL_ID")));
 			externalID.click();
-			WebElement articleN = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("N")));
-			articleN.click();
-			WebElement pubID = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("ARTICLE")));
-			pubID.click();
+//			WebElement articleN = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("N")));
+//			articleN.click();
+//			WebElement pubID = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("ARTICLE")));
+//			pubID.click();
+			WebElement introducer = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("INTRODUCER")));
+			introducer.click();
 			WebElement comments = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("COMMENTS")));
 			comments.click();
 			WebElement selectUnits = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("unit-"+propertyNumber)));
@@ -215,7 +217,7 @@ public class DriverOChem {
 	}
 	
 	public static void main(String[] args) {
-		scrapeOChem(ExperimentalConstants.strMeltingPoint,3501,0,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
+		scrapeOChem(ExperimentalConstants.strWaterSolubility,302,0,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
 	}
 	
 }

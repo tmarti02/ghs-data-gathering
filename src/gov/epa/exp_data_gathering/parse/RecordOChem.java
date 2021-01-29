@@ -35,6 +35,8 @@ public class RecordOChem {
 	String pressureUnit;
 	String pH;
 	String measurementMethod;
+	String articleID;
+	String introducer;
 	
 	static final String lastUpdated = "12/14/2020";
 	static final String sourceName = ExperimentalConstants.strSourceOChem;
@@ -70,6 +72,8 @@ public class RecordOChem {
 					int pressureUnitIndex = -1;
 					int pHIndex = -1;
 					int measurementMethodIndex = -1;
+					int articleIDIndex = -1;
+					int introducerIndex = -1;
 					String propertyName = "";
 					for (Cell cell:headerRow) {
 						String header = cell.getStringCellValue().toLowerCase();
@@ -91,6 +95,8 @@ public class RecordOChem {
 							pressureUnitIndex = col+1;
 						} else if (header.contains("method")) { measurementMethodIndex = col;
 						} else if (header.contains("pH") && !header.contains("unit")) { pHIndex = col;
+						} else if (header.trim().equals("articleid")) { articleIDIndex = col;
+						} else if (header.trim().equals("introducer")) { introducerIndex = col;
 						}
 					}
 					int rows = sheet.getLastRowNum();
@@ -118,6 +124,8 @@ public class RecordOChem {
 						ocr.pressureUnit = betterGetCellValue(row,pressureUnitIndex);
 						ocr.measurementMethod = betterGetCellValue(row,measurementMethodIndex);
 						ocr.pH = betterGetCellValue(row,pHIndex);
+						ocr.articleID = betterGetCellValue(row,articleIDIndex);
+						ocr.introducer = betterGetCellValue(row,introducerIndex);
 						records.add(ocr);
 					}
 					wb.close();
