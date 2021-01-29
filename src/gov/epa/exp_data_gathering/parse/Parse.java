@@ -253,10 +253,10 @@ public class Parse {
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuite};
-//		for (String s:sources) {
-//			runParse(s,recordType);
-//		}
-		runParse(ExperimentalConstants.strSourceOChem,recordType);
+		for (String s:sources) {
+			runParse(s,recordType);
+		}
+//		runParse(ExperimentalConstants.strSourceEChemPortalAPI,recordType);
 		DataFetcher d = new DataFetcher(sources,recordType);
 		d.createRecordsDatabase();
 	}
