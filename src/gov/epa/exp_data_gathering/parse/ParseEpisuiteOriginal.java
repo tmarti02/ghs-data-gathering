@@ -8,6 +8,22 @@ import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
 
+
+
+//References 15 and 17 of AqSolDB paper
+//http://esc.syrres.com/interkow/Download/WaterFragmentDataFiles.zip
+//http://esc.syrres.com/interkow/Download/WSKOWWIN_Datasets.zip
+
+
+//Citation for AqSolDB paper
+//Sorkun, M.C., Khetan, A. & Er, S. AqSolDB, a curated reference set of aqueous solubility and 2D descriptors for a diverse set of compounds. Sci Data 6, 143 (2019). https://doi.org/10.1038/s41597-019-0151-1
+
+
+
+/**
+ * @author cramslan
+ * Turns recordEpisuite objects into experimentalrecord jsons.
+ */
 public class ParseEpisuiteOriginal extends Parse {
 	
 	public ParseEpisuiteOriginal() {
@@ -55,9 +71,11 @@ public class ParseEpisuiteOriginal extends Parse {
 		String temp = ParseUtilities.fixCASLeadingZero(reo.CAS);
 		er.casrn = temp;
 		er.chemical_name = reo.Name;
-		er.property_value_point_estimate_original = reo.LogWsol;
-		er.property_value_units_original = ExperimentalConstants.str_log_M;
+		er.property_value_point_estimate_original = reo.WsolmgL;
+		er.property_value_units_original = ExperimentalConstants.str_mg_L;
 		er.source_name = ExperimentalConstants.strSourceEpisuite;
+		er.property_value_string= "Wsol mg/L = " + reo.WsolmgL.toString();
+		er.original_source_name=reo.Reference;
 		
 		uc.convertRecord(er);
 		
@@ -66,7 +84,7 @@ public class ParseEpisuiteOriginal extends Parse {
 	
 	public static void main(String[] args) {
 		ParseEpisuiteOriginal p = new ParseEpisuiteOriginal();
-		p.generateOriginalJSONRecords = false;
+		// p.generateOriginalJSONRecords = false;
 		p.createFiles();
 	}
 

@@ -273,7 +273,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx","General",136001,146000,false);
+		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx","General",220000,240000,false);
 	}
 	
 }

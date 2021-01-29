@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.util.Vector;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -12,6 +13,20 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.api.ExperimentalConstants;
 
+
+// References 15 and 17 of AqSolDB paper
+// http://esc.syrres.com/interkow/Download/WaterFragmentDataFiles.zip
+// http://esc.syrres.com/interkow/Download/WSKOWWIN_Datasets.zip
+
+
+// Citation for AqSolDB paper
+// Sorkun, M.C., Khetan, A. & Er, S. AqSolDB, a curated reference set of aqueous solubility and 2D descriptors for a diverse set of compounds. Sci Data 6, 143 (2019). https://doi.org/10.1038/s41597-019-0151-1
+
+
+/**
+ * @author cramslan
+ * Obtains data from episuite excel sheet.
+ */
 public class RecordEpisuiteOriginal {
 	String CAS;
 	String Name;
@@ -21,7 +36,7 @@ public class RecordEpisuiteOriginal {
 	Double LogWsol;
 	Double LogEstimated;
 	Double Error;
-	double Temp;
+	Double Temp;
 	String Reference;
 	
 	static final String sourceName="EpisuiteOriginal";
@@ -94,10 +109,10 @@ public class RecordEpisuiteOriginal {
 				r.Error = rowi.getCell(colNumError).getNumericCellValue();
 				// sometimes the temperature cells are empty
 				if (colNumTemp > 0) {
-					if (rowi.getCell(colNumTemp)!=null) {
-						r.Temp = rowi.getCell(colNumTemp).getNumericCellValue();
+					if (rowi.getCell(colNumTemp) != null) {
+					r.Temp = rowi.getCell(colNumTemp).getNumericCellValue();
 					}
-				}	
+				}
 				r.Reference = rowi.getCell(colNumReference).getStringCellValue();
 				
 				// specify which sheet in the recordEpisuite object
@@ -139,7 +154,9 @@ public class RecordEpisuiteOriginal {
 
 	
 	public static void main (String[] args) {
-		Vector<RecordEpisuiteOriginal> records = recordWaterFragmentData();
-		
+		// Vector<RecordEpisuiteOriginal> records = recordWaterFragmentData();
+//		Double x = null;
+//		Double y = (double) x;
+//		System.out.println(x);
 	}
 }
