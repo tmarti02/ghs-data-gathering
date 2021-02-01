@@ -8,6 +8,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.RecordOPERA;
 
 public class RecordQSAR {
 	
@@ -59,6 +60,8 @@ public class RecordQSAR {
 	public String Structure_InChIKey_QSAR_Ready;
 	public String Structure_InChIKey1_QSAR_Ready;
 	public String comboID;
+	
+	public Integer Tr_1_Tst_0;
 	
 	public final static String [] outputFieldNames = {
 			"property_name","source_name",
@@ -133,6 +136,22 @@ public class RecordQSAR {
 	
 	public RecordQSAR() {
 		// TODO Auto-generated constructor stub
+	}
+
+	public RecordQSAR(RecordOPERA ro) {
+		this.casrn=ro.source_casrn;
+		this.Substance_CASRN=ro.CAS;
+		
+		this.chemical_name=ro.preferred_name;
+		this.DSSTox_Substance_Id=ro.DSSTox_Substance_Id;
+		this.DSSTox_Structure_Id=ro.dsstox_compound_id;
+		this.property_name=ro.property_name;
+		if (ro.Temperature!=null && !ro.Temperature.isEmpty()) this.temperature_C=Double.parseDouble(ro.Temperature);
+		this.original_source_name=ro.Reference;
+		if (!ro.Tr_1_Tst_0.isEmpty()) this.Tr_1_Tst_0=Integer.parseInt(ro.Tr_1_Tst_0);
+		this.property_value_units_qsar=ro.property_value_units_original;
+		this.property_value_point_estimate_qsar=Double.parseDouble(ro.LogMolar);
+		this.Structure_SMILES_2D_QSAR=ro.Canonical_QSARr;
 	}
 
 	public boolean setQSARUnits() {

@@ -11,14 +11,21 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.iterator.IteratingSDFReader;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
+import gov.epa.TEST.Descriptors.DatabaseUtilities.DescriptorDatabaseUtilities;
+import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorData;
+import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorFactory;
+import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorsFromSmiles;
+import gov.epa.TEST.Descriptors.DescriptorUtilities.AtomicProperties;
 import gov.epa.api.ExperimentalConstants;
 
 public class RecordEpisuiteISIS {
+
 	String CAS;
 	String Name;
 	String Smiles;	
@@ -27,11 +34,12 @@ public class RecordEpisuiteISIS {
 	Double Temperature;
 	String DataSet;
 	String Reference;
+	Double WS_LogMolarCalc;
 	
 	static final String sourceName=ExperimentalConstants.strSourceEpisuiteISIS;
 
 	
-	private static Vector<RecordEpisuiteISIS> getRecords(String filepath){
+	private static Vector<RecordEpisuiteISIS> getRecords(String filepath,String abbrev){
 		Vector<RecordEpisuiteISIS> records = new Vector<>();
 		
 		try {
@@ -39,6 +47,9 @@ public class RecordEpisuiteISIS {
 			IteratingSDFReader mr = new IteratingSDFReader(new FileInputStream(filepath),DefaultChemObjectBuilder.getInstance());								
 
 			int counter=0;
+
+//			DescriptorFactory df=new DescriptorFactory(false);
+			
 			while (mr.hasNext()) {
 				
 				AtomContainer m=null;
@@ -49,19 +60,35 @@ public class RecordEpisuiteISIS {
 				
 				counter++;
 				
-				r.CAS=m.getProperty("CAS");
-				
-
+				r.CAS=m.getProperty("CAS");				
 //				System.out.println(counter+"\t"+r.CAS);
 				
 				if (m.getProperty("NAME")!=null) r.Name=m.getProperty("NAME");
 				r.Smiles=generateSmiles(m);
 				
-				if (m.getProperty("WS")!=null) r.WS_mg_L=Double.parseDouble(m.getProperty("WS"));
-				r.WS_LogMolar=Double.parseDouble(m.getProperty("LogMolar"));
+//				String desc=DescriptorsFromSmiles.goDescriptors(r.Smiles);
+				
+
+				if (abbrev.contentEquals("WS")) {
+					if (m.getProperty(abbrev)!=null) {
+						r.WS_mg_L=Double.parseDouble(m.getProperty(abbrev));
+						double MW=Calculate_mw(m);
+//						double WS_LogMolarCalc=Math.log10(r.WS_mg_L/1000.0/dd.MW);
+						r.WS_LogMolarCalc=Math.log10(r.WS_mg_L/1000.0/MW);
+					}
+					r.WS_LogMolar=Double.parseDouble(m.getProperty("LogMolar"));
+					
+//					DescriptorData dd=new DescriptorData();
+//					df.CalculateDescriptors(m, dd, false);
+					
+					
+//					System.out.println(r.CAS+"\t"+mw);
+					
+				}
+				
 				r.DataSet=m.getProperty("DataSet");
-				r.Reference=m.getProperty("WS Reference");
-				if (m.getProperty("WS Temperature")!=null) r.Temperature=Double.parseDouble(m.getProperty("WS Temperature"));
+				r.Reference=m.getProperty(abbrev+" Reference");
+				if (m.getProperty(abbrev+" Temperature")!=null) r.Temperature=Double.parseDouble(m.getProperty(abbrev +" Temperature"));
 				
 				records.add(r);
 			}
@@ -72,6 +99,40 @@ public class RecordEpisuiteISIS {
 		return records;
 	}
 
+	
+	private static double Calculate_mw(IAtomContainer m) {
+		// tried to use CDK built in methods but they suck
+		// alternative method would be to use m2 which includes the hydrogens
+		
+		try {
+			AtomicProperties ap=AtomicProperties.getInstance();
+		
+			double MW=0;
+			
+			for (int i=0;i<=m.getAtomCount()-1;i++) {			
+				IAtom a=m.getAtom(i);
+				
+				if (a.getSymbol().contentEquals("Na")) MW+=22.98977; 
+				else if (a.getSymbol().contentEquals("K")) MW+=39.0983;
+				else if (a.getSymbol().contentEquals("Ca")) MW+=40.08;
+				else if (a.getSymbol().contentEquals("Ba")) MW+=137.33;		
+				else if (a.getSymbol().contentEquals("U")) MW+=238.029;
+				else if (a.getSymbol().contentEquals("Sr")) MW+=87.62;
+				else MW+=ap.GetMass(a.getSymbol());
+				
+				MW+=a.getImplicitHydrogenCount()*ap.GetMass("H");
+				
+			}
+		
+			return MW;
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return -9999;
+			
+	}
 	
 	public static String generateSmiles(IAtomContainer ac) {
 		return generateSmiles(ac, SmiFlavor.Unique);
@@ -98,8 +159,8 @@ public class RecordEpisuiteISIS {
 
 		
 		String strFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName+File.separator+"EPI_SDF_Data"+File.separator;
-		Vector<RecordEpisuiteISIS> records1 = getRecords(strFolder+"EPI_WaterFrag_Data_SDF.sdf");
-		Vector<RecordEpisuiteISIS> records2 = getRecords(strFolder+"EPI_Wskowwin_Data_SDF.sdf");
+		Vector<RecordEpisuiteISIS> records1 = getRecords(strFolder+"EPI_WaterFrag_Data_SDF.sdf","WS");
+		Vector<RecordEpisuiteISIS> records2 = getRecords(strFolder+"EPI_Wskowwin_Data_SDF.sdf","WS");
 		
 		records.addAll(records1);
 		
@@ -114,19 +175,16 @@ public class RecordEpisuiteISIS {
 				}
 			}
 			if (!haveRec) {
-				System.out.println(rec2.CAS);
+//				System.out.println(rec2.CAS);
 				records.add(rec2);
 			}
 		}
-		
-			
-		
 		return(records);
 	}
 
 	
 	public static void main (String[] args) {
 		Vector<RecordEpisuiteISIS> records = recordWaterFragmentData();
-		
 	}
 }
+

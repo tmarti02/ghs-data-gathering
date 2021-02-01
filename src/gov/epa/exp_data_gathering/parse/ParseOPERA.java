@@ -16,7 +16,12 @@ public class ParseOPERA extends Parse {
 	}
 	@Override
 	protected void createRecords() {
+		
+		System.out.println("enter create records");
 		Vector<RecordOPERA> records = RecordOPERA.parseOperaSdf();
+		
+		System.out.println(records.size());
+		
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -63,6 +68,8 @@ public class ParseOPERA extends Parse {
 			er_a.property_value_string = "pkaa=" + ro.pKa_a + "|"+ "pkab=" + ro.pKa_b;
 			er_a.casrn = ro.Substance_CASRN;
 			er_a.note = "qc_level= " + ro.DSSTox_QC_Level;
+			
+			
 			er_a.dsstox_substance_id = ro.DSSTox_Substance_Id;
 			er_a.date_accessed = dayOnly;
 			er_a.keep = true;
@@ -106,8 +113,10 @@ public class ParseOPERA extends Parse {
 			er.date_accessed = dayOnly;
 
 			er.original_source_name = ro.Reference;
-			if (!(ro.dsstox_compound_id == null))
-			er.dsstox_substance_id = ro.dsstox_compound_id;
+			er.dsstox_substance_id = ro.DSSTox_Substance_Id;
+			
+//			if (!(ro.dsstox_compound_id == null))
+//			er.dsstox_substance_id = ro.dsstox_compound_id;
 			
 			// handles temperature recorded as 24|25 and absent temperatures
 			getTemperatureCondition(er,ro.Temperature);
@@ -169,7 +178,7 @@ public class ParseOPERA extends Parse {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		ParseOPERA p = new ParseOPERA();
-		p.generateOriginalJSONRecords = false;
+		p.generateOriginalJSONRecords = true;
 		p.createFiles();
 	}
 

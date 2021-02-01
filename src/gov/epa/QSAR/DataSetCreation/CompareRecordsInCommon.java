@@ -70,7 +70,7 @@ public class CompareRecordsInCommon {
 		
 		System.out.println("#Valid records="+recordsQSAR.size());
 							
-		Vector<RecordDashboard> recordsDashboard = RecordDashboard
+		RecordsDashboard recordsDashboard = RecordsDashboard
 				.getRecords(folder + property +" dashboard search by CAS.xls");
 
 		Hashtable<String,RecordDashboard>htDashboard=new Hashtable<>();

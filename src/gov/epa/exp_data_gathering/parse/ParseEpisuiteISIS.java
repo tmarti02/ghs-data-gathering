@@ -40,7 +40,7 @@ public class ParseEpisuiteISIS extends Parse {
 	}
 	
 	
-	private void addExperimentalRecords(RecordEpisuiteISIS reo, ExperimentalRecords records) {
+	private void addExperimentalRecords(RecordEpisuiteISIS r, ExperimentalRecords records) {
 		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 		Date date = new Date();  
 		String strDate=formatter.format(date);
@@ -51,17 +51,43 @@ public class ParseEpisuiteISIS extends Parse {
 		er.keep=true;
 		er.property_name=ExperimentalConstants.strWaterSolubility;
 		er.date_accessed = dayOnly;
-		er.temperature_C = reo.Temperature;
-		er.casrn=ParseUtilities.fixCASLeadingZero(reo.CAS);		
-		er.chemical_name = reo.Name;
+		er.temperature_C = r.Temperature;
+		er.casrn=ParseUtilities.fixCASLeadingZero(r.CAS);		
+		er.chemical_name = r.Name;
+		er.smiles=r.Smiles;
 		
-		er.property_value_string=reo.WS_mg_L+"";
-		er.property_value_point_estimate_original = reo.WS_mg_L;
+		if (r.Smiles==null || r.Smiles.isEmpty()) {
+			er.keep=false;
+			er.reason="smiles missing";
+		} else if (r.WS_LogMolar==null) {
+			er.flag=true;
+			er.note="logMolar value is null";
+			System.out.println(er.casrn+"\t"+er.note);
+		} else if (r.WS_LogMolarCalc==null) {
+			er.flag=true;
+			er.note="logMolarCalc value is null";
+			System.out.println(er.casrn+"\t"+er.note);
+		} else {
+//			System.out.println(er.casrn+"\t"+r.WS_LogMolar+"\t"+r.WS_LogMolarCalc+"\t"+Math.abs(r.WS_LogMolar-r.WS_LogMolarCalc));
+			
+			if (Math.abs(r.WS_LogMolar-r.WS_LogMolarCalc)>0.5) {
+				er.keep=false;
+				er.reason="logM value doesnt match value calculated from mg/L value";
+				System.out.println(er.casrn+"\t"+r.WS_LogMolar+"\t"+r.WS_LogMolarCalc);
+			} else if (Math.abs(r.WS_LogMolar-r.WS_LogMolarCalc)>0.1) {
+				er.flag=true;				
+				er.note="logM value ("+r.WS_LogMolar+") doesnt match value calculated from mg/L value ("+r.WS_LogMolarCalc+")";
+			}
+		}
+
+		
+		
+		er.property_value_string=r.WS_mg_L+" mg/L";
+		er.property_value_point_estimate_original = r.WS_mg_L;
 		er.property_value_units_original = ExperimentalConstants.str_mg_L;
 		
 		er.source_name = ExperimentalConstants.strSourceEpisuiteISIS;
-		er.original_source_name=reo.Reference;
-		er.smiles=reo.Smiles;
+		er.original_source_name=r.Reference;
 		er.url="http://esc.syrres.com/interkow/EpiSuiteData_ISIS_SDF.htm";
 				
 		uc.convertRecord(er);

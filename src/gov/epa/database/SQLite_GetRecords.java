@@ -1,9 +1,11 @@
 package gov.epa.database;
 
+import java.awt.List;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Vector;
 
 public class SQLite_GetRecords {
@@ -152,8 +154,23 @@ public class SQLite_GetRecords {
 						myField.setInt(r,ival);
 					} else if (myField.getType().getName().contentEquals("java.lang.String")) {
 						myField.set(r, val);
+					} else if (myField.getType().getName().contentEquals("java.util.List")) {
+//						System.out.println(name+"\t"+val);
+						val=val.replace("[", "").replace("]", "");
+						
+						String  [] values = val.split(",");
+						ArrayList<String>list=new ArrayList<>();
+						for (String value:values) {
+							list.add(value.trim());
+						}
+						myField.set(r,list);
+						
+					
 					} else {
-						System.out.println("Need to implement"+myField.getType().getName());
+						System.out.println("Need to implement: "+myField.getType().getName());
+						
+						
+						
 					}					
 										
 				}

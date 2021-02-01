@@ -2,6 +2,7 @@ package gov.epa.QSAR.DataSetCreation;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,6 +24,14 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 
+import org.openscience.cdk.AtomContainer;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+
+import gov.epa.QSAR.DataSetCreation.Splitting.CreatingTrainingPredictionSplittings;
+import gov.epa.QSAR.utilities.CSVUtils;
 import gov.epa.QSAR.utilities.Inchi;
 import gov.epa.QSAR.utilities.IndigoUtilities;
 import gov.epa.TEST.Descriptors.DatabaseUtilities.DescriptorDatabaseUtilities;
@@ -35,6 +44,8 @@ import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.RecordOPERA;
+import weka.core.Instances;
 
 public class ConvertExperimentalRecordsToDataSet {
 
@@ -628,25 +639,36 @@ public class ConvertExperimentalRecordsToDataSet {
 		return htRecordsInchiKey1;
 	}
 
-	void calculateDescriptors(String folder, RecordsQSAR records) {
+	void calculateDescriptors(String folder, RecordsQSAR records,String filepathDB) {
 
 		try {
 			FileWriter fw = new FileWriter(folder + "descriptors input.tsv");
 			FileWriter fw2 = new FileWriter(folder + "descriptors output.tsv");
 
+			System.out.println(new File(folder).getAbsolutePath());
+			
 			fw2.write("ID\t" + DescriptorData.toStringDescriptorNames() + "\r\n");
 
 			
 			String descriptorSoftware=RecordDescriptorsMetadata.softwareTEST;
 			String descriptorNames=DescriptorData.toStringDescriptorNames();
 
-			Connection conn = DescriptorDatabaseUtilities.getConnection(descriptorSoftware,descriptorNames);
+			Connection conn = DescriptorDatabaseUtilities.getConnection(descriptorSoftware,descriptorNames,filepathDB);
 
+			int counter=0;
+			
 			for (RecordQSAR rq : records) {
+				
+				counter++;
+				
+				if (counter%500==0) System.out.println(counter);
+				
 //				System.out.println(er.Structure_SMILES_2D_QSAR+"\t"+er.Structure_InChIKey1_QSAR_Ready);
 
 				String fieldName=RecordDescriptors.fieldNameKey;
 				String fieldValue=(String)rq.getValue(fieldName);
+								
+				if (conn==null) conn=SQLite_Utilities.getConnection(filepathDB);
 				
 				String strDescriptors = DescriptorsFromSmiles.goDescriptors(rq.Structure_SMILES_2D_QSAR,fieldValue,conn);
 
@@ -654,6 +676,7 @@ public class ConvertExperimentalRecordsToDataSet {
 				String smiles=rq.Structure_SMILES_2D_QSAR;
 				fw.write(smiles + "\t" + key+ "\r\n");
 				fw2.write(key + "\t" + strDescriptors + "\r\n");
+//				System.out.println(key + "\t" + strDescriptors + "\r\n");
 
 				fw.flush();
 				fw2.flush();
@@ -662,6 +685,8 @@ public class ConvertExperimentalRecordsToDataSet {
 
 			}
 
+			conn.close();
+			
 			fw.flush();
 			fw.close();
 
@@ -709,17 +734,107 @@ public class ConvertExperimentalRecordsToDataSet {
 		processPropertyRecords(property, dbpath);
 		
 	}
+	
+	
+	
+	
+	void runWS_OPERA() {
+
+		String property = ExperimentalConstants.strWaterSolubility;
+		String software=RecordDescriptorsMetadata.softwareTEST;
+		
+		String folder="data\\DataSets\\"+property+" OPERA\\";
+		File f=new File(folder);
+		f.mkdirs();
+		
+		try {
+			Gson gson = new Gson();	
+			String filePathJSON="data\\experimental\\OPERA\\OPERA Original Records.json";
+						
+			RecordOPERA[] recordsOPERA = gson.fromJson(new FileReader(filePathJSON), RecordOPERA[].class);
+			
+			RecordsQSAR recordsQSAR=new RecordsQSAR();
+			
+			for (RecordOPERA recordOPERA:recordsOPERA) {
+				
+				if (!recordOPERA.property_name.contentEquals(property)) continue;//wrong property skip				
+				if (recordOPERA.Tr_1_Tst_0.isEmpty()) continue;//opera didnt use it in modeling
+				
+				AtomContainer ac=DescriptorsFromSmiles.loadSMILES(recordOPERA.Canonical_QSARr);				
+				String error=ac.getProperty("Error");				
+				if (!error.isEmpty()) {
+					System.out.println(recordOPERA.DSSTox_Substance_Id+"\t"+error);
+					continue;//cant predict test descriptors
+				}
+				
+				recordsQSAR.add(new RecordQSAR(recordOPERA));				
+			}
+			System.out.println("Number of RecordsQSAR for "+property+"="+recordsQSAR.size());
+			String dbpath="databases\\OPERA_WS.db";
+			
+			recordsQSAR.addFlatQSARRecordsToDB(dbpath);			
+			CreatingTrainingPredictionSplittings.setUpSplittingTable(property,dbpath);
+			CreatingTrainingPredictionSplittings.createNFoldPredictionSets(5,property,recordsQSAR,dbpath);
+			CreatingTrainingPredictionSplittings.addSplittingRowsUsingSetInQSARRecord(dbpath,"OPERA",recordsQSAR);
+			
+			Vector<String>ids=new Vector<>();			
+			for (RecordQSAR recordQSAR:recordsQSAR)
+				ids.add(recordQSAR.DSSTox_Structure_Id);
+			
+			Instances instances=DataSetDatabaseUtilities.getInstances(property, software, dbpath, ids);
+			CreatingTrainingPredictionSplittings.createSphereExclusionSplitting(property, instances, dbpath);
+			CreatingTrainingPredictionSplittings.createKennardStoneSplitting(property, instances, dbpath);			
+			calculateDescriptors(folder, recordsQSAR,dbpath);
+
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		
+//		processPropertyRecords(property,recordsWS);		
+
+		
+	}
+
+	private void getDashboardRecords(String property, ExperimentalRecords recordsWS,String filePath) {
+		Vector<String>sidList=new Vector<>();
+		
+		int count=0;
+		for (ExperimentalRecord record:recordsWS) {
+			if (record.dsstox_substance_id.contains("|")) {
+				List<String> values=CSVUtils.parseLine(record.dsstox_substance_id,"|");				
+//				for (String value:values) {
+//					sidList.add(value);
+//				}								
+				sidList.add(values.get(0));//just use first one
+			} else {
+				sidList.add(record.dsstox_substance_id);
+			}
+			count++;
+//			if (count==100) break;
+		}
+		
+		RecordsDashboard recordsDashboardAll=RecordsDashboard.getBigListFromSID(sidList);		
+		recordsDashboardAll.toJSON_File(filePath);
+		
+	}
 
 	private void processPropertyRecords(String property, String dbpath) {
+		ExperimentalRecords recordsDB = getExperimentalRecordsFromDB(property, dbpath);		
+		processPropertyRecords(property, recordsDB,dbpath);
 		
-		boolean writeExcel=true;		
+	}
+
+	private void processPropertyRecords(String property, ExperimentalRecords experimentalRecords,String filePathDB) {
+		
+		boolean writeExcel=false;		
 		String folder = "Data\\DataSets\\" + property + "\\";
 
 				
-		ExperimentalRecords recordsDB = getExperimentalRecordsFromDB(property, dbpath);
-		if (writeExcel) recordsDB.toExcel_File(folder + property + "_records.xlsx");
+		if (writeExcel) experimentalRecords.toExcel_File(folder + property + "_records.xlsx");
 
-		RecordsQSAR recordsQSAR = recordsDB.getValidQSARRecords();
+		RecordsQSAR recordsQSAR = experimentalRecords.getValidQSARRecords();
 
 		if (writeExcel) recordsQSAR.toExcelFile(folder + property + "_unmapped_qsar_records.xlsx");
 				
@@ -753,15 +868,14 @@ public class ConvertExperimentalRecordsToDataSet {
 		RecordsQSAR recordsQSARflat = mergeIsomersContinuousOmitSalts(recordsQSAR, property, folder);
 		if (writeExcel) recordsQSARflat.toExcelFile(folder + property + "_flatQSAR.xlsx", RecordQSAR.outputFieldNames);
 
-		recordsQSARflat.addFlatQSARRecordsToDB();		
-		CreatingTrainingPredictionSplittings.createNFoldPredictionSets(5,property,recordsQSARflat);
-		calculateDescriptors(folder, recordsQSARflat);
+		recordsQSARflat.addFlatQSARRecordsToDB(filePathDB);
+		CreatingTrainingPredictionSplittings.setUpSplittingTable(property,filePathDB);
+		CreatingTrainingPredictionSplittings.createNFoldPredictionSets(5,property,recordsQSARflat,filePathDB);
+		calculateDescriptors(folder, recordsQSARflat,filePathDB);
 		
 		//TODO random splitting/rational design - store splittings in a db
 
 	}
-
-	
 	
 	
 
@@ -770,7 +884,7 @@ public class ConvertExperimentalRecordsToDataSet {
 	
 	
 	private void getChemRegInputForCASNotInProdDashboard(String folder, String endpoint) {
-		Vector<RecordDashboard> recsDashboard = RecordDashboard
+		RecordsDashboard recsDashboard = RecordsDashboard
 				.getDashboardRecordsFromTextFile(folder + "RecordsDashboard.txt");
 		Hashtable<String, RecordDashboard> ht = new Hashtable<>();
 		for (RecordDashboard rec : recsDashboard) {
@@ -841,8 +955,8 @@ public class ConvertExperimentalRecordsToDataSet {
 		ConvertExperimentalRecordsToDataSet c = new ConvertExperimentalRecordsToDataSet();
 
 //		c.runRatInhalationLC50();
-		c.runWS();		
-
+//		c.runWS();		
+		c.runWS_OPERA();
 //		if (true) return;
 //		
 //		Statement stat=SQLite_Utilities.getStatement("Data\\Experimental\\ExperimentalRecords.db");
@@ -882,3 +996,4 @@ public class ConvertExperimentalRecordsToDataSet {
 	}
 
 }
+
