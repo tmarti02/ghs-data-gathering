@@ -307,6 +307,12 @@ public class UnitConverter {
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_mL) || er.property_value_units_original.equals(ExperimentalConstants.str_g_cm3)) {
 			convertAndAssignFinalFields(er,1000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		// under construction - CR
+
+		  	
+		 
+			
+		// end of construction
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppb)) {
 			convertAndAssignFinalFields(er,1.0/1000000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;

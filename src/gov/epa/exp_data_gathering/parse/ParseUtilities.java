@@ -241,6 +241,9 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
 			badUnits = false;
+		// under construction - CR
+		//
+		//
 		} else if (propertyValue.toLowerCase().contains("% w/w") || propertyValue.toLowerCase().contains("wt%")) {
 			er.property_value_units_original = ExperimentalConstants.str_pctWt;
 			unitsIndex = propertyValue.indexOf("%");
