@@ -117,10 +117,10 @@ public class RecordsQSAR extends ArrayList<RecordQSAR> {
 	}
 	
 	
-	public void addFlatQSARRecordsToDB() {		
+	public void addFlatQSARRecordsToDB(String dbpath) {		
 		
 		try {
-			Connection conn=SQLite_Utilities.getConnection(DataSetDatabaseUtilities.pathDataSetDB);
+			Connection conn=SQLite_Utilities.getConnection(dbpath);
 			Statement stat=conn.createStatement();			
 
 			//This assumes all records are for same property:

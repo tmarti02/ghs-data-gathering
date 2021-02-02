@@ -45,14 +45,17 @@ public class CompareRecordsInCommon {
 	
 	private void comparePropertyRecords(String property, String dbpath) {
 
-		String source1=ExperimentalConstants.strSourceEpisuite;//change to EPISUITE later
+		String source1=ExperimentalConstants.strSourceEpisuiteISIS;//change to EPISUITE later
 		
 		boolean writeExcel=true;		
 		String folder = "Data\\DataSets\\" + property + "\\";
-
 				
 		ExperimentalRecords recordsDB = ConvertExperimentalRecordsToDataSet.getExperimentalRecordsFromDB(property, dbpath);
 
+		//Temporarily load from json since not in db yet:
+		ExperimentalRecords recordsEPISUITE=ExperimentalRecords.loadFromJSON("data\\experimental\\"+source1+"\\"+source1+" Experimental Records.json");
+		recordsDB.addAll(recordsEPISUITE);
+		
 		RecordsQSAR recordsQSAR = recordsDB.getValidQSARRecords();
 		
 		Vector<String>sources=new Vector<>();
@@ -67,7 +70,7 @@ public class CompareRecordsInCommon {
 		
 		System.out.println("#Valid records="+recordsQSAR.size());
 							
-		Vector<RecordDashboard> recordsDashboard = RecordDashboard
+		RecordsDashboard recordsDashboard = RecordsDashboard
 				.getRecords(folder + property +" dashboard search by CAS.xls");
 
 		Hashtable<String,RecordDashboard>htDashboard=new Hashtable<>();

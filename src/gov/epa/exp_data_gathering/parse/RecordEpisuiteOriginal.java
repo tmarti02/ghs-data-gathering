@@ -1,8 +1,14 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.Vector;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -10,6 +16,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 
 import gov.epa.api.ExperimentalConstants;
 
@@ -38,15 +45,68 @@ public class RecordEpisuiteOriginal {
 	Double Error;
 	Double Temp;
 	String Reference;
+	String url;
+	String LogP; // 
+	String ExpLogWsol; // log molar experimental water solubility that appears in the LogP data source (probably redundant)
+	String EstWSol; // pcChem estimated water solubility, part of LogP data source (useless)
+	String EstMP; // similar to above
+	String EstWsolEq19; // not important
+	String EstWsolEq9; // not important
+	String Property;
 	
 	static final String sourceName="EpisuiteOriginal";
+	
+	
+	private static Vector<RecordEpisuiteOriginal> gettxtRecords(String filepath){
+		Vector<RecordEpisuiteOriginal> records = new Vector<>();
+		
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new FileReader(filepath));
+			String line = reader.readLine();
+			
+			while (line != null) {
+				if (line.startsWith("CAS") || line.startsWith("---")) { // skips headers in txt file
+					line = reader.readLine();
+				}
+				else { // pick up logP data
+				
+				RecordEpisuiteOriginal r = new RecordEpisuiteOriginal();
+				r.CAS = line.substring(0,11); // takes 11 characters, enough for entire CAS.
+				
+				String NameAndRest = line.substring(13);
+
+				Matcher m = Pattern.compile("(.+?)(?=([ ]?[-]?[0-9]\\.[0-9]+))").matcher(NameAndRest);
+				if (m.find()) {
+					// System.out.println("group 1 = " + m.group(1) + " group 2 = " + m.group(2));
+					r.Name = m.group(1);
+					r.LogP = m.group(2);
+				}
+				
+				r.url = "http://esc.syrres.com/interkow/Download/WSKOWWIN_Datasets.zip";
+				r.Property = ExperimentalConstants.strLogKow;
+				
+				// TODO get logwsol #'s for the logP records
+				// System.out.println(r.CAS);
+				
+				records.add(r);
+				
+				line = reader.readLine();
+				
+				}
+			}
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return records;
+	}
+	
 
 	
 	private static Vector<RecordEpisuiteOriginal> getRecords(String filepath, int sheetnum){
 		Vector<RecordEpisuiteOriginal> records = new Vector<>();
-		
-	
-		
+			
 		try {
 			FileInputStream fis = new FileInputStream(new File(filepath));
 			
@@ -54,6 +114,12 @@ public class RecordEpisuiteOriginal {
 
 			if (filepath.contains(".xlsx")) wb=new XSSFWorkbook(fis);
 			else if (filepath.contains(".xls")) wb=new HSSFWorkbook(fis);
+			
+			// handles inclusion of the LogP data
+			else if (filepath.contains(".txt")) {
+				records = gettxtRecords(filepath);
+				return records;
+			}
 			
 			// int TrainingDataSheetNo = 0;
 			// int ValidationDataSheetNo = 1;
@@ -120,9 +186,10 @@ public class RecordEpisuiteOriginal {
 					r.Sheet="Validation Data";
 				else if (sheetnum == 0)
 					r.Sheet="Training Data";
-					
 				
-				
+				// url for the wsol data
+				r.url = "http://esc.syrres.com/interkow/Download/WaterFragmentDataFiles.zip";
+				r.Property = ExperimentalConstants.strWaterSolubility;
 				records.add(r);
 
 			}
@@ -141,12 +208,14 @@ public class RecordEpisuiteOriginal {
 		
 		String ExcelFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 		String ExcelPath = ExcelFolder+File.separator + "WaterFragmentDataFiles.xls";
+		String txtPath = ExcelFolder+File.separator + "EpisuiteKOWExperimental.txt";
 		Vector<RecordEpisuiteOriginal> recordsTraining = getRecords(ExcelPath, 0);
 		Vector<RecordEpisuiteOriginal> recordsValidation = getRecords(ExcelPath, 1);
+		Vector<RecordEpisuiteOriginal> recordsLogP = getRecords(txtPath, 0);
 		
 		records.addAll(recordsTraining);
 		records.addAll(recordsValidation);
-		
+		records.addAll(recordsLogP);
 		
 		System.out.println(records.get(4).CAS);
 		return(records);
@@ -155,8 +224,6 @@ public class RecordEpisuiteOriginal {
 	
 	public static void main (String[] args) {
 		// Vector<RecordEpisuiteOriginal> records = recordWaterFragmentData();
-//		Double x = null;
-//		Double y = (double) x;
-//		System.out.println(x);
+		gettxtRecords("C:\\Users\\CRAMSLAN\\OneDrive - Environmental Protection Agency (EPA)\\Java\\ghs_data_gathering\\Data\\Experimental\\EpisuiteOriginal\\EpisuiteKOWExperimental.txt");
 	}
 }

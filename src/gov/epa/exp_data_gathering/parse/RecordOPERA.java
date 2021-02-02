@@ -30,42 +30,42 @@ import gov.epa.api.ExperimentalConstants;
  */
 public class RecordOPERA {
 
-	String ChemID;
+	public String ChemID;
 
-	String source_casrn;//Map to ExperimentalRecord.casrn
-	String Original_SMILES;//Map to ExperimentalRecord.smiles
+	public String source_casrn;//Map to ExperimentalRecord.casrn
+	public String Original_SMILES;//Map to ExperimentalRecord.smiles
 
-	String dsstox_substance_id;//Map to ExperimentalRecord.dsstox_substance_id (need to add field)
+	public String dsstox_substance_id;//Map to ExperimentalRecord.dsstox_substance_id (need to add field)
 	
 	// **********************************************************************
 	//May not need to map following to ExperimentalRecord:
-	String CAS;//Derived quantity from DSSTOX
-	String preferred_name;//Derived quantity from DSSTOX
-	String dsstox_compound_id;//Derived quantity from DSSTOX
-	String Canonical_QSARr;//Derived quantity from DSSTOX
-	String InChI_Code_QSARr;//Derived quantity from DSSTOX
-	String InChI_Key_QSARr;//Derived quantity from DSSTOX
+	public String CAS;//Derived quantity from DSSTOX
+	public String preferred_name;//Derived quantity from DSSTOX
+	public String dsstox_compound_id;//Derived quantity from DSSTOX
+	public String Canonical_QSARr;//Derived quantity from DSSTOX
+	public String InChI_Code_QSARr;//Derived quantity from DSSTOX
+	public String InChI_Key_QSARr;//Derived quantity from DSSTOX
 	// **********************************************************************
 	
-	String Salt_Solvent;//used to account for the fact that solubility of salt was measured
-	String Salt_Solvent_ID;
-	String MPID;
-	String qc_level; // CR: this is going to be added to the notes of experimentalrecords
+	public String Salt_Solvent;//used to account for the fact that solubility of salt was measured
+	public String Salt_Solvent_ID;
+	public String MPID;
+	public String qc_level; // CR: this is going to be added to the notes of experimentalrecords
 	
 	// **********************************************************************
 	// pka specific terms:
-	String MPID_a;
-	String MPID_b;
-	String pKa_a_ref;
-	String pKa_b_ref;
-	String pKa_a;
-	String pKa_b;
-	String Substance_CASRN;
-	String Substance_Name;
-	String Extenal_ID;
-	String DSSTox_Structure_Id;
-	String DSSTox_QC_Level;
-	String DSSTox_Substance_Id;
+	public String MPID_a;
+	public String MPID_b;
+	public String pKa_a_ref;
+	public String pKa_b_ref;
+	public String pKa_a;
+	public String pKa_b;
+	public String Substance_CASRN;
+	public String Substance_Name;
+	public String Extenal_ID;
+	public String DSSTox_Structure_Id;
+	public String DSSTox_QC_Level;
+	public String DSSTox_Substance_Id;
 	
 	// the many forms of property value string
 	public String property_name;
@@ -79,10 +79,10 @@ public class RecordOPERA {
 	
 	public String property_value_units_original;//sometimes it will take some work to figure this out by comparing to data values from other sources
 		
-	String Temperature;//Map to ExperimentalRecord.temperature_C
-	String Reference;//Map to ExperimentalRecord.reference (might need to add a field), since should put PHYSPROP for original_source_name
+	public String Temperature;//Map to ExperimentalRecord.temperature_C
+	public String Reference;//Map to ExperimentalRecord.reference (might need to add a field), since should put PHYSPROP for original_source_name
 	
-	String Tr_1_Tst_0;//tells you whether compound appears in their training or test sets
+	public String Tr_1_Tst_0;//tells you whether compound appears in their training or test sets
 
 	public String toJSON() {
 		GsonBuilder builder = new GsonBuilder();
@@ -106,6 +106,7 @@ public class RecordOPERA {
 
 		AtomContainerSet acs=LoadFromSDF(folder+filename);
 
+		System.out.println(acs.getAtomContainerCount());
 		
 		for (int i=0;i<acs.getAtomContainerCount();i++) {
 			AtomContainer ac=(AtomContainer)acs.getAtomContainer(i);
@@ -162,7 +163,8 @@ public class RecordOPERA {
 		RecordOPERA ro=new RecordOPERA();
 
 		Map<Object,Object>props=ac.getProperties();
-
+		
+		
 		for (Map.Entry<Object,Object> entry : props.entrySet()) {  
 
 			String key=(String)entry.getKey();
@@ -200,12 +202,17 @@ public class RecordOPERA {
 			} else if (key.contains("Temperature")) {
 				ro.Temperature=value;
 				
+			} else if (key.contentEquals("dsstox_substance_id")) {
+				ro.DSSTox_Substance_Id=value;
+				
 			} else {
 				try {
 					//Use reflection to assign values from key/value pair:
 //					System.out.println(key);
 					Field myField = ro.getClass().getDeclaredField(key.replace(" ", "_").replace("-", "_"));
 
+//					System.out.println(key+"\t"+value);
+					
 					myField.set(ro, value);
 					
 					//TODO if get error- add if statement above to account for it or in some cases add a new field to RecordOPERA class
@@ -265,13 +272,16 @@ public class RecordOPERA {
 	 * @return
 	 */
 	public static Vector<RecordOPERA> parseOperaSdf() {
-		Vector<RecordOPERA> records=new Vector<>();
+		Vector<RecordOPERA> records = new Vector<>();
 		// have to figure out a smart way to handle ExperimentalConstants.str_pKA
-		String [] endpoints = {ExperimentalConstants.strBoilingPoint,ExperimentalConstants.strHenrysLawConstant,ExperimentalConstants.strLogKow,ExperimentalConstants.strMeltingPoint, ExperimentalConstants.strVaporPressure,ExperimentalConstants.strWaterSolubility,ExperimentalConstants.str_pKA};
+		String[] endpoints = { ExperimentalConstants.strBoilingPoint, ExperimentalConstants.strHenrysLawConstant,
+				ExperimentalConstants.strLogKow, ExperimentalConstants.strMeltingPoint,
+				ExperimentalConstants.strVaporPressure, ExperimentalConstants.strWaterSolubility,
+				ExperimentalConstants.str_pKA };
 		for (int i = 0; i < endpoints.length; i++) {
-		records.addAll(parseOPERA_SDF(endpoints[i]));
+			records.addAll(parseOPERA_SDF(endpoints[i]));
 		}
-	return records;
+		return records;
 	}
 
 	/**

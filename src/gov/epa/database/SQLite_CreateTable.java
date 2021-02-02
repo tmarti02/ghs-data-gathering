@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Arrays;
 
-import com.fasterxml.jackson.databind.ser.std.StdArraySerializers.FloatArraySerializer;
+//import com.fasterxml.jackson.databind.ser.std.StdArraySerializers.FloatArraySerializer;
 
 import gov.epa.QSAR.DataSetCreation.RecordQSAR;
 import gov.epa.QSAR.DataSetCreation.RecordsQSAR;
