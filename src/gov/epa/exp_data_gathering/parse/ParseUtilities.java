@@ -269,7 +269,7 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_mM;
 			unitsIndex = propertyValue.indexOf("mM");
 			badUnits = false;
-		} else if (propertyValue.contains("ÂµM") || propertyValue.contains("uM")) {
+		} else if (propertyValue.contains("µM") || propertyValue.contains("uM")) {
 			er.property_value_units_original = ExperimentalConstants.str_uM;
 			unitsIndex = propertyValue.indexOf("M");
 			badUnits = false;
@@ -412,12 +412,12 @@ public class ParseUtilities extends Parse {
 	public static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
-		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm mÂ³/mol") ||
+		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol") ||
 				propertyValue.toLowerCase().contains("atm m^3/mol")) {
 			er.property_value_units_original = ExperimentalConstants.str_atm_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("pa mÂ³/mol") || propertyValue.toLowerCase().contains("pa m^3/mol")) {
+		} else if (propertyValue.toLowerCase().contains("pa m³/mol") || propertyValue.toLowerCase().contains("pa m^3/mol")) {
 			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("pa");
 			badUnits = false;
@@ -443,18 +443,43 @@ public class ParseUtilities extends Parse {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 
-		if (propertyValue.toLowerCase().contains("mg/l air")) {
+		if (propertyValue.toLowerCase().contains("mg/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/m^3 air")) {
+		} else if (propertyValue.toLowerCase().contains("mg/m^3") || propertyValue.toLowerCase().contains("mg/cu m")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_m3;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("g/m^3") || propertyValue.toLowerCase().contains("g/m³") || propertyValue.toLowerCase().contains("g/m3") ||
+				propertyValue.toLowerCase().contains("g/cubic meter")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_m3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ml/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_mL_m3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ml/");
 			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("ppm")) {
 			er.property_value_units_original = ExperimentalConstants.str_ppm;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
 			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mg/kg") || propertyValue.toLowerCase().contains("mg /kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("g/kg") || propertyValue.toLowerCase().contains("gm/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_kg;
+			unitsIndex = propertyValue.toLowerCase().indexOf("g");
+			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ml/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mL_kg;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ml/");
+			badUnits = false;
+		} else {
+			badUnits = true;
+			er.keep = false;
+			er.reason = "Unhandled units";
 		}
 		
 		if (propertyValue.toLowerCase().contains("nominal")) {

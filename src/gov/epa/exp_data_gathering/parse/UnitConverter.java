@@ -88,8 +88,7 @@ public class UnitConverter {
 			convertHenrysLawConstant(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility) && er.property_value_units_original!=null) {
 			convertSolubility(er);
-		} else if ((er.property_name.toLowerCase().contains("lc50") || er.property_name.toLowerCase().contains("ld50")) &&
-				er.property_value_units_original!=null) {
+		} else if (er.property_value_units_original!=null) {
 			convertToxicity(er);
 		}
 		
@@ -111,14 +110,14 @@ public class UnitConverter {
 	 * @return
 	 */
 	private boolean convertToxicity(ExperimentalRecord er) {
-		if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)) {
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L) || er.property_value_units_original.equals(ExperimentalConstants.str_g_m3)) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_mg_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_m3)) {
 			convertAndAssignFinalFields(er,1.0/1000.0);
 			er.property_value_units_final = ExperimentalConstants.str_mg_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_m3)) {
-			if (htDensity.get(er.casrn) == null) {
+			if (er.casrn==null || htDensity.get(er.casrn) == null) {
 				er.flag = true;
 				er.updateNote("Conversion to mg/L not possible (missing density)");
 				assignFinalFieldsWithoutConverting(er);
@@ -145,8 +144,11 @@ public class UnitConverter {
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_kg)) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_mg_kg;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_kg)) {
+			convertAndAssignFinalFields(er,1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_mg_kg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_kg)) {
-			if (htDensity.get(er.casrn) == null) {
+			if (er.casrn==null || htDensity.get(er.casrn) == null) {
 				er.flag = true;
 				er.updateNote("Conversion to mg/kg not possible (missing density)");
 				assignFinalFieldsWithoutConverting(er);
