@@ -134,12 +134,14 @@ public class Parse {
 					i++;
 					if (i!=0 && i%100000==0) {
 						batch++;
-						temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
+						String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + batch + ".xlsx";
+						temp.toExcel_File(mainFolder+File.separator+batchFileName);
 						temp.clear();
 					}
 				}
 				batch++;
-				temp.toExcel_File(mainFolder+File.separator+sourceName +" Experimental Records "+batch+".xlsx");
+				String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + batch + ".xlsx";
+				temp.toExcel_File(mainFolder+File.separator+batchFileName);
 			}
 		}
 		

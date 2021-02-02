@@ -840,16 +840,16 @@ public class ParseUtilities extends Parse {
 
 	public static String reverseFixChars(String str) {
 		StringBuilder sb = new StringBuilder(str);
-		replaceAll(sb,"^0","\u2070");// superscript 0
-		replaceAll(sb,"^1","\u00B9");// superscript 1
-		replaceAll(sb,"^2","\u00B2");// superscript 2
-		replaceAll(sb,"^3","\u00B3");// superscript 3
-		replaceAll(sb,"^4","\u2074");// superscript 4
-		replaceAll(sb,"^5","\u2075");// superscript 5
-		replaceAll(sb,"^6","\u2076");// superscript 6
-		replaceAll(sb,"^7","\u2077");// superscript 7
-		replaceAll(sb,"^8","\u2078");// superscript 8
-		replaceAll(sb,"^9","\u2079");// superscript 9
+		replaceAll(sb,"\\^0","\u2070");// superscript 0
+		replaceAll(sb,"\\^1","\u00B9");// superscript 1
+		replaceAll(sb,"\\^2","\u00B2");// superscript 2
+		replaceAll(sb,"\\^3","\u00B3");// superscript 3
+		replaceAll(sb,"\\^4","\u2074");// superscript 4
+		replaceAll(sb,"\\^5","\u2075");// superscript 5
+		replaceAll(sb,"\\^6","\u2076");// superscript 6
+		replaceAll(sb,"\\^7","\u2077");// superscript 7
+		replaceAll(sb,"\\^8","\u2078");// superscript 8
+		replaceAll(sb,"\\^9","\u2079");// superscript 9
 		replaceAll(sb,"_0","\u2080");// subscript 0
 		replaceAll(sb,"_1","\u2081");// subscript 1
 		replaceAll(sb,"_2","\u2082");// subscript 2
