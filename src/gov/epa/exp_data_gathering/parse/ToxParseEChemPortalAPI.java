@@ -1,8 +1,21 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Vector;
+import java.util.stream.Stream;
+
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.eChemPortalAPI.eChemPortalAPI;
@@ -33,13 +46,19 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 		eChemPortalAPI.downloadInhalationLC50Results(databasePath);
 	}
 	
+	public void downloadAllDashboardToxResults() {
+		String databaseName = sourceName+"_raw_tox_json.db";
+		String databasePath = databaseFolder+File.separator+databaseName;
+		eChemPortalAPI.downloadAllDashboardToxResults(databasePath);
+	}
+	
 	/**
 	 * Parses JSON entries in database to RecordPubChem objects, then saves them to a JSON file
 	 */
 	@Override
 	protected void createRecords() {
-		if (downloadNew) { downloadInhalationLC50Results(); }
-		FinalRecords records = FinalRecords.getToxResultsInDatabase(databaseFolder + File.separator + sourceName+"_raw_inhalationlc50_json.db");
+		if (downloadNew) { downloadAllDashboardToxResults(); }
+		FinalRecords records = FinalRecords.getToxResultsInDatabase(databaseFolder + File.separator + sourceName+"_raw_tox_json.db");
 		writeOriginalRecordsToFile(new Vector<FinalRecord>(records));
 	}
 	
@@ -52,14 +71,14 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 		
 		try {
 			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
-			
+
 			FinalRecord[] finalRecordsArr = gson.fromJson(new FileReader(jsonFile), FinalRecord[].class);
 			
 			for (int i = 0; i < finalRecordsArr.length; i++) {
 				FinalRecord r = finalRecordsArr[i];
 				addExperimentalRecords(r,recordsExperimental);
 			}
-			
+
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

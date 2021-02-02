@@ -156,13 +156,18 @@ public class Parse {
 			File file = new File(jsonPath);
 			if(!file.getParentFile().exists()) { file.getParentFile().mkdirs(); }
 			
+			// Clear existing file contents
 			FileWriter fw = new FileWriter(jsonPath);
-			String strRecords=gson.toJson(records);
-			
-			strRecords=ParseUtilities.fixChars(strRecords);
-			
-			fw.write(strRecords);
 			fw.close();
+			
+			FileWriter fwAppend = new FileWriter(jsonPath,true);
+			
+			String[] strRecords=gson.toJson(records).split("\n");
+			for (String s:strRecords) {
+				s=ParseUtilities.fixChars(s);
+				fwAppend.write(s+"\n");
+			}
+			fwAppend.close();
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -202,7 +207,7 @@ public class Parse {
 			break;
 		case ExperimentalConstants.strSourceEChemPortalAPI:
 			if (recordTypeToParse.toLowerCase().contains("tox")) {
-				p = new ToxParseEChemPortalAPI(true);
+				p = new ToxParseEChemPortalAPI(false);
 			} else {
 				p = new ParseEChemPortalAPI();
 			}
@@ -238,7 +243,7 @@ public class Parse {
 	}
 	
 	public static void main(String[] args) {
-		String recordType = "physchem";
+		String recordType = "tox";
 		String[] sources = {ExperimentalConstants.strSourceADDoPT,
 				ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,
@@ -249,7 +254,7 @@ public class Parse {
 				ExperimentalConstants.strSourceOChem,
 				ExperimentalConstants.strSourceOFMPub,
 				ExperimentalConstants.strSourceOPERA,
-				ExperimentalConstants.strSourcePubChem,
+//				ExperimentalConstants.strSourcePubChem,
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuite};

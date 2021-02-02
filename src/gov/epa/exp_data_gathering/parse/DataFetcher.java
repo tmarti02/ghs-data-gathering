@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
@@ -152,7 +153,13 @@ public class DataFetcher {
 	}
 	
 	private void makeDatabase(ExperimentalRecords records) {
-		String[] fieldNames = ExperimentalRecord.outputFieldNames;
+		String[] fieldNames = null;
+		if (Arrays.asList(sources).contains(ExperimentalConstants.strSourceEChemPortalAPI) && recordType.toLowerCase().contains("tox")) {
+			String[] fr_id = {"fr_id"};
+			fieldNames = ArrayUtils.addAll(fr_id, ExperimentalRecord.outputFieldNames);
+		} else {
+			fieldNames = ExperimentalRecord.outputFieldNames;
+		}
 		String tableName = "ExperimentalRecords";
 		System.out.println("Creating database at "+databasePath+" with fields:\n"+String.join("\n",fieldNames));
 		try {

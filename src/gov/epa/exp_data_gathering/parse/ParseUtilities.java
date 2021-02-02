@@ -839,62 +839,88 @@ public class ParseUtilities extends Parse {
 	}
 
 	public static String reverseFixChars(String str) {
-		str=str.replace("^0","\u2070");// superscript 0
-		str=str.replace("^1","\u00B9");// superscript 1
-		str=str.replace("^2","\u00B2");// superscript 2
-		str=str.replace("^3","\u00B3");// superscript 3
-		str=str.replace("^4","\u2074");// superscript 4
-		str=str.replace("^5","\u2075");// superscript 5
-		str=str.replace("^6","\u2076");// superscript 6
-		str=str.replace("^7","\u2077");// superscript 7
-		str=str.replace("^8","\u2078");// superscript 8
-		str=str.replace("^9","\u2079");// superscript 9
-		str=str.replace("_0","\u2080");// subscript 0
-		str=str.replace("_1","\u2081");// subscript 1
-		str=str.replace("_2","\u2082");// subscript 2
-		str=str.replace("_3","\u2083");// subscript 3
-		str=str.replace("_4","\u2084");// subscript 4
-		str=str.replace("_5","\u2085");// subscript 5
-		str=str.replace("_6","\u2086");// subscript 6
-		str=str.replace("_7","\u2087");// subscript 7
-		str=str.replace("_8","\u2088");// subscript 8
-		str=str.replace("_9","\u2089");// subscript 9
-		return str;
+		StringBuilder sb = new StringBuilder(str);
+		replaceAll(sb,"^0","\u2070");// superscript 0
+		replaceAll(sb,"^1","\u00B9");// superscript 1
+		replaceAll(sb,"^2","\u00B2");// superscript 2
+		replaceAll(sb,"^3","\u00B3");// superscript 3
+		replaceAll(sb,"^4","\u2074");// superscript 4
+		replaceAll(sb,"^5","\u2075");// superscript 5
+		replaceAll(sb,"^6","\u2076");// superscript 6
+		replaceAll(sb,"^7","\u2077");// superscript 7
+		replaceAll(sb,"^8","\u2078");// superscript 8
+		replaceAll(sb,"^9","\u2079");// superscript 9
+		replaceAll(sb,"_0","\u2080");// subscript 0
+		replaceAll(sb,"_1","\u2081");// subscript 1
+		replaceAll(sb,"_2","\u2082");// subscript 2
+		replaceAll(sb,"_3","\u2083");// subscript 3
+		replaceAll(sb,"_4","\u2084");// subscript 4
+		replaceAll(sb,"_5","\u2085");// subscript 5
+		replaceAll(sb,"_6","\u2086");// subscript 6
+		replaceAll(sb,"_7","\u2087");// subscript 7
+		replaceAll(sb,"_8","\u2088");// subscript 8
+		replaceAll(sb,"_9","\u2089");// subscript 9
+		return sb.toString();
 	}
 
 	public static String fixChars(String str) {
-		str=str.replace("Ã¢â¬â","-").replace("Ã¢â¬â¢","'");
-		str=str.replace("\uff08", "(");// Ã¯Â¼Ë
-		str=str.replace("\uff09", ")");// Ã¯Â¼â°
-		str=str.replace("\uff0f", "/");// Ã¯Â¼ï¿½
-		str=str.replace("\u3000", " ");//blank
-		str=str.replace("\u00a0", " ");//blank
-		str=str.replace("\u2003", " ");//blank
-		str=str.replace("\u0009", " ");//blank
-		str=str.replace("\u300c", "");// Ã£â¬Å
-		str=str.replace("\u300d", "");// Ã£â¬ï¿½
-		str=str.replace("\u2070", "^0");// superscript 0
-		str=str.replace("\u00B9", "^1");// superscript 1
-		str=str.replace("\u00B2", "^2");// superscript 2
-		str=str.replace("\u00B3", "^3");// superscript 3
-		str=str.replace("\u2074", "^4");// superscript 4
-		str=str.replace("\u2075", "^5");// superscript 5
-		str=str.replace("\u2076", "^6");// superscript 6
-		str=str.replace("\u2077", "^7");// superscript 7
-		str=str.replace("\u2078", "^8");// superscript 8
-		str=str.replace("\u2079", "^9");// superscript 9
-		str=str.replace("\u2080", "_0");// subscript 0
-		str=str.replace("\u2081", "_1");// subscript 1
-		str=str.replace("\u2082", "_2");// subscript 2
-		str=str.replace("\u2083", "_3");// subscript 3
-		str=str.replace("\u2084", "_4");// subscript 4
-		str=str.replace("\u2085", "_5");// subscript 5
-		str=str.replace("\u2086", "_6");// subscript 6
-		str=str.replace("\u2087", "_7");// subscript 7
-		str=str.replace("\u2088", "_8");// subscript 8
-		str=str.replace("\u2089", "_9");// subscript 9
-	
-		return str;
+		StringBuilder sb = new StringBuilder(str);
+		try {
+		replaceAll(sb,"Ã¢â¬â","-");
+		replaceAll(sb,"Ã¢â¬â¢","'");
+		replaceAll(sb,"\uff08", "(");// Ã¯Â¼Ë
+		replaceAll(sb,"\uff09", ")");// Ã¯Â¼â°
+		replaceAll(sb,"\uff0f", "/");// Ã¯Â¼ï¿½
+		replaceAll(sb,"\u3000", " ");//blank
+		replaceAll(sb,"\u00a0", " ");//blank
+		replaceAll(sb,"\u2003", " ");//blank
+		replaceAll(sb,"\u0009", " ");//blank
+		replaceAll(sb,"\u300c", "");// Ã£â¬Å
+		replaceAll(sb,"\u300d", "");// Ã£â¬ï¿½
+		replaceAll(sb,"\u2070", "^0");// superscript 0
+		replaceAll(sb,"\u00B9", "^1");// superscript 1
+		replaceAll(sb,"\u00B2", "^2");// superscript 2
+		replaceAll(sb,"\u00B3", "^3");// superscript 3
+		replaceAll(sb,"\u2074", "^4");// superscript 4
+		replaceAll(sb,"\u2075", "^5");// superscript 5
+		replaceAll(sb,"\u2076", "^6");// superscript 6
+		replaceAll(sb,"\u2077", "^7");// superscript 7
+		replaceAll(sb,"\u2078", "^8");// superscript 8
+		replaceAll(sb,"\u2079", "^9");// superscript 9
+		replaceAll(sb,"\u2080", "_0");// subscript 0
+		replaceAll(sb,"\u2081", "_1");// subscript 1
+		replaceAll(sb,"\u2082", "_2");// subscript 2
+		replaceAll(sb,"\u2083", "_3");// subscript 3
+		replaceAll(sb,"\u2084", "_4");// subscript 4
+		replaceAll(sb,"\u2085", "_5");// subscript 5
+		replaceAll(sb,"\u2086", "_6");// subscript 6
+		replaceAll(sb,"\u2087", "_7");// subscript 7
+		replaceAll(sb,"\u2088", "_8");// subscript 8
+		replaceAll(sb,"\u2089", "_9");// subscript 9
+		} catch (Exception ex) {
+			System.out.println(sb.toString());
+		}
+		return sb.toString();
 	}
+	
+	private static void replaceAll(StringBuilder sb, String find, String replace){
+        
+        //compile pattern from find string
+        Pattern p = Pattern.compile(find);
+        
+        //create new Matcher from StringBuilder object
+        Matcher matcher = p.matcher(sb);
+        
+        //index of StringBuilder from where search should begin
+        int startIndex = 0;
+        
+        while (matcher.find(startIndex)) {
+            
+            sb.replace(matcher.start(), matcher.end(), replace);
+            
+            //set next start index as start of the last match + length of replacement
+            startIndex = matcher.start() + replace.length();
+        }
+    }
 
 }

@@ -60,6 +60,7 @@ public class ExperimentalRecord {
 	public String source_name;//use Experimental constants
 	public String original_source_name;//If specific reference/paper provided
 								//"original_source_name" rather than "source_name_original" to avoid syntactic confusion with "*_original" vs "*_final" fields above
+	public String fr_id;
 	public String date_accessed;//use Experimental constants
 	
 	public boolean keep=true;//Does the record contain useful data? keep might be different depending on whether goal is for database or for QSAR data set

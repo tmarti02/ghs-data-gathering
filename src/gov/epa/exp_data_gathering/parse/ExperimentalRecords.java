@@ -50,14 +50,22 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	public ExperimentalRecords() { }
 	
 	public ExperimentalRecords(FinalRecord rec) {
-		int recordCount = rec.experimentalValues.size();
-		for (int i = 0; i < recordCount; i++) {
+		int size = 1;
+		int speciesSize = 1;
+		if (rec.valueTypes!=null && !rec.valueTypes.isEmpty()) {
+			size = rec.valueTypes.size();
+		} else if (rec.genotoxicity!=null && !rec.genotoxicity.isEmpty()) {
+			size = rec.genotoxicity.size();
+			if (rec.propertyName.equals(APIConstants.geneticToxicityVitro)) { speciesSize = size; }
+		}
+		for (int i = 0; i < size; i++) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.source_name = ExperimentalConstants.strSourceEChemPortalAPI;
 			er.url = rec.url;
 			er.original_source_name = rec.participant;
 			er.date_accessed = rec.dateAccessed;
 			er.reliability = rec.reliability;
+			er.fr_id = rec.id;
 			
 			if (!rec.name.equals("-") && !rec.name.contains("unnamed")) {
 				er.chemical_name = rec.name;
@@ -74,21 +82,35 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 				}
 			}
 			
-			if (rec.propertyName.contentEquals(APIConstants.acuteToxicityInhalation)) {
-				String species = rec.species.get(0);
+			String species = null;
+			if (speciesSize>1) {
+				species = (rec.species==null || rec.species.isEmpty()) ? null : rec.species.get(i);
+			} else {
+				species = (rec.species==null || rec.species.isEmpty()) ? null : rec.species.get(0);
+			}
+			
+			String valueType = (rec.valueTypes==null || rec.valueTypes.isEmpty()) ? "" : "_"+rec.valueTypes.get(i);
+			if (species!=null) {
 				if (!species.toLowerCase().contains("other")) {
-					String valueType = (rec.valueTypes==null || rec.valueTypes.isEmpty()) ? "" : "_"+rec.valueTypes.get(i);
 					er.property_name=species.replaceAll(" ","_").replaceAll(",","")+"_"+rec.propertyName+valueType;
 				} else {
-					String valueType = (rec.valueTypes==null || rec.valueTypes.isEmpty()) ? "" : "_"+rec.valueTypes.get(i);
 					er.property_name="other_"+rec.propertyName+valueType;
 					er.updateNote("Species: "+species.substring(rec.species.indexOf(":")+1));
 				}
 			} else {
-				return;
+				er.property_name = rec.propertyName+valueType;
 			}
 			
-			String value = rec.experimentalValues.get(i);
+			String value = null;
+			if (rec.experimentalValues!=null && !rec.experimentalValues.isEmpty()) {
+				value = rec.experimentalValues.get(i);
+			} else if (rec.genotoxicity!=null && !rec.genotoxicity.isEmpty()) {
+				value = rec.genotoxicity.get(i);
+			} else if (rec.interpretationOfResults!=null && !rec.interpretationOfResults.isEmpty()) {
+				value = rec.interpretationOfResults;
+			}
+			
+			if (value==null) { continue; }
 			ParseUtilities.getToxicity(er,value);
 			er.property_value_string = "Value: "+value;
 			
