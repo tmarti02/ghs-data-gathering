@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -40,11 +41,13 @@ import gov.epa.TEST.Descriptors.DatabaseUtilities.RecordDescriptorsMetadata;
 import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorData;
 import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorsFromSmiles;
 import gov.epa.api.ExperimentalConstants;
+//import gov.epa.ccte.functions.descriptorGeneration.padelCliWrapper.service.RunPadelFromJava;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.RecordOPERA;
+import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 import weka.core.Instances;
 
 public class ConvertExperimentalRecordsToDataSet {
@@ -698,6 +701,58 @@ public class ConvertExperimentalRecordsToDataSet {
 		}
 
 	}
+	
+	void calculateDescriptorsPadel(String folder, String filepathDB) {
+
+		String descriptorSoftware="Padel 2.21";
+		
+		try {
+			
+			String filePathInput=folder + "descriptors input.tsv";
+			String filePathOutput=folder + "descriptors output Padel.csv";
+			
+//			File in = new File(filePathInput);
+			File out= new File(filePathOutput);	
+//			File in2 = new File(folder+"input.smi");//need smi format for padel to work			
+//			gov.epa.QSAR.utilities.FileUtilities.CopyFile(in, in2);
+//			RunPadelFromJava.run(in2,out);// not working right now- need to just run it from padel project to get it to work for now
+			
+//			System.out.println(out.exists()+"\t"+out.getAbsolutePath());
+						
+			BufferedReader br=new BufferedReader(new FileReader(filePathOutput));
+			
+			String descriptorNames=br.readLine();
+			descriptorNames.substring(descriptorNames.indexOf(",")+1,descriptorNames.length());
+			descriptorNames=descriptorNames.replace(",", "\t");
+
+			Connection conn = DescriptorDatabaseUtilities.getConnection(descriptorSoftware,descriptorNames,filepathDB);
+			
+			while (true) {
+				String Line=br.readLine();
+				if(Line==null) break;
+
+				RecordDescriptors r=new RecordDescriptors();
+				r.DSSTox_Structure_Id=Line.substring(0,Line.indexOf(",")).replace("\"", "");
+				r.Descriptors=Line.substring(Line.indexOf(",")+1,Line.length()).replace(",", "\t");
+				r.DescriptorSoftware=descriptorSoftware;
+
+				//TODO alternatively- set ID as the primary key with no duplicates allowed to avoid having to check if in database...
+				//TODO write batch add to make this go faster
+				String strDescriptors=RecordDescriptors.lookupDescriptorsInDatabase(conn,r.DSSTox_Structure_Id,r.DescriptorSoftware);				
+				if (strDescriptors!=null) continue;
+	
+//				System.out.println(r.DSSTox_Structure_Id);
+//				System.out.println(r.Descriptors);							
+				r.addRecord(conn);				
+			}
+			br.close();
+			
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
 
 	void runRatInhalationLC50() {
 
@@ -770,7 +825,8 @@ public class ConvertExperimentalRecordsToDataSet {
 				recordsQSAR.add(new RecordQSAR(recordOPERA));				
 			}
 			System.out.println("Number of RecordsQSAR for "+property+"="+recordsQSAR.size());
-			String dbpath="databases\\OPERA_WS.db";
+			
+		String dbpath="databases\\OPERA_WS2.db";
 			
 			recordsQSAR.addFlatQSARRecordsToDB(dbpath);			
 			CreatingTrainingPredictionSplittings.setUpSplittingTable(property,dbpath);
@@ -785,6 +841,7 @@ public class ConvertExperimentalRecordsToDataSet {
 			CreatingTrainingPredictionSplittings.createSphereExclusionSplitting(property, instances, dbpath);
 			CreatingTrainingPredictionSplittings.createKennardStoneSplitting(property, instances, dbpath);			
 			calculateDescriptors(folder, recordsQSAR,dbpath);
+			calculateDescriptorsPadel(folder, dbpath);
 
 
 		} catch (Exception e) {
