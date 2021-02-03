@@ -211,12 +211,12 @@ public class UnitConverter {
 				er.note.contains(ExperimentalConstants.str_relative_mixture_density))) {
 			convertAndAssignFinalFields(er,airDensitySTP);
 			er.property_value_units_final = ExperimentalConstants.str_g_cm3;
-		} else {
+		} else if (er.property_value_point_estimate_original!=null || er.property_value_min_original!=null) {
 			er.flag = true;
 			er.updateNote("Conversion to g/cm3 not possible (unknown units)");
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = er.property_value_units_original;
-			System.out.println("Unrecognized units for "+er.property_name+": "+er.property_value_units_original);
+			System.out.println("Unrecognized units for "+er.property_name+": "+er.property_value_string);
 		}
 	}
 	

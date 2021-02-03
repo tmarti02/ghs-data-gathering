@@ -36,10 +36,10 @@ public class Parse {
 	protected String fileNameJsonExperimentalRecordsBad;
 	public String mainFolder;
 	
-	public static boolean generateOriginalJSONRecords=true; //runs code to generate json records from original data format (json file has all the chemicals in one file)	
-	public static boolean writeFlatFile=false;//all data converted to final format stored as flat text file
-	public static boolean writeJsonExperimentalRecordsFile=true;//all data converted to final format stored as Json file
-	public static boolean writeExcelExperimentalRecordsFile=true;//all data converted to final format stored as xlsx file
+	public boolean generateOriginalJSONRecords=true; //runs code to generate json records from original data format (json file has all the chemicals in one file)	
+	public boolean writeFlatFile=false;//all data converted to final format stored as flat text file
+	public boolean writeJsonExperimentalRecordsFile=true;//all data converted to final format stored as Json file
+	public boolean writeExcelExperimentalRecordsFile=true;//all data converted to final format stored as xlsx file
 	
 	protected Gson gson=null;
 	protected UnitConverter uc=null;
@@ -81,9 +81,8 @@ public class Parse {
 	}
 	
 	public void createFiles() {
-		System.out.println("Creating " + sourceName + " json files...");
-		
 		if (generateOriginalJSONRecords) {
+			System.out.println("Creating " + sourceName + " json files...");
 			if (fileNameSourceExcel!=null) {
 				System.out.println("Parsing "+fileNameSourceExcel);
 			} else if (folderNameWebpages!=null) {
@@ -97,7 +96,7 @@ public class Parse {
 			createRecords();
 		}
 
-		System.out.println("Going through original records");
+		System.out.println("Going through original records...");
 		ExperimentalRecords records=goThroughOriginalRecords();
 		records.addSourceBasedIDNumbers();
 		
@@ -238,8 +237,12 @@ public class Parse {
 		case ExperimentalConstants.strSourceSander:
 			p = new ParseSander();
 			break;
-		case ExperimentalConstants.strSourceEpisuite:
+		case ExperimentalConstants.strSourceEpisuiteISIS:
 			p = new ParseEpisuiteISIS();
+			p.generateOriginalJSONRecords = true;
+			break;
+		case ExperimentalConstants.strSourceEpisuiteOriginal:
+			p = new ParseEpisuiteOriginal();
 			break;
 		}
 		p.createFiles();
@@ -260,7 +263,7 @@ public class Parse {
 				ExperimentalConstants.strSourcePubChem,
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander,
-				ExperimentalConstants.strSourceEpisuite};
+				ExperimentalConstants.strSourceEpisuiteISIS};
 		for (String s:sources) {
 			runParse(s,recordType);
 		}

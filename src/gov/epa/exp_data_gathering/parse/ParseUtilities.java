@@ -580,6 +580,7 @@ public class ParseUtilities extends Parse {
 	 * @return				The temperature condition in C
 	 */
 	public static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
+		propertyValue = correctDegreeSymbols(propertyValue);
 		String units = getTemperatureUnits(propertyValue);
 		int tempIndex = propertyValue.indexOf(units);
 		// If temperature units were found, looks for the last number that precedes them
@@ -592,14 +593,14 @@ public class ParseUtilities extends Parse {
 					// Converts to C as needed
 					double temp = Double.parseDouble(tempStr);
 					switch (units) {
-					case "C":
+					case ExperimentalConstants.str_C:
 						er.temperature_C = temp;
 						break;
-					case "F":
-						er.temperature_C = (temp-32)*5/9;
+					case ExperimentalConstants.str_F:
+						er.temperature_C = UnitConverter.F_to_C(temp);
 						break;
-					case "K":
-						er.temperature_C = temp-273.15;
+					case ExperimentalConstants.str_K:
+						er.temperature_C = UnitConverter.K_to_C(temp);
 						break;
 					}
 				}
@@ -790,7 +791,7 @@ public class ParseUtilities extends Parse {
 	 * @return				A standardized temperature unit string from ExperimentalConstants
 	 */
 	public static String getTemperatureUnits(String propertyValue) {
-		propertyValue=propertyValue.replaceAll(" ","");
+		propertyValue=propertyValue.replaceAll("[ |Â]","");
 		propertyValue = correctDegreeSymbols(propertyValue);
 		String units = "";
 		if (propertyValue.contains("\u00B0C") || propertyValue.contains("oC")
@@ -806,8 +807,11 @@ public class ParseUtilities extends Parse {
 	}
 	
 	private static String correctDegreeSymbols(String s) {
-		s = s.replaceAll("[\u00BA\u1D52\u02DA\u309C\u18DE\u2070\u2218\u29B5\u1BC85\u26AC]","\u00B0");
-		return s;
+		StringBuilder sb = new StringBuilder(s);
+		replaceAll(sb,"[\u00BA|\u1D52|\u02DA|\u309C|\u18DE|\u2070|\u2218|\u29B5|\u1BC8|\u26AC|&deg;]","\u00B0");
+		replaceAll(sb,"\u2103","\u00B0C");
+		replaceAll(sb,"\u2109","\u00B0F");
+		return sb.toString();
 	}
 	
 	public static boolean hasIdentifiers(ExperimentalRecord er) {
@@ -839,16 +843,16 @@ public class ParseUtilities extends Parse {
 	/**
 	 * Verifies CAS checksum per https://www.cas.org/support/documentation/chemical-substances/checkdig
 	 * 
-	 * @param casInput	CAS RN (or pipe-delimited sequence of multiple CAS RNs)
-	 * @return			True if checksum holds for all CAS RNs in input; false otherwise
+	 * @param casInput	CAS RN (or sequence of multiple CAS RNs delimited by pipe and/or semicolon)
+	 * @return			True if checksum holds for each CAS RN in input; false otherwise
 	 */
 	public static boolean isValidCAS(String casInput) {
-		String[] casArray = casInput.split("\\|");
+		String[] casArray = casInput.split("\\||;");
 		boolean valid = true;
 		for (String cas:casArray) {
 			String casTemp = cas.replaceAll("[^0-9]","");
 			int len = casTemp.length();
-			if (len > 10) { return false; }
+			if (len > 10 || len <= 0) { return false; }
 			int check = Character.getNumericValue(casTemp.charAt(len-1));
 			int sum = 0;
 			for (int i = 1; i <= len-1; i++) {

@@ -315,6 +315,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		int badCurrentRow = 2;
 		for (ExperimentalRecord er:this) {
 			Class erClass = er.getClass();
+			Object value = null;
 			try {
 				Row row = null;
 				if (er.keep) {
@@ -326,14 +327,16 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 				}
 				for (int i = 0; i < headers.length; i++) {
 					Field field = erClass.getDeclaredField(headers[i]);
-					Object value = field.get(er);
+					value = field.get(er);
 					if (value!=null && !(value instanceof Double)) { 
 						String strValue = ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
+						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
 						row.createCell(i).setCellValue(strValue);
 					} else if (value!=null) { row.createCell(i).setCellValue((double) value); }
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
+				System.out.println(value.toString());
 			}
 		}
 		

@@ -240,9 +240,11 @@ public class RecordPubChem {
 				pcr.getExperimentalData(experimentalProperties);
 				String identifiers = rs.getString("identifiers");
 				IdentifierData identifierData = gson.fromJson(identifiers, IdentifierData.class);
-				Property identifierProperty = identifierData.propertyTable.properties.get(0);
-				pcr.iupacName = identifierProperty.iupacName;
-				pcr.smiles = identifierProperty.canonicalSMILES;
+				if (identifierData!=null) {
+					Property identifierProperty = identifierData.propertyTable.properties.get(0);
+					pcr.iupacName = identifierProperty.iupacName;
+					pcr.smiles = identifierProperty.canonicalSMILES;
+				}
 				String cas = rs.getString("cas");
 				Data casData = gson.fromJson(cas, Data.class);
 				if (casData!=null) {

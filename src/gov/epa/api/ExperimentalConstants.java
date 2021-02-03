@@ -103,7 +103,7 @@ public class ExperimentalConstants {
 	public static final String strSourceChemBL="ChemBL";
 	public static final String strSourceChemidplus="ChemIDplus";
 	public static final String strSourceOPERA="OPERA";
-	public static final String strSourceEpisuite="EpisuiteOriginal";
+	public static final String strSourceEpisuiteOriginal="EpisuiteOriginal";
 	public static final String strSourceEpisuiteISIS="EpisuiteISIS";
 	
 }

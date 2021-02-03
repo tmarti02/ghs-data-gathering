@@ -4,11 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Vector;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
@@ -17,10 +12,6 @@ import org.openscience.cdk.io.iterator.IteratingSDFReader;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 
-import gov.epa.TEST.Descriptors.DatabaseUtilities.DescriptorDatabaseUtilities;
-import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorData;
-import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorFactory;
-import gov.epa.TEST.Descriptors.DescriptorFactory.DescriptorsFromSmiles;
 import gov.epa.TEST.Descriptors.DescriptorUtilities.AtomicProperties;
 import gov.epa.api.ExperimentalConstants;
 

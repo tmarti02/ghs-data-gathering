@@ -26,7 +26,7 @@ import gov.epa.api.ExperimentalConstants;
 public class ParseEpisuiteOriginal extends Parse {
 	
 	public ParseEpisuiteOriginal() {
-		sourceName = ExperimentalConstants.strSourceEpisuite;
+		sourceName = ExperimentalConstants.strSourceEpisuiteOriginal;
 		this.init();
 	}
 	
@@ -63,7 +63,7 @@ public class ParseEpisuiteOriginal extends Parse {
 		
 		ExperimentalRecord er = new ExperimentalRecord();
 		
-		er.source_name = ExperimentalConstants.strSourceEpisuite;
+		er.source_name = ExperimentalConstants.strSourceEpisuiteOriginal;
 		er.url = reo.url;
 		String temp = ParseUtilities.fixCASLeadingZero(reo.CAS);
 		er.casrn = temp;

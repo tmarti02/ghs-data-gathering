@@ -22,6 +22,7 @@ public class ParsePubChem extends Parse {
 	@Override
 	protected void createRecords() {
 		Vector<RecordPubChem> records = RecordPubChem.parseJSONsInDatabase();
+		System.out.println("Added "+records.size()+" records");
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -112,8 +113,9 @@ public class ParsePubChem extends Parse {
 		er.source_name=ExperimentalConstants.strSourcePubChem;
 		
 		boolean foundNumeric = false;
-		propertyValue = propertyValue.replaceAll("greater than( or equal to )?", ">");
-		propertyValue = propertyValue.replaceAll("less than( or equal to )?", "<");
+		propertyValue = propertyValue.replaceAll("greater than", ">");
+		propertyValue = propertyValue.replaceAll("less than", "<");
+		propertyValue = propertyValue.replaceAll(" or equal to ", "=");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er,propertyValue);
 			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
