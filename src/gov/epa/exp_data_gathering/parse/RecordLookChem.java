@@ -199,6 +199,7 @@ public class RecordLookChem {
 	public static Vector<RecordLookChem> parseWebpagesInDatabase(String version) {
 		String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "LookChem "+version;
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
+		System.out.println("Parsing webpages in "+databasePath+"...");
 		Vector<RecordLookChem> records = new Vector<>();
 
 		try {

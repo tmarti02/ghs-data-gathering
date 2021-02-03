@@ -13,6 +13,9 @@ public class ParseLookChem extends Parse {
 		sourceName = ExperimentalConstants.strSourceLookChem;
 		this.init();
 		this.versions = versions;
+		fileNameSourceExcel=null;
+		folderNameWebpages=null;
+		folderNameExcel=null;
 	}
 	
 	/**
@@ -23,7 +26,9 @@ public class ParseLookChem extends Parse {
 		// Vector<RecordLookChem> records = RecordLookChem.parseWebpagesInZipFile();
 		Vector<RecordLookChem> records = new Vector<RecordLookChem>();
 		for (String v:versions) {
-			records.addAll(RecordLookChem.parseWebpagesInDatabase(v));
+			Vector<RecordLookChem> versionRecords = RecordLookChem.parseWebpagesInDatabase(v);
+			records.addAll(versionRecords);
+			System.out.println("Added "+versionRecords.size()+" records from "+v+"; total size "+records.size());
 		}
 		writeOriginalRecordsToFile(records);
 	}

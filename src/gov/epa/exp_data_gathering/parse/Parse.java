@@ -1,5 +1,6 @@
 package gov.epa.exp_data_gathering.parse;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.Arrays;
@@ -134,13 +135,13 @@ public class Parse {
 					i++;
 					if (i!=0 && i%100000==0) {
 						batch++;
-						String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + batch + ".xlsx";
+						String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + " " + batch + ".xlsx";
 						temp.toExcel_File(mainFolder+File.separator+batchFileName);
 						temp.clear();
 					}
 				}
 				batch++;
-				String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + batch + ".xlsx";
+				String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + " " + batch + ".xlsx";
 				temp.toExcel_File(mainFolder+File.separator+batchFileName);
 			}
 		}
@@ -162,14 +163,14 @@ public class Parse {
 			FileWriter fw = new FileWriter(jsonPath);
 			fw.close();
 			
-			FileWriter fwAppend = new FileWriter(jsonPath,true);
+			BufferedWriter bwAppend = new BufferedWriter(new FileWriter(jsonPath,true));
 			
 			String[] strRecords=gson.toJson(records).split("\n");
 			for (String s:strRecords) {
 				s=ParseUtilities.fixChars(s);
-				fwAppend.write(s+"\n");
+				bwAppend.write(s+"\n");
 			}
-			fwAppend.close();
+			bwAppend.close();
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -238,7 +239,7 @@ public class Parse {
 			p = new ParseSander();
 			break;
 		case ExperimentalConstants.strSourceEpisuite:
-			p = new ParseEpisuiteOriginal();
+			p = new ParseEpisuiteISIS();
 			break;
 		}
 		p.createFiles();
@@ -256,14 +257,13 @@ public class Parse {
 				ExperimentalConstants.strSourceOChem,
 				ExperimentalConstants.strSourceOFMPub,
 				ExperimentalConstants.strSourceOPERA,
-//				ExperimentalConstants.strSourcePubChem,
+				ExperimentalConstants.strSourcePubChem,
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuite};
 		for (String s:sources) {
 			runParse(s,recordType);
 		}
-//		runParse(ExperimentalConstants.strSourceEChemPortalAPI,recordType);
 		DataFetcher d = new DataFetcher(sources,recordType);
 		d.createRecordsDatabase();
 	}
