@@ -4,6 +4,8 @@ import java.text.DecimalFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.RecordChemidplus.ToxicityRecord;
 
@@ -25,7 +27,7 @@ public class ParseUtilities extends Parse {
 					foundNumeric = true;
 					int propertyValueIndex;
 					if (!badUnits && propertyValue.indexOf(strMantissa) > 0) {
-						String checkSymbol = propertyValue.replaceAll("\\s","");
+						String checkSymbol = StringEscapeUtils.unescapeHtml4(propertyValue.replaceAll("\\s",""));
 						propertyValueIndex = checkSymbol.indexOf(strMantissa);
 						er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
 					}
@@ -70,6 +72,7 @@ public class ParseUtilities extends Parse {
 		if (!foundNumeric) {
 			try {
 				double propertyValueAsDouble = extractDoubleFromString(propertyValue,unitsIndex);
+				propertyValue = StringEscapeUtils.unescapeHtml4(propertyValue);
 				int propertyValueIndex = -1;
 				if (propertyValueAsDouble >= 0 && propertyValueAsDouble < 1) {
 					// Bug fix for zeroes, 12/17/2020 - This if statement is new; previous was just the contents of the "else" clause
@@ -280,7 +283,7 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_M;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mol");
 			badUnits = false;
-		} else if (propertyValue.contains("M")) {
+		} else if (propertyValue.contains("M") && !(propertyValue.contains("ML") || propertyValue.contains("MG"))) {
 			unitsIndex = propertyValue.indexOf("M");
 			if (unitsIndex>0) {
 				er.property_value_units_original = ExperimentalConstants.str_M;
@@ -292,14 +295,22 @@ public class ParseUtilities extends Parse {
 			unitsIndex = propertyValue.length();
 		}
 
-		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.toLowerCase().startsWith("water") || propertyValue.toLowerCase().startsWith("h2o")) &&
+		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.toLowerCase().contains("water") || propertyValue.toLowerCase().contains("h2o")) &&
 				!(propertyValue.toLowerCase().startsWith("ca") || propertyValue.toLowerCase().startsWith("circa") || propertyValue.startsWith(">") ||
 						propertyValue.startsWith("<") || propertyValue.startsWith("=") || propertyValue.startsWith("~"))) {
 			er.keep = false;
 			er.reason = "Non-aqueous solubility";
-		} else if (propertyValue.toLowerCase().contains("m naoh") || propertyValue.toLowerCase().contains("m hcl")) {
-			er.keep = false;
-			er.reason = "Non-aqueous solubility";
+		} 
+		String[] badSolvents = {"ethanol","ether","benzene","naoh","hcl","chloroform","ligroin","acet","alcohol","dmso","dimethyl sulfoxide","etoh","hexane","octanol",
+				"dichloromethane","dcm","toluene","glyc","oil","oragnic solvent"};
+		boolean found = false;
+		for (String solvent:badSolvents) {
+			if (found) { continue; }
+			if (propertyValue.toLowerCase().contains(solvent) && !propertyValue.toLowerCase().contains("water") && !propertyValue.toLowerCase().contains("h2o")) {
+				er.keep = false;
+				er.reason = "Non-aqueous solubility";
+				found = true;
+			}
 		}
 
 		boolean foundNumeric = false;
@@ -795,7 +806,8 @@ public class ParseUtilities extends Parse {
 		propertyValue = correctDegreeSymbols(propertyValue);
 		String units = "";
 		if (propertyValue.contains("\u00B0C") || propertyValue.contains("oC")
-				|| (propertyValue.indexOf("C") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1)))) {
+				|| (propertyValue.indexOf("C") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1))
+						&& !propertyValue.contains("CC"))) {
 			units = ExperimentalConstants.str_C;
 		} else if (propertyValue.contains("\u00B0F") || propertyValue.contains("oF")
 				|| (propertyValue.indexOf("F") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("F")-1)))) {
@@ -847,7 +859,7 @@ public class ParseUtilities extends Parse {
 	 * @return			True if checksum holds for each CAS RN in input; false otherwise
 	 */
 	public static boolean isValidCAS(String casInput) {
-		String[] casArray = casInput.split("\\||;");
+		String[] casArray = casInput.split("\\||;|,");
 		boolean valid = true;
 		for (String cas:casArray) {
 			String casTemp = cas.replaceAll("[^0-9]","");

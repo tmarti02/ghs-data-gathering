@@ -161,7 +161,7 @@ public class ParsePubChem extends Parse {
 		if ((foundNumeric || er.property_value_qualitative!=null || er.note!=null) && er.keep) {
 			er.keep = true;
 			er.reason = null;
-		} else {
+		} else if (er.keep) {
 			er.keep = false;
 			er.reason = "Bad data or units";
 		}
