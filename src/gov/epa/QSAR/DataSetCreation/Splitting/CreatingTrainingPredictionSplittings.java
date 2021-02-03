@@ -19,7 +19,12 @@ import weka.core.Instances;
 public class CreatingTrainingPredictionSplittings {
 	
 	public static final String tableNameSplittings="Splittings";
-
+	
+	
+	public static final String choiceKennardStoneMaxMin="KennardStoneMaxMin";
+	public static final String choiceSphereMaxMin="SphereMaxMin2";
+	public static final String choiceOPERA="OPERA";
+	
 	
 	static String [] fieldNames= {"DSSTOX_Structure_Id","property_name","splitting","t_p"};
 
@@ -209,11 +214,11 @@ public class CreatingTrainingPredictionSplittings {
 //		double c = 11;//Rat LD50
 		double c = 13.5;//BCF		
 		int maxCount=5;//maximum count of chemicals inside sphere to add to training and test sets
-		SphereExclusion.GoSphere2(instances, 2,"SphereMaxMin2", c,maxCount,property,dbpath);
+		SphereExclusion.GoSphere2(instances, 2,choiceSphereMaxMin, c,maxCount,property,dbpath);
 	}
 	
 	public static void createKennardStoneSplitting (String property,Instances instances, String dbpath) {
-		String RationalDesignMethod="KennardStoneMaxMin";
+		String RationalDesignMethod=choiceKennardStoneMaxMin;
 		double predFrac=0.2;
 		int normMethod=2;
 		KennardStone.GoKennardStone(property,instances, predFrac, normMethod, RationalDesignMethod, dbpath);

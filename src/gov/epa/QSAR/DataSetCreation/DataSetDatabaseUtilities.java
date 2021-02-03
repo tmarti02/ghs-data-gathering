@@ -131,6 +131,34 @@ public class DataSetDatabaseUtilities {
 
 	}
 	
+	public static Vector<String> getID_Property_Smiles_AsString (String propertyName,String splitting,String t_p,Connection conn) {
+		Vector<String> values=new Vector<>();
+		try {
+			
+			Statement stat=conn.createStatement();	
+						
+			values.add("ID\tProperty\tSmiles");
+			
+			String sql = getSQL_ID_Property_Smiles(propertyName, splitting, t_p);
+			ResultSet rs=SQLite_GetRecords.getRecords(stat, sql);			
+					
+			while (rs.next()) {				
+				values.add(rs.getString(1)+"\t"+rs.getString(2)+"\t"+rs.getString(3));
+			}
+			
+//			for (int i=0;i<values.size();i++) {
+//				System.out.println((i+1)+"\t"+values.get(i));
+//			}
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return values;
+		
+
+	}
+
+	
 	public static String getInstancesAsStringOneDB (String propertyName,String software,String dbpath) {
 		return getInstancesAsStringOneDB(propertyName, software, dbpath, null);
 	}
@@ -144,6 +172,16 @@ public class DataSetDatabaseUtilities {
 		instances.setClassIndex(0);
 		return instances;
 	}
+	
+	public static Instances getInstances (String property,String software,String dbpath) {
+		String strInstances=DataSetDatabaseUtilities.getInstancesAsStringOneDB(property, software, dbpath);
+
+		System.out.println("Done getting instances as String from db tables");	
+		Instances instances=getInstances(strInstances);
+		instances.setClassIndex(0);
+		return instances;
+	}
+
 	
 	public static Instances getInstances(String strInstances) {
 		InputStream inputStream = new ByteArrayInputStream(strInstances.getBytes());
@@ -183,6 +221,7 @@ public class DataSetDatabaseUtilities {
 			
 			values="ID\tProperty\t"+descriptorNames+"\r\n";
 			
+						
 			String sql = getSQLCreateInstances(propertyName, software);
 			ResultSet rs=SQLite_GetRecords.getRecords(stat, sql);
 			
@@ -229,11 +268,33 @@ public class DataSetDatabaseUtilities {
 				+ "FROM OverallSets\n"
 				+ "INNER JOIN Splittings on OverallSets.DSSTox_Structure_Id = Splittings.DSSTOX_Structure_Id\n"
 				+ "INNER JOIN Descriptors on OverallSets.DSSTox_Structure_Id = Descriptors.DSSTOX_Structure_Id\n"
-				+ "WHERE OverallSets.property_name=\"" + propertyName + "\"" + " and Splittings.splitting=\""
-				+ splitting + "\"" + " and Splittings.t_p=\"" + t_p + "\"" + "and Descriptors.DescriptorSoftware=\""
+				+ "WHERE OverallSets.property_name=\"" + propertyName + "\"" + 
+				" and Splittings.splitting=\""+ splitting + "\"" + " and Splittings.t_p=\"" + t_p + "\" and Splittings.property_name=\""+propertyName+"\""+ 
+				" and Descriptors.DescriptorSoftware=\""
 				+ software + "\"\n" + "ORDER BY OverallSets.DSSTox_Structure_Id;";			
 		
-		System.out.println(sql);
+//		System.out.println(sql);
+		return sql;
+	}
+	
+	/**
+	 * Get training or prediction set as string
+	 * 
+	 * @param propertyName
+	 * @param splitting
+	 * @param t_p
+	 * @param software
+	 * @return
+	 */
+	private static String getSQL_ID_Property_Smiles(String propertyName, String splitting, String t_p) {
+		String sql = "Select OverallSets.DSSTox_Structure_Id, OverallSets.property_value_point_estimate_qsar,OverallSets.Structure_Smiles_2D_QSAR\n"
+				+ "FROM OverallSets\n"
+				+ "INNER JOIN Splittings on OverallSets.DSSTox_Structure_Id = Splittings.DSSTOX_Structure_Id\n"
+				+ "WHERE OverallSets.property_name=\"" + propertyName + "\"" + 
+				" and Splittings.splitting=\""+ splitting + "\"" + " and Splittings.t_p=\"" + t_p + "\" and Splittings.property_name=\""+propertyName+"\""+ 
+				  "\n" + "ORDER BY OverallSets.DSSTox_Structure_Id;";			
+		
+//		System.out.println(sql);
 		return sql;
 	}
 

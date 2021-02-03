@@ -152,6 +152,7 @@ public class RecordQSAR {
 		this.property_value_units_qsar=ro.property_value_units_original;
 		this.property_value_point_estimate_qsar=Double.parseDouble(ro.LogMolar);
 		this.Structure_SMILES_2D_QSAR=ro.Canonical_QSARr;
+		this.smiles=ro.Original_SMILES;
 	}
 
 	public boolean setQSARUnits() {
