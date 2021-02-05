@@ -33,6 +33,7 @@ public class ParseUtilities extends Parse {
 					}
 				}
 			} catch (Exception ex) {
+				System.out.println(propertyValue);
 				ex.printStackTrace();
 			}
 		}
@@ -112,7 +113,7 @@ public class ParseUtilities extends Parse {
 				symbol = "?";
 			} else if (str.charAt(index-1)=='<') {
 				symbol = "<";
-			} else if (str.charAt(index-1)=='~' || str.contains("ca.") || str.contains("circa")) {
+			} else if (str.charAt(index-1)=='~' || str.contains("ca.") || str.contains("circa") || str.contains("approx")) {
 				symbol = "~";
 			} else if (index > 1 && str.charAt(index-2)=='>' && str.charAt(index-1)=='=') {
 				symbol = ">=";
@@ -200,15 +201,83 @@ public class ParseUtilities extends Parse {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
-		if (propertyValue.toLowerCase().contains("in benzene") && propertyValue.toLowerCase().contains("in water") &&
-				propertyValue.toLowerCase().indexOf("benzene") < propertyValue.toLowerCase().indexOf("water")) {
-			propertyValue = propertyValue.substring(propertyValue.toLowerCase().indexOf("benzene")+8);
+		
+		Matcher containsNumber = Pattern.compile(".*\\d.*").matcher(propertyValue);
+		if (!containsNumber.find()) { return false; }
+		
+		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","etoh","hexane","meoh",
+				"dichloromethane","dcm","toluene","glyc","oils","oragnic solvent","dmf","et2o","etoac","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
+				"acid","oxide","pyri","carbon tetrachloride","pet","anol","ch3oh","c2h5oh","ch2cl2","chcl3","alkali","dsmo","dma","buffer","ammon"};
+		boolean foundSolvent = false;
+		boolean foundWater = false;
+		String[] waterSynonyms = {"water (distilled)","water","h2o","h20","aq"};
+		for (String solvent:badSolvents) {
+			// Stop searching if a solvent has already been found
+			if (foundSolvent) { continue; }
+			// Check for non-aqueous solvents
+			if (propertyValue.toLowerCase().contains(solvent) && (er.chemical_name==null || !er.chemical_name.contains(solvent))) {
+				// Mark non-aqueous solvent found
+				foundSolvent = true;
+				foundWater = false;
+				// See if there is an aqueous record too
+				for (String water:waterSynonyms) {
+					// Stop searching if water synonym already found
+					if (foundWater) { continue;}
+					// If water synonym found, parse out aqueous entry
+					if (propertyValue.toLowerCase().contains(water)) {
+						foundWater = true;
+						boolean parsed = false;
+						Matcher colonFormat1 = Pattern.compile(water+"( solubility)?: ([ <>~=\\.0-9MmGguLl/@%\\(\\)째CcFKPpHh]+)[;,]").matcher(propertyValue);
+						if (colonFormat1.find()) {
+							propertyValue = colonFormat1.group(2);
+							parsed = true;
+							er.updateNote("Aqueous entry parsed (colon 1): "+propertyValue);
+						}
+						if (!parsed) {
+							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%\\(\\)째CcFKPpHh]+)\\("+water+"\\)[;,]").matcher(propertyValue);
+							if (colonFormat2.find()) {
+								propertyValue = colonFormat2.group(1);
+								parsed = true;
+								er.updateNote("Aqueous entry parsed (colon 2): "+propertyValue);
+							}
+						}
+						if (!parsed) {
+							Matcher inWaterFormat1 = Pattern.compile("([<>=~\\?]*[ ]?[0-9]*\\.?[0-9]+[ <>~=\\.0-9XxMmGguLl/@%\\(\\)째CcFKPpHh\\+-]+ in )"+water
+									+"( [@(at)] [ <>~=0-9MmGgLl/@%\\(\\)캜cFKPpHh]+)?").matcher(propertyValue);
+							if (inWaterFormat1.find()) {
+								propertyValue = inWaterFormat1.group(1)+water+inWaterFormat1.group(2);
+								parsed = true;
+								er.updateNote("Aqueous entry parsed (in water 1): "+propertyValue);
+							}
+						}
+						if (!parsed) {
+							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?"+water+" \\(?([ <>~=\\.0-9XxMmGguLl/@%\\(\\)째CcFKPpHh\\+-]+)\\)?").matcher(propertyValue);
+							if (inWaterFormat2.find()) {
+								propertyValue = inWaterFormat2.group(2);
+								parsed = true;
+								er.updateNote("Aqueous entry parsed (in water 2): "+propertyValue);
+							}
+						}
+
+						if (!parsed) {
+							er.flag = true;
+							er.updateNote("Aqueous entry: "+propertyValue+", Solvent: "+solvent+", Water: "+water);
+						}
+					}
+				}
+				// If no water synonyms found, mark record as bad
+				if (!foundWater) {
+					er.keep = false;
+					er.reason = "Non-aqueous solubility";
+				}
+			}
 		}
+		
 		if (propertyValue.toLowerCase().contains("mg/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/l")) {
+		} else if (propertyValue.toLowerCase().contains("mg/l") || (propertyValue.toLowerCase().contains("mg/1") && !propertyValue.toLowerCase().contains("mg/10"))) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
@@ -244,9 +313,10 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_ug_100mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/100")) {
+		} else if (propertyValue.toLowerCase().contains("g/100mL") || propertyValue.toLowerCase().contains("g / 100 mL") 
+				|| propertyValue.toLowerCase().contains("g/100 mL")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("/");
 			badUnits = false;
 		// under construction - CR
 		//
@@ -283,7 +353,7 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_uM;
 			unitsIndex = propertyValue.indexOf("M");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mol/l")) {
+		} else if (propertyValue.toLowerCase().contains("mol/l") || propertyValue.toLowerCase().contains("mols/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_M;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mol");
 			badUnits = false;
@@ -299,24 +369,6 @@ public class ParseUtilities extends Parse {
 			unitsIndex = propertyValue.length();
 		}
 
-		if (Character.isAlphabetic(propertyValue.charAt(0)) && !(propertyValue.toLowerCase().contains("water") || propertyValue.toLowerCase().contains("h2o")) &&
-				!(propertyValue.toLowerCase().startsWith("ca") || propertyValue.toLowerCase().startsWith("circa") || propertyValue.startsWith(">") ||
-						propertyValue.startsWith("<") || propertyValue.startsWith("=") || propertyValue.startsWith("~"))) {
-			er.keep = false;
-			er.reason = "Non-aqueous solubility";
-		} 
-		String[] badSolvents = {"ethanol","ether","benzene","naoh","hcl","chloroform","ligroin","acet","alcohol","dmso","dimethyl sulfoxide","etoh","hexane","octanol",
-				"dichloromethane","dcm","toluene","glyc","oil","oragnic solvent"};
-		boolean found = false;
-		for (String solvent:badSolvents) {
-			if (found) { continue; }
-			if (propertyValue.toLowerCase().contains(solvent) && !propertyValue.toLowerCase().contains("water") && !propertyValue.toLowerCase().contains("h2o")) {
-				er.keep = false;
-				er.reason = "Non-aqueous solubility";
-				found = true;
-			}
-		}
-
 		boolean foundNumeric = false;
 		if (er.keep) { foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits); }
 		return foundNumeric;
@@ -330,13 +382,13 @@ public class ParseUtilities extends Parse {
 		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| at| and only|\\(|;))?";
 		}
-		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?(uble)]?|miscible))( (in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
+		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?(uble)]?|miscible))( [\\(]?(in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
 		while (solubilityMatcher.find()) {
 			String qualifier = solubilityMatcher.group(1);
 			qualifier = qualifier.equals("souble") ? "soluble" : qualifier;
 			String prep = solubilityMatcher.group(7);
 			String solvent = solubilityMatcher.group(9);
-			if (solvent==null || solvent.length()==0 || solvent.contains("water")) {
+			if (solvent==null || solvent.length()==0 || solvent.contains("water") || solvent.contains("aqueous solution")) {
 				er.property_value_qualitative = qualifier;
 			} else {
 				prep = prep==null ? " " : prep;
@@ -809,7 +861,7 @@ public class ParseUtilities extends Parse {
 		propertyValue=propertyValue.replaceAll("[ |�]","");
 		propertyValue = correctDegreeSymbols(propertyValue);
 		String units = "";
-		if (propertyValue.contains("\u00B0C") || propertyValue.contains("oC")
+		if (propertyValue.contains("\u00B0C") || propertyValue.contains("oC") || propertyValue.contains("deg. C")
 				|| (propertyValue.indexOf("C") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1))
 						&& !propertyValue.contains("CC"))) {
 			units = ExperimentalConstants.str_C;
