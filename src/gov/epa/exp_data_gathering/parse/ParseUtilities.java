@@ -240,6 +240,10 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_mg_100mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("ug/100")) {
+			er.property_value_units_original = ExperimentalConstants.str_ug_100mL;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
+			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("g/100")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/");

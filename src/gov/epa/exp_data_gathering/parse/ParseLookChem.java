@@ -133,7 +133,7 @@ public class ParseLookChem extends Parse {
 		er.url = baseURL+prefix+"/"+lcr.CAS+".html";
 
 		boolean foundNumeric = false;
-		propertyValue = propertyValue.replaceAll(",", ".").replaceAll("-", "-");
+		propertyValue = propertyValue.replaceAll("(\\d),(\\d)", "$1.$2");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
 			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);

@@ -74,6 +74,7 @@ public class ExperimentalConstants {
 	public static final String str_mol_kg_H20="mol/kg H20";
 	public static final String str_g_kg_H20="g/kg H20";
 	public static final String str_ug_g_H20 ="ug/g H20";
+	public static final String str_ug_100mL = "ug/100mL";
 	
 	//Other:
 	public static final String str_dec="decomposes";
