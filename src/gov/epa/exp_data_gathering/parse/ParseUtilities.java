@@ -202,8 +202,8 @@ public class ParseUtilities extends Parse {
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
 		
-		Matcher containsNumber = Pattern.compile(".*\\d.*").matcher(propertyValue);
-		if (!containsNumber.find()) { return false; }
+		Matcher anyNumber = Pattern.compile(".*\\d.*").matcher(propertyValue);
+		if (!anyNumber.find()) { return false; }
 		
 		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","etoh","hexane","meoh",
 				"dichloromethane","dcm","toluene","glyc","oils","oragnic solvent","dmf","et2o","etoac","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
@@ -222,19 +222,23 @@ public class ParseUtilities extends Parse {
 				// See if there is an aqueous record too
 				for (String water:waterSynonyms) {
 					// Stop searching if water synonym already found
-					if (foundWater) { continue;}
+					if (foundWater) { continue; }
 					// If water synonym found, parse out aqueous entry
 					if (propertyValue.toLowerCase().contains(water)) {
 						foundWater = true;
 						boolean parsed = false;
-						Matcher colonFormat1 = Pattern.compile(water+"( solubility)?: ([ <>~=\\.0-9MmGguLl/@%\\(\\)째CcFKPpHh]+)[;,]").matcher(propertyValue);
-						if (colonFormat1.find()) {
-							propertyValue = colonFormat1.group(2);
-							parsed = true;
-							er.updateNote("Aqueous entry parsed (colon 1): "+propertyValue);
+						if (!parsed) {
+							Matcher colonFormat1 = Pattern.compile(water+"( solubility)?: ([ <>~=\\.0-9MmGguLl/@%\\(\\)째CcFKPpHh]+)[;,]")
+									.matcher(propertyValue.toLowerCase());
+							if (colonFormat1.find()) {
+								propertyValue = colonFormat1.group(2);
+								parsed = true;
+								er.updateNote("Aqueous entry parsed (colon 1): "+propertyValue);
+							}
 						}
 						if (!parsed) {
-							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%\\(\\)째CcFKPpHh]+)\\("+water+"\\)[;,]").matcher(propertyValue);
+							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%\\(\\)째CcFKPpHh]+)\\("+water+"\\)[;,]")
+									.matcher(propertyValue);
 							if (colonFormat2.find()) {
 								propertyValue = colonFormat2.group(1);
 								parsed = true;
@@ -243,7 +247,8 @@ public class ParseUtilities extends Parse {
 						}
 						if (!parsed) {
 							Matcher inWaterFormat1 = Pattern.compile("([<>=~\\?]*[ ]?[0-9]*\\.?[0-9]+[ <>~=\\.0-9XxMmGguLl/@%\\(\\)째CcFKPpHh\\+-]+ in )"+water
-									+"( [@(at)] [ <>~=0-9MmGgLl/@%\\(\\)캜cFKPpHh]+)?").matcher(propertyValue);
+									+"( [@(at)] [ <>~=0-9MmGgLl/@%\\(\\)캜cFKPpHh]+)?")
+									.matcher(propertyValue);
 							if (inWaterFormat1.find()) {
 								propertyValue = inWaterFormat1.group(1)+water+inWaterFormat1.group(2);
 								parsed = true;
@@ -251,7 +256,9 @@ public class ParseUtilities extends Parse {
 							}
 						}
 						if (!parsed) {
-							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?"+water+" \\(?([ <>~=\\.0-9XxMmGguLl/@%\\(\\)째CcFKPpHh\\+-]+)\\)?").matcher(propertyValue);
+							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?"+water+
+									" \\(?([ <>~=\\.0-9XxMmGguLl(to)(percent)(mols)(about)/@%\\(\\)째CcFKPpHh\\+-]+)\\)?")
+									.matcher(propertyValue);
 							if (inWaterFormat2.find()) {
 								propertyValue = inWaterFormat2.group(2);
 								parsed = true;
@@ -318,9 +325,6 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("/");
 			badUnits = false;
-		// under construction - CR
-		//
-		//
 		} else if (propertyValue.toLowerCase().contains("% w/w") || propertyValue.toLowerCase().contains("wt%")) {
 			er.property_value_units_original = ExperimentalConstants.str_pctWt;
 			unitsIndex = propertyValue.indexOf("%");
@@ -876,7 +880,7 @@ public class ParseUtilities extends Parse {
 	
 	private static String correctDegreeSymbols(String s) {
 		StringBuilder sb = new StringBuilder(s);
-		replaceAll(sb,"[\u00BA|\u1D52|\u02DA|\u309C|\u18DE|\u2070|\u2218|\u29B5|\u1BC8|\u26AC|&deg;]","\u00B0");
+		replaceAll(sb,"[\u00BA\u1D52\u02DA\u309C\u18DE\u2070\u2218\u29B5\u1BC8\u26AC(&deg;)]","\u00B0");
 		replaceAll(sb,"\u2103","\u00B0C");
 		replaceAll(sb,"\u2109","\u00B0F");
 		return sb.toString();
