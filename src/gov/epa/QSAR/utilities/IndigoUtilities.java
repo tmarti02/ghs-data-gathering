@@ -2,8 +2,8 @@ package gov.epa.QSAR.utilities;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -15,7 +15,7 @@ import com.epam.indigo.IndigoObject;
 
 public class IndigoUtilities {
 
-	private static final Logger logger = LogManager.getLogger(IndigoUtilities.class);
+//	private static final Logger logger = LogManager.getLogger(IndigoUtilities.class);
 
 	private static Indigo indigo = null;
 	

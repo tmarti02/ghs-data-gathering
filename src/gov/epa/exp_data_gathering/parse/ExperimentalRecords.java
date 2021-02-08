@@ -30,8 +30,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
-import gov.epa.QSAR.DataSetCreation.RecordQSAR;
-import gov.epa.QSAR.DataSetCreation.RecordsQSAR;
+import gov.epa.QSAR.DataSetCreation.api.RecordQSAR;
+import gov.epa.QSAR.DataSetCreation.api.RecordsQSAR;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.eChemPortalAPI.Processing.FinalRecord;
 import gov.epa.eChemPortalAPI.Query.APIConstants;

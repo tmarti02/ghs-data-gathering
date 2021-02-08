@@ -19,14 +19,15 @@ import org.jsoup.select.Elements;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
+
 
 import gov.epa.api.RawDataRecord;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
 
 public class RecordChemidplus {
 
@@ -411,8 +412,7 @@ public class RecordChemidplus {
 		
 		
 		try {
-			Unirest.setTimeouts(0, 0);
-			
+						
 			HttpResponse<String> response = Unirest.get("https://chem.nlm.nih.gov/chemidplus/ProxyServlet?"
 					+ "objectHandle=Search&actionHandle=searchChemIdLite&"
 					+ "nextPage=jsp%2Fchemidheavy%2FChemidDataview.jsp&"
