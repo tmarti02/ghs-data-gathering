@@ -5,10 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Arrays;
 
-//import com.fasterxml.jackson.databind.ser.std.StdArraySerializers.FloatArraySerializer;
-
-import gov.epa.QSAR.DataSetCreation.RecordQSAR;
-import gov.epa.QSAR.DataSetCreation.RecordsQSAR;
+import gov.epa.QSAR.DataSetCreation.api.RecordQSAR;
+import gov.epa.QSAR.DataSetCreation.api.RecordsQSAR;
 
 public class SQLite_CreateTable {
 

@@ -35,6 +35,10 @@ import org.openxmlformats.schemas.drawingml.x2006.main.CTNoFillProperties;
 import org.openxmlformats.schemas.drawingml.x2006.main.CTTextBody;
 import org.openxmlformats.schemas.drawingml.x2006.main.CTTextParagraph;
 
+import gov.epa.QSAR.DataSetCreation.api.RecordDashboard;
+import gov.epa.QSAR.DataSetCreation.api.RecordQSAR;
+import gov.epa.QSAR.DataSetCreation.api.RecordsDashboard;
+import gov.epa.QSAR.DataSetCreation.api.RecordsQSAR;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 

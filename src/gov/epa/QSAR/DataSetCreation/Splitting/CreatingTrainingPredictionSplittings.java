@@ -8,13 +8,13 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
 
-import gov.epa.QSAR.DataSetCreation.RecordQSAR;
-import gov.epa.QSAR.DataSetCreation.RecordsQSAR;
+import gov.epa.QSAR.DataSetCreation.api.RecordQSAR;
+import gov.epa.QSAR.DataSetCreation.api.RecordsQSAR;
 //import gov.epa.QSAR.build.buildAllModels.InstancesFromString;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_Utilities;
 import weka.core.Instances;
-
+import weka.core.Instance;
 
 public class CreatingTrainingPredictionSplittings {
 	
@@ -320,5 +320,65 @@ public class CreatingTrainingPredictionSplittings {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+
+
+	public static void createRandomAlcoholsSplitting(String property, Instances instances, String dbpath) {
+		String descStart="As [+5 valence, one double bond]";
+		
+		int start=instances.attribute(descStart).index();
+		
+		int indexCH3=instances.attribute("-CH3 [aliphatic attach]").index();
+		
+		System.out.println(start+"\t"+indexCH3);
+		
+		int count=0;
+		
+		RecordsQSAR records=new RecordsQSAR();
+		
+		for (int j=0;j<instances.numInstances();j++) {
+			
+			Instance instance=instances.instance(j);
+			
+			double nCH3=instance.value(instances.attribute("-CH3 [aliphatic attach]").index());
+			double nCH2=instance.value(instances.attribute("-CH2- [aliphatic attach]").index());
+			double nCH=instance.value(instances.attribute("-CH< [aliphatic attach]").index());
+			double nC=instance.value(instances.attribute(">C< [aliphatic attach]").index());
+			double nOH=instance.value(instances.attribute("-OH [aliphatic attach]").index());
+			
+			double sumAlcoholFrags=nCH3+nCH2+nCH+nC+nOH;
+			
+			double sumAllFrags=0;
+			for (int i=start;i<instances.numAttributes();i++) {
+				sumAllFrags+=instance.value(i);
+				
+//				if (instance.value(i)!=0)
+//					System.out.println(instance.stringValue(0)+"\t"+instances.attribute(i).name()+"\t"+instance.value(i));
+			}
+//			System.out.println(instance.stringValue(0)+"\t"+sumAllFrags+"\t"+sumAlcoholFrags);
+			
+			if (sumAllFrags>sumAlcoholFrags) continue;
+		
+			RecordQSAR rec=new RecordQSAR();
+			rec.DSSTox_Structure_Id=instance.stringValue(0);
+			rec.property_name=property;
+			
+			records.add(rec);
+			count++;
+			System.out.println(count+"\t"+instance.stringValue(0));
+		}
+		
+		Collections.shuffle(records,new Random(1234));
+		int NumInFold=(int)Math.floor((double)records.size()/(double)5);
+		
+		RecordsQSAR recordsPred= new RecordsQSAR();
+		for (int i=1;i<=NumInFold;i++) {
+			recordsPred.add(records.remove(0));
+		}
+		Connection conn=SQLite_Utilities.getConnection(dbpath);
+		addSplittingRows(conn, "rnd-alcohols", "P", recordsPred);
+		addSplittingRows(conn, "rnd-alcohols", "T", records);
+		
 	}
 }
