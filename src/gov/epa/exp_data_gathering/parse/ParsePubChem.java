@@ -184,7 +184,6 @@ public class ParsePubChem extends Parse {
 		String qual = matcher.group(4);
 		String denom = matcher.group(5);
 		String solvent = matcher.group(6);
-		System.out.println(num+", "+denom);
 		if (num==null || num.isBlank() || denom==null || denom.isBlank() || (solvent!=null && !(solvent.contains("water") || solvent.contains("h2o")))) { return false; }
 		denom = denom.replaceAll(",", "");
 		er.property_value_point_estimate_original = Double.parseDouble(num)/Double.parseDouble(denom);

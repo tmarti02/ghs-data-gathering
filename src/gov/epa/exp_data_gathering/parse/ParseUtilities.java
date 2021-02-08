@@ -196,14 +196,19 @@ public class ParseUtilities extends Parse {
 		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
 		return foundNumeric;
 	}
+	
+	private static boolean containsNumber(String str) {
+		Matcher anyNumber = Pattern.compile(".*\\d.*").matcher(str);
+		return anyNumber.find();
+	}
 
 	public static boolean getWaterSolubility(ExperimentalRecord er,String propertyValue,String sourceName) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
+		propertyValue = correctDegreeSymbols(propertyValue);
 		
-		Matcher anyNumber = Pattern.compile(".*\\d.*").matcher(propertyValue);
-		if (!anyNumber.find()) { return false; }
+		if (!containsNumber(propertyValue)) { return false; }
 		
 		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","etoh","hexane","meoh",
 				"dichloromethane","dcm","toluene","glyc","oils","oragnic solvent","dmf","et2o","etoac","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
@@ -212,6 +217,7 @@ public class ParseUtilities extends Parse {
 		boolean foundWater = false;
 		String[] waterSynonyms = {"water (distilled)","water","h2o","h20","aq"};
 		for (String solvent:badSolvents) {
+			if (er.source_name.equals(ExperimentalConstants.strSourceOFMPub)) { break; } // OFMPub formatting is too weird to apply this
 			// Stop searching if a solvent has already been found
 			if (foundSolvent) { continue; }
 			// Check for non-aqueous solvents
@@ -228,38 +234,38 @@ public class ParseUtilities extends Parse {
 						foundWater = true;
 						boolean parsed = false;
 						if (!parsed) {
-							Matcher colonFormat1 = Pattern.compile(water+"( solubility)?: ([ <>~=\\.0-9MmGguLl/@%\\(\\)째CcFKPpHh]+)[;,]")
+							Matcher colonFormat1 = Pattern.compile(water+"( solubility)?: ([ <>~=\\.0-9MmGguLl/@%\\(\\)\u00B0CcFKPpHh]+)[;,]")
 									.matcher(propertyValue.toLowerCase());
-							if (colonFormat1.find()) {
+							if (colonFormat1.find() && containsNumber(colonFormat1.group(2))) {
 								propertyValue = colonFormat1.group(2);
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (colon 1): "+propertyValue);
 							}
 						}
 						if (!parsed) {
-							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%\\(\\)째CcFKPpHh]+)\\("+water+"\\)[;,]")
+							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%\\(\\)\\u00B0CcFKPpHh]+)\\("+water+"\\)[;,]")
 									.matcher(propertyValue);
-							if (colonFormat2.find()) {
+							if (colonFormat2.find() && containsNumber(colonFormat2.group(2))) {
 								propertyValue = colonFormat2.group(1);
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (colon 2): "+propertyValue);
 							}
 						}
 						if (!parsed) {
-							Matcher inWaterFormat1 = Pattern.compile("([<>=~\\?]*[ ]?[0-9]*\\.?[0-9]+[ <>~=\\.0-9XxMmGguLl/@%\\(\\)째CcFKPpHh\\+-]+ in )"+water
-									+"( [@(at)] [ <>~=0-9MmGgLl/@%\\(\\)캜cFKPpHh]+)?")
+							Matcher inWaterFormat1 = Pattern.compile("([<>=~\\?]*[ ]?[0-9]*\\.?[0-9]+[ <>~=\\.0-9XxMmGguLl(at)/@%\\(\\)\\u00B0CcFKPpHhWwTtVvOoLl\\+-]+ in )"
+									+water+"( [@(at)] [ <>~=0-9MmGgLl/@%\\(\\)\\u00B0CcFKPpHh]+)?")
 									.matcher(propertyValue);
-							if (inWaterFormat1.find()) {
-								propertyValue = inWaterFormat1.group(1)+water+inWaterFormat1.group(2);
+							if (inWaterFormat1.find() && containsNumber(inWaterFormat1.group(2))) {
+								propertyValue = inWaterFormat1.group(1)+water+(inWaterFormat1.group(2)==null ? "" : inWaterFormat1.group(2));
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (in water 1): "+propertyValue);
 							}
 						}
 						if (!parsed) {
 							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?"+water+
-									" \\(?([ <>~=\\.0-9XxMmGguLl(to)(percent)(mols)(about)/@%\\(\\)째CcFKPpHh\\+-]+)\\)?")
+									" \\(?([ <>~=(\\d\\.\\d)0-9XxMmGguLl(to)(percent)(mols)(about)/@%\\(\\)\\u00B0CcFKPpHh\\+-]+)[\\)\\.,;]")
 									.matcher(propertyValue);
-							if (inWaterFormat2.find()) {
+							if (inWaterFormat2.find() && containsNumber(inWaterFormat2.group(2))) {
 								propertyValue = inWaterFormat2.group(2);
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (in water 2): "+propertyValue);
@@ -320,8 +326,8 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_ug_100mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/100mL") || propertyValue.toLowerCase().contains("g / 100 mL") 
-				|| propertyValue.toLowerCase().contains("g/100 mL")) {
+		} else if (propertyValue.toLowerCase().contains("g/100ml") || propertyValue.toLowerCase().contains("g / 100 ml") 
+				|| propertyValue.toLowerCase().contains("g/100 ml") || propertyValue.toLowerCase().contains("g/100 cc")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("/");
 			badUnits = false;
@@ -880,10 +886,12 @@ public class ParseUtilities extends Parse {
 	
 	private static String correctDegreeSymbols(String s) {
 		StringBuilder sb = new StringBuilder(s);
-		replaceAll(sb,"[\u00BA\u1D52\u02DA\u309C\u18DE\u2070\u2218\u29B5\u1BC8\u26AC(&deg;)]","\u00B0");
+		replaceAll(sb,"[\u00BA\u1D52\u02DA\u309C\u18DE\u2070\u2218\u29B5\u1BC8\u26AC]","\u00B0");
 		replaceAll(sb,"\u2103","\u00B0C");
 		replaceAll(sb,"\u2109","\u00B0F");
-		return sb.toString();
+		String s_new = sb.toString();
+		s_new = s_new.replaceAll("&deg;","\u00B0"); // This replacement doesn't behave with StringBuilder
+		return s_new;
 	}
 	
 	public static boolean hasIdentifiers(ExperimentalRecord er) {
