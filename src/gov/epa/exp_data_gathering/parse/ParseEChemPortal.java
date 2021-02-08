@@ -137,7 +137,7 @@ public class ParseEChemPortal extends Parse {
 					ParseUtilities.getTemperatureProperty(er,propertyValue);
 				} else if (ecpr.section.equals("Water solubility")) {
 					er.property_name = ExperimentalConstants.strWaterSolubility;
-					ParseUtilities.getWaterSolubility(er,propertyValue,sourceName);
+					ParseWaterSolubility.getWaterSolubility(er,propertyValue,sourceName);
 				} else if (ecpr.section.equals("Vapour pressure")) {
 					er.property_name = ExperimentalConstants.strVaporPressure;
 					ParseUtilities.getVaporPressure(er,propertyValue);

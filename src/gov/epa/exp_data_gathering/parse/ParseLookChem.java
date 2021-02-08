@@ -143,9 +143,9 @@ public class ParseLookChem extends Parse {
 			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
 			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
+			foundNumeric = ParseWaterSolubility.getWaterSolubility(er, propertyValue,sourceName);
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
-			ParseUtilities.getQualitativeSolubility(er, propertyValue,sourceName);
+			ParseWaterSolubility.getQualitativeSolubility(er, propertyValue,sourceName);
 		}
 		
 		// Adds measurement methods and notes to valid records
