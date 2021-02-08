@@ -131,7 +131,7 @@ public class ParseEChemPortalAPI extends Parse {
 			break;
 		case APIConstants.waterSolubility:
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			ParseWaterSolubility.getWaterSolubility(er,r.value,sourceName);
+			ParseUtilities.getWaterSolubility(er,r.value,sourceName);
 			break;
 		case APIConstants.dissociationConstant:
 			er.property_name = ExperimentalConstants.str_pKA;

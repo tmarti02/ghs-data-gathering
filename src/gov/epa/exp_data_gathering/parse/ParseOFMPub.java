@@ -112,9 +112,9 @@ public class ParseOFMPub extends Parse {
 				er.updateNote(ExperimentalConstants.str_subl);
 			}
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = ParseWaterSolubility.getWaterSolubility(er, propertyValue,sourceName);
+			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
 			if (!foundNumeric && opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) {
-				foundNumeric = ParseWaterSolubility.getWaterSolubility(er, opr.resultRemarks.replaceAll(" per ","/"),sourceName);
+				foundNumeric = ParseUtilities.getWaterSolubility(er, opr.resultRemarks.replaceAll(" per ","/"),sourceName);
 			}
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			if (er.temperature_C==null && remarks.contains("temperature:")) {

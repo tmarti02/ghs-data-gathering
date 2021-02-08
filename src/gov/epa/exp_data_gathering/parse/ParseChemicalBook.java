@@ -129,7 +129,7 @@ public class ParseChemicalBook extends Parse {
 			}
 			
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
-			foundNumeric = ParseWaterSolubility.getWaterSolubility(er, propertyValue,sourceName);
+			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			getQualitativeSolubility(er, propertyValue);
 		}
