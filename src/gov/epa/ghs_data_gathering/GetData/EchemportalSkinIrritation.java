@@ -193,13 +193,13 @@ public class EchemportalSkinIrritation {
 		
 		Hashtable<String,String>htDict=ssr.getIOR_Dictionary();
 		
-		boolean printUniqueIORs=false;
-		EChemPortalParse.goThroughRecords(filepathText, filepathGood, filepathBad, scifinderFilePath, ECHACASlookup, htDict,printUniqueIORs);
-		
-		String filepathGoodNoDuplicates=folder+"\\echemportal "+endpoint+" good-no duplicates.txt";
-		EChemPortalParse.omitDuplicateRecords(filepathGood, filepathGoodNoDuplicates);
-		
-		String filepathOmitBadScifinder=folder+"\\echemportal "+endpoint+" good-no duplicates-omit bad scifinder.txt";		
-		EChemPortalParse.omitBadScifinderRecords(filepathGoodNoDuplicates, filepathOmitBadScifinder);
+//		boolean printUniqueIORs=false;
+//		EChemPortalParse.goThroughRecords(filepathText, filepathGood, filepathBad, scifinderFilePath, ECHACASlookup, htDict,printUniqueIORs);
+//		
+//		String filepathGoodNoDuplicates=folder+"\\echemportal "+endpoint+" good-no duplicates.txt";
+//		EChemPortalParse.omitDuplicateRecords(filepathGood, filepathGoodNoDuplicates);
+//		
+//		String filepathOmitBadScifinder=folder+"\\echemportal "+endpoint+" good-no duplicates-omit bad scifinder.txt";		
+//		EChemPortalParse.omitBadScifinderRecords(filepathGoodNoDuplicates, filepathOmitBadScifinder);
 	}
 }

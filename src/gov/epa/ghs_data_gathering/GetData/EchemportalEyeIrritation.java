@@ -36,14 +36,18 @@ import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 
 public class EchemportalEyeIrritation {
+	public static final String scoreAmbiguous="-1";
+	public static final String scorePositive="1";
+	public static final String scoreNegative="0";
 
+	
 	
 	Hashtable<String,String>getIOR_Dictionary() {
 		Hashtable <String,String>ht=new Hashtable<>();
 		
-		String strA=EChemPortalParse.scoreAmbiguous;
-		String strN=EChemPortalParse.scoreNegative;
-		String strP=EChemPortalParse.scorePositive;
+		String strA=scoreAmbiguous;
+		String strN=scoreNegative;
+		String strP=scorePositive;
 		String scoreMild=strN;//assign mild to negative result for irritation
 
 		ht.put("\"practically non-irritating\"",scoreMild);		
@@ -219,8 +223,6 @@ public class EchemportalEyeIrritation {
 		ht.put("the test item produced a maximum group mean score of 34.5 and was classified as a moderate irritant (class 5 on a 1 to 8 scale)",strP);
 		ht.put("the test item was classified as irritating to eyes (category 2)",strP);
 
-
-
 		return ht;
 	}
 	
@@ -238,20 +240,7 @@ public class EchemportalEyeIrritation {
 //		Vector<RecordEchemportal2>records=EChemPortalParse.parseExcelEchemportalQueryResult(filepathExcel);
 //		RecordEchemportal2.writeToFile(filepathText, records);		
 		
-		String filepathGood=folder+"echemportal "+endpoint+" good.txt";
-		String filepathBad=folder+"echemportal "+endpoint+" bad.txt";		
-		String scifinderFilePath=Scifinder.folderScifinder+"\\scifinder_chemical_info.txt";
-		String ECHACASlookup="AA Dashboard\\Data\\ECHA\\REACH_dossier_data\\echa cas lookup.txt";
-		
 		Hashtable<String,String>htDict=ssr.getIOR_Dictionary();
 		
-		boolean printUniqueIORs=false;
-		EChemPortalParse.goThroughRecords(filepathText, filepathGood, filepathBad, scifinderFilePath, ECHACASlookup, htDict,printUniqueIORs);
-		
-		String filepathGoodNoDuplicates=folder+"\\echemportal "+endpoint+" good-no duplicates.txt";
-		EChemPortalParse.omitDuplicateRecords(filepathGood, filepathGoodNoDuplicates);
-		
-		String filepathOmitBadScifinder=folder+"\\echemportal "+endpoint+" good-no duplicates-omit bad scifinder.txt";		
-		EChemPortalParse.omitBadScifinderRecords(filepathGoodNoDuplicates, filepathOmitBadScifinder);
 	}
 }

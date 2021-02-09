@@ -27,7 +27,7 @@ import org.jsoup.nodes.Element;
 
 import gov.epa.api.RawDataRecord;
 import gov.epa.database.SQLite_CreateTable;
-import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
+
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 public class DownloadWebpageUtilities {

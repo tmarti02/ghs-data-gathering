@@ -40,8 +40,8 @@ import org.openscience.cdk.io.iterator.IteratingSDFReader;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
+import gov.epa.exp_data_gathering.parse.OECD_Toolbox.RecordOECD_Toolbox;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
-import gov.epa.ghs_data_gathering.GetData.SkinSensitization.RecordOECD_Toolbox;
 import gov.epa.ghs_data_gathering.Utilities.MolFileUtilities;
 import gov.epa.ghs_data_gathering.Utilities.TESTConstants;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
@@ -55,39 +55,39 @@ public class Scifinder {
 	 * Fixes CAS so that uses CAS that's listed as Scifinder's main cas and not alternate cas in scifinder 
 	 */
 	
-	public static void getAlternateCASFromScifinder(Hashtable<String, ScifinderRecord> htScifinderRecords, RecordEchemportal2 r) {
-		List<String> tmp = Collections.list(htScifinderRecords.keys());
-		Iterator<String> it = tmp.iterator();
-		
-		while(it.hasNext()){
-			ScifinderRecord sr=htScifinderRecords.get(it.next());
-			
-//			System.out.println(r.CAS_final+"\talternate reg numbers:"+sr.Alternate_Registry_Numbers);
-			
-			String [] altCAS=sr.Alternate_Registry_Numbers.split(",");
-			
-			for (int i=0;i<altCAS.length;i++) {
-				if(altCAS[i].trim().equals(r.CAS_final)) {
-					System.out.println("Alternate CAS Match:"+r.CAS_final+"\t"+sr.Registry_Number+"\t"+altCAS[i]);
-					r.CAS_warning=EChemPortalParse.append(r.CAS_warning, "Alternative CAS ("+r.CAS_final+") replaced");
-					r.CAS_final=sr.Registry_Number;
-					return;
-				}
-			}
-			
-			String [] deletedCAS=sr.Deleted_Registry_Numbers.split(",");
-			
-			for (int i=0;i<deletedCAS.length;i++) {
-				if(deletedCAS[i].trim().equals(r.CAS_final)) {
-					System.out.println("Deleted CAS Match:"+r.CAS_final+"\t"+sr.Registry_Number+"\t"+deletedCAS[i]);
-					r.CAS_warning=EChemPortalParse.append(r.CAS_warning, "Deleted CAS ("+r.CAS_final+") replaced");
-					r.CAS_final=sr.Registry_Number;
-					return;
-				}
-			}
-			
-		}
-	}
+//	public static void getAlternateCASFromScifinder(Hashtable<String, ScifinderRecord> htScifinderRecords, RecordEchemportal2 r) {
+//		List<String> tmp = Collections.list(htScifinderRecords.keys());
+//		Iterator<String> it = tmp.iterator();
+//		
+//		while(it.hasNext()){
+//			ScifinderRecord sr=htScifinderRecords.get(it.next());
+//			
+////			System.out.println(r.CAS_final+"\talternate reg numbers:"+sr.Alternate_Registry_Numbers);
+//			
+//			String [] altCAS=sr.Alternate_Registry_Numbers.split(",");
+//			
+//			for (int i=0;i<altCAS.length;i++) {
+//				if(altCAS[i].trim().equals(r.CAS_final)) {
+//					System.out.println("Alternate CAS Match:"+r.CAS_final+"\t"+sr.Registry_Number+"\t"+altCAS[i]);
+//					r.CAS_warning=EChemPortalParse.append(r.CAS_warning, "Alternative CAS ("+r.CAS_final+") replaced");
+//					r.CAS_final=sr.Registry_Number;
+//					return;
+//				}
+//			}
+//			
+//			String [] deletedCAS=sr.Deleted_Registry_Numbers.split(",");
+//			
+//			for (int i=0;i<deletedCAS.length;i++) {
+//				if(deletedCAS[i].trim().equals(r.CAS_final)) {
+//					System.out.println("Deleted CAS Match:"+r.CAS_final+"\t"+sr.Registry_Number+"\t"+deletedCAS[i]);
+//					r.CAS_warning=EChemPortalParse.append(r.CAS_warning, "Deleted CAS ("+r.CAS_final+") replaced");
+//					r.CAS_final=sr.Registry_Number;
+//					return;
+//				}
+//			}
+//			
+//		}
+//	}
 	
 	/**
 	 * Fixes CAS so that uses CAS that's listed as Scifinder's main cas and not alternate cas in scifinder 
@@ -155,41 +155,41 @@ public class Scifinder {
 	
 	
 	
-	public static void fixCASFinal(RecordEchemportal2 r,Hashtable<String, ScifinderRecord>htScifinderRecords) {
-		
-		//@TODO Put list of corrections in a text file 
-		
-		
-		if (r.CAS_final==null) r.CAS_final="";
-
-		//		System.out.println(r);
-		if (!r.CAS_final.isEmpty()) {
-			r.CAS_final=r.CAS_final.trim();
-
-			if (r.CAS_final.equals("133-06-02")) {
-				r.CAS_final="133-06-2";
-			} else if (r.CAS_final.equals("68037-0-14")) {
-				r.CAS_final="68037-01-4";
-			} else if (r.CAS_final.contentEquals("188416- 34-4")) {
-				r.CAS_final="188416-34-4";
-			} else if (r.CAS_final.contentEquals("Basic Violet 1: 8004-87-3")) {
-				r.CAS_final="8004-87-3";
-			}
-			getAlternateCASFromScifinder(htScifinderRecords, r);
-
-			if (htScifinderRecords.get(r.CAS_final)!=null) {
-				ScifinderRecord sr=htScifinderRecords.get(r.CAS_final);
-				r.formula=sr.Formula;
-				r.CAS_warning=omitBasedOnScifinderFormula(r.CAS_warning, r.formula);
-				r.CAS_warning=omitBasedOnScifinderClassIdentifier(r.CAS_warning, sr);
-			}
-
-		} else {
-			r.CAS_warning="No final CAS available";
-//			r.omit_reason=EChemPortalParse.append(r.omit_reason,r.CAS_warning);
-
-		}
-	}
+//	public static void fixCASFinal(RecordEchemportal2 r,Hashtable<String, ScifinderRecord>htScifinderRecords) {
+//		
+//		//@TODO Put list of corrections in a text file 
+//		
+//		
+//		if (r.CAS_final==null) r.CAS_final="";
+//
+//		//		System.out.println(r);
+//		if (!r.CAS_final.isEmpty()) {
+//			r.CAS_final=r.CAS_final.trim();
+//
+//			if (r.CAS_final.equals("133-06-02")) {
+//				r.CAS_final="133-06-2";
+//			} else if (r.CAS_final.equals("68037-0-14")) {
+//				r.CAS_final="68037-01-4";
+//			} else if (r.CAS_final.contentEquals("188416- 34-4")) {
+//				r.CAS_final="188416-34-4";
+//			} else if (r.CAS_final.contentEquals("Basic Violet 1: 8004-87-3")) {
+//				r.CAS_final="8004-87-3";
+//			}
+//			getAlternateCASFromScifinder(htScifinderRecords, r);
+//
+//			if (htScifinderRecords.get(r.CAS_final)!=null) {
+//				ScifinderRecord sr=htScifinderRecords.get(r.CAS_final);
+//				r.formula=sr.Formula;
+//				r.CAS_warning=omitBasedOnScifinderFormula(r.CAS_warning, r.formula);
+//				r.CAS_warning=omitBasedOnScifinderClassIdentifier(r.CAS_warning, sr);
+//			}
+//
+//		} else {
+//			r.CAS_warning="No final CAS available";
+////			r.omit_reason=EChemPortalParse.append(r.omit_reason,r.CAS_warning);
+//
+//		}
+//	}
 	
 	private static boolean haveBadElement(AtomContainer mol) {
 

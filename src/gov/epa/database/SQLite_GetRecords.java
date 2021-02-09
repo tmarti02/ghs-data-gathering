@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 public class SQLite_GetRecords {
@@ -137,24 +139,35 @@ public class SQLite_GetRecords {
 				if (val!=null) {
 					Field myField = r.getClass().getDeclaredField(name);	
 					
-					if (myField.getType().getName().contentEquals("boolean")) {
+					String type=myField.getType().getName();
+					
+					if (type.contentEquals("boolean")) {
 						myField.setBoolean(r, Boolean.parseBoolean(val));
-
-					} else if (myField.getType().getName().contentEquals("double")) {
+					} else if (type.contentEquals("double")) {
 						myField.setDouble(r, Double.parseDouble(val));
-
-					} else if (myField.getType().getName().contentEquals("int")) {
+					} else if (type.contentEquals("int")) {
 						myField.setInt(r, Integer.parseInt(val));
 
-					} else if (myField.getType().getName().contentEquals("java.lang.Double")) {
+					} else if (type.contentEquals("java.lang.Double")) {
 						Double dval=Double.parseDouble(val);						
 						myField.set(r, dval);
-					} else if (myField.getType().getName().contentEquals("java.lang.Integer")) {
+					} else if (type.contentEquals("java.lang.Integer")) {
 						Integer ival=Integer.parseInt(val);
 						myField.setInt(r,ival);
-					} else if (myField.getType().getName().contentEquals("java.lang.String")) {
+					} else if (type.contentEquals("java.lang.String")) {
 						myField.set(r, val);
-					} else if (myField.getType().getName().contentEquals("java.util.List")) {
+					} else if (type.contentEquals("java.util.Set")) {
+//						System.out.println(name+"\t"+val);
+						val=val.replace("[", "").replace("]", "");
+						
+						String  [] values = val.split(",");
+						Set<String>list=new HashSet<>();
+						for (String value:values) {
+							list.add(value.trim());
+						}
+						myField.set(r,list);
+
+					} else if (type.contentEquals("java.util.List")) {
 //						System.out.println(name+"\t"+val);
 						val=val.replace("[", "").replace("]", "");
 						
@@ -164,13 +177,9 @@ public class SQLite_GetRecords {
 							list.add(value.trim());
 						}
 						myField.set(r,list);
-						
 					
 					} else {
 						System.out.println("Need to implement: "+myField.getType().getName());
-						
-						
-						
 					}					
 										
 				}

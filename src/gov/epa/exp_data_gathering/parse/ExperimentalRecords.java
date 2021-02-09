@@ -30,8 +30,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
-import gov.epa.QSAR.DataSetCreation.api.RecordQSAR;
-import gov.epa.QSAR.DataSetCreation.api.RecordsQSAR;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.eChemPortalAPI.Processing.FinalRecord;
 import gov.epa.eChemPortalAPI.Query.APIConstants;
@@ -127,25 +125,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return json;
 	}
 	
-	public RecordsQSAR getValidQSARRecords() {
-		RecordsQSAR qsarRecords = new RecordsQSAR();
-		
-		for (ExperimentalRecord er:this) {
-			if (!er.keep) {
-				continue;
-			} else if (!er.isValidPointEstimatePossible()) {
-//				System.out.println(er);
-				continue;
-			} else if (!er.isValidConditions()) {
-				continue;
-			} else {
-//				System.out.println("good"+er);
-				RecordQSAR qr = new RecordQSAR(er);
-				qsarRecords.add(qr);
-			}
-		}
-		return qsarRecords;
-	}
+	
 
 	
 	public ExperimentalRecord getRecord(String CAS) {
@@ -286,7 +266,12 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		}
 	}
 	
-	
+	/**
+	 * TODO rewrite this so it uses same code for both tabs to make edits easier
+	 * 
+	 * @param filePath
+	 * @param fieldNames
+	 */
 	public void toExcel_File(String filePath,String [] fieldNames) {
 
 		String[] headers = fieldNames;
