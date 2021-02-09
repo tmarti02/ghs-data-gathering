@@ -1,8 +1,8 @@
 package gov.epa.exp_data_gathering.parse;
+
 import gov.epa.api.RawDataRecord;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 import java.io.File;

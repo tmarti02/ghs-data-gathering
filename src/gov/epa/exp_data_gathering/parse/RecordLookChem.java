@@ -19,7 +19,7 @@ import org.jsoup.select.Elements;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
+
 
 
 public class RecordLookChem {
@@ -274,7 +274,7 @@ public class RecordLookChem {
 	}
 
 	public static void main(String[] args) {
-		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx","General",521600,550000,false);
+		downloadWebpagesFromExcelToDatabase("Data"+"/ALLCAS.xlsx","General",800000,850000,false);
 	}
 	
 }

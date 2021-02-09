@@ -1,52 +1,81 @@
-package gov.epa.ghs_data_gathering.GetData.SkinSensitization;
+package gov.epa.exp_data_gathering.parse.eChemPortalSkinSensitization;
 
-import java.io.FileWriter;
 import java.util.Hashtable;
-import java.util.Vector;
-
-import gov.epa.ghs_data_gathering.GetData.DSSTOX;
+import gov.epa.eChemPortalAPI.Processing.FinalRecord;
+import gov.epa.eChemPortalAPI.Processing.FinalRecords;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.EChemPortal.EChemPortalGetRecords;
 import gov.epa.ghs_data_gathering.GetData.EChemPortalParse;
-import gov.epa.ghs_data_gathering.GetData.RecordChemReg;
-import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
-import gov.epa.ghs_data_gathering.GetData.RecordEchemportal2;
-import gov.epa.ghs_data_gathering.GetData.RecordTox;
 
-/**
- * Class to parse skin sens data from echemportal spreadsheet
- * 
- * 1. Download data from echemportal save as follows:
- * 
- 		String date="2019-12-30";
-		String endpoint="LLNA";
-		String source="eChemPortal";
-		String folder="C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\000 Papers\\2020 skin sensitization paper\\"+endpoint+"_"+source+"\\";		
-		String filepathExcel=folder+endpoint+"_"+source+"_"+date+".xls";
-
-	2. Parse the spreadsheet, store as RecordEchemportal2 records:
+public class ParseEChemPortalSkinSensitization {
 	
-		Vector<RecordEchemportal2>recordsTox=EChemPortalParse.parseExcelEchemportalQueryResult(filepathExcel,0); 
-
-	3. Upload echemportal records into chemreg (map by name and CAS fields)- unfortunately chemreg doesnt store autonumbered record number to map back later
-		To simplify mapping, only upload unique list of CAS+Name combinations by creating a text file using:
-		getUniqueCASNameList(recordsTox, filepathUniqueToxRecords);
+	void go() {
+		Hashtable<String,String>dict=getIOR_Dictionary();
+		
+		ExperimentalRecords expRecords=EChemPortalGetRecords.getExperimentalRecords("mouse_SkinSensitisation");
+		FinalRecords finalRecords=EChemPortalGetRecords.getFinalRecords("skin sensitisation: in vivo (LLNA)");
+		
+		Hashtable<String,FinalRecord>htFinalRecords=new Hashtable<>();
+		
+		for (FinalRecord fr:finalRecords) {
+			htFinalRecords.put(fr.id, fr);
+		}
+		
+		ExperimentalRecords expRecords2=new ExperimentalRecords();
+		
+		for (ExperimentalRecord er:expRecords) {
+			if (!er.original_source_name.contentEquals("ECHA REACH")) continue;
+			if (er.reason.contentEquals("No identifiers")) continue;
 			
-	4. Export ChemReg records from "All Records" in chemreg to "LLNA_eChemPortal_ChemReg.xlsx"
-	
-	5. Obtain the list of unique SID values from chemreg records:
-	RecordChemReg.getUniqueSIDs(recordsChemReg);
-	
-	6. For unique list of SIDs, download structure data from https://comptox-prod.epa.gov/dashboard/dsstoxdb/batch_search" as Excel 
-		Check boxes for CAS-RN, InChiKey, IUPAC Name, Smiles, QSAR Ready Smiles, Molecular Formula
-		
-	
-		
- * 
- * @author TMARTI02
- *
- */
-public class SkinSensitizationEchemportal {
+			if (htFinalRecords.get(er.fr_id)==null) continue;
+			
+			FinalRecord fr=htFinalRecords.get(er.fr_id);			
+			if (fr.species==null) continue;
+						
 
+			
+			String ior = getIOR(fr);
+
+			if (ior.contains("charcoal")) continue;
+			
+			if (dict.get(ior.toLowerCase())==null)
+				System.out.println(ior+"\t***"+fr.interpretationOfResults);
+			
+			expRecords2.add(er);
+		}
+		
+		
+		System.out.println(expRecords2.size());
+//		System.out.println(finalRecords.size());
+	}
+
+	private String getIOR(FinalRecord fr) {
+		String ior=fr.interpretationOfResults.replace("Migrated information", "").replace("other:", "").trim().toLowerCase();
+
+		if (ior.contains("criteria used for")) 
+			ior=ior.substring(0, ior.indexOf("criteria used for"));		 
+		if (ior.contains("in accordance")) 
+			ior=ior.substring(0, ior.indexOf("in accordance"));
+		if (ior.contains("according to")) 
+			ior=ior.substring(0, ior.indexOf("according to"));
+		if (ior.contains("based on")) 
+			ior=ior.substring(0, ior.indexOf("based on"));
+		
+		ior =ior.trim();
+		
+				
+		
+		return ior;
+	}
+	
+	public static void main (String[] args) {
+		ParseEChemPortalSkinSensitization p=new ParseEChemPortalSkinSensitization();
+		p.go();
+	}
+	
 	static Hashtable<String,String>getIOR_Dictionary() {
+		
 		Hashtable <String,String>ht=new Hashtable<>();
 		
 		String strA=EChemPortalParse.scoreAmbiguous;
@@ -170,6 +199,7 @@ public class SkinSensitizationEchemportal {
 		ht.put("a moderate skin sensitizer",strP);
 		ht.put("cat. 1, h317",strP);
 		ht.put("category 1 (skin sensitising)",strP);
+		ht.put("sensitising clp category 1b",strP);		
 		ht.put("category 1a",strP);
 		ht.put("category 1a (indication of significant skin sensitising potential)",strP);
 		ht.put("category 1b",strP);
@@ -250,114 +280,5 @@ public class SkinSensitizationEchemportal {
 
 		
 		return ht;
-	}
-	
-	
-	/**
-	 * Go through skin sensitization records and retrieve LLNA records
-	 * @param filepath
-	 * @param filepathGood
-	 * @param filepathBad
-	 */
-	public static void getUniqueCASNameList(Vector<RecordEchemportal2>records,String filepathOut) {
-		try {
-
-			FileWriter fwOut=new FileWriter(filepathOut);
-
-			fwOut.write(RecordEchemportal2.getHeader()+"\r\n");
-						
-			Hashtable<String,RecordEchemportal2>htUniqueChems=new Hashtable<>();
-						
-			for (int i=0;i<records.size();i++) {
-				RecordEchemportal2 r = records.get(i);
-
-				String nameCAS=r.Substance_Name.trim()+"\t"+r.Substance_Number;
-				
-				if (htUniqueChems.get(nameCAS)==null) {
-					htUniqueChems.put(nameCAS, r);
-					fwOut.write(r+"\r\n");
-				}
-				
-			}
-			
-			fwOut.close();
-
-
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	
-	public static void main(String[] args) {
-		
-		SkinSensitizationEchemportal ssr=new SkinSensitizationEchemportal();
-		
-		//Start over- 2/13/20:	
-		String date="2019-12-30";
-		String endpoint="LLNA";
-		String source="eChemPortal";
-		
-//		String folder="C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\000 Papers\\2020 skin sensitization paper\\"+endpoint+"_"+source+"\\";
-		String folder="D:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\000 Papers\\2020 skin sensitization paper\\"+endpoint+"_"+source+"\\";
-		
-		String filepathExcel=folder+endpoint+"_"+source+"_"+date+".xls";
-		String filepathText=folder+endpoint+"_"+source+"_"+date+".txt";
-
-		Vector<RecordEchemportal2>recordsTox=EChemPortalParse.parseExcelEchemportalQueryResult(filepathExcel,0);
-//		RecordEchemportal2.writeToFile(filepathText, records);
-		
-		String filepathUniqueToxRecords=folder+endpoint+"_"+source+"_"+date+"_unique_CAS_name.txt";
-		
-//		ssr.getUniqueCASNameList(recordsTox, filepathUniqueToxRecords);
-		
-		
-		Vector<RecordChemReg> recordsChemReg = DSSTOX.parseChemRegExcel(folder + endpoint+"_"+source+"_ChemReg.xlsx");
-		
-		RecordChemReg.getUniqueSIDs(recordsChemReg);
-		
-	
-		Hashtable<String, RecordDashboard> htDashboard = DSSTOX
-				.parseDashboardExcel(folder + endpoint+"_"+source+"_Dashboard.xls");
-				
-		Vector<RecordTox> recordsTox2=new Vector<>();
-		
-		for (RecordEchemportal2 recordEchemportal2:recordsTox) {
-			RecordTox recTox=getRecordTox(recordEchemportal2);		
-			recordsTox2.add(recTox);
-		}
-		
-		DSSTOX.goThroughToxRecords(recordsTox2, recordsChemReg, htDashboard,folder,endpoint,source);
-				
-		
-	}
-
-
-	
-
-
-	private static RecordTox getRecordTox(RecordEchemportal2 recordEchemportal2) {
-		
-		Hashtable<String,String>ht=getIOR_Dictionary();
-		
-		EChemPortalParse.getInterpretationBasis(recordEchemportal2);
-		
-		RecordTox r=new RecordTox();
-		r.CAS=recordEchemportal2.Substance_Number;
-		r.chemicalName=recordEchemportal2.Substance_Name;
-				
-		String tox=ht.get(recordEchemportal2.Interpretation_of_results);
-		
-		if (tox.contentEquals(EChemPortalParse.scoreNegative)) r.binaryResult=0;
-		else if (tox.contentEquals(EChemPortalParse.scorePositive)) r.binaryResult=1;
-		else if (tox.contentEquals(EChemPortalParse.scoreAmbiguous)) r.binaryResult=-1;
-		else {
-			System.out.println(tox);
-		}
-		
-//		System.out.println(r.CAS+"\t"+tox);
-//		System.out.println(recordEchemportal2.Interpretation_of_results);
-		
-		return r;
 	}
 }

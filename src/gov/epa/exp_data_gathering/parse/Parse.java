@@ -31,6 +31,8 @@ public class Parse {
 	public String jsonFolder;
 	public String databaseFolder;
 	public String webpageFolder;
+	
+	public boolean removeDuplicates=true;
 
 	protected String fileNameSourceExcel;//input excel spreadsheet
 	protected String fileNameHtmlZip;//input as zip file of webpages
@@ -111,8 +113,10 @@ public class Parse {
 		ExperimentalRecords records=goThroughOriginalRecords();
 		records.addSourceBasedIDNumbers();
 		
-		DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
-		d.removeDuplicates(records,sourceName);
+		if (removeDuplicates) {
+			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
+			d.removeDuplicates(records,sourceName);
+		}
 		
 		ExperimentalRecords recordsBad = records.dumpBadRecords();
 

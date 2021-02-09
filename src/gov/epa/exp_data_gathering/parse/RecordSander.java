@@ -3,14 +3,9 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.sql.RowSetListener;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -20,8 +15,7 @@ import org.jsoup.select.Elements;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
-import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
+
 
 public class RecordSander {
 	

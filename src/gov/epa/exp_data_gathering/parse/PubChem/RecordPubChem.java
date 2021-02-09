@@ -21,13 +21,14 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.exp_data_gathering.parse.RecordDashboard;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Data;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.IdentifierData;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Information;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Property;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Section;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.StringWithMarkup;
-import gov.epa.ghs_data_gathering.GetData.RecordDashboard;
+
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 public class RecordPubChem {

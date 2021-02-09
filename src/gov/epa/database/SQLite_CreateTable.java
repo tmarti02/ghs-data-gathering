@@ -5,8 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Arrays;
 
-import gov.epa.QSAR.DataSetCreation.api.RecordQSAR;
-import gov.epa.QSAR.DataSetCreation.api.RecordsQSAR;
 
 public class SQLite_CreateTable {
 
