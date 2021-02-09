@@ -13,6 +13,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.Bradley.ParseBradley;
+import gov.epa.exp_data_gathering.parse.ChemBL.ParseChemBL;
+import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortal;
+import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortalAPI;
+import gov.epa.exp_data_gathering.parse.EChemPortal.ToxParseEChemPortalAPI;
+import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteISIS;
+import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteOriginal;
+import gov.epa.exp_data_gathering.parse.OChem.ParseOChem;
+import gov.epa.exp_data_gathering.parse.OPERA.ParseOPERA;
+import gov.epa.exp_data_gathering.parse.PubChem.ParsePubChem;
+import gov.epa.exp_data_gathering.parse.QSARDB.ParseQSARDB;
 
 public class Parse {
 	

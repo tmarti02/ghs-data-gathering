@@ -2,13 +2,10 @@ package gov.epa.QSAR.DataSetCreation;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
+
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -25,13 +22,19 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 
+
 import org.openscience.cdk.AtomContainer;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonSyntaxException;
 
 import gov.epa.QSAR.DataSetCreation.Splitting.CreatingTrainingPredictionSplittings;
+import gov.epa.QSAR.DataSetCreation.api.RecordChemReg;
+import gov.epa.QSAR.DataSetCreation.api.RecordDSSTox;
+import gov.epa.QSAR.DataSetCreation.api.RecordDashboard;
+import gov.epa.QSAR.DataSetCreation.api.RecordQSAR;
+import gov.epa.QSAR.DataSetCreation.api.RecordTox;
+import gov.epa.QSAR.DataSetCreation.api.RecordsDashboard;
+import gov.epa.QSAR.DataSetCreation.api.RecordsQSAR;
 import gov.epa.QSAR.utilities.CSVUtils;
 import gov.epa.QSAR.utilities.Inchi;
 import gov.epa.QSAR.utilities.IndigoUtilities;
@@ -46,7 +49,7 @@ import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
-import gov.epa.exp_data_gathering.parse.RecordOPERA;
+import gov.epa.exp_data_gathering.parse.OPERA.RecordOPERA;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 import weka.core.Instances;
 
@@ -701,7 +704,94 @@ public class ConvertExperimentalRecordsToDataSet {
 		}
 
 	}
+	/**
+	 * gets padel descriptors from single chemical python webservice
+	 * 
+	 * @param folder
+	 * @param records
+	 * @param filepathDB
+	 */
+	void calculateDescriptorsPadel(String folder, RecordsQSAR records,String filepathDB) {
+
+		try {
+			
+			FileWriter fw2 = new FileWriter(folder + "descriptors padel single webservice.csv");
+
+			System.out.println(new File(folder).getAbsolutePath());
+			
+			
+			String descriptorSoftware=RecordDescriptorsMetadata.softwarePadel;
+			
+			String descNames=TestPadelWebService.generateHeader();
+
+			fw2.write("ID\t" + descNames + "\r\n");
+			
+			System.out.println(descNames);
+			
+			Connection conn = DescriptorDatabaseUtilities.getConnection(descriptorSoftware,descNames,filepathDB);
+			
+			int counter=0;
+			
+			for (RecordQSAR rq : records) {
+				
+				counter++;
+				
+//				if (counter%500==0) System.out.println(counter);
+				
+				if (rq.Structure_SMILES_2D_QSAR.contentEquals("C=O")) continue;
+				if (rq.Structure_SMILES_2D_QSAR.contentEquals("C=C")) continue;
+				
+				System.out.println(rq.DSSTox_Structure_Id);
+				
+				String strDescriptors=RecordDescriptors.lookupDescriptorsInDatabase(conn,rq.DSSTox_Structure_Id,descriptorSoftware);
+								
+				if (strDescriptors==null) {
+									
+					strDescriptors = TestPadelWebService.generatePadelDescriptorsSingle(rq.Structure_SMILES_2D_QSAR);
+					System.out.println(counter+"\t"+rq.Structure_SMILES_2D_QSAR+"\t"+strDescriptors);
+					
+//					System.out.println(strDescriptors);
+					
+//					if (true) break;
+					
+					RecordDescriptors r=new RecordDescriptors();
+
+					r.Descriptors=strDescriptors;
+					r.DescriptorSoftware=descriptorSoftware;
+					r.DSSTox_Structure_Id=rq.DSSTox_Structure_Id;
+					if (conn!=null) r.addRecord(conn);
+
+				} else {
+					System.out.println("From db:\t"+counter+"\t"+rq.Structure_SMILES_2D_QSAR+"\t"+strDescriptors);
+				}
+				
+				
+				String key=rq.DSSTox_Structure_Id;
+				String smiles=rq.Structure_SMILES_2D_QSAR;
+				
+				fw2.write(key + "\t" + strDescriptors + "\r\n");
+				fw2.flush();
+
+//				TimeUnit.SECONDS.sleep(3);
+			}
+
+			conn.close();
+			
+			fw2.flush();
+			fw2.close();
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
 	
+	/**
+	 * Gets padel descriptors from output csv
+	 * 
+	 * @param folder
+	 * @param filepathDB
+	 */
 	void calculateDescriptorsPadel(String folder, String filepathDB) {
 
 		String descriptorSoftware="Padel 2.21";
@@ -828,20 +918,22 @@ public class ConvertExperimentalRecordsToDataSet {
 			
 		String dbpath="databases\\OPERA_WS2.db";
 			
-			recordsQSAR.addFlatQSARRecordsToDB(dbpath);			
-			CreatingTrainingPredictionSplittings.setUpSplittingTable(property,dbpath);
-			CreatingTrainingPredictionSplittings.createNFoldPredictionSets(5,property,recordsQSAR,dbpath);
-			CreatingTrainingPredictionSplittings.addSplittingRowsUsingSetInQSARRecord(dbpath,"OPERA",recordsQSAR);
-			
+//			recordsQSAR.addFlatQSARRecordsToDB(dbpath);			
+//			CreatingTrainingPredictionSplittings.setUpSplittingTable(property,dbpath);
+//			CreatingTrainingPredictionSplittings.createNFoldPredictionSets(5,property,recordsQSAR,dbpath);
+//			CreatingTrainingPredictionSplittings.addSplittingRowsUsingSetInQSARRecord(dbpath,"OPERA",recordsQSAR);
+//			
 			Vector<String>ids=new Vector<>();			
 			for (RecordQSAR recordQSAR:recordsQSAR)
 				ids.add(recordQSAR.DSSTox_Structure_Id);
 			
 			Instances instances=DataSetDatabaseUtilities.getInstances(property, software, dbpath, ids);
-			CreatingTrainingPredictionSplittings.createSphereExclusionSplitting(property, instances, dbpath);
-			CreatingTrainingPredictionSplittings.createKennardStoneSplitting(property, instances, dbpath);			
-			calculateDescriptors(folder, recordsQSAR,dbpath);
-			calculateDescriptorsPadel(folder, dbpath);
+//			CreatingTrainingPredictionSplittings.createRandomAlcoholsSplitting(property, instances, dbpath);
+//			CreatingTrainingPredictionSplittings.createSphereExclusionSplitting(property, instances, dbpath);
+//			CreatingTrainingPredictionSplittings.createKennardStoneSplitting(property, instances, dbpath);			
+//			calculateDescriptors(folder, recordsQSAR,dbpath);
+//			calculateDescriptorsPadel(folder, dbpath);
+//			calculateDescriptorsPadel(folder, recordsQSAR,dbpath);
 
 
 		} catch (Exception e) {

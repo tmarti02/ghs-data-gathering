@@ -21,6 +21,11 @@ import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
+import gov.epa.QSAR.DataSetCreation.api.RecordChemReg;
+import gov.epa.QSAR.DataSetCreation.api.RecordDSSTox;
+import gov.epa.QSAR.DataSetCreation.api.RecordDashboard;
+import gov.epa.QSAR.DataSetCreation.api.RecordQSAR;
+import gov.epa.QSAR.DataSetCreation.api.RecordsQSAR;
 import gov.epa.QSAR.utilities.ExcelUtilities;
 import gov.epa.QSAR.utilities.MolFileUtilities;
 import gov.epa.api.ExperimentalConstants;

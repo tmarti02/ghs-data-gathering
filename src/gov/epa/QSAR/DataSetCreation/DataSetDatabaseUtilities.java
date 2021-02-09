@@ -105,9 +105,9 @@ public class DataSetDatabaseUtilities {
 			String sql = getSQLCreateInstances(propertyName, splitting, t_p, software);
 			ResultSet rs=SQLite_GetRecords.getRecords(stat, sql);
 			
-					
+			int counter=0;		
 			while (rs.next()) {
-				
+				counter++;
 				String strDescriptors=null;
 				if (RecordDescriptors.compressDescriptorsInDB) {
 					byte [] bytes=rs.getBytes(3);				
@@ -117,7 +117,11 @@ public class DataSetDatabaseUtilities {
 				}
 
 				values+=(rs.getString(1)+"\t"+rs.getString(2)+"\t"+strDescriptors)+"\r\n";
+				
+//				if (counter==1000) break;
 			}
+			
+//			System.out.println(values);
 			
 //			for (int i=0;i<values.size();i++) {
 //				System.out.println((i+1)+"\t"+values.get(i));
