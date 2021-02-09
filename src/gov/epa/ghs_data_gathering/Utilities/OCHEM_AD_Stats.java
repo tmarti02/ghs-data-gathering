@@ -25,7 +25,7 @@ public class OCHEM_AD_Stats {
 	class RecordOCHEM {
 		String ID;
 		String exp;
-		String pred;
+		Double pred;
 		Double AD;
 	}
 	
@@ -63,7 +63,7 @@ public class OCHEM_AD_Stats {
 			int colNumAD=-1;
 			
 			for (int i=0;i<colNames.size();i++) {
-				if (colNames.get(i).contains("{measured")) colNumExp=i;
+				if (colNames.get(i).contains("{measured, converted")) colNumExp=i;
 				
 				if(colNumPred==-1) 
 					if (colNames.get(i).contains("{predicted")) colNumPred=i;
@@ -72,7 +72,7 @@ public class OCHEM_AD_Stats {
 					if (colNames.get(i).contains(colNameAD)) colNumAD=i;
 			}
 			
-//			System.out.println(colNumExp+"\t"+colNumPred+"\t"+colNumAD);
+			// System.out.println(colNumExp+"\t"+colNumPred+"\t"+colNumAD);
 			
 			for (int i=1;i<sheet.getLastRowNum();i++) {
 				
@@ -82,10 +82,13 @@ public class OCHEM_AD_Stats {
 				
 				r.ID=rowi.getCell(colNumID).getStringCellValue();
 				r.exp=rowi.getCell(colNumExp).getStringCellValue();
-				r.pred=rowi.getCell(colNumPred).getStringCellValue();
+				r.pred=rowi.getCell(colNumPred).getNumericCellValue();
 				if(colNameAD!=null) r.AD=rowi.getCell(colNumAD).getNumericCellValue();
 				
-				if (r.pred.isEmpty())r.AD=9999999.0;
+				if (r.pred == null)r.AD=9999999.0;
+				// 	if (r.pred.isNull())r.AD=9999999.0;
+				// leora's original code saved above
+
 				
 //				if (r.ID.contentEquals("ADD SIDs"))r.AD=99999.0;
 //				*** add SIDs for the chemicals that are too large.***
@@ -113,6 +116,7 @@ public class OCHEM_AD_Stats {
 		
 	}
 	
+/*	
 	StatsBinary getStats(String filepath,String colNameAD,double fracTrainingInsideAD) {
 		
 		try {
@@ -136,6 +140,7 @@ public class OCHEM_AD_Stats {
 		
 		
 	}
+*/
 
 	StatsContinuous getStatsContinuous(String filepath, String colNameAD, double fracTrainingInsideAD) {
 		
@@ -157,9 +162,7 @@ public class OCHEM_AD_Stats {
 			return null;
 		}
 
-	}
-	
-	
+	}	
 	
 	 /**
 	  * Get the AD value that gives you a certain fraction predicted<br><br>
@@ -172,11 +175,11 @@ public class OCHEM_AD_Stats {
 	  * @return
 	  */
 	private double getAD_at_frac(double fracTrainingInsideAD, Vector<RecordOCHEM> recordsTraining) {
-
-//		for (int i=0;i<recordsTraining.size();i++) {
-//			System.out.println(i+"\t"+recordsTraining.get(i).AD);
-//		}
-		
+/*
+		for (int i=0;i<recordsTraining.size();i++) {
+			System.out.println(i+"\t"+recordsTraining.get(i).AD);
+		}
+*/		
 		int countForFrac=(int)(recordsTraining.size()*fracTrainingInsideAD)-1;			
 		return recordsTraining.get(countForFrac).AD;
 		
@@ -204,14 +207,14 @@ public class OCHEM_AD_Stats {
 			if (!file.getName().toLowerCase().contains(".xls")) continue;
 			if (!file.getName().toLowerCase().contains("_"+methodName+"_")) continue;
 			
-//			System.out.println(file.getName()+"\t"+colNameAD);
+			System.out.println(file.getName()+"\t"+colNameAD);
 			
 			StatsContinuous sc= getStatsContinuous(file.getAbsolutePath(), colNameAD, fracTrainingInsideAD);
 						
 //			double product=sb.balancedAccuracy*sb.coverage;
-//			Double product = sc.rSquared*sc.coverage;
+			Double product = sc.rSquared*sc.coverage;
 						
-//			System.out.println(file.getName()+"\t"+colNameAD+"\t"+fracTrainingInsideAD+"\t"+df.format(sc.rSquared)+"\t"+df.format(sc.coverage)+"\t"+df.format(product));
+			System.out.println(file.getName()+"\t"+colNameAD+"\t"+fracTrainingInsideAD+"\t"+df.format(sc.rSquared)+"\t"+df.format(sc.coverage)+"\t"+df.format(product));
 			
 
 		}
@@ -260,8 +263,9 @@ public class OCHEM_AD_Stats {
 		String folderPath="OCHEM";
 				
 		System.out.println("file\tAD_Name\tFrac training\tBA prediction set\tCoverage prediction set\tProduct");
-							
-		String [] adnames= {strASNN_CORREL,strASNN_STDEV};
+		
+		// {strASNN_CORREL,strASNN_STDEV}
+		String [] adnames= {strASNN_CORREL};
 		String method="asnn";
 //		
 //		o.getStatsForFolder(folderPath,null, 1.0,method);
@@ -269,6 +273,8 @@ public class OCHEM_AD_Stats {
 		for (String adname:adnames) {
 			o.getStatsForFolder(folderPath,adname, 0.95,method);	
 		}
+		
+		o.getStatsForFolder(folderPath, strASNN_STDEV, 0.95, method);
 //				
 //		for (String adname:adnames) {
 //			o.getStatsForFolder(folderPath,adname, 1.0,method);	
@@ -296,19 +302,53 @@ public class OCHEM_AD_Stats {
 		
 		StatsContinuous sc = new StatsContinuous();
 		
-		int predCount = 0;
 		int totalCount = 0;
-		
+		int appDomCount = 0;
+		double estSum = 0; // 
+
 		for (int i=0;i<records.size();i++) {
 			
 			RecordOCHEM r=records.get(i);
+					
+			// make this code work when there isn't a prediction, ehh
+			if (r.exp != null) totalCount++;
 			
-			if(true)
-				predCount++;
+			
+			if ((r.AD!=null && r.AD<ADcutoff) || r.AD==null)  {
+				appDomCount++;
+				estSum += Double.parseDouble(r.exp);
+				
+			}	
 
 		}
 		
-		System.out.print(predCount);
+		
+		double mean = estSum/(double)appDomCount;
+		
+		int predCount = 0;
+		double sumSquareTotal = 0;
+		double sumSquareRegression = 0;
+		
+		for (int j=0;j<records.size();j++) {
+			
+			RecordOCHEM r=records.get(j);
+
+			if ((r.AD!=null && r.AD<ADcutoff) || r.AD==null)  {
+
+			Double yHatDifference = Double.parseDouble(r.exp) - r.pred;
+			Double yBarDifference = Double.parseDouble(r.exp) - mean;
+			
+			sumSquareTotal = sumSquareTotal + Math.pow(yBarDifference, 2);
+			sumSquareRegression = sumSquareRegression + Math.pow(yHatDifference, 2);
+			
+			predCount++;
+			}
+			
+		}
+		sc.coverage = (double) predCount / (double) totalCount;
+		sc.rSquared = 1.0  - (sumSquareRegression / sumSquareTotal);
+
+		// System.out.print(totalCount + "       " + appDomCount + "    " + estSum + "    " + mean + "         " + sumSquareRegression + "      " + sumSquareTotal + "sc.r^2 = " + sc.rSquared + "coverage" + sc.coverage + "\n");
 		
 		return sc;
 	}
@@ -325,7 +365,7 @@ public class OCHEM_AD_Stats {
 		
 	}
 	
-	
+	/*
 	public StatsBinary CalculateBinaryStats(Vector<RecordOCHEM>records,double ADcutoff) {		
 //		double cutoff=30; //cutoff for deciding if value = C or NC
 		
@@ -406,5 +446,7 @@ public class OCHEM_AD_Stats {
 		return sc;
 		
 	}
+	
+	*/
 
 }
