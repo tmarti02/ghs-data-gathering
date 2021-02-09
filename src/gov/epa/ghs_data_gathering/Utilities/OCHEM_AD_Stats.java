@@ -138,7 +138,30 @@ public class OCHEM_AD_Stats {
 		
 	}
 
-	 
+	StatsContinuous getStatsContinuous(String filepath, String colNameAD, double fracTrainingInsideAD) {
+		
+		try {
+			
+			Vector<RecordOCHEM> recordsTraining=getRecords(filepath, colNameAD, 0);
+			Vector<RecordOCHEM> recordsPrediction=getRecords(filepath, colNameAD, 1);
+			
+			double AD_at_Frac=9999;
+			
+			if(colNameAD!=null) AD_at_Frac= getAD_at_frac(fracTrainingInsideAD, recordsTraining);
+			
+			StatsContinuous sc = CalculateContinuousStats(recordsPrediction, AD_at_Frac);
+			
+			
+			return sc;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
+
+	}
+	
+	
+	
 	 /**
 	  * Get the AD value that gives you a certain fraction predicted<br><br>
 	  * 
@@ -184,11 +207,12 @@ public class OCHEM_AD_Stats {
 			
 //			System.out.println(file.getName()+"\t"+colNameAD);
 			
-			StatsBinary sb=getStats(file.getAbsolutePath(), colNameAD, fracTrainingInsideAD);
+			StatsContinuous sc= getStatsContinuous(file.getAbsolutePath(), colNameAD, fracTrainingInsideAD);
 						
-			double product=sb.balancedAccuracy*sb.coverage;
+//			double product=sb.balancedAccuracy*sb.coverage;
+//			Double product = sc.rSquared*sc.coverage;
 						
-			System.out.println(file.getName()+"\t"+colNameAD+"\t"+fracTrainingInsideAD+"\t"+df.format(sb.balancedAccuracy)+"\t"+df.format(sb.coverage)+"\t"+df.format(product));
+//			System.out.println(file.getName()+"\t"+colNameAD+"\t"+fracTrainingInsideAD+"\t"+df.format(sc.rSquared)+"\t"+df.format(sc.coverage)+"\t"+df.format(product));
 			
 
 		}
@@ -238,14 +262,14 @@ public class OCHEM_AD_Stats {
 				
 		System.out.println("file\tAD_Name\tFrac training\tBA prediction set\tCoverage prediction set\tProduct");
 							
-//		String [] adnames= {strProbStd,strClassLag,strASNN_CORREL,strASNN_STDEV, strBaggingSTD};
-//		String method="asnn";
+		String [] adnames= {strASNN_CORREL,strASNN_STDEV};
+		String method="asnn";
 //		
 //		o.getStatsForFolder(folderPath,null, 1.0,method);
 //		
-//		for (String adname:adnames) {
-//			o.getStatsForFolder(folderPath,adname, 0.95,method);	
-//		}
+		for (String adname:adnames) {
+			o.getStatsForFolder(folderPath,adname, 0.95,method);	
+		}
 //				
 //		for (String adname:adnames) {
 //			o.getStatsForFolder(folderPath,adname, 1.0,method);	
@@ -255,10 +279,39 @@ public class OCHEM_AD_Stats {
 //		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strClassLag, 1.0,"xgboost");
 //		o.getStatsForFolder(folderPath, null, 1.0,"xgboost");//if dont have AD use null
 				
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"knn");
-		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"knn");
-		o.getStatsForFolder(folderPath, null, 1.0,"knn");//if dont have AD use null
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 0.95,"knn");
+//		o.getStatsForFolder(folderPath, OCHEM_AD_Stats.strBaggingSTD, 1.0,"knn");
+//		o.getStatsForFolder(folderPath, null, 1.0,"knn");//if dont have AD use null
 			
+	}
+	
+	public class StatsContinuous {
+		public Double coverage;
+		public Double predError;
+		public Double SumSquareTotal;
+		public Double SumSquareReg;
+		public Double rSquared;
+	}
+	
+	public StatsContinuous CalculateContinuousStats(Vector<RecordOCHEM> records, double ADcutoff) {
+		
+		StatsContinuous sc = new StatsContinuous();
+		
+		int predCount = 0;
+		int totalCount = 0;
+		
+		for (int i=0;i<records.size();i++) {
+			
+			RecordOCHEM r=records.get(i);
+			
+			if(true)
+				predCount++;
+
+		}
+		
+		System.out.print(predCount);
+		
+		return sc;
 	}
 	
 	public class StatsBinary {
@@ -272,6 +325,7 @@ public class OCHEM_AD_Stats {
 		public double balancedAccuracy;
 		
 	}
+	
 	
 	public StatsBinary CalculateBinaryStats(Vector<RecordOCHEM>records,double ADcutoff) {		
 //		double cutoff=30; //cutoff for deciding if value = C or NC
