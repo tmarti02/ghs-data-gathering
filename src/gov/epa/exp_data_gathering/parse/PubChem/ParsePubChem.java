@@ -122,6 +122,7 @@ public class ParsePubChem extends Parse {
 		propertyValue = propertyValue.replaceAll("greater than", ">");
 		propertyValue = propertyValue.replaceAll("less than", "<");
 		propertyValue = propertyValue.replaceAll(" or equal to ", "=");
+		propertyValue = propertyValue.replaceAll("about ", "~");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er,propertyValue);
 			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
@@ -182,15 +183,19 @@ public class ParsePubChem extends Parse {
 	
 	private static boolean getPubChemTextSolubility(ExperimentalRecord er, String propertyValue) {
 		propertyValue = propertyValue.toLowerCase();
-		Matcher matcher = Pattern.compile("([0-9.]+)[ ]?gm? (sol )?(dissolves )?in (greater than |about )?([0-9.,]+) ml (of )?([a-z]+)").matcher(propertyValue);
+		Matcher matcher = Pattern.compile("([0-9.]+|one)[ ]?gr?a?m? (sol )?(dissolves )?in (>|~)?[ ]?([0-9.,]+) (ml|cc) (of )?([a-z]+)").matcher(propertyValue);
 		if (!matcher.find()) { return false; }
 		String num = matcher.group(1);
 		String qual = matcher.group(4);
 		String denom = matcher.group(5);
-		String solvent = matcher.group(6);
+		String solvent = matcher.group(7);
 		if (num==null || num.isBlank() || denom==null || denom.isBlank() || (solvent!=null && !(solvent.contains("water") || solvent.contains("h2o")))) { return false; }
 		denom = denom.replaceAll(",", "");
-		er.property_value_point_estimate_original = Double.parseDouble(num)/Double.parseDouble(denom);
+		if (num.equals("one")) { 
+			er.property_value_point_estimate_original = 1.0/Double.parseDouble(denom);
+		} else {
+			er.property_value_point_estimate_original = Double.parseDouble(num)/Double.parseDouble(denom);
+		}
 		er.property_value_units_original = ExperimentalConstants.str_g_mL;
 		if (qual==null || qual.isBlank()) {
 			return true;
@@ -199,6 +204,21 @@ public class ParsePubChem extends Parse {
 		} else if (qual.contains("about")) {
 			er.property_value_numeric_qualifier = "~";
 		}
+		return true;
+	}
+	
+	private static boolean getPubChemSimpleSolubility(ExperimentalRecord er, String propertyValue) {
+		propertyValue = ParseUtilities.correctDegreeSymbols(propertyValue.toLowerCase());
+		Matcher matcher = Pattern.compile("([0-9.]+) g/([0-9.]+) (ml|cc|g) (hot |cold )?water(( at| @) ([0-9.]+) \u00B0C)?").matcher(propertyValue);
+		if (!matcher.find()) { return false; }
+		String num = matcher.group(1);
+		String denom = matcher.group(2);
+		String temp = matcher.group(7);
+		if (num==null || num.isBlank() || denom==null || denom.isBlank()) { return false; }
+		denom = denom.replaceAll(",", "");
+		er.property_value_point_estimate_original = Double.parseDouble(num)/Double.parseDouble(denom);
+		er.property_value_units_original = ExperimentalConstants.str_g_mL;
+		if (temp!=null) { er.temperature_C = Double.parseDouble(temp); }
 		return true;
 	}
 

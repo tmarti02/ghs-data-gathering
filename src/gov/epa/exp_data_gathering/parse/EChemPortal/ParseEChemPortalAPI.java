@@ -104,6 +104,7 @@ public class ParseEChemPortalAPI extends Parse {
 		
 		if (r.value==null) { return; }
 		
+		er.property_value_string = "Value: "+r.value;
 		switch (r.endpointKind) {
 		case APIConstants.meltingPoint:
 			er.property_name = ExperimentalConstants.strMeltingPoint;
@@ -146,7 +147,6 @@ public class ParseEChemPortalAPI extends Parse {
 			ParseUtilities.getHenrysLawConstant(er,r.value);
 			break;
 		}
-		er.property_value_string = "Value: "+r.value;
 		
 		if (r.pressure!=null) {
 			ParseUtilities.getPressureCondition(er,r.pressure,sourceName);

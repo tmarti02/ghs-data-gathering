@@ -297,7 +297,7 @@ public class UnitConverter {
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_L)) {
 			convertAndAssignFinalFields(er,1.0/1000000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_100mL) ||
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_100mL) || er.property_value_units_original.equals(ExperimentalConstants.str_g_100g) ||
 				er.property_value_units_original.equals(ExperimentalConstants.str_pctWt) || er.property_value_units_original.equals(ExperimentalConstants.str_pct)) {
 			convertAndAssignFinalFields(er,10.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
