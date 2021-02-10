@@ -3,7 +3,10 @@ package gov.epa.exp_data_gathering.parse.EPISUITE;
 import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
@@ -28,18 +31,38 @@ public class ParseEpisuiteISIS extends Parse {
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordEpisuiteISIS[] recordsEpisuiteISIS = gson.fromJson(new FileReader(jsonFile), RecordEpisuiteISIS[].class);
+			List<RecordEpisuiteISIS> recordsEpisuiteISIS = new ArrayList<RecordEpisuiteISIS>();
+			RecordEpisuiteISIS[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordEpisuiteISIS[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsEpisuiteISIS.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordEpisuiteISIS[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsEpisuiteISIS.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsEpisuiteISIS.length; i++) {
-				RecordEpisuiteISIS rec = recordsEpisuiteISIS[i];
-				addExperimentalRecords(rec,recordsExperimental);
+			Iterator<RecordEpisuiteISIS> it = recordsEpisuiteISIS.iterator();
+			while (it.hasNext()) {
+				RecordEpisuiteISIS r = it.next();
+				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return recordsExperimental;
 	}
 	

@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.Chemidplus;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -70,12 +70,12 @@ public class RecordChemidplus {
 		String Source;
 	}
 	
-	class ToxicityRecord {
+	public class ToxicityRecord {
 		String Organism;
 		String TestType;
 		String Route;
-		String ReportedDose;
-		String NormalizedDose;// appears below ReportDose in ()
+		public String ReportedDose;
+		public String NormalizedDose;// appears below ReportDose in ()
 		String Effect;
 		String Source;
 	}

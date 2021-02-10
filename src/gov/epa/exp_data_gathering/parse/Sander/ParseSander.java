@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.Sander;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -6,12 +6,18 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gov.epa.api.Chemical;
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.Parse;
 
 public class ParseSander extends Parse {
 	
@@ -28,19 +34,38 @@ public class ParseSander extends Parse {
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordSander[] recordsSander = gson.fromJson(new FileReader(jsonFile), RecordSander[].class);
-			
-			for (int i = 0; i < recordsSander.length; i++) { // recordsSander.length
-				RecordSander rec = recordsSander[i];
-				addExperimentalRecords(rec,recordsExperimental);
+			List<RecordSander> recordsSander = new ArrayList<RecordSander>();
+			RecordSander[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordSander[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsSander.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordSander[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsSander.add(tempRecords[i]);
+					}
+				}
 			}
 			
+			Iterator<RecordSander> it = recordsSander.iterator();
+			while (it.hasNext()) {
+				RecordSander r = it.next();
+				addExperimentalRecords(r,recordsExperimental);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return recordsExperimental;
 	}
 	

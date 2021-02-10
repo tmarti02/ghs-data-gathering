@@ -2,6 +2,9 @@ package gov.epa.exp_data_gathering.parse.ChemBL;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,19 +30,39 @@ public class ParseChemBL extends Parse {
 	
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
-		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordChemBL[] recordsChemBL = gson.fromJson(new FileReader(jsonFile), RecordChemBL[].class);
+			List<RecordChemBL> recordsChemBL = new ArrayList<RecordChemBL>();
+			RecordChemBL[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordChemBL[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsChemBL.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordChemBL[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsChemBL.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsChemBL.length; i++) {
-				RecordChemBL rec = recordsChemBL[i];
-				addExperimentalRecords(rec,recordsExperimental);
+			Iterator<RecordChemBL> it = recordsChemBL.iterator();
+			while (it.hasNext()) {
+				RecordChemBL r = it.next();
+				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return recordsExperimental;
 	}
 	

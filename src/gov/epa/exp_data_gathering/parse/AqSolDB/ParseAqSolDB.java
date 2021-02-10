@@ -1,10 +1,16 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.AqSolDB;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.Parse;
 
 /**
  * Parses data from AqSolDB, accessible at: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OVHAW8
@@ -27,18 +33,38 @@ public class ParseAqSolDB extends Parse {
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordAqSolDB[] recordsAqSolDB = gson.fromJson(new FileReader(jsonFile), RecordAqSolDB[].class);
+			List<RecordAqSolDB> recordsAqSolDB = new ArrayList<RecordAqSolDB>();
+			RecordAqSolDB[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordAqSolDB[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsAqSolDB.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordAqSolDB[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsAqSolDB.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsAqSolDB.length; i++) {
-				RecordAqSolDB rec = recordsAqSolDB[i];
-				addExperimentalRecords(rec,recordsExperimental);
+			Iterator<RecordAqSolDB> it = recordsAqSolDB.iterator();
+			while (it.hasNext()) {
+				RecordAqSolDB r = it.next();
+				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return recordsExperimental;
 	}
 	

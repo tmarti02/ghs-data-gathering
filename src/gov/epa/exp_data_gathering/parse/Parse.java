@@ -3,8 +3,10 @@ package gov.epa.exp_data_gathering.parse;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -13,17 +15,24 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.ADDoPT.ParseADDoPT;
+import gov.epa.exp_data_gathering.parse.AqSolDB.ParseAqSolDB;
 import gov.epa.exp_data_gathering.parse.Bradley.ParseBradley;
 import gov.epa.exp_data_gathering.parse.ChemBL.ParseChemBL;
+import gov.epa.exp_data_gathering.parse.ChemicalBook.ParseChemicalBook;
+import gov.epa.exp_data_gathering.parse.Chemidplus.ParseChemidplus;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortal;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ToxParseEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteISIS;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteOriginal;
+import gov.epa.exp_data_gathering.parse.LookChem.ParseLookChem;
 import gov.epa.exp_data_gathering.parse.OChem.ParseOChem;
+import gov.epa.exp_data_gathering.parse.OFMPub.ParseOFMPub;
 import gov.epa.exp_data_gathering.parse.OPERA.ParseOPERA;
 import gov.epa.exp_data_gathering.parse.PubChem.ParsePubChem;
 import gov.epa.exp_data_gathering.parse.QSARDB.ParseQSARDB;
+import gov.epa.exp_data_gathering.parse.Sander.ParseSander;
 
 public class Parse {
 	
@@ -56,6 +65,8 @@ public class Parse {
 	
 	protected Gson gson=null;
 	protected UnitConverter uc=null;
+	
+	protected int howManyOriginalRecordsFiles=1;
 
 	public void init() {
 		fileNameJSON_Records = sourceName +" Original Records.json";
@@ -170,22 +181,56 @@ public class Parse {
 			Gson gson = builder.create();
 			
 			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
-			File file = new File(jsonPath);
-			if(!file.getParentFile().exists()) { file.getParentFile().mkdirs(); }
 			
+			if (records.size() <= 100000) {
+				String jsonRecords = gson.toJson(records);
+				writeJSONLineByLine(jsonRecords,jsonPath);
+			} else {
+				List<Object> temp = new ArrayList<Object>();
+				Iterator<?> it = records.iterator();
+				int i = 0;
+				int batch = 0;
+				while (it.hasNext()) {
+					temp.add(it.next());
+					i++;
+					if (i!=0 && i%100000==0) {
+						batch++;
+						String batchFileName = jsonPath.substring(0,jsonPath.indexOf(".")) + " " + batch + ".json";
+						String jsonRecords = gson.toJson(temp);
+						writeJSONLineByLine(jsonRecords,batchFileName);
+						temp.clear();
+					}
+				}
+				batch++;
+				String batchFileName = jsonPath.substring(0,jsonPath.indexOf(".")) + " " + batch + ".json";
+				String jsonRecords = gson.toJson(temp);
+				writeJSONLineByLine(jsonRecords,batchFileName);
+				howManyOriginalRecordsFiles = batch;
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	private static void writeJSONLineByLine(String jsonRecords,String filePath) {
+		String[] strRecords = jsonRecords.split("\n");
+		
+		File file = new File(filePath);
+		if(!file.getParentFile().exists()) { file.getParentFile().mkdirs(); }
+		
+		try {
 			// Clear existing file contents
-			FileWriter fw = new FileWriter(jsonPath);
+			FileWriter fw = new FileWriter(filePath);
 			fw.close();
 			
-			BufferedWriter bwAppend = new BufferedWriter(new FileWriter(jsonPath,true));
-			
-			String[] strRecords=gson.toJson(records).split("\n");
+			BufferedWriter bwAppend = new BufferedWriter(new FileWriter(filePath,true));
+		
 			for (String s:strRecords) {
 				s=ParseUtilities.fixChars(s);
 				bwAppend.write(s+"\n");
 			}
+			
 			bwAppend.close();
-
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

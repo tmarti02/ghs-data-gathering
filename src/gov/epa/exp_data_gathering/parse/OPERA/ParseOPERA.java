@@ -3,7 +3,10 @@ package gov.epa.exp_data_gathering.parse.OPERA;
 import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
@@ -34,15 +37,33 @@ public class ParseOPERA extends Parse {
 	 */
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
-		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordOPERA[] recordsOPERA = gson.fromJson(new FileReader(jsonFile), RecordOPERA[].class);
+			List<RecordOPERA> recordsOPERA = new ArrayList<RecordOPERA>();
+			RecordOPERA[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordOPERA[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsOPERA.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordOPERA[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsOPERA.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsOPERA.length; i++) {
-				RecordOPERA r = recordsOPERA[i];
+			Iterator<RecordOPERA> it = recordsOPERA.iterator();
+			while (it.hasNext()) {
+				RecordOPERA r = it.next();
 				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {

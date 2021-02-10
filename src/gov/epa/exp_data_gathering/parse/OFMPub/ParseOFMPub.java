@@ -1,12 +1,19 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.OFMPub;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.Parse;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 public class ParseOFMPub extends Parse {
 
@@ -26,17 +33,34 @@ public class ParseOFMPub extends Parse {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordOFMPub[] recordsOFMPub = gson.fromJson(new FileReader(jsonFile), RecordOFMPub[].class);
+			List<RecordOFMPub> recordsOFMPub = new ArrayList<RecordOFMPub>();
+			RecordOFMPub[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordOFMPub[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsOFMPub.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordOFMPub[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsOFMPub.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsOFMPub.length; i++) {
-				RecordOFMPub r = recordsOFMPub[i];
+			Iterator<RecordOFMPub> it = recordsOFMPub.iterator();
+			while (it.hasNext()) {
+				RecordOFMPub r = it.next();
 				if (r.value!=null && !r.value.isBlank()) {
 					addExperimentalRecord(r,recordsExperimental);
 				}
 			}
-			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

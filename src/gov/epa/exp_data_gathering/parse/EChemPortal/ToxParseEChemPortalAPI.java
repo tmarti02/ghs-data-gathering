@@ -1,21 +1,11 @@
 package gov.epa.exp_data_gathering.parse.EChemPortal;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
-import java.util.stream.Stream;
-
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonIOException;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.eChemPortalAPI.eChemPortalAPI;
@@ -73,15 +63,32 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
-
-			FinalRecord[] finalRecordsArr = gson.fromJson(new FileReader(jsonFile), FinalRecord[].class);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			for (int i = 0; i < finalRecordsArr.length; i++) {
-				FinalRecord r = finalRecordsArr[i];
+			List<FinalRecord> finalRecords = new ArrayList<FinalRecord>();
+			FinalRecord[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), FinalRecord[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					finalRecords.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), FinalRecord[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						finalRecords.add(tempRecords[i]);
+					}
+				}
+			}
+			
+			Iterator<FinalRecord> it = finalRecords.iterator();
+			while (it.hasNext()) {
+				FinalRecord r = it.next();
 				addExperimentalRecords(r,recordsExperimental);
 			}
-
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

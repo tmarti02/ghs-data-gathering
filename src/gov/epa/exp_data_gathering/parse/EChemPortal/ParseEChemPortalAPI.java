@@ -2,6 +2,8 @@ package gov.epa.exp_data_gathering.parse.EChemPortal;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Iterator;
 //import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
@@ -58,15 +60,32 @@ public class ParseEChemPortalAPI extends Parse {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordEChemPortalAPI[] recordsEChemPortalAPI = gson.fromJson(new FileReader(jsonFile), RecordEChemPortalAPI[].class);
+			List<RecordEChemPortalAPI> recordsEChemPortalAPI = new ArrayList<RecordEChemPortalAPI>();
+			RecordEChemPortalAPI[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordEChemPortalAPI[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsEChemPortalAPI.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordEChemPortalAPI[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsEChemPortalAPI.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsEChemPortalAPI.length; i++) {
-				RecordEChemPortalAPI r = recordsEChemPortalAPI[i];
+			Iterator<RecordEChemPortalAPI> it = recordsEChemPortalAPI.iterator();
+			while (it.hasNext()) {
+				RecordEChemPortalAPI r = it.next();
 				addExperimentalRecords(r,recordsExperimental);
-			}	
-
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

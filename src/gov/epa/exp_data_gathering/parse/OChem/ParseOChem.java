@@ -2,7 +2,9 @@ package gov.epa.exp_data_gathering.parse.OChem;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -35,18 +37,38 @@ public class ParseOChem extends Parse {
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordOChem[] recordsOChem = gson.fromJson(new FileReader(jsonFile), RecordOChem[].class);
+			List<RecordOChem> recordsOChem = new ArrayList<RecordOChem>();
+			RecordOChem[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordOChem[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsOChem.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordOChem[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsOChem.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsOChem.length; i++) {
-				RecordOChem rec = recordsOChem[i];
-				addExperimentalRecords(rec,recordsExperimental);
+			Iterator<RecordOChem> it = recordsOChem.iterator();
+			while (it.hasNext()) {
+				RecordOChem r = it.next();
+				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return recordsExperimental;
 	}
 	

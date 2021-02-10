@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.text.StringEscapeUtils;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.exp_data_gathering.parse.RecordChemidplus.ToxicityRecord;
+import gov.epa.exp_data_gathering.parse.Chemidplus.RecordChemidplus.ToxicityRecord;
 
 public class ParseUtilities extends Parse {
 
@@ -42,9 +42,14 @@ public class ParseUtilities extends Parse {
 			try {
 				double[] range = extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
 				if (!badUnits && range!=null) {
-					er.property_value_min_original = range[0];
-					er.property_value_max_original = range[1];
-					foundNumeric = true;
+					if (range[0]<=range[1]) {
+						er.property_value_min_original = range[0];
+						er.property_value_max_original = range[1];
+						foundNumeric = true;
+					} else {
+						er.keep = false;
+						er.reason = "Failed range correction";
+					}
 				}
 				if (!badUnits && (propertyValue.contains("~") || propertyValue.contains("ca."))) {
 					er.property_value_numeric_qualifier = "~";
@@ -206,6 +211,7 @@ public class ParseUtilities extends Parse {
 	public static boolean getWaterSolubility(ExperimentalRecord er,String propertyValue,String sourceName) {
 		if (propertyValue==null) { return false; }
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
+		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1\\.$2");
 		propertyValue = correctDegreeSymbols(propertyValue);
 		
 		// Don't waste time looking for a numerical entry if there are no numbers in the string!
@@ -236,7 +242,7 @@ public class ParseUtilities extends Parse {
 						foundWater = true;
 						boolean parsed = false;
 						if (!parsed) {
-							Matcher colonFormat1 = Pattern.compile(water+"( solubility)?: ([ <>~=\\.0-9MmGguLl/@%\\(\\)\u00B0CcFKPpHh]+)[;,]")
+							Matcher colonFormat1 = Pattern.compile(water+"( solubility)?: ([ <>~=\\.0-9MmGguLl/@%\\(\\)\u00B0CcFKPpHh]+)[;,$]")
 									.matcher(propertyValue.toLowerCase());
 							if (colonFormat1.find() && containsNumber(colonFormat1.group(2))) {
 								propertyValue = colonFormat1.group(2);
@@ -245,7 +251,7 @@ public class ParseUtilities extends Parse {
 							}
 						}
 						if (!parsed) {
-							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%\\(\\)\\u00B0CcFKPpHh]+)\\("+water+"\\)[;,]")
+							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%\\(\\)\\u00B0CcFKPpHh]+)\\("+water+"\\)[;,$]")
 									.matcher(propertyValue);
 							if (colonFormat2.find() && containsNumber(colonFormat2.group(1))) {
 								propertyValue = colonFormat2.group(1);
@@ -254,7 +260,7 @@ public class ParseUtilities extends Parse {
 							}
 						}
 						if (!parsed) {
-							Matcher inWaterFormat1 = Pattern.compile("([<>=~\\?]*[ ]?[0-9]*\\.?[0-9]+[ <>~=\\.\\*0-9XxMmGguLl(at)/@%\\(\\)\\u00B0CcFKPpHhWwTtVvOoLl\\+-]+ in )"
+							Matcher inWaterFormat1 = Pattern.compile("([<>=~\\?]*[ ]?[0-9]*\\.?[0-9]+[ <>~=\\.\\*0-9XxMmGguLlat/@%\\(\\)\\u00B0CcFKPpHhWwTtVvOoLl\\+-]+ in )"
 									+water+"( @|(at) [ <>~=0-9MmGgLl/@%\\(\\)\\u00B0CcFKPpHh]+)?")
 									.matcher(propertyValue);
 							if (inWaterFormat1.find() && containsNumber(inWaterFormat1.group(1))) {
@@ -264,9 +270,9 @@ public class ParseUtilities extends Parse {
 							}
 						}
 						if (!parsed) {
-							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?"+water+"( at [0-9.]+[ ]?\u00B0(C|F|K),? .*(\\d\\.\\d)?.*[\\)\\.,;])")
+							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?"+water+"(( at [0-9.]+[ ]?\u00B0[CFK])?,? [^\\)\\.,;$]*(\\d\\.\\d)?[^\\)\\.,;$]*[\\)\\.,;$])")
 									.matcher(propertyValue);
-							if (inWaterFormat2.find() && containsNumber(inWaterFormat2.group(2))) {
+							if (inWaterFormat2.find() && containsNumber(inWaterFormat2.group(3))) {
 								propertyValue = inWaterFormat2.group(2);
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (in water 2): "+propertyValue);
@@ -384,14 +390,14 @@ public class ParseUtilities extends Parse {
 	}
 
 	public static void getQualitativeSolubility(ExperimentalRecord er, String propertyValue,String sourceName) {
-		propertyValue = propertyValue.toLowerCase();
+		String propertyValue1 = propertyValue.toLowerCase();
 		String solventMatcherStr = "";
 		if (sourceName.equals(ExperimentalConstants.strSourceLookChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\s-%]+?)(,| and|\\.|\\z|[ ]?\\(|;))?";
 		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| at| and only|\\(|;))?";
 		}
-		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?(uble)]?|miscible))( [\\(]?(in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
+		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?(uble)]?|miscible))( [\\(]?(in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue1);
 		while (solubilityMatcher.find()) {
 			String qualifier = solubilityMatcher.group(1);
 			qualifier = qualifier.equals("souble") ? "soluble" : qualifier;
@@ -405,25 +411,25 @@ public class ParseUtilities extends Parse {
 			}
 		}
 
-		if (propertyValue.contains("reacts") || propertyValue.contains("reaction")) {
+		if (propertyValue1.contains("reacts") || propertyValue1.contains("reaction")) {
 			er.property_value_qualitative = "reaction";
 		}
 
-		if (propertyValue.contains("hydrolysis") || propertyValue.contains("hydrolyse") || propertyValue.contains("hydrolyze")) {
+		if (propertyValue1.contains("hydrolysis") || propertyValue1.contains("hydrolyse") || propertyValue1.contains("hydrolyze")) {
 			er.property_value_qualitative = "hydrolysis";
 		}
 
-		if (propertyValue.contains("decompos")) {
+		if (propertyValue1.contains("decompos")) {
 			er.property_value_qualitative = "decomposes";
 		}
 
-		if (propertyValue.contains("autoignition")) {
+		if (propertyValue1.contains("autoignition")) {
 			er.property_value_qualitative = "autoignition";
 		}
 
 		String[] qualifiers = {"none","very poor","poor","low","negligible","slight","significant","complete"};
 		for (String qual:qualifiers) {
-			if ((propertyValue.startsWith(qual) || (propertyValue.contains("solubility in water") && propertyValue.contains(qual))) &&
+			if ((propertyValue1.startsWith(qual) || (propertyValue1.contains("solubility in water") && propertyValue1.contains(qual))) &&
 					(er.property_value_qualitative==null || er.property_value_qualitative.isBlank())) {
 				er.property_value_qualitative = qual;
 			}
@@ -659,8 +665,8 @@ public class ParseUtilities extends Parse {
 		propertyValue = correctDegreeSymbols(propertyValue);
 		String units = getTemperatureUnits(propertyValue);
 		int tempIndex = propertyValue.indexOf(units);
-		if (units.equals(ExperimentalConstants.str_C) && propertyValue.toLowerCase().contains("cc")) {
-			tempIndex = propertyValue.indexOf(units,tempIndex+1);
+		if (tempIndex==propertyValue.toLowerCase().indexOf("cc")) {
+			tempIndex = propertyValue.indexOf(units,tempIndex+2);
 		}
 		// If temperature units were found, looks for the last number that precedes them
 		if (tempIndex > 0) {
@@ -811,7 +817,11 @@ public class ParseUtilities extends Parse {
 				} else {
 					// Otherwise replaces substring
 					strMax = strMin.substring(0,strMin.length()-digits)+strMax;
-					max = Double.parseDouble(strMax);
+					try {
+						max = Double.parseDouble(strMax);
+					} catch (Exception ex) {
+						System.out.println("Failed range correction: "+str);
+					}
 				}
 			}
 			double[] range = {min, max};
@@ -866,21 +876,21 @@ public class ParseUtilities extends Parse {
 
 	/**
 	 * If the property value string contains temperature units, returns the units in standardized format
-	 * @param propertyValue	The string to be read
+	 * @param propertyValue1	The string to be read
 	 * @return				A standardized temperature unit string from ExperimentalConstants
 	 */
 	public static String getTemperatureUnits(String propertyValue) {
-		propertyValue=propertyValue.replaceAll("[ |Â]","");
-		propertyValue = correctDegreeSymbols(propertyValue);
+		String propertyValue1=propertyValue.replaceAll("[ Â]","");
+		propertyValue1 = correctDegreeSymbols(propertyValue1);
 		String units = "";
-		if (propertyValue.contains("\u00B0C") || propertyValue.contains("oC") || propertyValue.contains("deg. C")
-				|| (propertyValue.indexOf("C") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1))
-						&& !propertyValue.contains("CC"))) {
+		if (propertyValue1.contains("\u00B0C") || propertyValue1.contains("oC") || propertyValue1.contains("deg.C")
+				|| (propertyValue1.indexOf("C") > 0 && Character.isDigit(propertyValue1.charAt(propertyValue1.indexOf("C")-1))
+						&& !propertyValue1.contains("CC"))) {
 			units = ExperimentalConstants.str_C;
-		} else if (propertyValue.contains("\u00B0F") || propertyValue.contains("oF")
-				|| (propertyValue.indexOf("F") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("F")-1)))) {
+		} else if (propertyValue1.contains("\u00B0F") || propertyValue1.contains("oF")
+				|| (propertyValue1.indexOf("F") > 0 && Character.isDigit(propertyValue1.charAt(propertyValue1.indexOf("F")-1)))) {
 			units = ExperimentalConstants.str_F;
-		} else if ((propertyValue.indexOf("K") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("K")-1)))) {
+		} else if ((propertyValue1.indexOf("K") > 0 && Character.isDigit(propertyValue1.charAt(propertyValue1.indexOf("K")-1)))) {
 			units = ExperimentalConstants.str_K;
 		} 
 		return units;

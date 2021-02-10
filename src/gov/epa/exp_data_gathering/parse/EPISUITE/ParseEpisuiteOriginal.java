@@ -3,7 +3,10 @@ package gov.epa.exp_data_gathering.parse.EPISUITE;
 import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
@@ -43,18 +46,38 @@ public class ParseEpisuiteOriginal extends Parse {
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordEpisuiteOriginal[] recordsEpisuiteOriginal = gson.fromJson(new FileReader(jsonFile), RecordEpisuiteOriginal[].class);
+			List<RecordEpisuiteOriginal> recordsEpisuiteOriginal = new ArrayList<RecordEpisuiteOriginal>();
+			RecordEpisuiteOriginal[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordEpisuiteOriginal[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsEpisuiteOriginal.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordEpisuiteOriginal[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsEpisuiteOriginal.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsEpisuiteOriginal.length; i++) {
-				RecordEpisuiteOriginal rec = recordsEpisuiteOriginal[i];
-				addExperimentalRecords(rec,recordsExperimental);
+			Iterator<RecordEpisuiteOriginal> it = recordsEpisuiteOriginal.iterator();
+			while (it.hasNext()) {
+				RecordEpisuiteOriginal r = it.next();
+				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return recordsExperimental;
 	}
 	

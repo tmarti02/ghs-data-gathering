@@ -2,6 +2,9 @@ package gov.epa.exp_data_gathering.parse.Bradley;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
@@ -31,18 +34,38 @@ public class ParseBradley extends Parse {
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordBradley[] recordsBradley = gson.fromJson(new FileReader(jsonFile), RecordBradley[].class);
+			List<RecordBradley> recordsBradley = new ArrayList<RecordBradley>();
+			RecordBradley[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordBradley[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsBradley.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordBradley[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsBradley.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsBradley.length; i++) {
-				RecordBradley rec = recordsBradley[i];
-				addExperimentalRecords(rec,recordsExperimental);
+			Iterator<RecordBradley> it = recordsBradley.iterator();
+			while (it.hasNext()) {
+				RecordBradley r = it.next();
+				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return recordsExperimental;
 	}
 	

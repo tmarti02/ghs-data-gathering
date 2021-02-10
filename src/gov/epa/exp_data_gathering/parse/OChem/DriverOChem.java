@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.OChem;
 
 import java.io.FileWriter;
 import java.util.List;

@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.LookChem;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +19,8 @@ import org.jsoup.select.Elements;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.exp_data_gathering.parse.DownloadWebpageUtilities;
+import gov.epa.exp_data_gathering.parse.RecordDashboard;
 
 
 

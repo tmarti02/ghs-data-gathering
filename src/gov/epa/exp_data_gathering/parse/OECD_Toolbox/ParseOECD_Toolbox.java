@@ -2,6 +2,9 @@ package gov.epa.exp_data_gathering.parse.OECD_Toolbox;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
@@ -29,18 +32,38 @@ public class ParseOECD_Toolbox extends Parse {
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordOECD_Toolbox[] records = gson.fromJson(new FileReader(jsonFile), RecordOECD_Toolbox[].class);
+			List<RecordOECD_Toolbox> recordsOECD_Toolbox = new ArrayList<RecordOECD_Toolbox>();
+			RecordOECD_Toolbox[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordOECD_Toolbox[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsOECD_Toolbox.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordOECD_Toolbox[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsOECD_Toolbox.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < records.length; i++) {
-				RecordOECD_Toolbox rec = records[i];
-				addExperimentalRecords(rec,recordsExperimental);
+			Iterator<RecordOECD_Toolbox> it = recordsOECD_Toolbox.iterator();
+			while (it.hasNext()) {
+				RecordOECD_Toolbox r = it.next();
+				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
 		return recordsExperimental;
 	}
 

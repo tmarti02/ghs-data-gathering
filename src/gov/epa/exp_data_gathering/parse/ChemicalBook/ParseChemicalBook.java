@@ -1,11 +1,14 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.ChemicalBook;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -20,6 +23,10 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
 import gov.epa.database.SQLite_CreateTable;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.Parse;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 /**
  * @author CRAMSLAN
@@ -44,12 +51,30 @@ public class ParseChemicalBook extends Parse {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
-			FileReader originalsource = new FileReader(jsonFile);
-			RecordChemicalBook[] recordsChemicalBook = gson.fromJson(originalsource, RecordChemicalBook[].class);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			for (int i = 0; i < recordsChemicalBook.length; i++) {
-				RecordChemicalBook r = recordsChemicalBook[i];
+			List<RecordChemicalBook> recordsChemicalBook = new ArrayList<RecordChemicalBook>();
+			RecordChemicalBook[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordChemicalBook[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsChemicalBook.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordChemicalBook[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsChemicalBook.add(tempRecords[i]);
+					}
+				}
+			}
+			
+			Iterator<RecordChemicalBook> it = recordsChemicalBook.iterator();
+			while (it.hasNext()) {
+				RecordChemicalBook r = it.next();
 				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
@@ -105,7 +130,7 @@ public class ParseChemicalBook extends Parse {
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		boolean foundNumeric = false;
-		propertyValue = propertyValue.replaceAll(",", ".");
+		propertyValue = propertyValue.replaceAll("(\\d),(\\d)", "$1.$2");
 
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er, propertyValue);

@@ -1,10 +1,9 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.ADDoPT;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Vector;
 
-import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -13,23 +12,23 @@ import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.DownloadWebpageUtilities;
 
 /**
- * Stores data from AqSolDB, accessible at: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OVHAW8
+ * Stores data from ADDoPT, accessible at: https://onlinelibrary.wiley.com/doi/epdf/10.1002/jcc.24424 (supplementary info table 1)
  * @author GSINCL01
  *
  */
-public class RecordAqSolDB {
-	String id;
-	String name;
-	String smiles;
+public class RecordADDoPT {
+	String cas;
 	String solubility;
+	String temp;
 	
-	public static final String lastUpdated = "12/04/2020";
-	public static final String sourceName = ExperimentalConstants.strSourceAqSolDB;
+	public static final String lastUpdated = "12/14/2020";
+	public static final String sourceName = ExperimentalConstants.strSourceADDoPT;
 	
-	public static Vector<RecordAqSolDB> parseAqSolDBRecordsFromExcel() {
-		Vector<RecordAqSolDB> records = new Vector<RecordAqSolDB>();
+	public static Vector<RecordADDoPT> parseADDoPTRecordsFromExcel() {
+		Vector<RecordADDoPT> records = new Vector<RecordADDoPT>();
 		String folderNameExcel = "excel files";
 		String mainFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 		String excelFilePath = mainFolder + File.separator+folderNameExcel;
@@ -47,30 +46,27 @@ public class RecordAqSolDB {
 					Workbook wb = new XSSFWorkbook(fis);
 					Sheet sheet = wb.getSheetAt(0);
 					Row headerRow = sheet.getRow(0);
-					int idIndex = -1;
-					int nameIndex = -1;
-					int smilesIndex = -1;
-					int solIndex = -1;
+					int solubilityIndex = -1;
+					int casIndex = -1;
+					int tempIndex = -1;
 					for (Cell cell:headerRow) {
 						cell.setCellType(Cell.CELL_TYPE_STRING);
 						String header = cell.getStringCellValue().toLowerCase();
 						int col = cell.getColumnIndex();
 						
-						if (header.equals("id")) { idIndex = col;	
-						} else if (header.equals("name")) { nameIndex = col;
-						} else if (header.equals("smiles")) { smilesIndex = col;
-						} else if (header.equals("solubility")) { solIndex = col;
+						if (header.contains("observed solubility")) { solubilityIndex = col;
+						} else if (header.equals("cas number")) { casIndex = col;
+						} else if (header.equals("t")) { tempIndex = col;
 						}
 					}
 					int rows = sheet.getLastRowNum();
 					for (int i = 1; i < rows; i++) {
 						Row row = sheet.getRow(i);
 						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
-						RecordAqSolDB ar = new RecordAqSolDB();
-						ar.id = row.getCell(idIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-						ar.name = StringEscapeUtils.escapeHtml4(row.getCell(nameIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
-						ar.smiles = row.getCell(smilesIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-						ar.solubility = row.getCell(solIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+						RecordADDoPT ar = new RecordADDoPT();
+						ar.cas = row.getCell(casIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+						ar.solubility = row.getCell(solubilityIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+						ar.temp = row.getCell(tempIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 						records.add(ar);
 					}
 					wb.close();

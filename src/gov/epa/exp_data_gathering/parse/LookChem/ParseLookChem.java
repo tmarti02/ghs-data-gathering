@@ -1,10 +1,17 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.LookChem;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.Parse;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 public class ParseLookChem extends Parse {
 	String[] versions;
@@ -41,12 +48,30 @@ public class ParseLookChem extends Parse {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordLookChem[] recordsLookChem = gson.fromJson(new FileReader(jsonFile), RecordLookChem[].class);
+			List<RecordLookChem> recordsLookChem = new ArrayList<RecordLookChem>();
+			RecordLookChem[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordLookChem[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsLookChem.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordLookChem[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsLookChem.add(tempRecords[i]);
+					}
+				}
+			}
 			
-			for (int i = 0; i < recordsLookChem.length; i++) {
-				RecordLookChem r = recordsLookChem[i];
+			Iterator<RecordLookChem> it = recordsLookChem.iterator();
+			while (it.hasNext()) {
+				RecordLookChem r = it.next();
 				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {

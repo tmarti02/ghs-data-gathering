@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.OFMPub;
 
 import java.io.File;
 import java.sql.ResultSet;
@@ -16,6 +16,7 @@ import org.jsoup.select.Elements;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.exp_data_gathering.parse.DownloadWebpageUtilities;
 
 public class RecordOFMPub {
 	String endpoint;

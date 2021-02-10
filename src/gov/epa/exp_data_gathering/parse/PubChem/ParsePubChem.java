@@ -2,6 +2,9 @@ package gov.epa.exp_data_gathering.parse.PubChem;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,15 +43,32 @@ public class ParsePubChem extends Parse {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
-			File jsonFile = new File(jsonFolder + File.separator + fileNameJSON_Records);
+			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
+			File jsonFile = new File(jsonFileName);
 			
-			RecordPubChem[] recordsPubChem = gson.fromJson(new FileReader(jsonFile), RecordPubChem[].class);
-			
-			for (int i = 0; i < recordsPubChem.length; i++) {
-				RecordPubChem r = recordsPubChem[i];
-				addExperimentalRecords(r,recordsExperimental);
+			List<RecordPubChem> recordsPubChem = new ArrayList<RecordPubChem>();
+			RecordPubChem[] tempRecords = null;
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordPubChem[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsPubChem.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordPubChem[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsPubChem.add(tempRecords[i]);
+					}
+				}
 			}
 			
+			Iterator<RecordPubChem> it = recordsPubChem.iterator();
+			while (it.hasNext()) {
+				RecordPubChem r = it.next();
+				addExperimentalRecords(r,recordsExperimental);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -135,6 +155,9 @@ public class ParsePubChem extends Parse {
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			foundNumeric = getPubChemTextSolubility(er,propertyValue);
 			if (!foundNumeric) {
+				foundNumeric = getPubChemSimpleSolubility(er, propertyValue);
+			}
+			if (!foundNumeric) {
 				foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
 			}
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
@@ -209,11 +232,11 @@ public class ParsePubChem extends Parse {
 	
 	private static boolean getPubChemSimpleSolubility(ExperimentalRecord er, String propertyValue) {
 		propertyValue = ParseUtilities.correctDegreeSymbols(propertyValue.toLowerCase());
-		Matcher matcher = Pattern.compile("([0-9.]+) g/([0-9.]+) (ml|cc|g) (hot |cold )?water(( at| @) ([0-9.]+) \u00B0C)?").matcher(propertyValue);
+		Matcher matcher = Pattern.compile("([0-9.]+) g/([0-9.]+) (ml|cc|g)( in)? (hot |cold )?water(( at| @) ([0-9.]+) \u00B0C)?").matcher(propertyValue);
 		if (!matcher.find()) { return false; }
 		String num = matcher.group(1);
 		String denom = matcher.group(2);
-		String temp = matcher.group(7);
+		String temp = matcher.group(8);
 		if (num==null || num.isBlank() || denom==null || denom.isBlank()) { return false; }
 		denom = denom.replaceAll(",", "");
 		er.property_value_point_estimate_original = Double.parseDouble(num)/Double.parseDouble(denom);

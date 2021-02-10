@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.parse;
+package gov.epa.exp_data_gathering.parse.SigmaAldrich;
 
 import java.io.File;
 import java.util.Random;
@@ -10,6 +10,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.DownloadWebpageUtilities;
+import gov.epa.exp_data_gathering.parse.RecordDashboard;
 
 
 public class RecordSigmaAldrich {
