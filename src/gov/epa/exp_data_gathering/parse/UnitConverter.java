@@ -100,6 +100,9 @@ public class UnitConverter {
 				er.keep = false;
 				er.reason = "Negative value not plausible";
 			}
+		} else if (er.temperature_C!=null && er.temperature_C<0) {
+			er.flag = true;
+			er.reason = "Negative temperature may be artifact of bad range parsing";
 		}
 	}
 	

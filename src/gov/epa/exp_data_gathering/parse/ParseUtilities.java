@@ -210,12 +210,18 @@ public class ParseUtilities extends Parse {
 
 	public static boolean getWaterSolubility(ExperimentalRecord er,String propertyValue,String sourceName) {
 		if (propertyValue==null) { return false; }
+		
+		// Don't waste time looking for a numerical entry if there are no numbers in the string!
+		if (!containsNumber(propertyValue)) { return false; }
+		
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1\\.$2");
 		propertyValue = correctDegreeSymbols(propertyValue);
 		
-		// Don't waste time looking for a numerical entry if there are no numbers in the string!
-		if (!containsNumber(propertyValue)) { return false; }
+		if (getTextSolubility(er,propertyValue)) { return true; }
+		if (!er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI) && 
+				!er.source_name.equals(ExperimentalConstants.strSourceEChemPortal) &&
+				getSimpleNumericSolubility(er,propertyValue)) { return true; }
 		
 		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","etoh","hexane","meoh",
 				"dichloromethane","dcm","toluene","glyc","oils","organic solvent","dmf","et2o","etoac","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
@@ -226,8 +232,9 @@ public class ParseUtilities extends Parse {
 		for (String solvent:badSolvents) {
 			if (er.source_name.equals(ExperimentalConstants.strSourceOFMPub)) { break; } // OFMPub formatting is too weird to apply this system
 			// Stop searching if a solvent has already been found
-			if (foundSolvent) { continue; }
 			if (solvent.equals("alc") && propertyValue.toLowerCase().contains("calc")) { continue; } // For obvious reasons
+			// Snip out any easily-recognized entries for other solvents
+			propertyValue.replaceAll(solvent+": ([ <>~=\\\\.0-9MmGguLl/@%\\\\(\\\\)\\u00B0CcFKPpHh]+)[;,$]","");
 			// Check for non-aqueous solvents
 			if (propertyValue.toLowerCase().contains(solvent) && (er.chemical_name==null || !er.chemical_name.contains(solvent))) {
 				// Mark non-aqueous solvent found
@@ -242,17 +249,17 @@ public class ParseUtilities extends Parse {
 						foundWater = true;
 						boolean parsed = false;
 						if (!parsed) {
-							Matcher colonFormat1 = Pattern.compile(water+"( solubility)?: ([ <>~=\\.0-9MmGguLl/@%\\(\\)\u00B0CcFKPpHh]+)[;,$]")
-									.matcher(propertyValue.toLowerCase());
-							if (colonFormat1.find() && containsNumber(colonFormat1.group(2))) {
+							Matcher colonFormat1 = Pattern.compile("(?<=/)"+water+"( solubility)?(: |[ ]?=[ ]?)([ <>~=\\.0-9MmGguLl/@%()\u00B0CcFKPpHh]+)[;,$]")
+									.matcher(propertyValue.toLowerCase().trim());
+							if (colonFormat1.find() && containsNumber(colonFormat1.group(3))) {
 								propertyValue = colonFormat1.group(2);
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (colon 1): "+propertyValue);
 							}
 						}
 						if (!parsed) {
-							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%\\(\\)\\u00B0CcFKPpHh]+)\\("+water+"\\)[;,$]")
-									.matcher(propertyValue);
+							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%()\\u00B0CcFKPpHh]+)\\("+water+"\\)[;,$]")
+									.matcher(propertyValue.trim());
 							if (colonFormat2.find() && containsNumber(colonFormat2.group(1))) {
 								propertyValue = colonFormat2.group(1);
 								parsed = true;
@@ -260,9 +267,9 @@ public class ParseUtilities extends Parse {
 							}
 						}
 						if (!parsed) {
-							Matcher inWaterFormat1 = Pattern.compile("([<>=~\\?]*[ ]?[0-9]*\\.?[0-9]+[ <>~=\\.\\*0-9XxMmGguLlat/@%\\(\\)\\u00B0CcFKPpHhWwTtVvOoLl\\+-]+ in )"
-									+water+"( @|(at) [ <>~=0-9MmGgLl/@%\\(\\)\\u00B0CcFKPpHh]+)?")
-									.matcher(propertyValue);
+							Matcher inWaterFormat1 = Pattern.compile("([<>=~?]*[ ]?[0-9]*\\.?[0-9]+[ <>~=.*0-9XxMmGguLlat/@%()\\u00B0CcFKPpHhWwTtVvOoLl+-]+ in )"
+									+water+"( @|(at) [ <>~=0-9MmGgLl/@%()\\u00B0CcFKPpHh]+)?")
+									.matcher(propertyValue.trim());
 							if (inWaterFormat1.find() && containsNumber(inWaterFormat1.group(1))) {
 								propertyValue = inWaterFormat1.group(1)+water+(inWaterFormat1.group(2)==null ? "" : inWaterFormat1.group(2));
 								parsed = true;
@@ -270,10 +277,10 @@ public class ParseUtilities extends Parse {
 							}
 						}
 						if (!parsed) {
-							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?"+water+"(( at [0-9.]+[ ]?\u00B0[CFK])?,? [^\\)\\.,;$]*(\\d\\.\\d)?[^\\)\\.,;$]*[\\)\\.,;$])")
+							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?(?<!/)"+water+"(( at [0-9.]+[ ]?\\u00B0[CFK])?,? [^).,;$]*((?<=[0-9])[\\.,][0-9])?[^).,;$]*[).,;$])")
 									.matcher(propertyValue);
-							if (inWaterFormat2.find() && containsNumber(inWaterFormat2.group(3))) {
-								propertyValue = inWaterFormat2.group(2);
+							if (inWaterFormat2.find() && containsNumber(inWaterFormat2.group())) {
+								propertyValue = inWaterFormat2.group();
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (in water 2): "+propertyValue);
 							}
@@ -380,9 +387,9 @@ public class ParseUtilities extends Parse {
 		} else if (propertyValue.toLowerCase().contains("mol/l") || propertyValue.toLowerCase().contains("mols/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_M;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mol");
-		} else if (propertyValue.contains("M") && !(propertyValue.contains("ML") || propertyValue.contains("MG"))) {
+		} else if (propertyValue.contains("M")) {
 			unitsIndex = propertyValue.indexOf("M");
-			if (unitsIndex>0) {
+			if (unitsIndex>0 && (unitsIndex==propertyValue.length()-1 || !Character.isLetter(propertyValue.charAt(propertyValue.indexOf("M")+1)))) {
 				er.property_value_units_original = ExperimentalConstants.str_M;
 			}
 		}
@@ -1046,5 +1053,53 @@ public class ParseUtilities extends Parse {
             startIndex = matcher.start() + replace.length();
         }
     }
+
+	public static boolean getTextSolubility(ExperimentalRecord er, String propertyValue) {
+		String propertyValue1 = propertyValue.toLowerCase();
+		Matcher matcher = Pattern.compile("([0-9.]+|one)[ ]?gr?a?m? (sol )?(dissolves )?in (>|~)?[ ]?([0-9.,]+) (ml|cc) (of )?([0-9%a-z]+)").matcher(propertyValue1);
+		if (!matcher.find()) { return false; }
+		String num = matcher.group(1);
+		String qual = matcher.group(4);
+		String denom = matcher.group(5);
+		String solvent = matcher.group(8);
+		if (num==null || num.isBlank() || denom==null || denom.isBlank() || (solvent!=null && !(solvent.contains("water") || solvent.contains("h2o")))) { return false; }
+		denom = denom.replaceAll(",", "");
+		if (num.equals("one")) { 
+			er.property_value_point_estimate_original = 1.0/Double.parseDouble(denom);
+		} else {
+			er.property_value_point_estimate_original = Double.parseDouble(num)/Double.parseDouble(denom);
+		}
+		er.property_value_units_original = ExperimentalConstants.str_g_mL;
+		if (qual==null || qual.isBlank()) {
+			return true;
+		} else if (qual.contains("greater") || qual.contains(">")) {
+			er.property_value_numeric_qualifier = "<";
+		} else if (qual.contains("about") || qual.contains("~")) {
+			er.property_value_numeric_qualifier = "~";
+		}
+		return true;
+	}
+
+	public static boolean getSimpleNumericSolubility(ExperimentalRecord er, String propertyValue) {
+		String propertyValue1 = propertyValue.toLowerCase();
+		Matcher matcher = Pattern.compile("([~=><]{1,2}|about |approx[\\.]?(imately)? )?([0-9.]+) g/([0-9.]+) (ml|cc|g)( in)? (hot |cold )?water(( at| @) ([0-9.]+) \u00B0C)?")
+				.matcher(propertyValue1);
+		if (!matcher.find()) { return false; }
+		String qual = matcher.group(1);
+		String num = matcher.group(3);
+		String denom = matcher.group(4);
+		if (num==null || num.isBlank() || denom==null || denom.isBlank()) { return false; }
+		denom = denom.replaceAll(",", "");
+		er.property_value_point_estimate_original = Double.parseDouble(num)/Double.parseDouble(denom);
+		er.property_value_units_original = ExperimentalConstants.str_g_mL;
+		if (qual!=null) { 
+			if (qual.contains("about") || qual.contains("approx")) { 
+				er.property_value_numeric_qualifier = "~";
+			} else {
+				er.property_value_numeric_qualifier = qual;
+			}
+		}
+		return true;
+	}
 
 }
