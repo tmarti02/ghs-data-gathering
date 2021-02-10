@@ -175,6 +175,13 @@ public class ParseOChem extends Parse {
 			er.reason = "OPERA data";
 		}
 		
+		if (ocr.introducer!=null && ocr.introducer.equals("charochkina") &&
+		ocr.articleID!=null && ocr.articleID.equals("A120907") &&
+		ocr.name != null && (ocr.casrn == null || ocr.casrn.isEmpty())) {
+				er.keep = false;
+				er.reason = "nonsense date name, no CAS, smiles only";
+		}
+		
 		if (er.property_name.equals(ExperimentalConstants.strWaterSolubility) && 
 				ocr.articleID!=null && ocr.articleID.equals("A108291") &&
 				ocr.introducer!=null && ocr.introducer.equals("mvashurina")) {
