@@ -152,7 +152,7 @@ public class ParsePubChem extends Parse {
 			if (propertyValue.contains("closed cup") || propertyValue.contains("c.c.")) { er.measurement_method = "closed cup"; }
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			if (er.temperature_C==null) { ParseUtilities.getTemperatureCondition(er,propertyValue); }
 			ParseUtilities.getQualitativeSolubility(er, propertyValue,sourceName);
 		} else if (propertyName==ExperimentalConstants.strVaporPressure) {
 			foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);

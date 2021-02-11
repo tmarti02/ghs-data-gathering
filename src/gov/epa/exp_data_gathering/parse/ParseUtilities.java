@@ -219,8 +219,8 @@ public class ParseUtilities extends Parse {
 		propertyValue = correctDegreeSymbols(propertyValue);
 		
 		if (getTextSolubility(er,propertyValue)) { return true; }
-		if (!er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI) && 
-				!er.source_name.equals(ExperimentalConstants.strSourceEChemPortal) &&
+		if ((er.source_name.equals(ExperimentalConstants.strSourcePubChem) || 
+				er.source_name.equals(ExperimentalConstants.strSourceLookChem)) &&
 				getSimpleNumericSolubility(er,propertyValue)) { return true; }
 		
 		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","etoh","hexane","meoh",
@@ -267,8 +267,8 @@ public class ParseUtilities extends Parse {
 							}
 						}
 						if (!parsed) {
-							Matcher inWaterFormat1 = Pattern.compile("([<>=~?]*[ ]?[0-9]*\\.?[0-9]+[ <>~=.*0-9XxMmGguLlat/@%()\\u00B0CcFKPpHhWwTtVvOoLl+-]+ in )"
-									+water+"( @|(at) [ <>~=0-9MmGgLl/@%()\\u00B0CcFKPpHh]+)?")
+							Matcher inWaterFormat1 = Pattern.compile("([<>=~?]* ?[0-9.]+[ <>~=.*0-9XxMmGguLlat/@%()\\u00B0CcFKPpHhWwTtVvOoLl+-]* ?(in)? ?)"
+									+water+"( ?(@|at)? ?[ <>~=0-9MmGgLl/@%()\\u00B0CcFKPpHh]+)?")
 									.matcher(propertyValue.trim());
 							if (inWaterFormat1.find() && containsNumber(inWaterFormat1.group(1))) {
 								propertyValue = inWaterFormat1.group(1)+water+(inWaterFormat1.group(2)==null ? "" : inWaterFormat1.group(2));
@@ -277,7 +277,7 @@ public class ParseUtilities extends Parse {
 							}
 						}
 						if (!parsed) {
-							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?(?<!/)"+water+"(( at [0-9.]+[ ]?\\u00B0[CFK])?,? [^).,;$]*((?<=[0-9])[\\.,][0-9])?[^).,;$]*[).,;$])")
+							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?(?<!/)"+water+"(( ?[(]?(@|at)? ?[0-9.]+ ?\\u00B0[CFK])?[)]?,?:? [^).,;$]*((?<=[0-9])[\\.,][0-9])?[^).,;$]*[).,;$])")
 									.matcher(propertyValue);
 							if (inWaterFormat2.find() && containsNumber(inWaterFormat2.group())) {
 								propertyValue = inWaterFormat2.group();

@@ -169,7 +169,7 @@ public class ParseLookChem extends Parse {
 			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			if (er.temperature_C==null) { ParseUtilities.getTemperatureCondition(er,propertyValue); }
 			ParseUtilities.getQualitativeSolubility(er, propertyValue,sourceName);
 		}
 		
