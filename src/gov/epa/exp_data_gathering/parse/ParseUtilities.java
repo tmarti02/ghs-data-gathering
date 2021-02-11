@@ -393,9 +393,50 @@ public class ParseUtilities extends Parse {
 				er.property_value_units_original = ExperimentalConstants.str_M;
 			}
 		}
+		// CR I intend to add call to ExtraEchemPortalRecords method here
 		return unitsIndex;
 	}
-
+	
+	private static int ExtraEChemPortalRecords(String propertyValue, ExperimentalRecord er) {
+		int unitsIndex = -1;
+		if (propertyValue.toLowerCase().contains("mg/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
+			er.updateNote("extraECPrecord"); // remove later
+			return unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+		} else if (propertyValue.toLowerCase().contains("g/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_kg_H20;
+			er.updateNote("extraECPrecord"); // remove later
+			return unitsIndex = propertyValue.toLowerCase().indexOf("g/");
+		} else if (propertyValue.toLowerCase().contains("mol/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_mol_m3_H20;
+			er.updateNote("extraECPrecord"); // remove later
+			return unitsIndex = propertyValue.toLowerCase().indexOf("mol");
+		}
+		Matcher microGperG = Pattern.compile("(\\u00B5g/g)").matcher(propertyValue.trim());
+		if (microGperG.find()) {
+			System.out.println(microGperG.group(1));
+			er.property_value_units_original = ExperimentalConstants.str_ug_g_H20;
+			er.updateNote("extraECPrecord");
+			return propertyValue.toLowerCase().indexOf(microGperG.group(1));
+		}
+		Matcher microGAIperG = Pattern.compile("(\\u00B5g[ ]?a.i./)").matcher(propertyValue.trim());
+		if (microGAIperG.find()) {
+			System.out.println(microGAIperG.group(1));
+			er.property_value_units_original = ExperimentalConstants.str_ug_L;
+			er.updateNote("extraECPrecord");
+			return propertyValue.toLowerCase().indexOf(microGAIperG.group(1));
+		}
+		Matcher microGpermL = Pattern.compile("(micrograms(per mL)?(/milliliter)?)").matcher(propertyValue.trim());
+		if (microGpermL.find()) {
+			System.out.println(microGpermL.group(1));
+			er.property_value_units_original = ExperimentalConstants.str_ug_L;
+			er.updateNote("extraECPrecord");
+			return propertyValue.toLowerCase().indexOf(microGpermL.group(1));
+		}
+		return unitsIndex;
+	}
+	
+	
 	public static void getQualitativeSolubility(ExperimentalRecord er, String propertyValue,String sourceName) {
 		String propertyValue1 = propertyValue.toLowerCase();
 		String solventMatcherStr = "";
