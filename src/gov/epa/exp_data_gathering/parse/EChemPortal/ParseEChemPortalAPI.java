@@ -105,6 +105,7 @@ public class ParseEChemPortalAPI extends Parse {
 		er.original_source_name = r.participantAcronym;
 		er.date_accessed = r.dateAccessed;
 		er.reliability = r.reliability;
+		er.keep = true;
 		
 		if (!r.name.equals("-") && !r.name.contains("unnamed")) {
 			er.chemical_name = r.name;
