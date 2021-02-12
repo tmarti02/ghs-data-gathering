@@ -315,7 +315,7 @@ public class Parse {
 	
 	public static void main(String[] args) {
 		String recordType = "physchem";
-		String[] sources = {ExperimentalConstants.strSourceADDoPT,
+		String[] allSources = {ExperimentalConstants.strSourceADDoPT,
 				ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,
 				ExperimentalConstants.strSourceChemicalBook,
@@ -329,10 +329,14 @@ public class Parse {
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuiteISIS};
-		for (String s:sources) {
+		String[] reparseSources = {ExperimentalConstants.strSourceChemicalBook, 
+				ExperimentalConstants.strSourceEChemPortalAPI, 
+				ExperimentalConstants.strSourceLookChem, 
+				ExperimentalConstants.strSourcePubChem};
+		for (String s:allSources) {
 			runParse(s,recordType);
 		}
-		DataFetcher d = new DataFetcher(sources,recordType);
+		DataFetcher d = new DataFetcher(allSources,recordType);
 		d.createRecordsDatabase();
 	}
 }

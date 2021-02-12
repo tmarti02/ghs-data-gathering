@@ -285,8 +285,6 @@ public class ParseUtilities extends Parse {
 						if (!parsed) {
 							Matcher qualMatcher = Pattern.compile("(ly |in)soluble in "+water).matcher(propertyValue.toLowerCase());
 							if (qualMatcher.find()) {
-								er.keep = false;
-								er.reason = "Qualitative aqueous entry only";
 								return false;
 							}
 						}
@@ -332,12 +330,12 @@ public class ParseUtilities extends Parse {
 		} else if (propertyValue.toLowerCase().contains("mg/l") || (propertyValue.toLowerCase().contains("mg/1") && !propertyValue.toLowerCase().contains("mg/10"))) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("µg/ml")) {
+		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("\u00B5g/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
-		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("µg/l")) {
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("\u00B5g/") : propertyValue.toLowerCase().indexOf("ug/");
+		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("\u00B5g/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("µg/") : propertyValue.toLowerCase().indexOf("ug/");
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("\u00B5g/") : propertyValue.toLowerCase().indexOf("ug/");
 		} else if (propertyValue.toLowerCase().contains("g/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
@@ -382,7 +380,7 @@ public class ParseUtilities extends Parse {
 		} else if (propertyValue.contains("mM")) {
 			er.property_value_units_original = ExperimentalConstants.str_mM;
 			unitsIndex = propertyValue.indexOf("mM");
-		} else if (propertyValue.contains("µM") || propertyValue.contains("uM")) {
+		} else if (propertyValue.contains("\u00B5M") || propertyValue.contains("uM")) {
 			er.property_value_units_original = ExperimentalConstants.str_uM;
 			unitsIndex = propertyValue.indexOf("M");
 		} else if (propertyValue.toLowerCase().contains("mol/l") || propertyValue.toLowerCase().contains("mols/l")) {
@@ -403,36 +401,30 @@ public class ParseUtilities extends Parse {
 	private static int ExtraEChemPortalRecords(String propertyValue, ExperimentalRecord er, int unitsIndex) {
 		if (propertyValue.toLowerCase().contains("mg/kg")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_kg_H20;
-			er.updateNote("extraECPrecord"); // remove later
 			return unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 		} else if (propertyValue.toLowerCase().contains("g/kg")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_kg_H20;
-			er.updateNote("extraECPrecord"); // remove later
 			return unitsIndex = propertyValue.toLowerCase().indexOf("g/");
 		} else if (propertyValue.toLowerCase().contains("mol/m3")) {
 			er.property_value_units_original = ExperimentalConstants.str_mol_m3_H20;
-			er.updateNote("extraECPrecord"); // remove later
 			return unitsIndex = propertyValue.toLowerCase().indexOf("mol");
 		}
 		Matcher microGperG = Pattern.compile("(\\u00B5g/g)").matcher(propertyValue.trim());
 		if (microGperG.find()) {
-			System.out.println(microGperG.group(1));
+//			System.out.println(microGperG.group(1));
 			er.property_value_units_original = ExperimentalConstants.str_ug_g_H20;
-			er.updateNote("extraECPrecord");
 			return propertyValue.toLowerCase().indexOf(microGperG.group(1));
 		}
 		Matcher microGAIperG = Pattern.compile("(\\u00B5g[ ]?a.i./)").matcher(propertyValue.trim());
 		if (microGAIperG.find()) {
-			System.out.println(microGAIperG.group(1));
+//			System.out.println(microGAIperG.group(1));
 			er.property_value_units_original = ExperimentalConstants.str_ug_L;
-			er.updateNote("extraECPrecord");
 			return propertyValue.toLowerCase().indexOf(microGAIperG.group(1));
 		}
 		Matcher microGpermL = Pattern.compile("(micrograms(per mL)?(/milliliter)?)").matcher(propertyValue.trim());
 		if (microGpermL.find()) {
-			System.out.println(microGpermL.group(1));
+//			System.out.println(microGpermL.group(1));
 			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
-			er.updateNote("extraECPrecord");
 			return propertyValue.toLowerCase().indexOf(microGpermL.group(1));
 		}
 		return unitsIndex;
@@ -485,7 +477,7 @@ public class ParseUtilities extends Parse {
 			}
 		}
 
-		if ((er.reason==null || !(er.reason.toLowerCase().contains("non-aqueous solubility") || er.reason.toLowerCase().contains("qualitative aqueous entry"))) &&
+		if ((er.reason==null || !er.reason.toLowerCase().contains("non-aqueous solubility")) &&
 				(er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
 			er.reason = null;
