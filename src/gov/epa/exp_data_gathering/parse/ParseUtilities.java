@@ -226,19 +226,15 @@ public class ParseUtilities extends Parse {
 		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","etoh","hexane","meoh",
 				"dichloromethane","dcm","toluene","glyc","oils","organic solvent","dmf","et2o","etoac","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
 				"acid","oxide","pyri","carbon tetrachloride","pet","anol","ch3oh","c2h5oh","ch2cl2","chcl3","alkali","dsmo","dma","buffer","ammonia water"};
-		boolean foundSolvent = false;
 		boolean foundWater = false;
 		String[] waterSynonyms = {"water (distilled)","water","h2o","h20","aqueous solution"};
 		for (String solvent:badSolvents) {
 			if (er.source_name.equals(ExperimentalConstants.strSourceOFMPub)) { break; } // OFMPub formatting is too weird to apply this system
-			// Stop searching if a solvent has already been found
 			if (solvent.equals("alc") && propertyValue.toLowerCase().contains("calc")) { continue; } // For obvious reasons
 			// Snip out any easily-recognized entries for other solvents
-			propertyValue.replaceAll(solvent+": ([ <>~=\\\\.0-9MmGguLl/@%\\\\(\\\\)\\u00B0CcFKPpHh]+)[;,$]","");
+			propertyValue = propertyValue.replaceAll(solvent+": ([ <>~=\\\\.0-9MmGguLl/@%\\\\(\\\\)\\u00B0CcFKPpHh]+)[;,$]","");
 			// Check for non-aqueous solvents
 			if (propertyValue.toLowerCase().contains(solvent) && (er.chemical_name==null || !er.chemical_name.contains(solvent))) {
-				// Mark non-aqueous solvent found
-				foundSolvent = true;
 				foundWater = false;
 				// See if there is an aqueous record too
 				for (String water:waterSynonyms) {
@@ -246,13 +242,14 @@ public class ParseUtilities extends Parse {
 					if (foundWater) { continue; }
 					// If water synonym found, parse out aqueous entry
 					if (propertyValue.toLowerCase().contains(water) && !solvent.contains(water)) { // Handles "ammonia water" and similar
+						if (propertyValue.contains("% "+water) || propertyValue.contains("/"+water)) { continue; } // Ignores records with water mixtures
 						foundWater = true;
 						boolean parsed = false;
 						if (!parsed) {
-							Matcher colonFormat1 = Pattern.compile("(?<=/)"+water+"( solubility)?(: |[ ]?=[ ]?)([ <>~=\\.0-9MmGguLl/@%()\u00B0CcFKPpHh]+)[;,$]")
+							Matcher colonFormat1 = Pattern.compile(water+"( solubility)?(: |[ ]?=[ ]?)([ <>~=\\.0-9MmGguLl/@%()\u00B0CcFKPpHh]+)[;,$]")
 									.matcher(propertyValue.toLowerCase().trim());
 							if (colonFormat1.find() && containsNumber(colonFormat1.group(3))) {
-								propertyValue = colonFormat1.group(2);
+								propertyValue = colonFormat1.group(3);
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (colon 1): "+propertyValue);
 							}
@@ -260,8 +257,8 @@ public class ParseUtilities extends Parse {
 						if (!parsed) {
 							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%()\\u00B0CcFKPpHh]+)\\("+water+"\\)[;,$]")
 									.matcher(propertyValue.trim());
-							if (colonFormat2.find() && containsNumber(colonFormat2.group(1))) {
-								propertyValue = colonFormat2.group(1);
+							if (colonFormat2.find() && containsNumber(colonFormat2.group())) {
+								propertyValue = colonFormat2.group();
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (colon 2): "+propertyValue);
 							}
@@ -270,14 +267,14 @@ public class ParseUtilities extends Parse {
 							Matcher inWaterFormat1 = Pattern.compile("([<>=~?]* ?[0-9.]+[ <>~=.*0-9XxMmGguLlat/@%()\\u00B0CcFKPpHhWwTtVvOoLl+-]* ?(in)? ?)"
 									+water+"( ?(@|at)? ?[ <>~=0-9MmGgLl/@%()\\u00B0CcFKPpHh]+)?")
 									.matcher(propertyValue.trim());
-							if (inWaterFormat1.find() && containsNumber(inWaterFormat1.group(1))) {
-								propertyValue = inWaterFormat1.group(1)+water+(inWaterFormat1.group(2)==null ? "" : inWaterFormat1.group(2));
+							if (inWaterFormat1.find() && containsNumber(inWaterFormat1.group())) {
+								propertyValue = inWaterFormat1.group();
 								parsed = true;
 								er.updateNote("Aqueous entry parsed (in water 1): "+propertyValue);
 							}
 						}
 						if (!parsed) {
-							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?(?<!/)"+water+"(( ?[(]?(@|at)? ?[0-9.]+ ?\\u00B0[CFK])?[)]?,?:? [^).,;$]*((?<=[0-9])[\\.,][0-9])?[^).,;$]*[).,;$])")
+							Matcher inWaterFormat2 = Pattern.compile("([Ii]n )?"+water+"(( ?[(]?(@|at)? ?[0-9.]+ ?\\u00B0[CFK])?[)]?,?:? ([^).,;$]*((?<=[0-9])[\\.,][0-9])?[^).,;$]*)*[).,;$])")
 									.matcher(propertyValue);
 							if (inWaterFormat2.find() && containsNumber(inWaterFormat2.group())) {
 								propertyValue = inWaterFormat2.group();
@@ -285,7 +282,14 @@ public class ParseUtilities extends Parse {
 								er.updateNote("Aqueous entry parsed (in water 2): "+propertyValue);
 							}
 						}
-
+						if (!parsed) {
+							Matcher qualMatcher = Pattern.compile("(ly |in)soluble in "+water).matcher(propertyValue.toLowerCase());
+							if (qualMatcher.find()) {
+								er.keep = false;
+								er.reason = "Qualitative aqueous entry only";
+								return false;
+							}
+						}
 						if (!parsed) {
 							er.flag = true;
 							er.updateNote("Aqueous entry: "+propertyValue+", Solvent: "+solvent+", Water: "+water);
@@ -356,9 +360,6 @@ public class ParseUtilities extends Parse {
 				|| propertyValue.toLowerCase().contains("g/100 ml") || propertyValue.toLowerCase().contains("g/100 cc")
 				|| propertyValue.toLowerCase().contains("g/100 cc")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("/");
-		} else if (propertyValue.toLowerCase().contains("g/100 g")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_100g;
 			unitsIndex = propertyValue.toLowerCase().indexOf("/");
 		} else if (propertyValue.toLowerCase().contains("% w/w") || propertyValue.toLowerCase().contains("wt%")) {
 			er.property_value_units_original = ExperimentalConstants.str_pctWt;
@@ -483,7 +484,7 @@ public class ParseUtilities extends Parse {
 			}
 		}
 
-		if ((er.reason==null || !er.reason.toLowerCase().contains("non-aqueous solubility")) &&
+		if ((er.reason==null || !(er.reason.toLowerCase().contains("non-aqueous solubility") || er.reason.toLowerCase().contains("qualitative aqueous entry"))) &&
 				(er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
 			er.reason = null;
@@ -1097,7 +1098,7 @@ public class ParseUtilities extends Parse {
 
 	public static boolean getTextSolubility(ExperimentalRecord er, String propertyValue) {
 		String propertyValue1 = propertyValue.toLowerCase();
-		Matcher matcher = Pattern.compile("([0-9.]+|one)[ ]?gr?a?m? (sol )?(dissolves )?in (>|~)?[ ]?([0-9.,]+) (ml|cc) (of )?([0-9%a-z]+)").matcher(propertyValue1);
+		Matcher matcher = Pattern.compile("([0-9.]+|one)[ ]?gr?a?m? (sol )?(dissolves )?in:? (>|~)?[ ]?([0-9.,]+) (ml|cc) (of )?([0-9%a-z]+)").matcher(propertyValue1);
 		if (!matcher.find()) { return false; }
 		String num = matcher.group(1);
 		String qual = matcher.group(4);
@@ -1123,7 +1124,7 @@ public class ParseUtilities extends Parse {
 
 	public static boolean getSimpleNumericSolubility(ExperimentalRecord er, String propertyValue) {
 		String propertyValue1 = propertyValue.toLowerCase();
-		Matcher matcher = Pattern.compile("([~=><]{1,2}|about |approx[\\.]?(imately)? )?([0-9.]+) g/([0-9.]+) (ml|cc|g)( in)? (hot |cold )?water(( at| @) ([0-9.]+) \u00B0C)?")
+		Matcher matcher = Pattern.compile("([~=><]{1,2}|about |approx[\\.]?(imately)? )?([0-9.]+) g/([0-9.]+) (ml|cc)( in)? (hot |cold )?water(( at| @) ([0-9.]+) \u00B0C)?")
 				.matcher(propertyValue1);
 		if (!matcher.find()) { return false; }
 		String qual = matcher.group(1);

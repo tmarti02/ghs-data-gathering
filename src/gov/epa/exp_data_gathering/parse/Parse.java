@@ -139,8 +139,8 @@ public class Parse {
 		
 		if (writeJsonExperimentalRecordsFile) {
 			System.out.println("Writing json file for chemical records");
-			records.toJSON_File(mainFolder+File.separator+fileNameJsonExperimentalRecords);
-			recordsBad.toJSON_File(mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
+			batchAndWriteJSON(new Vector<ExperimentalRecord>(records),mainFolder+File.separator+fileNameJsonExperimentalRecords);
+			batchAndWriteJSON(new Vector<ExperimentalRecord>(recordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
 		}
 		
 		if (writeExcelExperimentalRecordsFile) {
@@ -176,40 +176,45 @@ public class Parse {
 	
 	protected void writeOriginalRecordsToFile(Vector<?> records) {
 		try {
-			GsonBuilder builder = new GsonBuilder();
-			builder.setPrettyPrinting().disableHtmlEscaping();
-			Gson gson = builder.create();
-			
 			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
-			
-			if (records.size() <= 100000) {
-				String jsonRecords = gson.toJson(records);
-				writeJSONLineByLine(jsonRecords,jsonPath);
-			} else {
-				List<Object> temp = new ArrayList<Object>();
-				Iterator<?> it = records.iterator();
-				int i = 0;
-				int batch = 0;
-				while (it.hasNext()) {
-					temp.add(it.next());
-					i++;
-					if (i!=0 && i%100000==0) {
-						batch++;
-						String batchFileName = jsonPath.substring(0,jsonPath.indexOf(".")) + " " + batch + ".json";
-						String jsonRecords = gson.toJson(temp);
-						writeJSONLineByLine(jsonRecords,batchFileName);
-						temp.clear();
-					}
-				}
-				batch++;
-				String batchFileName = jsonPath.substring(0,jsonPath.indexOf(".")) + " " + batch + ".json";
-				String jsonRecords = gson.toJson(temp);
-				writeJSONLineByLine(jsonRecords,batchFileName);
-				howManyOriginalRecordsFiles = batch;
-			}
+			howManyOriginalRecordsFiles = batchAndWriteJSON(records,jsonPath);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+	}
+	
+	private static int batchAndWriteJSON(Vector<?> records, String baseFileName) {
+		GsonBuilder builder = new GsonBuilder();
+		builder.setPrettyPrinting().disableHtmlEscaping();
+		Gson gson = builder.create();
+		int batch = 0;
+		
+		if (records.size() <= 100000) {
+			String jsonRecords = gson.toJson(records);
+			writeJSONLineByLine(jsonRecords,baseFileName);
+			batch = 1;
+		} else {
+			List<Object> temp = new ArrayList<Object>();
+			Iterator<?> it = records.iterator();
+			int i = 0;
+			while (it.hasNext()) {
+				temp.add(it.next());
+				i++;
+				if (i!=0 && i%100000==0) {
+					batch++;
+					String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".")) + " " + batch + ".json";
+					String jsonRecords = gson.toJson(temp);
+					writeJSONLineByLine(jsonRecords,batchFileName);
+					temp.clear();
+				}
+			}
+			batch++;
+			String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".")) + " " + batch + ".json";
+			String jsonRecords = gson.toJson(temp);
+			writeJSONLineByLine(jsonRecords,batchFileName);
+		}
+		
+		return batch;
 	}
 	
 	private static void writeJSONLineByLine(String jsonRecords,String filePath) {

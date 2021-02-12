@@ -63,24 +63,24 @@ public class DataFetcher {
 			
 			ExperimentalRecords sourceRecords=null;
 			
-			if (fileRecords.exists()) {
-				sourceRecords = ExperimentalRecords.loadFromJSON(recordFilePath);	
-			}
+			sourceRecords = getRecordsFromNumberedFiles(source,false);
 			
-			if (fileBadRecords.exists()) {
-				ExperimentalRecords badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFilePath);				
-				sourceRecords.addAll(badSourceRecords);
-			}
-
-//			if (sourceRecords==null) {
-			//TMM- there doesnt seem to be any numbered files...
-//				sourceRecords = getRecordsFromNumberedFiles(source);
-//			}
-			
-			if (sourceRecords==null) {
-				System.out.println("No file for "+source);
+			if ((sourceRecords==null || sourceRecords.isEmpty()) && fileRecords.exists()) {
+				sourceRecords = ExperimentalRecords.loadFromJSON(recordFilePath);
+			} else if (sourceRecords==null) {
+				System.out.println("No records file for "+source);
 				continue;
 			}
+			
+			ExperimentalRecords badSourceRecords=null;
+			
+			badSourceRecords = getRecordsFromNumberedFiles(source,true);
+			
+			if ((badSourceRecords==null || badSourceRecords.isEmpty()) && fileBadRecords.exists()) {
+				badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFilePath);
+			}
+			
+			sourceRecords.addAll(badSourceRecords);
 			
 			System.out.println("Fetching data from "+source);
 
@@ -90,19 +90,18 @@ public class DataFetcher {
 		}
 	}
 	
-	private ExperimentalRecords getRecordsFromNumberedFiles(String source) {
-		ExperimentalRecords sourceRecords;
-		sourceRecords = new ExperimentalRecords();
-		int i = 1;
+	private ExperimentalRecords getRecordsFromNumberedFiles(String source,boolean getBadRecords) {
+		ExperimentalRecords sourceRecords = new ExperimentalRecords();
+		int batch = 1;
 		ExperimentalRecords temp = new ExperimentalRecords();
 		
+		String badNote = getBadRecords ? "-Bad " : " ";
 		while (temp!=null) {
-			File ftemp=new File(mainFolder+File.separator+source+" Experimental Records "+i+".json");					
-			System.out.println(ftemp.getName()+"\t"+ftemp.exists());						
-			temp = ExperimentalRecords.loadFromJSON(mainFolder+File.separator+source+" Experimental Records "+i+".json");
+			String fileName = mainFolder+File.separator+source+File.separator+source+" Experimental Records"+badNote+batch+".json";
+			temp = ExperimentalRecords.loadFromJSON(fileName);
 			if (temp==null) break;
 			sourceRecords.addAll(temp);
-			i++;
+			batch++;
 		}
 		return sourceRecords;
 	}
