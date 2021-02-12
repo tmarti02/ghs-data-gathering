@@ -314,10 +314,18 @@ public class UnitConverter {
 			convertAndAssignFinalFields(er,1000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		// under construction - CR
-
-		  	
-		 
-			
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_kg_H20)) {
+			convertAndAssignFinalFields(er,1.0/1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_kg_H20)) {
+			convertAndAssignFinalFields(er,1.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_g_H20)) {
+			convertAndAssignFinalFields(er,1.0/1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mol_m3_H20)) {
+			convertAndAssignFinalFields(er,1.0/1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_M;
 		// end of construction
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppb)) {
 			convertAndAssignFinalFields(er,1.0/1000000.0);

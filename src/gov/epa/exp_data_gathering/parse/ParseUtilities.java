@@ -393,15 +393,16 @@ public class ParseUtilities extends Parse {
 			if (unitsIndex>0 && (unitsIndex==propertyValue.length()-1 || !Character.isLetter(propertyValue.charAt(propertyValue.indexOf("M")+1)))) {
 				er.property_value_units_original = ExperimentalConstants.str_M;
 			}
+		} else if (er.source_name==ExperimentalConstants.strSourceEChemPortalAPI) {
+			unitsIndex = ExtraEChemPortalRecords(propertyValue, er, unitsIndex);
 		}
-		// CR I intend to add call to ExtraEchemPortalRecords method here
+		
 		return unitsIndex;
 	}
 	
-	private static int ExtraEChemPortalRecords(String propertyValue, ExperimentalRecord er) {
-		int unitsIndex = -1;
+	private static int ExtraEChemPortalRecords(String propertyValue, ExperimentalRecord er, int unitsIndex) {
 		if (propertyValue.toLowerCase().contains("mg/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
+			er.property_value_units_original = ExperimentalConstants.str_mg_kg_H20;
 			er.updateNote("extraECPrecord"); // remove later
 			return unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 		} else if (propertyValue.toLowerCase().contains("g/kg")) {
@@ -430,7 +431,7 @@ public class ParseUtilities extends Parse {
 		Matcher microGpermL = Pattern.compile("(micrograms(per mL)?(/milliliter)?)").matcher(propertyValue.trim());
 		if (microGpermL.find()) {
 			System.out.println(microGpermL.group(1));
-			er.property_value_units_original = ExperimentalConstants.str_ug_L;
+			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
 			er.updateNote("extraECPrecord");
 			return propertyValue.toLowerCase().indexOf(microGpermL.group(1));
 		}

@@ -70,6 +70,7 @@ public class ExperimentalConstants {
 	public static final String str_iu_kg="iu/kg";
 	public static final String str_units_kg="units/kg";
 	public static final String str_mg="mg";
+	public static final String str_mg_kg_H20="mg/kg H20";
 	public static final String str_g_Mg_H20="g/Mg H20";
 	public static final String str_g_100g="g/100g H20";
 	public static final String str_mol_m3_H20="mol/m3 H20";
