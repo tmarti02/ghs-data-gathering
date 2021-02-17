@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.commons.text.StringEscapeUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -29,7 +28,6 @@ import com.google.gson.GsonBuilder;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.RawDataRecord;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_GetRecords;
@@ -114,27 +112,7 @@ public class RecordMetaboliteDatabase {
 		}
 	}
 	
-	private static void getOneMolFile(String regno) {
-		try {
-			HttpClient httpclient = HttpClients.createDefault();
-			HttpPost httppost = new HttpPost("https://www.metabolomicsworkbench.org/data/StructureData.php");
-
-			// Request parameters and other properties.
-			List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(2);
-			params.add(new BasicNameValuePair("Mode", "Download"));
-			params.add(new BasicNameValuePair("RegNo", regno));
-			params.add(new BasicNameValuePair("OutputType", "MDLMOL"));
-			httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-
-			//Execute and get the response.
-			HttpResponse response = httpclient.execute(httppost);
-			HttpEntity entity = response.getEntity();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	private static List<RecordMetaboliteDatabase> parseMetaboliteDatabaseTablesInDatabase(String databasePath) {
+	static List<RecordMetaboliteDatabase> parseMetaboliteDatabaseTablesInDatabase(String databasePath) {
 		List<RecordMetaboliteDatabase> records = new ArrayList<RecordMetaboliteDatabase>();
 		
 		try {
@@ -147,11 +125,9 @@ public class RecordMetaboliteDatabase {
 				Document doc = Jsoup.parse(html);
 				
 				List<RecordMetaboliteDatabase> recs = new ArrayList<RecordMetaboliteDatabase>();
-//				rmd.dateAccessed = date.substring(0,date.indexOf(" "));
-				// TODO Test database has date in different format - change this back when real database is done downloading!
-				
-				String dateAccessed = date.trim();
-				parseDocument(recs,doc,dateAccessed);
+				String dateAccessed = date.substring(0,date.indexOf(" "));
+
+				parseMetaboliteDatabaseTableDocument(recs,doc,dateAccessed);
 
 				records.addAll(recs);
 			}
@@ -163,7 +139,7 @@ public class RecordMetaboliteDatabase {
 		}
 	}
 	
-	private static void parseDocument(List<RecordMetaboliteDatabase> recs, Document doc, String dateAccessed) {
+	private static void parseMetaboliteDatabaseTableDocument(List<RecordMetaboliteDatabase> recs, Document doc, String dateAccessed) {
 		Element table = doc.selectFirst("table");
 		if (table!=null) {
 			Elements rows = table.getElementsByTag("tr");
@@ -188,9 +164,9 @@ public class RecordMetaboliteDatabase {
 	}
 	
 	public static void main(String[] args) {
-//		downloadMetaboliteDatabaseTablesToDatabase("Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbench.db");
-		Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
-		List<RecordMetaboliteDatabase> records = parseMetaboliteDatabaseTablesInDatabase("Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchTest.db");
-		System.out.println(prettyGson.toJson(records));
+		downloadMetaboliteDatabaseTablesToDatabase("Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbench.db");
+//		List<RecordMetaboliteDatabase> records = parseMetaboliteDatabaseTablesInDatabase("Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchTest.db");
+//		Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
+//		System.out.println(prettyGson.toJson(records));
 	}
 }
