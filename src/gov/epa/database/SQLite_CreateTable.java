@@ -315,7 +315,11 @@ public class SQLite_CreateTable {
 			sql+="VALUES (";
 	
 			for (int i = 0; i < values.length; i++) {
-				sql+="'"+values[i]+"'";				
+				if (values[i]!=null) {
+					sql+="'"+values[i]+"'";
+				} else {
+					sql+="null";
+				}
 				if (i<values.length-1) sql+=",";
 			}
 	
