@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,11 +80,11 @@ public class RecordRefMet {
 		List<String> refMetNames = new ArrayList<String>();
 		HashMap<String,String> hmCIDToRefMet = new HashMap<String,String>();
 		
-		ArrayList<String> lines = Utilities.readFileToArray("Data\\refmet.csv");
+		ArrayList<String> lines = Utilities.readFileToArray("Data\\refmet.txt");
 		for (int i = 1; i < lines.size(); i++) { // First line is header
-			String[] vals = lines.get(i).split(",",-1);
+			String[] vals = lines.get(i).split("\t",-1);
 
-			if (vals.length==8) {
+			if (vals.length>7) {
 				String cid = vals[7];
 				String refMetName = vals[0];
 				if (cid!=null && !cid.isBlank()) {

@@ -53,7 +53,11 @@ public class JoinRecordMetabolomicsWorkbench {
 		for (RecordMetaboliteDatabase rmd:recordsMetaboliteDatabase) {
 			String regno = rmd.regno;
 			if (hmRecordsRefMetByRegno.containsKey(regno)) {
-				joinedRecords.add(hmRecordsRefMetByRegno.get(regno));
+				RecordRefMet rrm = hmRecordsRefMetByRegno.get(regno);
+				if ((rrm.systematicName==null || rrm.systematicName.isBlank()) && !(rmd.systematicName==null || rmd.systematicName.isBlank())) {
+					rrm.systematicName = rmd.systematicName;
+				}
+				joinedRecords.add(rrm);
 			} else {
 				try {
 					RecordRefMet rrm = new RecordRefMet(rmd);
