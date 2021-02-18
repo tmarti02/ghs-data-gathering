@@ -2,13 +2,14 @@ package gov.epa.exp_data_gathering.parse.MetabolomicsWorkbench;
 
 import java.io.File;
 import java.net.URLEncoder;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -36,6 +38,7 @@ import gov.epa.api.RawDataRecord;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 public class RecordRefMet {
@@ -51,10 +54,26 @@ public class RecordRefMet {
 	String superClass;
 	String mainClass;
 	String subClass;
-	String pubchemCID;
+	String pubChemCID;
 	String annotationLevel;
 	String molFile;
 	String dateAccessed;
+	String url;
+	
+	static final String[] fieldNames = {"regno","refMetName","systematicName","smiles","sumComposition","exactMass","formula",
+			"inchi","inchiKey","superClass","mainClass","subClass","pubChemCID","annotationLevel","molFile","dateAccessed","url"};
+	
+	RecordRefMet() {} // Default constructor
+	
+	RecordRefMet(RecordMetaboliteDatabase rmd) { // Construct partial record from RecordMetaboliteDatabase
+		regno = rmd.regno;
+		systematicName = rmd.systematicName;
+		pubChemCID = rmd.pubChemCID;
+		formula = rmd.formula;
+		exactMass = rmd.exactMass;
+		dateAccessed = rmd.dateAccessed;
+		url = rmd.url;
+	}
 	
 	private static List<String> getRefMetNamesFromMetaboliteDatabaseRecords(List<RecordMetaboliteDatabase> records) {
 		List<String> refMetNames = new ArrayList<String>();
@@ -74,7 +93,7 @@ public class RecordRefMet {
 		}
 		
 		for (RecordMetaboliteDatabase rec:records) {		
-			String cid = rec.pubchemCID;
+			String cid = rec.pubChemCID;
 			String refMetName = hmCIDToRefMet.get(cid);
 			refMetNames.add(refMetName);
 		}
@@ -82,20 +101,37 @@ public class RecordRefMet {
 		return refMetNames;
 	}
 	
-	private static void downloadRefMetPagesToDatabase(List<String> refMetNames, String databasePath) {
+	private static void downloadRefMetPagesToDatabase(List<String> refMetNames, boolean startFresh, String databasePath) {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		String tableName = "RefMet";
-		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecord.fieldNames, true);
+		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
 		
 		Logger logger = (Logger) LoggerFactory.getLogger("org.apache.http");
 		logger.setLevel(Level.WARN);
     	logger.setAdditive(false);
+    	
+    	int size = refMetNames.size();
+    	HashSet<String> hsURLs = new HashSet<String>();
+    	if (!startFresh) {
+	    	ResultSet rs = SQLite_GetRecords.getAllRecords(SQLite_Utilities.getStatement(conn), tableName);
+			try {
+				while (rs.next()) {
+					hsURLs.add(rs.getString("url"));
+				}
+				System.out.println(hsURLs.size()+" pages already downloaded. Continuing download...");
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+    	} else {
+    		System.out.println(size+" pages to be downloaded. Starting download...");
+    	}
 		
-		Random rand = new Random();
-		long delay = 0;
+//		Random rand = new Random();
+//		long delay = 0;
 		int countSuccess = 0;
-		for (String refMetName:refMetNames) {
+		for (int i = 0; i < size; i++) {
+			String refMetName = refMetNames.get(i);
 			if (refMetName==null) { continue; }
 			try {
 				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
@@ -104,11 +140,12 @@ public class RecordRefMet {
 				
 				String safeRefMetName = URLEncoder.encode(refMetName.replaceAll("\"", ""),"UTF-8");
 				String getURL = "https://www.metabolomicsworkbench.org/databases/refmet/refmet_details.php?REFMET_NAME="+safeRefMetName;
+				if (!startFresh && !hsURLs.add(getURL)) { continue; }
 				
-				long startTime=System.currentTimeMillis();
+//				long startTime=System.currentTimeMillis();
 				String content = getOneRefMetPage(getURL);
-				long endTime=System.currentTimeMillis();
-				delay = endTime-startTime;
+//				long endTime=System.currentTimeMillis();
+//				delay = endTime-startTime;
 				
 				if (content!=null) {
 					RawDataRecord rec=new RawDataRecord(strDate, getURL, content.replaceAll("'", "''").replaceAll(";", "\\;"));
@@ -121,7 +158,7 @@ public class RecordRefMet {
 					System.out.println("Failed to download page for "+refMetName+".");
 				}
 				
-				Thread.sleep((long) (delay*(1+rand.nextDouble())));
+				Thread.sleep(200);
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -157,11 +194,13 @@ public class RecordRefMet {
 
 			while (rs.next()) {
 				String html = rs.getString("content");
+				String url = rs.getString("url");
 				String date = rs.getString("date");
 				Document doc = Jsoup.parse(html);
 				
 				RecordRefMet rec = new RecordRefMet();
 				rec.dateAccessed = date.substring(0,date.indexOf(" "));
+				rec.url = url;
 				
 				parseRefMetPageDocument(rec,doc);
 
@@ -206,8 +245,8 @@ public class RecordRefMet {
 					case "Sub Class":
 						rec.subClass = td.selectFirst("a").text();
 						break;
-					case "PubChem CID":
-						rec.pubchemCID = td.selectFirst("a").text();
+					case "Pubchem CID":
+						rec.pubChemCID = td.selectFirst("a").text();
 						break;
 					case "RefMet name":
 						rec.refMetName = td.text();
@@ -222,7 +261,8 @@ public class RecordRefMet {
 						rec.sumComposition = td.text();
 						break;
 					case "Exact mass":
-						rec.exactMass = td.text();
+						String text = td.text();
+						rec.exactMass = text.substring(0,text.indexOf(" "));
 						break;
 					case "Formula":
 						rec.formula = td.text();
@@ -245,11 +285,23 @@ public class RecordRefMet {
 		}
 	}
 	
+	void addRecordToDatabase(String tableName,Connection conn) {
+		String safeRefMetName = refMetName==null ? null : refMetName.replaceAll("'", "''").replaceAll(";", "\\;");
+		String safeSystematicName = systematicName==null ? null : systematicName.replaceAll("'", "''").replaceAll(";", "\\;");
+		String safeSumComposition = sumComposition==null ? null : sumComposition.replaceAll("'", "''").replaceAll(";", "\\;");
+		String [] values= {regno,safeRefMetName,safeSystematicName,
+				smiles,safeSumComposition,exactMass,formula,inchi,inchiKey,
+				superClass,mainClass,subClass,
+				pubChemCID,annotationLevel,molFile,
+				dateAccessed,url};
+		SQLite_CreateTable.addDataToTable(tableName, fieldNames, values, conn);
+	}
+	
 	public static void main(String[] args) {
-		String databasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchTest.db";
+		String databasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbench.db";
 		List<RecordMetaboliteDatabase> records = RecordMetaboliteDatabase.parseMetaboliteDatabaseTablesInDatabase(databasePath);
 		List<String> refMetNames = getRefMetNamesFromMetaboliteDatabaseRecords(records);
-		downloadRefMetPagesToDatabase(refMetNames, databasePath);
+		downloadRefMetPagesToDatabase(refMetNames, false, databasePath);
 //		List<RecordRefMet> records = parseRefMetPagesInDatabase(databasePath);
 //		Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
 //		System.out.println(prettyGson.toJson(records));

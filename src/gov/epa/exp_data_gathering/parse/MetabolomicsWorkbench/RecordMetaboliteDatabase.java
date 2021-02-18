@@ -37,10 +37,11 @@ public class RecordMetaboliteDatabase {
 	String regno;
 	String commonName;
 	String systematicName;
-	String pubchemCID;
+	String pubChemCID;
 	String formula;
 	String exactMass;
 	String dateAccessed;
+	String url;
 	
 	private static void downloadMetaboliteDatabaseTablesToDatabase(String databasePath) {
 		File db = new File(databasePath);
@@ -125,7 +126,9 @@ public class RecordMetaboliteDatabase {
 				Document doc = Jsoup.parse(html);
 				
 				List<RecordMetaboliteDatabase> recs = new ArrayList<RecordMetaboliteDatabase>();
-				String dateAccessed = date.substring(0,date.indexOf(" "));
+				// String dateAccessed = date.substring(0,date.indexOf(" "));
+				// TODO Test database has different date format - change this back for final database
+				String dateAccessed = date;
 
 				parseMetaboliteDatabaseTableDocument(recs,doc,dateAccessed);
 
@@ -152,10 +155,11 @@ public class RecordMetaboliteDatabase {
 						rec.regno = regnoURL.substring(regnoURL.lastIndexOf("=")+1);
 						rec.commonName = cells.get(2).text();
 						rec.systematicName = cells.get(3).text();
-						rec.pubchemCID = cells.get(4).text();
+						rec.pubChemCID = cells.get(4).text();
 						rec.formula = cells.get(5).text();
 						rec.exactMass = cells.get(6).text();
 						rec.dateAccessed = dateAccessed;
+						rec.url = "https://www.metabolomicsworkbench.org"+regnoURL;
 						recs.add(rec);
 					}
 				}
