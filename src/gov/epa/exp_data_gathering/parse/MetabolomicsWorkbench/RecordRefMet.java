@@ -3,6 +3,7 @@ package gov.epa.exp_data_gathering.parse.MetabolomicsWorkbench;
 import java.io.File;
 import java.net.URLEncoder;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -42,6 +43,7 @@ import gov.epa.api.RawDataRecord;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
@@ -365,7 +367,7 @@ public class RecordRefMet {
 		}
 	}
 	
-	void addRecordToDatabase(String tableName,Connection conn) {
+	String[] setSafeValuesForDatabase() {
 		String safeRefMetName = refMetName==null ? null : refMetName.replaceAll("'", "''").replaceAll(";", "\\;");
 		String safeSystematicName = systematicName==null ? null : systematicName.replaceAll("'", "''").replaceAll(";", "\\;");
 		String safeSumComposition = sumComposition==null ? null : sumComposition.replaceAll("'", "''").replaceAll(";", "\\;");
@@ -377,7 +379,7 @@ public class RecordRefMet {
 				safeSuperClass,safeMainClass,safeSubClass,
 				pubChemCID,annotationLevel,molFile,
 				dateAccessed,url};
-		SQLite_CreateTable.addDataToTable(tableName, fieldNames, values, conn);
+		return values;
 	}
 	
 	public static void main(String[] args) {
@@ -385,6 +387,6 @@ public class RecordRefMet {
 		List<RecordMetaboliteDatabase> records = RecordMetaboliteDatabase.parseMetaboliteDatabaseTablesInDatabase(databasePath);
 //		List<String> refMetNames = getRefMetNamesFromMetaboliteDatabaseRecords(records);
 //		downloadRefMetPagesToDatabase(refMetNames, false, databasePath);
-		checkRefMetPages(records,28000);
+		checkRefMetPages(records,50000);
 	}
 }
