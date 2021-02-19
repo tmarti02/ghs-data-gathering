@@ -49,7 +49,7 @@ public class MetabolomicsWorkbenchRecordsJoiner {
 		this.recordsRefMet = recordsRefMet;
 	}
 	
-	private void joinRecords() {
+	private void joinRecords(int start, int end) {
 		int metaboliteDatabaseSize = recordsMetaboliteDatabase.size();
 		int refMetSize = recordsRefMet.size();
 		System.out.println("Found "+metaboliteDatabaseSize+" records from Metabolite Database, matched to "+refMetSize+" records from RefMet.");
@@ -59,9 +59,10 @@ public class MetabolomicsWorkbenchRecordsJoiner {
 			hmRecordsRefMetByRegno.put(rrm.regno,rrm);
 		}
 		
+		int count = 0;
 		int countPubChemDownloads = 0;
-		List<String> missingMolFileURLs = new ArrayList<String>();
-		for (RecordMetaboliteDatabase rmd:recordsMetaboliteDatabase) {
+		for (int i = start; i < end; i++) {
+			RecordMetaboliteDatabase rmd = recordsMetaboliteDatabase.get(i);
 			String regno = rmd.regno;
 			if (hmRecordsRefMetByRegno.containsKey(regno)) {
 				RecordRefMet rrm = hmRecordsRefMetByRegno.get(regno);
@@ -71,56 +72,70 @@ public class MetabolomicsWorkbenchRecordsJoiner {
 				joinedRecords.add(rrm);
 			} else {
 				RecordRefMet rrm = new RecordRefMet(rmd);
-				downloadAndAddMissingDataFromPubChem(rrm);
+				boolean success = downloadAndAddMissingDataFromPubChem(rrm);
 				joinedRecords.add(rrm);
-				countPubChemDownloads++;
-				missingMolFileURLs.add(rmd.url);
+				if (success) {
+					countPubChemDownloads++;
+				}
+			}
+			count++;
+			if (count % 1000==0) {
+				System.out.println("Added "+count+" records; missing data for "+countPubChemDownloads+" records retrieved from PubChem.");
 			}
 		}
-		System.out.println("Retrieved missing data for "+countPubChemDownloads+" records from PubChem.");
-		writeMissingMolFileURLsToTXT(missingMolFileURLs);
+		if (count % 1000 != 0) {
+			System.out.println("Added "+count+" records; missing data for "+countPubChemDownloads+" records retrieved from PubChem.");
+		}
 	}
 	
-	private void downloadAndAddMissingDataFromPubChem(RecordRefMet rrm) {
+	private boolean downloadAndAddMissingDataFromPubChem(RecordRefMet rrm) {
+		boolean success = true;
 		try {
-			String pubChemURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/"+rrm.pubChemCID+"/property/CanonicalSMILES,InChI,InChIKey/JSON";
-			String pubChemJSON = FileUtilities.getText_UTF8(pubChemURL);
+			String pubChemDataURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/"+rrm.pubChemCID+"/property/CanonicalSMILES,InChI,InChIKey/JSON";
+			long start = System.currentTimeMillis();
+			String pubChemJSON = FileUtilities.getText_UTF8(pubChemDataURL);
 			PubChemData pubChemData = gson.fromJson(pubChemJSON, PubChemData.class);
-			Property identifiers = pubChemData.propertyTable.properties.get(0);
-			
-			rrm.smiles = identifiers.canonicalSMILES;
-			rrm.inchi = identifiers.inChI;
-			rrm.inchiKey = identifiers.inChIKey;
-			
-			Thread.sleep(200);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	private void writeMissingMolFileURLsToTXT(List<String> urls) {
-		String filePath = "Data\\Experimental\\MetabolomicsWorkbench\\MissingMolFileURLs.txt";
-		File file = new File(filePath);
-		if(!file.getParentFile().exists()) { file.getParentFile().mkdirs(); }
-		
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(filePath));
-			for (String url:urls) {
-				bw.write(url+"\r\n");
+			if (pubChemData!=null) {
+				Property property = pubChemData.propertyTable.properties.get(0);
+				rrm.smiles = property.canonicalSMILES;
+				rrm.inchi = property.inChI;
+				rrm.inchiKey = property.inChIKey;
+			} else {
+				success = false;
 			}
-			bw.close();
-			System.out.println("Wrote missing molfile URLs to "+filePath+".");
+			
+			long end = System.currentTimeMillis();
+			if (end-start < 200) {
+				Thread.sleep(200-(end-start));
+			}
+			
+			String pubChemSDFURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/"+rrm.pubChemCID+"/SDF";
+			String pubChemSDF = FileUtilities.getText_UTF8(pubChemSDFURL);
+			if (pubChemSDF!=null) {
+				String pubChemMolFile = pubChemSDF.substring(0,pubChemSDF.indexOf("END")+3);
+				rrm.molFile = pubChemMolFile;
+			} else {
+				success = false;
+			}
+			
+			long end2 = System.currentTimeMillis();
+			if (end2-end < 200) {
+				Thread.sleep(200-(end2-end));
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
+			success = false;
 		}
+		
+		return success;
 	}
 	
-	public void joinAndWriteRecordsToDatabase(String databasePath) {
-		joinRecords();
+	public void joinAndWriteRecordsToDatabase(int start,int end,boolean startFresh,String databasePath) {
+		joinRecords(start,end);
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		String tableName = "MetabolomicsWorkbench";
-		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RecordRefMet.fieldNames, true);
+		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RecordRefMet.fieldNames, startFresh);
 		
 		for (RecordRefMet rec:joinedRecords) {
 			rec.addRecordToDatabase(tableName, conn);
@@ -128,10 +143,11 @@ public class MetabolomicsWorkbenchRecordsJoiner {
 	}
 	
 	public static void main(String[] args) {
-		String databasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchTest.db";
-		List<RecordMetaboliteDatabase> recordsMD = RecordMetaboliteDatabase.parseMetaboliteDatabaseTablesInDatabase(databasePath);
-		List<RecordRefMet> recordsRM = RecordRefMet.parseRefMetPagesInDatabase(databasePath);
+		String readDatabasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbench.db";
+		List<RecordMetaboliteDatabase> recordsMD = RecordMetaboliteDatabase.parseMetaboliteDatabaseTablesInDatabase(readDatabasePath);
+		List<RecordRefMet> recordsRM = RecordRefMet.parseRefMetPagesInDatabase(readDatabasePath);
 		MetabolomicsWorkbenchRecordsJoiner joiner = new MetabolomicsWorkbenchRecordsJoiner(recordsMD,recordsRM);
-		joiner.joinAndWriteRecordsToDatabase("Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchFinalTest.db");
+		String writeDatabasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchRecords.db";
+		joiner.joinAndWriteRecordsToDatabase(1000,10000,false,writeDatabasePath); // Left off at 1000 on 2/18
 	}
 }

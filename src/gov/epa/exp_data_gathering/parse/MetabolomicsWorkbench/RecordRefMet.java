@@ -20,8 +20,11 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -93,10 +96,16 @@ public class RecordRefMet {
 			}
 		}
 		
+		Logger logger = (Logger) LoggerFactory.getLogger("org.apache.http");
+		logger.setLevel(Level.WARN);
+    	logger.setAdditive(false);
+		
 		for (RecordMetaboliteDatabase rec:records) {		
 			String cid = rec.pubChemCID;
 			String refMetName = hmCIDToRefMet.get(cid);
-			refMetNames.add(refMetName);
+			if (refMetName!=null) {
+				refMetNames.add(refMetName);
+			}
 		}
 		
 		return refMetNames;
@@ -107,10 +116,6 @@ public class RecordRefMet {
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		String tableName = "RefMet";
 		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
-		
-		Logger logger = (Logger) LoggerFactory.getLogger("org.apache.http");
-		logger.setLevel(Level.WARN);
-    	logger.setAdditive(false);
     	
     	int size = refMetNames.size();
     	HashSet<String> hsURLs = new HashSet<String>();
@@ -133,7 +138,6 @@ public class RecordRefMet {
 		int countSuccess = 0;
 		for (int i = 0; i < size; i++) {
 			String refMetName = refMetNames.get(i);
-			if (refMetName==null) { continue; }
 			try {
 				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 				Date date = new Date();  
@@ -186,9 +190,84 @@ public class RecordRefMet {
 		}
 	}
 	
+	private static void checkRefMetPages(List<RecordMetaboliteDatabase> records, int start) {
+		HashMap<String,String> hmCIDToRefMet = new HashMap<String,String>();
+		ArrayList<String> lines = Utilities.readFileToArray("Data\\refmet.txt");
+		for (int i = 1; i < lines.size(); i++) { // First line is header
+			String[] vals = lines.get(i).split("\t",-1);
+	
+			if (vals.length>7) {
+				String cid = vals[7];
+				String refMetName = vals[0];
+				if (cid!=null && !cid.isBlank()) {
+					hmCIDToRefMet.put(cid, refMetName);
+				}
+			}
+		}
+	
+		Logger logger = (Logger) LoggerFactory.getLogger("org.apache.http");
+		logger.setLevel(Level.WARN);
+    	logger.setAdditive(false);
+    	
+		int count = 0;
+		int countSuccess = 0;
+		int countTrueFailure = 0;
+		System.out.println(records.size()+" records to be checked; starting at index "+start+".");
+		for (int i = start; i < records.size(); i++) {		
+			RecordMetaboliteDatabase rec = records.get(i);
+			String cid = rec.pubChemCID;
+			String refMetName = hmCIDToRefMet.get(cid);
+			if (refMetName!=null) {
+				countSuccess++;
+			} else if (cid!=null && !cid.isBlank() && !cid.equals("-")) {
+				try {
+					Thread.sleep(200);
+					String check = checkOneRefMetPage(cid);
+					if (!check.equals("No matches in database for this query.")) {
+						System.out.println("Failed to retrieve existing RefMet record for CID "+cid);
+						countTrueFailure++;
+					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+			count++;
+			if (count % 1000==0) {
+				System.out.println("Searched "+count+" CIDs; "+countSuccess+" successfully matched to RefMet names; "+countTrueFailure+" existing RefMet pages missed.");
+			}
+		}
+		System.out.println("Searched "+count+" CIDs; "+countSuccess+" successfully matched to RefMet names; "+countTrueFailure+" existing RefMet pages missed.");
+	}
+	
+	private static String checkOneRefMetPage(String cid) {
+		try {
+			HttpClient httpclient = HttpClients.createDefault();
+			HttpPost httppost = new HttpPost("https://www.metabolomicsworkbench.org/databases/refmet/refmet_tableonlyM.php");
+
+			// Request parameters and other properties.
+			List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(2);
+			params.add(new BasicNameValuePair("page", "1"));
+			params.add(new BasicNameValuePair("PUBCHEM_CID", cid));
+			params.add(new BasicNameValuePair("SORT", "r.name"));
+			httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+
+			//Execute and get the response.
+			HttpResponse response = httpclient.execute(httppost);
+			HttpEntity entity = response.getEntity();
+			String result = EntityUtils.toString(entity);
+			
+//			System.out.println(result);
+			
+			return result;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
+	}
+	
 	static List<RecordRefMet> parseRefMetPagesInDatabase(String databasePath) {
 		List<RecordRefMet> records = new ArrayList<RecordRefMet>();
-		
+
 		try {
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
 			ResultSet rs = SQLite_GetRecords.getAllRecords(stat, "RefMet");
@@ -290,9 +369,12 @@ public class RecordRefMet {
 		String safeRefMetName = refMetName==null ? null : refMetName.replaceAll("'", "''").replaceAll(";", "\\;");
 		String safeSystematicName = systematicName==null ? null : systematicName.replaceAll("'", "''").replaceAll(";", "\\;");
 		String safeSumComposition = sumComposition==null ? null : sumComposition.replaceAll("'", "''").replaceAll(";", "\\;");
+		String safeSuperClass = superClass==null ? null : superClass.replaceAll("'", "''").replaceAll(";", "\\;");
+		String safeMainClass = mainClass==null ? null : mainClass.replaceAll("'", "''").replaceAll(";", "\\;");
+		String safeSubClass = subClass==null ? null : subClass.replaceAll("'", "''").replaceAll(";", "\\;");
 		String [] values= {regno,safeRefMetName,safeSystematicName,
 				smiles,safeSumComposition,exactMass,formula,inchi,inchiKey,
-				superClass,mainClass,subClass,
+				safeSuperClass,safeMainClass,safeSubClass,
 				pubChemCID,annotationLevel,molFile,
 				dateAccessed,url};
 		SQLite_CreateTable.addDataToTable(tableName, fieldNames, values, conn);
@@ -301,10 +383,8 @@ public class RecordRefMet {
 	public static void main(String[] args) {
 		String databasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbench.db";
 		List<RecordMetaboliteDatabase> records = RecordMetaboliteDatabase.parseMetaboliteDatabaseTablesInDatabase(databasePath);
-		List<String> refMetNames = getRefMetNamesFromMetaboliteDatabaseRecords(records);
-		downloadRefMetPagesToDatabase(refMetNames, false, databasePath);
-//		List<RecordRefMet> records = parseRefMetPagesInDatabase(databasePath);
-//		Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
-//		System.out.println(prettyGson.toJson(records));
+//		List<String> refMetNames = getRefMetNamesFromMetaboliteDatabaseRecords(records);
+//		downloadRefMetPagesToDatabase(refMetNames, false, databasePath);
+		checkRefMetPages(records,28000);
 	}
 }
