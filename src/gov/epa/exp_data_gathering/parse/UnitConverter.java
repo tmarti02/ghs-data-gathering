@@ -293,19 +293,36 @@ public class UnitConverter {
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L) || er.property_value_units_original.equals(ExperimentalConstants.str_ug_mL)
-				|| er.property_value_units_original.equals(ExperimentalConstants.str_ppm)) {
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L) || er.property_value_units_original.equals(ExperimentalConstants.str_ug_mL)) {
 			convertAndAssignFinalFields(er,1.0/1000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppm)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_ppm;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_L)) {
 			convertAndAssignFinalFields(er,1.0/1000000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_100mL) ||
-				er.property_value_units_original.equals(ExperimentalConstants.str_pctWt) || er.property_value_units_original.equals(ExperimentalConstants.str_pct)) {
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_100mL)) {
+			convertAndAssignFinalFields(er,10.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pctWt)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_pctWt;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pct)) {
 			convertAndAssignFinalFields(er,10.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_100mL)) {
 			convertAndAssignFinalFields(er,1.0/100.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_10mL)) {
+			convertAndAssignFinalFields(er,1.0/10.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_10mL)) {
+			convertAndAssignFinalFields(er,100.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_100mL)) {
 			convertAndAssignFinalFields(er,10.0/1000000.0);
@@ -316,25 +333,55 @@ public class UnitConverter {
 		// under construction - CR
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_kg_H20)) {
 			convertAndAssignFinalFields(er,1.0/1000.0);
-			er.property_value_units_final = ExperimentalConstants.str_g_L;
+			er.property_value_units_final = ExperimentalConstants.str_g_kg_H20;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_kg_H20)) {
-			convertAndAssignFinalFields(er,1.0);
-			er.property_value_units_final = ExperimentalConstants.str_g_L;
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_g_kg_H20;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_kg_kg_H20)) {
+			convertAndAssignFinalFields(er,1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_kg_H20;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_g_H20)) {
 			convertAndAssignFinalFields(er,1.0/1000.0);
-			er.property_value_units_final = ExperimentalConstants.str_g_L;
+			er.property_value_units_final = ExperimentalConstants.str_g_kg_H20;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_100g)) {
+			convertAndAssignFinalFields(er,10.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_kg_H20;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_100g)) {
+			convertAndAssignFinalFields(er,10.0/1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_kg_H20;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mol_m3_H20)) {
 			convertAndAssignFinalFields(er,1.0/1000.0);
 			er.property_value_units_final = ExperimentalConstants.str_M;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
 		// end of construction
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppb)) {
-			convertAndAssignFinalFields(er,1.0/1000000.0);
-			er.property_value_units_final = ExperimentalConstants.str_g_L;
+			convertAndAssignFinalFields(er,1.0/1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_ppm;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pctVol)) {
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = er.property_value_units_original;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_oz_gal)) {
+			Double oz_to_g = 28.3495;
+			Double gal_to_L = 3.78541;
+			convertAndAssignFinalFields(er,oz_to_g/gal_to_L);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else {
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (unknown units)");

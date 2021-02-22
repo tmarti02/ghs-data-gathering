@@ -153,9 +153,10 @@ public class MetabolomicsWorkbenchRecordsJoiner {
 		Connection conn= SQLite_Utilities.getConnection(databasePath);
 		HashSet<String> hsRegno = new HashSet<String>();
 		try {
+			System.out.println("Writing to database...");
 			conn.setAutoCommit(true);
 			if (startFresh) {
-				System.out.println("Creating "+tableName+" table");
+				System.out.println("Creating "+tableName+" table...");
 				Statement stat1 = SQLite_Utilities.getStatement(conn);
 				stat1.executeUpdate("drop table if exists "+tableName+";");
 				stat1.close();
@@ -222,12 +223,15 @@ public class MetabolomicsWorkbenchRecordsJoiner {
 				
 				if (counter % 1000 == 0) {
 					prep.executeBatch();
+					System.out.println("Wrote "+counter+" records to database...");
 				}
 			}
 	
 			prep.executeBatch(); // do what's left
 			
 			conn.setAutoCommit(true);
+			
+			System.out.println("Wrote "+joinedRecords.size()+" records to database at "+databasePath+".");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -236,15 +240,14 @@ public class MetabolomicsWorkbenchRecordsJoiner {
 	public void joinAndWriteRecordsToDatabase(int start,int end,boolean startFresh,String databasePath) {
 		joinRecords(start,end);
 		batchAddRecordsToDatabase(databasePath, startFresh);
-		System.out.println("Wrote "+joinedRecords.size()+" records to database at "+databasePath+".");
 	}
 	
 	public static void main(String[] args) {
-		String readDatabasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbench.db";
+		String readDatabasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchRaw.db";
 		List<RecordMetaboliteDatabase> recordsMD = RecordMetaboliteDatabase.parseMetaboliteDatabaseTablesInDatabase(readDatabasePath);
 		List<RecordRefMet> recordsRM = RecordRefMet.parseRefMetPagesInDatabase(readDatabasePath);
 		MetabolomicsWorkbenchRecordsJoiner joiner = new MetabolomicsWorkbenchRecordsJoiner(recordsMD,recordsRM);
 		String writeDatabasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchRecords.db";
-		joiner.joinAndWriteRecordsToDatabase(20000,30000,false,writeDatabasePath);
+		joiner.joinAndWriteRecordsToDatabase(60000,80000,false,writeDatabasePath);
 	}
 }

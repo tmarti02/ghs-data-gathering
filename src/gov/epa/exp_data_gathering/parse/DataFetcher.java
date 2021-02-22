@@ -37,7 +37,7 @@ import gov.epa.eChemPortalAPI.Processing.FinalRecords;
 
 public class DataFetcher {
 	
-	private static ExperimentalRecords records;
+	static ExperimentalRecords records;
 	
 	public static final String mainFolder = "Data"+File.separator+"Experimental";
 	public String databasePath;

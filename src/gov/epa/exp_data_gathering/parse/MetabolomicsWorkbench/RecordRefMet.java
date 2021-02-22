@@ -387,6 +387,6 @@ public class RecordRefMet {
 		List<RecordMetaboliteDatabase> records = RecordMetaboliteDatabase.parseMetaboliteDatabaseTablesInDatabase(databasePath);
 //		List<String> refMetNames = getRefMetNamesFromMetaboliteDatabaseRecords(records);
 //		downloadRefMetPagesToDatabase(refMetNames, false, databasePath);
-		checkRefMetPages(records,50000);
+		checkRefMetPages(records,74000);
 	}
 }

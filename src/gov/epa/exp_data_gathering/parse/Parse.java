@@ -82,7 +82,7 @@ public class Parse {
 		folderNameExcel=mainFolder + File.separator + "excel files";
 		
 		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting().disableHtmlEscaping();
+		builder.setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues();
 		gson = builder.create();
 		
 		uc = new UnitConverter("Data" + File.separator + "density.txt");
@@ -185,7 +185,7 @@ public class Parse {
 	
 	private static int batchAndWriteJSON(Vector<?> records, String baseFileName) {
 		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting().disableHtmlEscaping();
+		builder.setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues();
 		Gson gson = builder.create();
 		int batch = 0;
 		
@@ -329,10 +329,9 @@ public class Parse {
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuiteISIS};
-		String[] reparseSources = {ExperimentalConstants.strSourceChemicalBook, 
-				ExperimentalConstants.strSourceEChemPortalAPI, 
-				ExperimentalConstants.strSourceLookChem, 
-				ExperimentalConstants.strSourcePubChem};
+		String[] reparseSources = {
+				ExperimentalConstants.strSourcePubChem,
+				ExperimentalConstants.strSourceLookChem};
 		for (String s:allSources) {
 			runParse(s,recordType);
 		}

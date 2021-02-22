@@ -70,14 +70,19 @@ public class ExperimentalConstants {
 	public static final String str_iu_kg="iu/kg";
 	public static final String str_units_kg="units/kg";
 	public static final String str_mg="mg";
-	public static final String str_mg_kg_H20="mg/kg H20";
-	public static final String str_g_Mg_H20="g/Mg H20";
-	public static final String str_g_100g="g/100g H20";
-	public static final String str_mol_m3_H20="mol/m3 H20";
-	public static final String str_mol_kg_H20="mol/kg H20";
-	public static final String str_g_kg_H20="g/kg H20";
-	public static final String str_ug_g_H20 ="ug/g H20";
+	public static final String str_mg_kg_H20="mg/kg H2O";
+	public static final String str_g_Mg_H20="g/Mg H2O";
+	public static final String str_g_100g="g/100g";
+	public static final String str_mg_100g="mg/100g";
+	public static final String str_mol_m3_H20="mol/m3 H2O";
+	public static final String str_mol_kg_H20="mol/kg H2O";
+	public static final String str_kg_kg_H20="kg/kg H2O";
+	public static final String str_g_kg_H20="g/kg H2O";
+	public static final String str_ug_g_H20 ="ug/g H2O";
 	public static final String str_ug_100mL = "ug/100mL";
+	public static final String str_mg_10mL = "mg/10mL";
+	public static final String str_g_10mL = "g/10mL";
+	public static final String str_oz_gal = "oz/gal";
 	
 	//Other:
 	public static final String str_dec="decomposes";

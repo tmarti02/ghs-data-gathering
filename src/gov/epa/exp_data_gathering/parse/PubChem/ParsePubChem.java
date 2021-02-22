@@ -137,10 +137,10 @@ public class ParsePubChem extends Parse {
 		er.source_name=ExperimentalConstants.strSourcePubChem;
 		
 		boolean foundNumeric = false;
-		propertyValue = propertyValue.replaceAll("greater than", ">");
-		propertyValue = propertyValue.replaceAll("less than", "<");
-		propertyValue = propertyValue.replaceAll(" or equal to ", "=");
-		propertyValue = propertyValue.replaceAll("about ", "~");
+		propertyValue = propertyValue.replaceAll("(?i)greater than", ">");
+		propertyValue = propertyValue.replaceAll("(?i)less than", "<");
+		propertyValue = propertyValue.replaceAll("(?i) or equal to ", "=");
+		propertyValue = propertyValue.replaceAll("(?i)about ", "~");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er,propertyValue);
 			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);

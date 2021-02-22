@@ -2,13 +2,11 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 import gov.epa.api.ExperimentalConstants;
 
@@ -20,6 +18,22 @@ public class DataCompare {
 	private boolean includeBadRecords;
 	
 	public static final String mainFolder = "Data"+File.separator+"Experimental";
+	
+	private Map<String,Map<String,Boolean>> casTable;
+	
+	public DataCompare(String[] sourceNames,boolean includeBad,boolean includeQualitative) {
+		DataFetcher df = new DataFetcher(sourceNames,"physchem");
+		casTable = new HashMap<String,Map<String,Boolean>>();
+		for (ExperimentalRecord rec:df.records) {
+			if (rec.casrn==null) { continue; }
+			if ((includeBad || rec.keep) && (includeQualitative || rec.property_value_point_estimate_final!=null || rec.property_value_min_final!=null)) {
+				Map<String,Boolean> row = casTable.get(rec.casrn);
+				if (row==null) { row = new HashMap<String,Boolean>(); }
+				row.put(rec.source_name,true);
+				casTable.put(rec.casrn, row);
+			}
+		}
+	}
 
 	public DataCompare(String sourceName1,String sourceName2,boolean includeBadRecords) {
 		this.includeBadRecords = includeBadRecords;
@@ -51,6 +65,52 @@ public class DataCompare {
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
+		}
+	}
+	
+	public void generateOverlapTable(String[] sourceNames) {
+		Map<String,Map<String,Integer>> overlapTable = new HashMap<String,Map<String,Integer>>();
+		Map<String,Integer> uniqueValueTable = new HashMap<String,Integer>();
+		for (String cas:casTable.keySet()) {
+			Map<String,Boolean> cas_row = casTable.get(cas);
+			for (String s1:sourceNames) {
+				Boolean hasS1 = cas_row.get(s1);
+				if (hasS1!=null && hasS1) {
+					boolean uniqueS1 = true;
+					for (String s2:sourceNames) {
+						if (s1.equals(s2)) { continue; }
+						Boolean hasS2 = cas_row.get(s2);
+						if (hasS2!=null && hasS2) {
+							uniqueS1 = false;
+							Map<String,Integer> overlapS1S2 = overlapTable.get(s1);
+							if (overlapS1S2==null) { overlapS1S2 = new HashMap<String,Integer>(); }
+							Integer countOverlapS1S2 = overlapS1S2.get(s2);
+							if (countOverlapS1S2==null) { countOverlapS1S2 = 0; }
+							overlapS1S2.put(s2, countOverlapS1S2+1);
+							overlapTable.put(s1, overlapS1S2);
+						}
+					}
+					if (uniqueS1) {
+						Integer countUniqueS1 = uniqueValueTable.get(s1);
+						if (countUniqueS1==null) { countUniqueS1 = 0; }
+						uniqueValueTable.put(s1, countUniqueS1+1);
+					}
+				}
+			}
+		}
+		
+		System.out.println("\t" + String.join("\t", sourceNames));
+		for (String s1:sourceNames) {
+			System.out.print(s1);
+			Map<String,Integer> overlapS1S2 = overlapTable.get(s1);
+			for (String s2:sourceNames) {
+				System.out.print("\t"+(overlapS1S2!=null ? overlapS1S2.get(s2) : null));
+			}
+			System.out.print("\n");
+		}
+		System.out.println("");
+		for (String s1:sourceNames) {
+			System.out.println(s1 + "\t" + uniqueValueTable.get(s1));
 		}
 	}
 	
@@ -135,7 +195,23 @@ public class DataCompare {
 	}
 	
 	public static void main(String[] args) {
-		DataCompare d = new DataCompare("eChemPortal","eChemPortalAPI",true);
-		d.compareAndWriteFiles();
+//		DataCompare d = new DataCompare("eChemPortal","eChemPortalAPI",true);
+//		d.compareAndWriteFiles();
+		String[] allSources = {ExperimentalConstants.strSourceADDoPT,
+				ExperimentalConstants.strSourceAqSolDB,
+				ExperimentalConstants.strSourceBradley,
+				ExperimentalConstants.strSourceChemicalBook,
+				ExperimentalConstants.strSourceChemidplus,
+				ExperimentalConstants.strSourceEChemPortalAPI,
+				ExperimentalConstants.strSourceLookChem,
+				ExperimentalConstants.strSourceOChem,
+				ExperimentalConstants.strSourceOFMPub,
+				ExperimentalConstants.strSourceOPERA,
+				ExperimentalConstants.strSourcePubChem,
+				ExperimentalConstants.strSourceQSARDB,
+				ExperimentalConstants.strSourceSander,
+				ExperimentalConstants.strSourceEpisuiteISIS};
+		DataCompare dc = new DataCompare(allSources,false,false);
+		dc.generateOverlapTable(allSources);
 	}
 }
