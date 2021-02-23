@@ -225,7 +225,7 @@ public class ParseUtilities extends Parse {
 		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","etoh","hexane","meoh",
 				"dichloromethane","dcm","toluene","glyc","oils","organic solvent","dmf","et2o","etoac","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
 				"acid","oxide","pyri","carbon tetrachloride","pet","anol","ch3oh","c2h5oh","ch2cl2","chcl3","alkali","dsmo","dma","buffer","ammonia water","pgmea",
-				"water-ethanol solution","cs2","ethylene dichloride","mineral oil","hydrochloric"};
+				"water-ethanol solution","cs2","ethylene dichloride","mineral oil","hydrochloric","sodium carbonate","nh4oh"};
 		boolean foundWater = false;
 		String[] waterSynonyms = {"water (distilled)","water","h2o","aqueous solution"};
 		for (String solvent:badSolvents) {
@@ -377,7 +377,16 @@ public class ParseUtilities extends Parse {
 
 		boolean foundNumeric = false;
 		if (er.keep) {
-			foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+			if (er.source_name.equals(ExperimentalConstants.strSourcePubChem) && propertyValue.toLowerCase().contains("ph")) {
+				Matcher pHMatcher = Pattern.compile("([0-9.]+) \\(ph [0-9.]+\\)").matcher(propertyValue.toLowerCase());
+				if (pHMatcher.find()) {
+					er.property_value_point_estimate_original = Double.parseDouble(pHMatcher.group(1));
+					foundNumeric = true;
+				}
+			}
+			if (!foundNumeric) {
+				foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+			}
 		}
 		return foundNumeric;
 	}
@@ -563,10 +572,9 @@ public class ParseUtilities extends Parse {
 		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\s,-]+?)(\\.|\\z| at| and only|\\(|;|[0-9]))?";
 		}
-		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so(uble|luble|l)]?|miscible))( [\\(]?(in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue1);
+		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(i[nm])?(s[ou]l?uble|miscible|sol(?!u)))( [\\(]?(in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue1);
 		while (solubilityMatcher.find()) {
 			String qualifier = solubilityMatcher.group(1);
-			qualifier = qualifier.replaceAll("souble","soluble");
 			String prep = solubilityMatcher.group(7);
 			String solvent = solubilityMatcher.group(10);
 			if (solvent==null || solvent.length()==0 || (solvent.contains("water") && !solvent.contains("alc")) || (
@@ -1058,7 +1066,7 @@ public class ParseUtilities extends Parse {
 		String propertyValue1=propertyValue.replaceAll("[ Â]","");
 		propertyValue1 = correctDegreeSymbols(propertyValue1);
 		String units = "";
-		if (propertyValue1.contains("\u00B0C") || propertyValue1.contains("oC") || propertyValue1.contains("deg.C")
+		if (propertyValue1.contains("\u00B0C") || propertyValue1.contains("oC") || propertyValue1.contains("deg.C") || propertyValue1.contains("deg C")
 				|| (propertyValue1.indexOf("C") > 0 && Character.isDigit(propertyValue1.charAt(propertyValue1.indexOf("C")-1))
 						&& !propertyValue1.contains("CC"))) {
 			units = ExperimentalConstants.str_C;
