@@ -167,12 +167,13 @@ public class ParsePubChem extends Parse {
 		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
 			er.updateNote(ExperimentalConstants.str_dec);
 		}
-		if (propertyValue.toLowerCase().contains("est")) {
+		if (propertyValue.toLowerCase().contains("est") && !propertyValue.toLowerCase().contains("ester") && !propertyValue.toLowerCase().contains("test")) {
 			er.updateNote(ExperimentalConstants.str_est);
 			er.keep = false;
 			er.reason = "Estimated";
 			}
-		if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp")) && !propertyValue.toLowerCase().contains("extreme")) {
+		if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp")) && !propertyValue.toLowerCase().contains("extreme")
+				&& !propertyValue.toLowerCase().contains("extent")) {
 			er.updateNote(ExperimentalConstants.str_ext);
 			er.keep = false;
 			er.reason = "Estimated";
