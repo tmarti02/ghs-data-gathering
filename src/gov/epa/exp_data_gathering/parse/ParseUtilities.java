@@ -225,7 +225,8 @@ public class ParseUtilities extends Parse {
 		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","etoh","hexane","meoh",
 				"dichloromethane","dcm","toluene","glyc","oils","organic solvent","dmf","et2o","etoac","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
 				"acid","oxide","pyri","carbon tetrachloride","pet","anol","ch3oh","c2h5oh","ch2cl2","chcl3","alkali","dsmo","dma","buffer","ammonia water","pgmea",
-				"water-ethanol solution","cs2","ethylene dichloride","mineral oil","hydrochloric","sodium carbonate","nh4oh"};
+				"water-ethanol solution","cs2","ethylene dichloride","mineral oil","hydrochloric","sodium carbonate","nh4oh","kh2po4","ethanol:buffered water",
+				"ethanol: water","ethanol:water","tfa"};
 		boolean foundWater = false;
 		String[] waterSynonyms = {"water (distilled)","water","h2o","aqueous solution"};
 		for (String solvent:badSolvents) {
@@ -248,7 +249,7 @@ public class ParseUtilities extends Parse {
 								propertyValue.toLowerCase().contains("?"+water) ||
 								propertyValue.toLowerCase().contains("ethanol in "+water) ||
 								propertyValue.toLowerCase().contains("etoh in "+water) ||
-								propertyValue.toLowerCase().contains("ethanol: "+water) ||
+								propertyValue.toLowerCase().contains("alkaline") ||
 								propertyValue.toLowerCase().contains("acidified")) { continue; } // Ignores records with water mixtures
 						foundWater = true;
 						boolean parsed = false;
@@ -397,6 +398,7 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 		} else if (propertyValue.toLowerCase().contains("mg/l") || propertyValue.toLowerCase().contains("mg l-1") || propertyValue.toLowerCase().contains("mgl-1") ||
+				propertyValue.toLowerCase().contains("mg / l") ||
 				(propertyValue.toLowerCase().contains("mg/1") && !propertyValue.toLowerCase().contains("mg/10"))) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg");
@@ -575,8 +577,8 @@ public class ParseUtilities extends Parse {
 		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(i[nm])?(s[ou]l?uble|miscible|sol(?!u)))( [\\(]?(in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue1);
 		while (solubilityMatcher.find()) {
 			String qualifier = solubilityMatcher.group(1);
-			String prep = solubilityMatcher.group(7);
-			String solvent = solubilityMatcher.group(10);
+			String prep = solubilityMatcher.group(6);
+			String solvent = solubilityMatcher.group(9);
 			if (solvent==null || solvent.length()==0 || (solvent.contains("water") && !solvent.contains("alc")) || (
 					solvent.contains("aqueous solution") && !solvent.contains("alkaline"))) {
 				er.property_value_qualitative = qualifier;
@@ -1066,7 +1068,7 @@ public class ParseUtilities extends Parse {
 		String propertyValue1=propertyValue.replaceAll("[ Â]","");
 		propertyValue1 = correctDegreeSymbols(propertyValue1);
 		String units = "";
-		if (propertyValue1.contains("\u00B0C") || propertyValue1.contains("oC") || propertyValue1.contains("deg.C") || propertyValue1.contains("deg C")
+		if (propertyValue1.contains("\u00B0C") || propertyValue1.contains("oC") || propertyValue1.contains("deg.C") || propertyValue1.contains("degC")
 				|| (propertyValue1.indexOf("C") > 0 && Character.isDigit(propertyValue1.charAt(propertyValue1.indexOf("C")-1))
 						&& !propertyValue1.contains("CC"))) {
 			units = ExperimentalConstants.str_C;
