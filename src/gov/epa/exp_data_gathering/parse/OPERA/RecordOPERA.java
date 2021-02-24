@@ -2,7 +2,9 @@ package gov.epa.exp_data_gathering.parse.OPERA;
 
 import java.io.FileInputStream;
 import java.lang.reflect.Field;
+import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import org.openscience.cdk.AtomContainer;
@@ -76,6 +78,13 @@ public class RecordOPERA {
 	public String BP;
 	public String LogMolar;
 	
+	public String LogOH;
+	public String OH;
+	public String LogBCF;
+	public String LogHalfLife;
+	public String LogKOC;
+	public String LogKmHL;
+	public String LogKOA;
 	
 	public String property_value_units_original;//sometimes it will take some work to figure this out by comparing to data values from other sources
 		
@@ -84,6 +93,10 @@ public class RecordOPERA {
 	
 	public String Tr_1_Tst_0;//tells you whether compound appears in their training or test sets
 
+	
+
+	
+
 	public String toJSON() {
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting();// makes it multiline and readable
@@ -91,17 +104,17 @@ public class RecordOPERA {
 		return gson.toJson(this);//all in one line!
 	}
 
-	public static Vector<RecordOPERA> parseOPERA_SDF(String endpoint) {
+	public static Vector<RecordOPERA> parseOPERA_SDF(String endpoint,String filename) {
 
 		
 		Vector<RecordOPERA> records=new Vector<>();
 		
 		String folder="data\\experimental\\OPERA\\OPERA_SDFS\\";
 		
-
-		String filename = getFileName(endpoint);
-		
-		if (filename==null) return null;
+		if (filename==null) {
+			System.out.println("filename missing for "+endpoint);
+			return null;
+		}
 		
 
 		AtomContainerSet acs=LoadFromSDF(folder+filename);
@@ -110,7 +123,7 @@ public class RecordOPERA {
 		
 		for (int i=0;i<acs.getAtomContainerCount();i++) {
 			AtomContainer ac=(AtomContainer)acs.getAtomContainer(i);
-			RecordOPERA ro = createRecordOpera(ac);
+			RecordOPERA ro = createRecordOpera(ac,endpoint);
 			ro.property_name = endpoint;
 			
 
@@ -131,27 +144,10 @@ public class RecordOPERA {
 
 	}
 	
-	private static String getFileName(String endpoint) {
-		switch (endpoint) {
-		case ExperimentalConstants.strWaterSolubility:
-			return "WS_QR.sdf";			
-		case ExperimentalConstants.strVaporPressure:
-			return "VP_QR.sdf";
-		case ExperimentalConstants.strBoilingPoint:
-			return "BP_QR.sdf";
-		case ExperimentalConstants.strHenrysLawConstant:
-			return "HL_QR.sdf";
-		case ExperimentalConstants.strLogKow:
-			return "LogP_QR.sdf";
-		case ExperimentalConstants.str_pKA:
-			return "pKa_QR.sdf";
-		case ExperimentalConstants.strMeltingPoint:
-			return "MP_QR.sdf";
+	
 
-		}
-		return null;
-
-	}
+	
+	
 
 	/**
 	 * Converts atom container property data into RecordOPERA object
@@ -159,8 +155,9 @@ public class RecordOPERA {
 	 * @param ac
 	 * @return
 	 */
-	private static RecordOPERA createRecordOpera(AtomContainer ac) {
+	private static RecordOPERA createRecordOpera(AtomContainer ac,String property_name) {
 		RecordOPERA ro=new RecordOPERA();
+		ro.property_name=property_name;
 
 		Map<Object,Object>props=ac.getProperties();
 		
@@ -168,44 +165,35 @@ public class RecordOPERA {
 		for (Map.Entry<Object,Object> entry : props.entrySet()) {  
 
 			String key=(String)entry.getKey();
+			
+//			System.out.println(key);
+			if (key.contains(" ")) {
+				if (key.contains("Reference") || key.contains("Temperature")) {
+					key=key.substring(key.indexOf(" ")+1,key.length());
+				}			
+			}			
+			key=key.replace("KocRef","Reference").replace("LogKOA_Ref", "Reference");
+			
 			String value=(String)entry.getValue();
 
 			if (key.contains("cdk")) continue;
 			
 			if (key.contentEquals("LogMolar")) {
 				// ro.property_value_point_estimate_original=Double.parseDouble(value);
-				ro.property_name=ExperimentalConstants.strWaterSolubility;
 				ro.property_value_units_original=ExperimentalConstants.str_log_M;//Note: later to get M need to use Math.pow(10,value)					
-				ro.LogMolar=value;
 			} else if (key.contentEquals("LogHL")) {
 				ro.property_value_units_original=ExperimentalConstants.str_log_atm_m3_mol;//TODO- determine what "?" is
-				ro.property_name=ExperimentalConstants.strHenrysLawConstant;
-				ro.LogHL=value;
-				
-			} else if (key.contentEquals("LogP")) {
-				ro.property_name=ExperimentalConstants.strLogKow;
-				ro.LogP=value;
 			} else if (key.contentEquals("MP")) {
-				ro.property_name=ExperimentalConstants.strMeltingPoint;
 				ro.property_value_units_original=ExperimentalConstants.str_C;
-				ro.MP=value;
 			} else if (key.contentEquals("LogVP")) {
-				ro.property_name=ExperimentalConstants.strVaporPressure;
 				ro.property_value_units_original=ExperimentalConstants.str_log_mmHg;
-				ro.LogVP=value;
 			} else if (key.contentEquals("BP")) {
-				ro.property_name=ExperimentalConstants.strBoilingPoint;
 				ro.property_value_units_original=ExperimentalConstants.str_C;
-				ro.BP=value;
-			} else if (key.contains("Reference")) {
-				ro.Reference=value;
-			} else if (key.contains("Temperature")) {
-				ro.Temperature=value;
-				
-			} else if (key.contentEquals("dsstox_substance_id")) {
+			}
+			
+			if (key.contentEquals("dsstox_substance_id")) {
 				ro.DSSTox_Substance_Id=value;
-				
-			} else {
+			} else {//Use reflection to store based on name of field
 				try {
 					//Use reflection to assign values from key/value pair:
 //					System.out.println(key);
@@ -264,31 +252,82 @@ public class RecordOPERA {
 		return acs;
 	}
 
-	// TODO: Need to get data for BP, HL, LogP, MP, pKA, VP, and WS
-
 	
+	
+	
+	// TODO: Need to get data for BP, HL, LogP, MP, pKA, VP, and WS
 	/**
 	 * this was the old main method, seems sensible to use it in the parseOPERA class in a manner similar to 'parseRecordsInDatabase' from other classes.
 	 * @return
 	 */
 	public static Vector<RecordOPERA> parseOperaSdf() {
 		Vector<RecordOPERA> records = new Vector<>();
-		// have to figure out a smart way to handle ExperimentalConstants.str_pKA
-		String[] endpoints = { ExperimentalConstants.strBoilingPoint, ExperimentalConstants.strHenrysLawConstant,
-				ExperimentalConstants.strLogKow, ExperimentalConstants.strMeltingPoint,
-				ExperimentalConstants.strVaporPressure, ExperimentalConstants.strWaterSolubility,
-				ExperimentalConstants.str_pKA };
-		for (int i = 0; i < endpoints.length; i++) {
-			records.addAll(parseOPERA_SDF(endpoints[i]));
-		}
+
+		Hashtable<String,String>ht=new Hashtable<>();
+		
+		ht.put(ExperimentalConstants.strLogOH, "AOH_QR.sdf");
+		ht.put(ExperimentalConstants.strLogBCF, "BCF_QR.sdf");
+		ht.put(ExperimentalConstants.strLogHalfLifeBiodegradation, "Biodeg_QR.sdf");
+		ht.put(ExperimentalConstants.strBoilingPoint, "BP_QR.sdf");
+		ht.put(ExperimentalConstants.strHenrysLawConstant, "HL_QR.sdf");
+		ht.put(ExperimentalConstants.strLogKmHL, "KM_QR.sdf");
+		ht.put(ExperimentalConstants.strLogKOA, "KOA_QR.sdf");
+		ht.put(ExperimentalConstants.strLogKOC, "KOC_QR.sdf");
+		ht.put(ExperimentalConstants.strLogKow, "LogP_QR.sdf");
+		ht.put(ExperimentalConstants.strMeltingPoint, "MP_QR.sdf");
+		ht.put(ExperimentalConstants.strVaporPressure, "VP_QR.sdf");
+		ht.put(ExperimentalConstants.strWaterSolubility, "WS_QR.sdf");
+		
+		ht.put(ExperimentalConstants.str_pKA, "pKa_QR.sdf");
+		
+		Set<String> setOfProperties = ht.keySet();
+		 
+        // for-each loop
+        for(String property : setOfProperties) {
+        	records.addAll(parseOPERA_SDF(property,ht.get(property)));
+        }
+		
 		return records;
 	}
 
+	public Double getPropertyValueOriginal() {
+		if (BP != null)
+			return Double.parseDouble(BP);
+		else if (LogHL != null)
+			return Double.parseDouble(LogHL);
+		else if (LogP != null)
+			return Double.parseDouble(LogP);
+		else if (MP != null)
+			return Double.parseDouble(MP);
+		else if (LogVP != null)
+			return Double.parseDouble(LogVP);
+		else if (LogMolar != null)
+			return Double.parseDouble(LogMolar);
+		else if (LogOH!=null)
+			return Double.parseDouble(LogOH);
+		else if (LogBCF!=null)
+			return Double.parseDouble(LogBCF);
+		else if (LogHalfLife!=null)
+			return Double.parseDouble(LogHalfLife);
+		else if (LogKOC!=null)
+			return Double.parseDouble(LogKOC);
+		else if (LogKOA!=null)
+			return Double.parseDouble(LogKOA);
+		else if (LogKmHL!=null)
+			return Double.parseDouble(LogKmHL);
+		else {
+			System.out.println("Need entry in getPropertyValueOriginal for "+property_name);
+			return null;	
+		}
+		
+	}
+	
+	
 	/**
 	 * exists only to 
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		parseOPERA_SDF(ExperimentalConstants.strWaterSolubility);
+		parseOPERA_SDF(ExperimentalConstants.strWaterSolubility,"WS_QR.sdf");
 	}
 }

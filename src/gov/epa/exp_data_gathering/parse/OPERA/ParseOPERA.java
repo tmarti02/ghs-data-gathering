@@ -124,7 +124,7 @@ ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 			er.source_name = ExperimentalConstants.strSourceOPERA;
 			er.keep = true;
 			er.property_name = ro.property_name;
-			er.property_value_point_estimate_original = getPropertyValueOriginal(ro);
+			er.property_value_point_estimate_original = ro.getPropertyValueOriginal();
 			if (er.property_value_point_estimate_original != null) {
 				er.property_value_string = er.property_value_point_estimate_original.toString();
 			}
@@ -182,22 +182,7 @@ ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		}
 	}
 	
-	private static Double getPropertyValueOriginal(RecordOPERA ro) {
-		if (!(ro.BP == null))
-			return Double.parseDouble(ro.BP);
-		else if (!(ro.LogHL == null))
-			return Double.parseDouble(ro.LogHL);
-		else if (!(ro.LogP == null))
-			return Double.parseDouble(ro.LogP);
-		else if (!(ro.MP == null))
-			return Double.parseDouble(ro.MP);
-		else if (!(ro.LogVP == null))
-			return Double.parseDouble(ro.LogVP);
-		else if (!(ro.LogMolar == null))
-			return Double.parseDouble(ro.LogMolar);
-		return null;
-	}
-
+	
 
 
 	public static void main(String[] args) {
