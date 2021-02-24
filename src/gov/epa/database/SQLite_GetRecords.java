@@ -149,8 +149,13 @@ public class SQLite_GetRecords {
 						myField.setInt(r, Integer.parseInt(val));
 
 					} else if (type.contentEquals("java.lang.Double")) {
-						Double dval=Double.parseDouble(val);						
-						myField.set(r, dval);
+//						System.out.println(name+"\tDouble");
+						try {
+							Double dval=Double.parseDouble(val);						
+							myField.set(r, dval);
+						} catch (Exception ex) {
+							System.out.println("Error parsing "+val+" for field "+name+" to Double for "+rs.getString(1));
+						}
 					} else if (type.contentEquals("java.lang.Integer")) {
 						Integer ival=Integer.parseInt(val);
 						myField.setInt(r,ival);

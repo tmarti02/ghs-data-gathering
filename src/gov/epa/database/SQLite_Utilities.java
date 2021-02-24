@@ -404,7 +404,7 @@ public class SQLite_Utilities {
 		
 		try {
 			String sql="DELETE FROM "+tableName+" WHERE "+fieldName+" = \""+fieldValue+"\";";
-			System.out.println(sql);
+//			System.out.println(sql);
 			stat.execute(sql);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
