@@ -16,6 +16,13 @@ public class ExperimentalConstants {
 	public static final String str_pKAa="pKAa";
 	public static final String str_pKAb="pKAb";
 
+	public static final String strLogOH="LogOH";
+	public static final String strLogBCF="LogBCF";
+	public static final String strLogHalfLifeBiodegradation = "LogHalfLife";
+	public static final String strLogKmHL = "LogKmHL";
+	public static final String strLogKOA="LogKOA";
+	public static final String strLogKOC = "LogKOC";
+
 	public static final String strInhalationLC50="inhalation_LC50";
 	public static final String strRatInhalationLC50="rat_inhalation_LC50";
 	public static final String strSkinSensitizationLLNA="SkinSensitizationLLNA";
