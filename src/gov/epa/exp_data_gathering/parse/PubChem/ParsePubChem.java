@@ -137,10 +137,10 @@ public class ParsePubChem extends Parse {
 		er.source_name=ExperimentalConstants.strSourcePubChem;
 		
 		boolean foundNumeric = false;
-		propertyValue = propertyValue.replaceAll("greater than", ">");
-		propertyValue = propertyValue.replaceAll("less than", "<");
-		propertyValue = propertyValue.replaceAll(" or equal to ", "=");
-		propertyValue = propertyValue.replaceAll("about ", "~");
+		propertyValue = propertyValue.replaceAll("(?i)greater than", ">");
+		propertyValue = propertyValue.replaceAll("(?i)less than", "<");
+		propertyValue = propertyValue.replaceAll("(?i) or equal to ", "=");
+		propertyValue = propertyValue.replaceAll("(?i)about ", "~");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er,propertyValue);
 			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
@@ -167,12 +167,13 @@ public class ParsePubChem extends Parse {
 		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
 			er.updateNote(ExperimentalConstants.str_dec);
 		}
-		if (propertyValue.toLowerCase().contains("est")) {
+		if (propertyValue.toLowerCase().contains("est") && !propertyValue.toLowerCase().contains("ester") && !propertyValue.toLowerCase().contains("test")) {
 			er.updateNote(ExperimentalConstants.str_est);
 			er.keep = false;
 			er.reason = "Estimated";
 			}
-		if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp")) && !propertyValue.toLowerCase().contains("extreme")) {
+		if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp")) && !propertyValue.toLowerCase().contains("extreme")
+				&& !propertyValue.toLowerCase().contains("extent")) {
 			er.updateNote(ExperimentalConstants.str_ext);
 			er.keep = false;
 			er.reason = "Estimated";

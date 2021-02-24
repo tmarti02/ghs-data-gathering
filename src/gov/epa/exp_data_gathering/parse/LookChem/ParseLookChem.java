@@ -197,6 +197,9 @@ public class ParseLookChem extends Parse {
 		} else if (propertyValue.toLowerCase().contains("predicted")) {
 			er.keep = false;
 			er.reason = "Predicted";
+		} else if (propertyValue.toLowerCase().contains("calc")) {
+			er.keep = false;
+			er.reason = "Calculated";
 		}
 		
 		uc.convertRecord(er);
