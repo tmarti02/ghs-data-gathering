@@ -1,5 +1,6 @@
 package gov.epa.exp_data_gathering.parse.eChemPortalSkinSensitization;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import gov.epa.eChemPortalAPI.Processing.FinalRecord;
 import gov.epa.eChemPortalAPI.Processing.FinalRecords;
@@ -9,12 +10,39 @@ import gov.epa.exp_data_gathering.parse.EChemPortal.EChemPortalGetRecords;
 import gov.epa.ghs_data_gathering.GetData.EChemPortalParse;
 
 public class ParseEChemPortalSkinSensitization {
-	
-	void go() {
+
+	/**
+	 * From LLNA paper with Leora:
+	 * 
+	 * The parameters used to query the eChemPortal database were: 
+	 * 
+	 * Query Block Type: “skin sensitization”; 
+	 * 
+	 * Type of Information: “experimental study”; 
+	 * 
+	 * Reliability:* “1” or “2”; 
+	 * 
+	 * Test Guideline, Qualifier: “according to” or “equivalent or similar to”; 
+	 * 
+	 * Test Guideline: EPA OPPTS 870.2600, EU Method B.42, or OECD
+	 * Guideline 429, 442A, or 442B; 
+	 * 
+	 * GLP Compliance: “not specified”, “yes”, or “yes incl. certificate”; 
+	 * Endpoint: skin sensitization: in vivo (LLNA); 
+	 * 
+	 * Type of study: mouse LLNA, mouse LLNA BrdU-ELISA, mouse LLNA DA, reduced LLNA,
+	 * reduced LLNA BrdU-ELISA, reduced LLNA DA, or “not specified”; 
+	 * 
+	 * Species: “mouse”; 
+	 * 
+	 * Interpretation of results: Category 1, 1A, or 1B, GHS criteria not met, or “other:”
+	 */
+	public static ExperimentalRecords getEChemPortalLLNARecords() {
+		
 		Hashtable<String,String>dict=getIOR_Dictionary();
 		
-		ExperimentalRecords expRecords=EChemPortalGetRecords.getExperimentalRecords("mouse_SkinSensitisation");
-		FinalRecords finalRecords=EChemPortalGetRecords.getFinalRecords("skin sensitisation: in vivo (LLNA)");
+		ExperimentalRecords expRecords=EChemPortalGetRecords.getExperimentalRecordsByPropertyName("mouse_SkinSensitisation");
+		FinalRecords finalRecords=EChemPortalGetRecords.getFinalRecordsByEndpointType("skin sensitisation: in vivo (LLNA)");
 		
 		Hashtable<String,FinalRecord>htFinalRecords=new Hashtable<>();
 		
@@ -24,33 +52,47 @@ public class ParseEChemPortalSkinSensitization {
 		
 		ExperimentalRecords expRecords2=new ExperimentalRecords();
 		
+		ArrayList<String>casUnique=new ArrayList<>();
+		
 		for (ExperimentalRecord er:expRecords) {
-			if (!er.original_source_name.contentEquals("ECHA REACH")) continue;
+			if (!er.original_source_name.contentEquals("ECHA REACH")) continue;			
 			if (er.reason.contentEquals("No identifiers")) continue;
 			
 			if (htFinalRecords.get(er.fr_id)==null) continue;
 			
 			FinalRecord fr=htFinalRecords.get(er.fr_id);			
 			if (fr.species==null) continue;
-						
-
 			
-			String ior = getIOR(fr);
+			//TODO check guideline:
+//			Test Guideline: EPA OPPTS 870.2600, EU Method B.42, or OECD Guideline 429, 442A, or 442B
+						
+									
+			if (fr.name!=null) {//Get rid of obvious mixtures:
+				if (fr.name.toLowerCase().contains("react")) continue;
+				if (fr.name.toLowerCase().contains("mixed")) continue;
+				if (fr.name.toLowerCase().contains("product")) continue;					
+			}
 
-			if (ior.contains("charcoal")) continue;
+			String ior = getIOR(fr);
+			if (ior.contains("charcoal")) continue;//dont know what those mean
 			
 			if (dict.get(ior.toLowerCase())==null)
 				System.out.println(ior+"\t***"+fr.interpretationOfResults);
+			
+			
+			if (!casUnique.contains(er.casrn)) casUnique.add(er.casrn);
 			
 			expRecords2.add(er);
 		}
 		
 		
 		System.out.println(expRecords2.size());
+		System.out.println(casUnique.size());
+		return expRecords2;
 //		System.out.println(finalRecords.size());
 	}
 
-	private String getIOR(FinalRecord fr) {
+	private static String getIOR(FinalRecord fr) {
 		String ior=fr.interpretationOfResults.replace("Migrated information", "").replace("other:", "").trim().toLowerCase();
 
 		if (ior.contains("criteria used for")) 
@@ -69,12 +111,11 @@ public class ParseEChemPortalSkinSensitization {
 		return ior;
 	}
 	
-	public static void main (String[] args) {
-		ParseEChemPortalSkinSensitization p=new ParseEChemPortalSkinSensitization();
-		p.go();
+	public static void main (String[] args) {		
+		getEChemPortalLLNARecords();
 	}
 	
-	static Hashtable<String,String>getIOR_Dictionary() {
+	private static Hashtable<String,String>getIOR_Dictionary() {
 		
 		Hashtable <String,String>ht=new Hashtable<>();
 		

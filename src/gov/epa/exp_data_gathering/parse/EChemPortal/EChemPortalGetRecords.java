@@ -14,7 +14,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 public class EChemPortalGetRecords {
 public static final String databasePathExperimentalRecords = "data/experimental/ToxicityRecords.db";
 	
-	public static ExperimentalRecords getExperimentalRecords(String propertyName) {
+	public static ExperimentalRecords getExperimentalRecordsByPropertyName(String propertyName) {
 		ExperimentalRecords records=new ExperimentalRecords();
 
 		try {		
@@ -35,7 +35,7 @@ public static final String databasePathExperimentalRecords = "data/experimental/
 		
 	}
 	
-	public static FinalRecords getFinalRecords(String endpointType) {
+	public static FinalRecords getFinalRecordsByEndpointType(String endpointType) {
 		FinalRecords records=new FinalRecords();
 
 		try {		
