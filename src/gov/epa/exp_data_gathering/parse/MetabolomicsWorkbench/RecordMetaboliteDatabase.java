@@ -126,7 +126,12 @@ public class RecordMetaboliteDatabase {
 				Document doc = Jsoup.parse(html);
 				
 				List<RecordMetaboliteDatabase> recs = new ArrayList<RecordMetaboliteDatabase>();
-				String dateAccessed = date.substring(0,date.indexOf(" "));
+				String dateAccessed = null;
+				if (date.contains(" ")) {
+					dateAccessed = date.substring(0,date.indexOf(" "));
+				} else {
+					dateAccessed = date;
+				}
 
 				parseMetaboliteDatabaseTableDocument(recs,doc,dateAccessed);
 

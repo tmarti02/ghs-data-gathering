@@ -9,6 +9,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
@@ -242,12 +247,104 @@ public class MetabolomicsWorkbenchRecordsJoiner {
 		batchAddRecordsToDatabase(databasePath, startFresh);
 	}
 	
+	public void addCommonNamesToExistingDatabase(String databasePath) {
+		String tableName = "MetabolomicsWorkbench";
+		String columnName = "commonName";
+		Connection conn= SQLite_Utilities.getConnection(databasePath);
+		int countTruncated = 0;
+		int countAll = 0;
+		try {
+			Statement stat = conn.createStatement();
+			for (RecordMetaboliteDatabase rmd:recordsMetaboliteDatabase) {
+				String safeCommonName = (rmd.commonName==null || rmd.commonName.isBlank()) ? null : rmd.commonName.replaceAll("'", "''").replaceAll(";", "\\;");
+				if (safeCommonName==null) { continue; }
+				
+				if (safeCommonName.contains("...")) {
+					countTruncated++;
+				}
+				
+				String update = "UPDATE " + tableName + " SET " + columnName + " = '" + safeCommonName + "' WHERE regno = '" + rmd.regno + "';";
+				try {
+					stat.execute(update);
+					countAll++;
+					if (countAll % 1000==0) { System.out.println("Made "+countAll+" updates..."); }
+				} catch (Exception ex1) {
+					System.out.println(update);
+					ex1.printStackTrace();
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		System.out.println("Successfully updated "+countAll+" records with common names; "+countTruncated+" names may be truncated.");
+	}
+	
+	public static void fixTruncationInExistingDatabase(String databasePath) {
+		String tableName = "MetabolomicsWorkbench";
+		Connection conn= SQLite_Utilities.getConnection(databasePath);
+		try (Statement stat = conn.createStatement()) {
+			String query = "select regno, commonName, systematicName from " + tableName + " where commonName like '%...%' or systematicName like '%...%';";
+			ResultSet rs = stat.executeQuery(query);
+			
+			int count = 0;
+			while (rs.next()) {
+				String regno = rs.getString("regno");
+				String commonName = null;
+				String systematicName = null;
+				
+				String url = "https://www.metabolomicsworkbench.org/data/StructureData.php?RegNo=" + regno;
+				Document doc = Jsoup.connect(url).get();
+				Element table = doc.select("table.datatable2").first();
+				Elements rows = table.select("tr");
+				for (Element row:rows) {
+					Elements cells = row.select("td");
+					String headerText = cells.first().text();
+					String dataText = cells.get(1).text();
+					if (headerText.contains("Common Name")) {
+						commonName = dataText;
+					} else if (headerText.contains("Systematic Name")) {
+						systematicName = dataText;
+					}
+				}
+				
+				String safeCommonName = (commonName==null || commonName.isBlank()) ? null : commonName.replaceAll("'", "''").replaceAll(";", "\\;");
+				String safeSystematicName = (systematicName==null || systematicName.isBlank()) ? null : systematicName.replaceAll("'", "''").replaceAll(";", "\\;");
+				
+				if (safeCommonName!=null) {
+					String updateCommonName = "UPDATE " + tableName + " SET commonName = '" + safeCommonName + "' WHERE regno = '" + regno + "';";
+					try (Statement stat2 = conn.createStatement()) {
+						stat2.execute(updateCommonName);
+					} catch (Exception ex1) {
+						ex1.printStackTrace();
+						System.out.println(updateCommonName);
+					}
+				}
+				
+				if (safeSystematicName!=null) {
+					String updateSystematicName = "UPDATE " + tableName + " SET systematicName = '" + safeSystematicName + "' WHERE regno = '" + regno + "';";
+					try (Statement stat3 = conn.createStatement()) {
+						stat3.execute(updateSystematicName);
+					} catch (Exception ex1) {
+						ex1.printStackTrace();
+						System.out.println(updateSystematicName);
+					}
+				}
+				
+				count++;
+				if (count % 1000 == 0) { System.out.println("Made " + count + " updates..."); }
+			}
+			System.out.println("Updated " + count + " records!");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
 	public static void main(String[] args) {
-		String readDatabasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchRaw.db";
-		List<RecordMetaboliteDatabase> recordsMD = RecordMetaboliteDatabase.parseMetaboliteDatabaseTablesInDatabase(readDatabasePath);
-		List<RecordRefMet> recordsRM = RecordRefMet.parseRefMetPagesInDatabase(readDatabasePath);
-		MetabolomicsWorkbenchRecordsJoiner joiner = new MetabolomicsWorkbenchRecordsJoiner(recordsMD,recordsRM);
-		String writeDatabasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchRecords.db";
-		joiner.joinAndWriteRecordsToDatabase(60000,80000,false,writeDatabasePath);
+//		String readDatabasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchRaw.db";
+//		List<RecordMetaboliteDatabase> recordsMD = RecordMetaboliteDatabase.parseMetaboliteDatabaseTablesInDatabase(readDatabasePath);
+//		List<RecordRefMet> recordsRM = RecordRefMet.parseRefMetPagesInDatabase(readDatabasePath);
+//		MetabolomicsWorkbenchRecordsJoiner joiner = new MetabolomicsWorkbenchRecordsJoiner(recordsMD,recordsRM);
+		String writeDatabasePath = "Data\\Experimental\\MetabolomicsWorkbench\\MetabolomicsWorkbenchRecords_TruncationFixed.db";
+		fixTruncationInExistingDatabase(writeDatabasePath);
 	}
 }
