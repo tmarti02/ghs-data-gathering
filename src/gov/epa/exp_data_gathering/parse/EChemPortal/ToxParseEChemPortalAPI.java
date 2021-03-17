@@ -51,7 +51,10 @@ public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 	@Override
 	protected void createRecords() {
 		if (downloadNew) { downloadAllDashboardToxResults(); }
-		FinalRecords records = FinalRecords.getToxResultsInDatabase(databaseFolder + File.separator + sourceName+"_raw_tox_json.db");
+		String filePathDB=databaseFolder + File.separator + sourceName+"_raw_tox_json.db";
+		System.out.println(filePathDB);
+		
+		FinalRecords records = FinalRecords.getToxResultsInDatabase(filePathDB);
 		writeOriginalRecordsToFile(new Vector<FinalRecord>(records));
 	}
 	

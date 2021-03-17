@@ -63,7 +63,7 @@ public class DataFetcher {
 			
 			ExperimentalRecords sourceRecords=null;
 			
-			sourceRecords = getRecordsFromNumberedFiles(source,false);
+			sourceRecords = getExperimentalRecordsFromNumberedFiles(source,toxNote, false);
 			
 			if ((sourceRecords==null || sourceRecords.isEmpty()) && fileRecords.exists()) {
 				sourceRecords = ExperimentalRecords.loadFromJSON(recordFilePath);
@@ -74,7 +74,7 @@ public class DataFetcher {
 			
 			ExperimentalRecords badSourceRecords=null;
 			
-			badSourceRecords = getRecordsFromNumberedFiles(source,true);
+			badSourceRecords = getExperimentalRecordsFromNumberedFiles(source,toxNote, true);
 			
 			if ((badSourceRecords==null || badSourceRecords.isEmpty()) && fileBadRecords.exists()) {
 				badSourceRecords = ExperimentalRecords.loadFromJSON(badRecordFilePath);
@@ -82,7 +82,7 @@ public class DataFetcher {
 			
 			sourceRecords.addAll(badSourceRecords);
 			
-			System.out.println("Fetching data from "+source);
+			System.out.println("Fetching data from "+source+"\t"+sourceRecords.size());
 
 //			addSourceBasedIDNumbers(sourceRecords);			
 			records.addAll(sourceRecords);
@@ -90,15 +90,40 @@ public class DataFetcher {
 		}
 	}
 	
-	private ExperimentalRecords getRecordsFromNumberedFiles(String source,boolean getBadRecords) {
+	private ExperimentalRecords getExperimentalRecordsFromNumberedFiles(String source,String toxNote, boolean getBadRecords) {
 		ExperimentalRecords sourceRecords = new ExperimentalRecords();
 		int batch = 1;
 		ExperimentalRecords temp = new ExperimentalRecords();
 		
 		String badNote = getBadRecords ? "-Bad " : " ";
 		while (temp!=null) {
-			String fileName = mainFolder+File.separator+source+File.separator+source+" Experimental Records"+badNote+batch+".json";
-			temp = ExperimentalRecords.loadFromJSON(fileName);
+			String filePath = mainFolder+File.separator+source+File.separator+source+toxNote+" Experimental Records"+badNote+batch+".json";
+//			System.out.println("filePath from getRecordsFromNumberedFiles:"+filePath); 
+			
+			temp = ExperimentalRecords.loadFromJSON(filePath);
+			if (temp==null) break;
+			sourceRecords.addAll(temp);
+			batch++;
+		}
+		return sourceRecords;
+	}
+	
+	/**
+	 * Gets FinalRecords from original numbered toxicity json files
+	 * @param source
+	 * @return
+	 */
+	public FinalRecords getFinalRecordsFromNumberedFiles(String source) {
+		FinalRecords sourceRecords = new FinalRecords();
+		int batch = 1;
+		
+		FinalRecords temp = new FinalRecords();
+				
+		while (temp!=null) {
+			String filePath = mainFolder+File.separator+source+File.separator+source+" Toxicity Original Records "+batch+".json";
+			System.out.println("filePath from getRecordsFromNumberedFiles:"+filePath); 
+			
+			temp = FinalRecords.loadFromJSON(filePath);
 			if (temp==null) break;
 			sourceRecords.addAll(temp);
 			batch++;
@@ -110,7 +135,7 @@ public class DataFetcher {
 	public void createRecordsDatabase() {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
-		makeDatabase(records);
+		addExperimentalRecordsToDatabase(records);
 	}
 	
 	public void createRecordsJSON() {
@@ -151,7 +176,7 @@ public class DataFetcher {
 		subsetRecords.toExcel_File(path);
 	}
 	
-	private void makeDatabase(ExperimentalRecords records) {
+	private void addExperimentalRecordsToDatabase(ExperimentalRecords records) {
 		String[] fieldNames = null;
 		if (Arrays.asList(sources).contains(ExperimentalConstants.strSourceEChemPortalAPI) && recordType.toLowerCase().contains("tox")) {
 			String[] fr_id = {"fr_id"};
@@ -159,8 +184,8 @@ public class DataFetcher {
 		} else {
 			fieldNames = ExperimentalRecord.outputFieldNames;
 		}
-		String tableName = "ExperimentalRecords";
-		System.out.println("Creating database at "+databasePath+" with fields:\n"+String.join("\n",fieldNames));
+		String tableName = ExperimentalRecords.tableName;
+		System.out.println("Creating ExperimentalRecords table using dbpath="+databasePath+" with fields:\n"+String.join("\n",fieldNames));
 		try {
 			Connection conn= SQLite_Utilities.getConnection(databasePath);
 			Statement stat = SQLite_Utilities.getStatement(conn);			
@@ -235,18 +260,15 @@ public class DataFetcher {
 				// We don't care
 			}
 			
-			System.out.println("Created database with "+counter+" entries. Done!");
+			System.out.println("Added "+counter+" entries to ExperimentalRecords table. Done!");
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
-		if (Arrays.asList(sources).contains(ExperimentalConstants.strSourceEChemPortalAPI) && recordType.toLowerCase().contains("tox")) {
-			addFinalRecordsTableToDatabase();
-		}
 	}
 	
-	private void addFinalRecordsTableToDatabase() {
+	public void addFinalRecordsTableToDatabase(FinalRecords records) {
 		String[] fieldNames = FinalRecord.outputFieldNames;
 		String tableName = "FinalRecords";
 		String finalRecordFilePath = mainFolder+File.separator+"eChemPortalAPI"+File.separator+"eChemPortalAPI Toxicity Original Records.json";
@@ -273,7 +295,7 @@ public class DataFetcher {
 			int batchCounter = 0;
 			PreparedStatement prep = conn.prepareStatement(s);
 			
-			FinalRecords records = FinalRecords.loadFromJSON(finalRecordFilePath);
+//			FinalRecords records = FinalRecords.loadFromJSON(finalRecordFilePath);
 			for (FinalRecord rec:records) {				
 				counter++;
 //				rec.id_physchem=counter;
@@ -322,7 +344,7 @@ public class DataFetcher {
 				// We don't care
 			}
 			
-			System.out.println("Created database with "+counter+" entries. Done!");
+			System.out.println("Added "+counter+" entries to FinalRecords table. Done!");
 
 		} catch (Exception ex) {
 			ex.printStackTrace();

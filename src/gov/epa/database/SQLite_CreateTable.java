@@ -21,6 +21,24 @@ public class SQLite_CreateTable {
 		return s;
 	}
 	
+	private static String create_sql_insert_with_field_names(String[] fields, String table) {
+		String s = "insert into "+table+"("; 
+
+		for (int i = 0; i < fields.length; i++) {
+			s += fields[i];
+			if (i < fields.length-1)
+				s += ",";			
+		}
+		
+		s+=")\nVALUES (";
+		for (int i = 1; i <= fields.length; i++) {
+			s += "?";
+			if (i < fields.length)
+				s += ",";
+		}
+		s += ");";
+		return s;
+	}
 	
 	public static void create_table (Statement stat,String table,String []fields) {
 	

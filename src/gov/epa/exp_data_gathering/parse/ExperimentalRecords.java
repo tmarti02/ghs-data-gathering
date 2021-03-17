@@ -8,6 +8,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
@@ -31,6 +35,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SQLite_Utilities;
 import gov.epa.eChemPortalAPI.Processing.FinalRecord;
 import gov.epa.eChemPortalAPI.Query.APIConstants;
 import gov.epa.ghs_data_gathering.Parse.Parse;
@@ -45,6 +51,9 @@ import gov.epa.ghs_data_gathering.Parse.Parse;
 
 public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	
+	public static final String tableName = "ExperimentalRecords";
+
+
 	public ExperimentalRecords() { }
 	
 	public ExperimentalRecords(FinalRecord rec) {
@@ -387,6 +396,90 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		}
 	}
 
+	public static Vector<String> getSourceList(Connection conn, String property) {
+		Vector<String> sources = new Vector<>();
+
+		String sql = "select distinct source_name from "+tableName+" where property_name=\"" + property
+				+ "\" and keep=\"true\"";
+
+		try {
+			Statement stat=conn.createStatement();
+			ResultSet rs = stat.executeQuery(sql);
+
+			while (rs.next()) {
+				String source = rs.getString(1);
+//				System.out.println(source);
+				sources.add(source);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return sources;
+	}
+	public static ExperimentalRecords getExperimentalRecordsFromDB_ForSource(String property, String source_name,
+			String expRecordsDBPath) {
+
+		ExperimentalRecords records = new ExperimentalRecords();
+
+		String sql = "select * from "+tableName+"records where property_name=\"" + property + "\" and keep=\"true\" "
+				+ "and source_name=\"" + source_name + "\"\r\n" + "order by casrn";
+
+		try {
+			Connection conn = SQLite_Utilities.getConnection(expRecordsDBPath);
+			Statement stat = conn.createStatement();
+			ResultSet rs = stat.executeQuery(sql);
+
+			while (rs.next()) {
+				ExperimentalRecord record = new ExperimentalRecord();
+				SQLite_GetRecords.createRecord(rs, record);
+				records.add(record);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return records;
+
+	}
+	public static ExperimentalRecords getExperimentalRecordsFromDB(String property, String expRecordsDBPath) {
+
+		ExperimentalRecords records = new ExperimentalRecords();
+
+		String sql = "select * from "+tableName+" where property_name=\"" + property + "\" and keep=\"true\" " + "\r\n"
+				+ "order by casrn";
+
+		try {
+			Connection conn = SQLite_Utilities.getConnection(expRecordsDBPath);
+			Statement stat = conn.createStatement();
+			ResultSet rs = stat.executeQuery(sql);
+
+			while (rs.next()) {
+				ExperimentalRecord record = new ExperimentalRecord();
+
+				SQLite_GetRecords.createRecord(rs, record);
+				records.add(record);
+			}
+			System.out.println(records.size() + " record for " + property + " where keep=true");
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return records;
+	}
+	
+	ExperimentalRecords getRecordsWithProperty(String propertyName, ExperimentalRecords records) {
+		ExperimentalRecords records2 = new ExperimentalRecords();
+
+		for (ExperimentalRecord record : records) {
+			if (record.property_name.contentEquals(propertyName)) {
+				records2.add(record);
+			}
+		}
+		return records2;
+	}
+
+	
 	public static void main(String[] args) {
 //		ExperimentalRecords records = loadFromJSON("sample.json");
 //		System.out.println(records.toJSON());

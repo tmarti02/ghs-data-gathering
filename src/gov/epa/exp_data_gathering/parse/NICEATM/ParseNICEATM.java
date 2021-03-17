@@ -14,10 +14,23 @@ import gov.epa.exp_data_gathering.parse.Parse;
 
 public class ParseNICEATM extends Parse {
 
-	public ParseNICEATM() {
+	String recordTypeToParse;
+	
+	public ParseNICEATM(String recordTypeToParse) {
 		sourceName = ExperimentalConstants.strSourceNICEATM;
+		this.recordTypeToParse=recordTypeToParse;
 		removeDuplicates=false;
 		this.init();
+		
+		String toxNote = recordTypeToParse.toLowerCase().contains("tox") ? " Toxicity" : "";
+				
+		fileNameJSON_Records = sourceName +toxNote + " Original Records.json";
+		fileNameFlatExperimentalRecords = sourceName +toxNote + " Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.txt";
+		fileNameJsonExperimentalRecords = sourceName +toxNote + " Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +toxNote + " Experimental Records.xlsx";
+						
 	}
 	
 	@Override
@@ -30,7 +43,7 @@ public class ParseNICEATM extends Parse {
 	
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
-ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
 			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
@@ -108,7 +121,7 @@ ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 	}
 	
 	public static void main(String[] args) {
-		ParseNICEATM p = new ParseNICEATM();
+		ParseNICEATM p = new ParseNICEATM("tox");
 		p.createFiles();
 	}
 }

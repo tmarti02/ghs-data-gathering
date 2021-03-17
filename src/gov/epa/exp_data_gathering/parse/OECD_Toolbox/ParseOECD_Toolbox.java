@@ -14,11 +14,23 @@ import gov.epa.exp_data_gathering.parse.Parse;
 
 
 public class ParseOECD_Toolbox extends Parse {
-
-	public ParseOECD_Toolbox() {
+	String recordTypeToParse;
+	
+	public ParseOECD_Toolbox(String recordTypeToParse) {
+		this.recordTypeToParse=recordTypeToParse;
 		sourceName = ExperimentalConstants.strSourceOECD_Toolbox;
 		removeDuplicates=false;
 		this.init();
+		
+		String toxNote = recordTypeToParse.toLowerCase().contains("tox") ? " Toxicity" : "";
+		
+		fileNameJSON_Records = sourceName +toxNote + " Original Records.json";
+		fileNameFlatExperimentalRecords = sourceName +toxNote + " Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.txt";
+		fileNameJsonExperimentalRecords = sourceName +toxNote + " Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +toxNote + " Experimental Records.xlsx";
+			
 	}
 	
 	@Override
@@ -111,7 +123,7 @@ public class ParseOECD_Toolbox extends Parse {
 	}
 	
 	public static void main(String[] args) {
-		ParseOECD_Toolbox p = new ParseOECD_Toolbox();
+		ParseOECD_Toolbox p = new ParseOECD_Toolbox("tox");
 		p.createFiles();
 	}
 

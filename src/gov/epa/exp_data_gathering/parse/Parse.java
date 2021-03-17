@@ -15,6 +15,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.eChemPortalAPI.eChemPortalAPI;
+import gov.epa.eChemPortalAPI.Processing.FinalRecords;
 import gov.epa.exp_data_gathering.parse.ADDoPT.ParseADDoPT;
 import gov.epa.exp_data_gathering.parse.AqSolDB.ParseAqSolDB;
 import gov.epa.exp_data_gathering.parse.Bradley.ParseBradley;
@@ -27,7 +29,9 @@ import gov.epa.exp_data_gathering.parse.EChemPortal.ToxParseEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteISIS;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteOriginal;
 import gov.epa.exp_data_gathering.parse.LookChem.ParseLookChem;
+import gov.epa.exp_data_gathering.parse.NICEATM.ParseNICEATM;
 import gov.epa.exp_data_gathering.parse.OChem.ParseOChem;
+import gov.epa.exp_data_gathering.parse.OECD_Toolbox.ParseOECD_Toolbox;
 import gov.epa.exp_data_gathering.parse.OFMPub.ParseOFMPub;
 import gov.epa.exp_data_gathering.parse.OPERA.ParseOPERA;
 import gov.epa.exp_data_gathering.parse.PubChem.ParsePubChem;
@@ -139,6 +143,7 @@ public class Parse {
 		
 		if (writeJsonExperimentalRecordsFile) {
 			System.out.println("Writing json file for chemical records");
+			System.out.println(mainFolder+File.separator+fileNameJsonExperimentalRecords);
 			batchAndWriteJSON(new Vector<ExperimentalRecord>(records),mainFolder+File.separator+fileNameJsonExperimentalRecords);
 			batchAndWriteJSON(new Vector<ExperimentalRecord>(recordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
 		}
@@ -242,7 +247,13 @@ public class Parse {
 	}
 	
 	public static void runParse(String sourceName,String recordTypeToParse) {
-		String[] toxSources = {ExperimentalConstants.strSourceChemidplus,ExperimentalConstants.strSourceEChemPortalAPI};
+		String[] toxSources = {
+				ExperimentalConstants.strSourceChemidplus,
+				ExperimentalConstants.strSourceEChemPortalAPI,
+				ExperimentalConstants.strSourceNICEATM,
+				ExperimentalConstants.strSourceOECD_Toolbox
+		};
+		
 		if (!Arrays.asList(toxSources).contains(sourceName) && recordTypeToParse.toLowerCase().contains("tox")) {
 			System.out.println("Warning: No toxicity data in "+sourceName+".");
 			return;
@@ -309,11 +320,21 @@ public class Parse {
 		case ExperimentalConstants.strSourceEpisuiteOriginal:
 			p = new ParseEpisuiteOriginal();
 			break;
+		case ExperimentalConstants.strSourceNICEATM:
+			p = new ParseNICEATM(recordTypeToParse);
+			break;
+		case ExperimentalConstants.strSourceOECD_Toolbox:
+			p = new ParseOECD_Toolbox(recordTypeToParse);
+			break;
+		default:
+			System.out.println("Need to add parse case for "+sourceName);
+			return;
 		}
+			
 		p.createFiles();
 	}
 	
-	public static void main(String[] args) {
+	static void parsePhyschem() { 
 		String recordType = "physchem";
 		String[] allSources = {ExperimentalConstants.strSourceADDoPT,
 				ExperimentalConstants.strSourceAqSolDB,
@@ -329,14 +350,71 @@ public class Parse {
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuiteISIS};
+		
 		String[] reparseSources = {
 				ExperimentalConstants.strSourcePubChem,
 				ExperimentalConstants.strSourceLookChem};
-		for (String s:allSources) {
-			runParse(s,recordType);
+		
+		boolean reparse=false;
+		boolean reparseAll=false;
+
+		String [] parseSources=reparseSources;
+		if (reparseAll) parseSources=allSources;
+
+		if (reparse) {
+			for (String s:parseSources) {
+				runParse(s,recordType);
+			}
 		}
+		
 		DataFetcher d = new DataFetcher(allSources,recordType);
 		d.createRecordsDatabase();
+	}
+	
+	static void parseTox() { 
+		
+		boolean updateEchemportal=false;
+		boolean reparse=false;
+		
+		String recordType = "tox";
+		String[] allSources = {ExperimentalConstants.strSourceChemidplus,
+				ExperimentalConstants.strSourceEChemPortalAPI,
+				ExperimentalConstants.strSourceNICEATM,
+				ExperimentalConstants.strSourceOECD_Toolbox};
+						
+		//Update echemportal data: 
+		
+		if (updateEchemportal) {
+			Parse p = new ToxParseEChemPortalAPI(true);//downloads from API, stores in raw json db,  and then parses into json files
+			p.createFiles();
+		}
+		
+		String[] parseSources = {
+				ExperimentalConstants.strSourceChemidplus,
+				ExperimentalConstants.strSourceNICEATM,
+				ExperimentalConstants.strSourceOECD_Toolbox 
+		};
+				
+		if (reparse) for (String s:parseSources) runParse(s,recordType);
+				
+		DataFetcher d = new DataFetcher(allSources,recordType);
+				
+		File f=new File(d.databasePath);
+		if (f.exists()) f.delete();//Delete database so dont get duplicate records		
+		
+		d.createRecordsDatabase();//Create ExperimentalRecords table
+		
+		FinalRecords finalRecordsEChemPortal=d.getFinalRecordsFromNumberedFiles(ExperimentalConstants.strSourceEChemPortalAPI);
+		System.out.println("FinalRecords from eChemportalAPI:"+finalRecordsEChemPortal.size());
+		d.addFinalRecordsTableToDatabase(finalRecordsEChemPortal);
+		
+
+	}
+	
+	
+	public static void main(String[] args) {
+//		parsePhyschem();
+		parseTox();
 	}
 }
 
