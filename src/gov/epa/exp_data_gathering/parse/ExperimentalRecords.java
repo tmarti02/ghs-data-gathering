@@ -19,6 +19,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.poi.common.usermodel.Hyperlink;
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -287,66 +289,11 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 
 		int size = this.size();
 		Workbook wb = new XSSFWorkbook();
-		Sheet recSheet = wb.createSheet("Records");
-		Sheet badSheet = wb.createSheet("Records-Bad");
-		Row recSubtotalRow = recSheet.createRow(0);
-		Row recHeaderRow = recSheet.createRow(1);
-		Row badSubtotalRow = badSheet.createRow(0);
-		Row badHeaderRow = badSheet.createRow(1);
-		CellStyle style = wb.createCellStyle();
-		Font font = wb.createFont();
-		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
-		style.setFont(font);
-		for (int i = 0; i < headers.length; i++) {
-			Cell recCell = recHeaderRow.createCell(i);
-			recCell.setCellValue(headers[i]);
-			recCell.setCellStyle(style);
-			Cell badCell = badHeaderRow.createCell(i);
-			badCell.setCellValue(headers[i]);
-			badCell.setCellStyle(style);
-		}
-		int recCurrentRow = 2;
-		int badCurrentRow = 2;
-		for (ExperimentalRecord er:this) {
-			Class erClass = er.getClass();
-			Object value = null;
-			try {
-				Row row = null;
-				if (er.keep) {
-					row = recSheet.createRow(recCurrentRow);
-					recCurrentRow++;
-				} else {
-					row = badSheet.createRow(badCurrentRow);
-					badCurrentRow++;
-				}
-				for (int i = 0; i < headers.length; i++) {
-					Field field = erClass.getDeclaredField(headers[i]);
-					value = field.get(er);
-					if (value!=null && !(value instanceof Double)) { 
-						String strValue = ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
-						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
-						row.createCell(i).setCellValue(strValue);
-					} else if (value!=null) { row.createCell(i).setCellValue((double) value); }
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-				System.out.println(value.toString());
-			}
-		}
 		
-		String lastCol = CellReference.convertNumToColString(headers.length);
-		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:"+lastCol+recCurrentRow));
-		recSheet.createFreezePane(0, 2);
-		badSheet.setAutoFilter(CellRangeAddress.valueOf("A2:"+lastCol+badCurrentRow));
-		badSheet.createFreezePane(0, 2);
+		CellStyle styleURL=createStyleURL(wb);
 		
-		for (int i = 0; i < headers.length; i++) {
-			String col = CellReference.convertNumToColString(i);
-			String recSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(recCurrentRow+1)+")";
-			recSubtotalRow.createCell(i).setCellFormula(recSubtotal);
-			String badSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(badCurrentRow+1)+")";
-			badSubtotalRow.createCell(i).setCellFormula(badSubtotal);
-		}
+		writeSheet(headers, "Records",true,wb,styleURL);
+		writeSheet(headers, "Records_Bad",false,wb,styleURL);
 		
 		try {
 			OutputStream fos = new FileOutputStream(filePath);
@@ -357,6 +304,78 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		}
 		
 		
+	}
+	
+	static CellStyle createStyleURL(Workbook workbook) {
+		CellStyle hlink_style = workbook.createCellStyle();
+		Font hlink_font = workbook.createFont();
+		hlink_font.setUnderline(Font.U_SINGLE);
+		hlink_font.setColor(Font.COLOR_RED);
+		hlink_style.setFont(hlink_font);
+		return hlink_style;
+	}
+
+	private void writeSheet(String[] headers, String sheetName, boolean keep, Workbook wb, CellStyle styleURL) {
+		Sheet recSheet = wb.createSheet(sheetName);
+		Row recSubtotalRow = recSheet.createRow(0);
+		Row recHeaderRow = recSheet.createRow(1);
+		CellStyle style = wb.createCellStyle();
+		Font font = wb.createFont();
+		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		style.setFont(font);
+		for (int i = 0; i < headers.length; i++) {
+			Cell recCell = recHeaderRow.createCell(i);
+			recCell.setCellValue(headers[i]);
+			recCell.setCellStyle(style);
+		}
+		int recCurrentRow = 2;
+		for (ExperimentalRecord er:this) {
+			if (!er.keep==keep) continue; 
+			
+			Class erClass = er.getClass();
+			Object value = null;
+			try {
+				Row row = recSheet.createRow(recCurrentRow);
+				recCurrentRow++;
+				 
+				for (int i = 0; i < headers.length; i++) {
+					
+					Field field = erClass.getDeclaredField(headers[i]);
+					value = field.get(er);
+					
+					if (value==null) continue;
+					
+					if (headers[i].contentEquals("url")) {
+						Cell cell = row.createCell(i);     						
+						Hyperlink href = wb.getCreationHelper().createHyperlink(HyperlinkType.URL);
+						cell.setHyperlink((org.apache.poi.ss.usermodel.Hyperlink) href);
+						href.setAddress((String)value);
+						cell.setCellStyle(styleURL);
+						cell.setCellValue(value+"");
+
+					}else if (!(value instanceof Double)) { 
+						String strValue = ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
+						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
+						row.createCell(i).setCellValue(strValue);
+					} else { 
+						row.createCell(i).setCellValue((double) value); 
+					}
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				System.out.println(value.toString());
+			}
+		}
+		
+		String lastCol = CellReference.convertNumToColString(headers.length);
+		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:"+lastCol+recCurrentRow));
+		recSheet.createFreezePane(0, 2);
+		
+		for (int i = 0; i < headers.length; i++) {
+			String col = CellReference.convertNumToColString(i);
+			String recSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(recCurrentRow+1)+")";
+			recSubtotalRow.createCell(i).setCellFormula(recSubtotal);
+		}
 	}
 		
 	public void toExcel_File(String filePath) {
@@ -422,9 +441,14 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 
 		ExperimentalRecords records = new ExperimentalRecords();
 
-		String sql = "select * from "+tableName+"records where property_name=\"" + property + "\" and keep=\"true\" "
+//		String sql = "select * from "+tableName+" where property_name=\"" + property + "\" and keep=\"true\" "
+//				+ "and source_name=\"" + source_name + "\"\r\n" + "order by casrn";
+		
+		String sql = "select * from "+tableName+" where property_name=\"" + property + "\""
 				+ "and source_name=\"" + source_name + "\"\r\n" + "order by casrn";
 
+		
+		System.out.println("sql for getExperimentalRecordsFromDB_ForSource:"+sql);
 		try {
 			Connection conn = SQLite_Utilities.getConnection(expRecordsDBPath);
 			Statement stat = conn.createStatement();
@@ -442,13 +466,18 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return records;
 
 	}
-	public static ExperimentalRecords getExperimentalRecordsFromDB(String property, String expRecordsDBPath) {
+	public static ExperimentalRecords getExperimentalRecordsFromDB(String property, String expRecordsDBPath, boolean useKeep) {
 
 		ExperimentalRecords records = new ExperimentalRecords();
 
-		String sql = "select * from "+tableName+" where property_name=\"" + property + "\" and keep=\"true\" " + "\r\n"
+		String sql="select * from "+tableName+" where property_name=\"" + property + "\""
 				+ "order by casrn";
-
+		
+		if (useKeep) {
+			sql="select * from "+tableName+" where property_name=\"" + property + "\" and keep=\"true\" " + "\r\n"
+					+ "order by casrn";
+		}
+		
 		try {
 			Connection conn = SQLite_Utilities.getConnection(expRecordsDBPath);
 			Statement stat = conn.createStatement();
