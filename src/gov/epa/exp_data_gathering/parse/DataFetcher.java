@@ -121,7 +121,7 @@ public class DataFetcher {
 				
 		while (temp!=null) {
 			String filePath = mainFolder+File.separator+source+File.separator+source+" Toxicity Original Records "+batch+".json";
-			System.out.println("filePath from getRecordsFromNumberedFiles:"+filePath); 
+//			System.out.println("filePath from getRecordsFromNumberedFiles:"+filePath); 
 			
 			temp = FinalRecords.loadFromJSON(filePath);
 			if (temp==null) break;
