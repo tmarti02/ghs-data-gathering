@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.List;
 
 
 public class SQLite_CreateTable {
@@ -21,7 +22,7 @@ public class SQLite_CreateTable {
 		return s;
 	}
 	
-	private static String create_sql_insert_with_field_names(String[] fields, String table) {
+	public static String create_sql_insert_with_field_names(String[] fields, String table) {
 		String s = "insert into "+table+"("; 
 
 		for (int i = 0; i < fields.length; i++) {
@@ -38,6 +39,18 @@ public class SQLite_CreateTable {
 		}
 		s += ");";
 		return s;
+	}
+	
+	public static String create_sql_update_on_field(String[] fieldNames, String updateOn, String tableName) {
+		int len = fieldNames.length;
+		String sql = "UPDATE " + tableName + " SET ";
+		for (int i = 0; i < len; i++) {
+			sql += fieldNames[i] + " = ?";
+			if (i < len - 1) sql += ",";
+		}
+		sql += " WHERE " + updateOn + " = ?";
+		
+		return sql;
 	}
 	
 	public static void create_table (Statement stat,String table,String []fields) {
@@ -69,6 +82,8 @@ public class SQLite_CreateTable {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
+		
 	
 	
 	
@@ -113,6 +128,42 @@ public class SQLite_CreateTable {
 			ex.printStackTrace();
 		}
 	
+	}
+	
+	public static void create_table_with_double_fields(Statement stat,String table,String []fields, List<String> doubleFields) {
+		
+		try {
+	
+			String sql = "create table if not exists " + table + " (";
+	
+			int count = 0;// number of fields
+	
+	
+			for (int i = 0; i < fields.length; i++) {
+				sql += fields[i];
+				if (doubleFields.contains(fields[i])) {
+					sql += " DOUBLE,";
+				} else {
+					sql += " TEXT,";
+				}
+				count++;
+			}
+	
+	
+			// Trim off trailing comma:
+			if (sql.substring(sql.length() - 1, sql.length()).equals(",")) {
+				sql = sql.substring(0, sql.length() - 1);
+			}
+	
+			sql += ");";
+	
+			//			System.out.println(sql);
+	
+			stat.executeUpdate(sql);
+	
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	public static void create_table (Statement stat,String table,String []fields,String primaryKey,String secondaryKey) {
