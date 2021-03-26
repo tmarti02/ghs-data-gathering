@@ -29,6 +29,7 @@ import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ToxParseEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteISIS;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteOriginal;
+import gov.epa.exp_data_gathering.parse.Lebrun.ParseLebrun;
 import gov.epa.exp_data_gathering.parse.LookChem.ParseLookChem;
 import gov.epa.exp_data_gathering.parse.NICEATM.ParseNICEATM;
 import gov.epa.exp_data_gathering.parse.OChem.ParseOChem;
@@ -253,7 +254,8 @@ public class Parse {
 				ExperimentalConstants.strSourceEChemPortalAPI,
 				ExperimentalConstants.strSourceNICEATM,
 				ExperimentalConstants.strSourceOECD_Toolbox,
-				ExperimentalConstants.strSourceCFSAN
+				ExperimentalConstants.strSourceCFSAN,
+				ExperimentalConstants.strSourceLebrun
 		};
 		
 		if (!Arrays.asList(toxSources).contains(sourceName) && recordTypeToParse.toLowerCase().contains("tox")) {
@@ -331,6 +333,9 @@ public class Parse {
 		case ExperimentalConstants.strSourceCFSAN:
 			p = new ParseCFSAN();
 			break;
+		case ExperimentalConstants.strSourceLebrun:
+			p = new ParseLebrun();
+			break;
 		default:
 			System.out.println("Need to add parse case for "+sourceName);
 			return;
@@ -386,7 +391,8 @@ public class Parse {
 				ExperimentalConstants.strSourceEChemPortalAPI,
 				ExperimentalConstants.strSourceNICEATM,
 				ExperimentalConstants.strSourceOECD_Toolbox,
-				ExperimentalConstants.strSourceCFSAN};
+				ExperimentalConstants.strSourceCFSAN,
+				ExperimentalConstants.strSourceLebrun};
 						
 		//Update echemportal data: 
 		
@@ -396,10 +402,11 @@ public class Parse {
 		}
 		
 		String[] parseSources = {
-				ExperimentalConstants.strSourceChemidplus,
-				ExperimentalConstants.strSourceNICEATM,
-				ExperimentalConstants.strSourceOECD_Toolbox ,
-				ExperimentalConstants.strSourceCFSAN
+//				ExperimentalConstants.strSourceChemidplus,
+//				ExperimentalConstants.strSourceNICEATM,
+//				ExperimentalConstants.strSourceOECD_Toolbox ,
+				ExperimentalConstants.strSourceCFSAN,
+				ExperimentalConstants.strSourceLebrun
 		};
 				
 		if (reparse) for (String s:parseSources) runParse(s,recordType);

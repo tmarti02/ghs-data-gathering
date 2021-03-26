@@ -86,6 +86,11 @@ public class ParseCFSAN extends Parse {
 			er.property_value_units_original = "binary";
 			er.property_value_units_final = "binary";
 //			uc.convertRecord(er);
+			
+			if (er.property_value_point_estimate_final==-1) {
+				er.keep=false;
+				er.reason="Ambiguous eye irritation score";
+			}
 			records.add(er);
 		}
 	}

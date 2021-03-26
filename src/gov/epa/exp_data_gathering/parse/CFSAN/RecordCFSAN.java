@@ -21,7 +21,7 @@ public class RecordCFSAN {
 	String casNr;
 	String activity;
 	
-	public static final String lastUpdated = "03/23/2020";
+	public static final String lastUpdated = "03/23/2021";
 	public static final String sourceName = ExperimentalConstants.strSourceCFSAN;
 	
 	public static Vector<RecordCFSAN> parseCFSANRecordsFromExcel() {
