@@ -26,7 +26,7 @@ public class ExperimentalConstants {
 	public static final String strInhalationLC50="inhalation_LC50";
 	public static final String strRatInhalationLC50="rat_inhalation_LC50";
 	public static final String strSkinSensitizationLLNA="SkinSensitizationLLNA";
-
+	public static final String strEyeIrritation="EyeIrritation";
 	
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
@@ -124,5 +124,6 @@ public class ExperimentalConstants {
 	
 	public static final String strSourceOECD_Toolbox="OECD Toolbox";
 	public static final String strSourceNICEATM="NICEATM";
+	public static final String strSourceCFSAN="CFSAN";
 	
 }

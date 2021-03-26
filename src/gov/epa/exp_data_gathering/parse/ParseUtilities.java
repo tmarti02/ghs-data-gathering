@@ -1234,7 +1234,7 @@ public class ParseUtilities extends Parse {
 
 	public static boolean getTextSolubility(ExperimentalRecord er, String propertyValue) {
 		String propertyValue1 = propertyValue.toLowerCase();
-		Matcher matcher = Pattern.compile("([0-9.]+|one)[ ]?gr?a?m? .*(soluble |dissolves? )?in:?.*((less|greater|more) than|<|>|~|about)? ?([0-9.,]+) (ml|cc) (of )?(cold|hot|warm|boiling)? ?(water|h2o)").matcher(propertyValue1);
+		Matcher matcher = Pattern.compile("([0-9.]+|one)[ ]?gr?a?m? .*(soluble |dissolves? )?in:?.*?((less|greater|more) than|<|>|~|about)? ?([0-9.,]+) (ml|cc) (of )?(cold|hot|warm|boiling)? ?(water|h2o)").matcher(propertyValue1);
 		if (!matcher.find()) { return false; }
 		String num = matcher.group(1);
 		String qual = matcher.group(3);
