@@ -40,6 +40,7 @@ import gov.epa.exp_data_gathering.parse.OPERA.ParseOPERA;
 import gov.epa.exp_data_gathering.parse.PubChem.ParsePubChem;
 import gov.epa.exp_data_gathering.parse.QSARDB.ParseQSARDB;
 import gov.epa.exp_data_gathering.parse.Sander.ParseSander;
+import gov.epa.exp_data_gathering.parse.Takahashi.ParseTakahashi;
 
 public class Parse {
 	
@@ -257,7 +258,8 @@ public class Parse {
 				ExperimentalConstants.strSourceOECD_Toolbox,
 				ExperimentalConstants.strSourceCFSAN,
 				ExperimentalConstants.strSourceLebrun,
-				ExperimentalConstants.strSourceDRD
+				ExperimentalConstants.strSourceDRD,
+				ExperimentalConstants.strSourceTakahashi
 		};
 		
 		if (!Arrays.asList(toxSources).contains(sourceName) && recordTypeToParse.toLowerCase().contains("tox")) {
@@ -341,6 +343,9 @@ public class Parse {
 		case ExperimentalConstants.strSourceDRD:
 			p = new ParseDRD();
 			break;
+		case ExperimentalConstants.strSourceTakahashi:
+			p = new ParseTakahashi();
+			break;
 		default:
 			System.out.println("Need to add parse case for "+sourceName);
 			return;
@@ -398,7 +403,8 @@ public class Parse {
 				ExperimentalConstants.strSourceOECD_Toolbox,
 				ExperimentalConstants.strSourceCFSAN,
 				ExperimentalConstants.strSourceLebrun,
-				ExperimentalConstants.strSourceDRD};
+				ExperimentalConstants.strSourceDRD,
+				ExperimentalConstants.strSourceTakahashi};
 						
 		//Update echemportal data: 
 		
@@ -411,9 +417,10 @@ public class Parse {
 //				ExperimentalConstants.strSourceChemidplus,
 //				ExperimentalConstants.strSourceNICEATM,
 //				ExperimentalConstants.strSourceOECD_Toolbox ,
-				ExperimentalConstants.strSourceCFSAN,
-				ExperimentalConstants.strSourceLebrun,
-				ExperimentalConstants.strSourceDRD
+//				ExperimentalConstants.strSourceCFSAN,
+//				ExperimentalConstants.strSourceLebrun,
+//				ExperimentalConstants.strSourceDRD,
+				ExperimentalConstants.strSourceTakahashi
 		};
 				
 		if (reparse) for (String s:parseSources) runParse(s,recordType);

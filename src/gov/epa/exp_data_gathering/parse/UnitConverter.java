@@ -69,7 +69,7 @@ public class UnitConverter {
 		if (er.casrn!=null && !ParseUtilities.isValidCAS(er.casrn)) {
 			er.keep = false;
 			er.reason = "Invalid CAS";
-		} else if (er.casrn.toLowerCase().contains("mixture")) {
+		} else if (er.casrn!=null && er.casrn.toLowerCase().contains("mixture")) {
 			er.keep = false;
 			er.reason = "Mixture";
 		}
