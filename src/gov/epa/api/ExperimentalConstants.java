@@ -126,5 +126,6 @@ public class ExperimentalConstants {
 	public static final String strSourceNICEATM="NICEATM";
 	public static final String strSourceCFSAN="CFSAN";
 	public static final String strSourceLebrun="Lebrun";
+	public static final String strSourceDRD="DRD";
 	
 }

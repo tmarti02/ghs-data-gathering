@@ -17,6 +17,7 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.eChemPortalAPI.eChemPortalAPI;
 import gov.epa.eChemPortalAPI.Processing.FinalRecords;
+import gov.epa.exp_data_gathering.DRD.ParseDRD;
 import gov.epa.exp_data_gathering.parse.ADDoPT.ParseADDoPT;
 import gov.epa.exp_data_gathering.parse.AqSolDB.ParseAqSolDB;
 import gov.epa.exp_data_gathering.parse.Bradley.ParseBradley;
@@ -255,7 +256,8 @@ public class Parse {
 				ExperimentalConstants.strSourceNICEATM,
 				ExperimentalConstants.strSourceOECD_Toolbox,
 				ExperimentalConstants.strSourceCFSAN,
-				ExperimentalConstants.strSourceLebrun
+				ExperimentalConstants.strSourceLebrun,
+				ExperimentalConstants.strSourceDRD
 		};
 		
 		if (!Arrays.asList(toxSources).contains(sourceName) && recordTypeToParse.toLowerCase().contains("tox")) {
@@ -336,6 +338,9 @@ public class Parse {
 		case ExperimentalConstants.strSourceLebrun:
 			p = new ParseLebrun();
 			break;
+		case ExperimentalConstants.strSourceDRD:
+			p = new ParseDRD();
+			break;
 		default:
 			System.out.println("Need to add parse case for "+sourceName);
 			return;
@@ -392,7 +397,8 @@ public class Parse {
 				ExperimentalConstants.strSourceNICEATM,
 				ExperimentalConstants.strSourceOECD_Toolbox,
 				ExperimentalConstants.strSourceCFSAN,
-				ExperimentalConstants.strSourceLebrun};
+				ExperimentalConstants.strSourceLebrun,
+				ExperimentalConstants.strSourceDRD};
 						
 		//Update echemportal data: 
 		
@@ -406,7 +412,8 @@ public class Parse {
 //				ExperimentalConstants.strSourceNICEATM,
 //				ExperimentalConstants.strSourceOECD_Toolbox ,
 				ExperimentalConstants.strSourceCFSAN,
-				ExperimentalConstants.strSourceLebrun
+				ExperimentalConstants.strSourceLebrun,
+				ExperimentalConstants.strSourceDRD
 		};
 				
 		if (reparse) for (String s:parseSources) runParse(s,recordType);

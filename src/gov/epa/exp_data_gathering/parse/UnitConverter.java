@@ -69,10 +69,18 @@ public class UnitConverter {
 		if (er.casrn!=null && !ParseUtilities.isValidCAS(er.casrn)) {
 			er.keep = false;
 			er.reason = "Invalid CAS";
+		} else if (er.casrn.toLowerCase().contains("mixture")) {
+			er.keep = false;
+			er.reason = "Mixture";
 		}
+		
 		if (er.property_value_numeric_qualifier!=null && er.property_value_numeric_qualifier.equals("?")) {
 			er.keep = false;
 			er.reason = "Undetermined numeric qualifier";
+		}
+		
+		if (er.property_value_units_original!=null && er.property_value_units_original.equals("binary")) {
+			return;
 		}
 				
 		if (er.property_name.equals(ExperimentalConstants.str_pKA) || er.property_name.equals(ExperimentalConstants.strLogKow)) {
