@@ -470,11 +470,11 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 
 		ExperimentalRecords records = new ExperimentalRecords();
 
-		String sql="select * from "+tableName+" where property_name=\"" + property + "\""
+		String sql="select * from "+tableName+" where property_name=\"" + property + "\" and source_name not like '%eChemPortal%'"
 				+ "order by casrn";
 		
 		if (useKeep) {
-			sql="select * from "+tableName+" where property_name=\"" + property + "\" and keep=\"true\" " + "\r\n"
+			sql="select * from "+tableName+" where property_name=\"" + property + "\" and source_name not like '%eChemPortal%' and keep=\"true\" " + "\r\n"
 					+ "order by casrn";
 		}
 		

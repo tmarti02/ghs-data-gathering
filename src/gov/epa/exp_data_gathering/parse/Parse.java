@@ -417,9 +417,9 @@ public class Parse {
 //				ExperimentalConstants.strSourceChemidplus,
 //				ExperimentalConstants.strSourceNICEATM,
 //				ExperimentalConstants.strSourceOECD_Toolbox ,
-//				ExperimentalConstants.strSourceCFSAN,
-//				ExperimentalConstants.strSourceLebrun,
-//				ExperimentalConstants.strSourceDRD,
+				ExperimentalConstants.strSourceCFSAN,
+				ExperimentalConstants.strSourceLebrun,
+				ExperimentalConstants.strSourceDRD,
 				ExperimentalConstants.strSourceTakahashi
 		};
 				

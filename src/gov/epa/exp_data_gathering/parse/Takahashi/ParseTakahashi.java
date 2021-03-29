@@ -77,7 +77,7 @@ public class ParseTakahashi extends Parse {
 		
 		er.chemical_name = tr.testMaterial;
 		er.casrn = tr.casNo;
-		er.property_name = ExperimentalConstants.strEyeIrritation;
+		er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
 		er.property_value_string = "Draize score (binary classification): " + tr.draizeScore100;
 	
 		er.property_value_point_estimate_original = getTakahashiBinary(tr.draizeScore100);

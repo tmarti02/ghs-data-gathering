@@ -78,7 +78,7 @@ public class ParseDRD extends Parse {
 		
 		er.chemical_name = dr.testChemicalName.replaceAll("[\n\r]", " ");
 		er.casrn = dr.casrn.replaceAll("[\n\r]", " ");
-		er.property_name = ExperimentalConstants.strEyeIrritation;
+		er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
 		er.property_value_string = dr.ghsClassification.replaceAll("[\n\r]", " ");
 	
 		er.property_value_point_estimate_original = drdGHSToBinary(dr.ghsClassification.replaceAll("[\n\r]", " "));

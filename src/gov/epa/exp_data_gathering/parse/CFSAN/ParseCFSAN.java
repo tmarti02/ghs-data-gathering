@@ -79,7 +79,7 @@ public class ParseCFSAN extends Parse {
 			
 			er.chemical_name = cr.chemName;
 			er.casrn = cr.casNr;
-			er.property_name = ExperimentalConstants.strEyeIrritation;
+			er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
 			er.property_value_string = cr.activity;
 			er.property_value_point_estimate_original = Double.parseDouble(cr.activity);
 			er.property_value_point_estimate_final = er.property_value_point_estimate_original;

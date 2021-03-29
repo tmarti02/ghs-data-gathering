@@ -77,7 +77,7 @@ public class ParseLebrun extends Parse {
 		
 		er.chemical_name = lr.chemicalName;
 		er.casrn = lr.casrn.replaceAll("/", "|");
-		er.property_name = ExperimentalConstants.strEyeIrritation;
+		er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
 		er.property_value_string = "";
 		String ghs = "";
 		String epa = "";
