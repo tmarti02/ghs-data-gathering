@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.DRD;
+package gov.epa.exp_data_gathering.parse.DRD;
 
 import java.io.File;
 import java.io.FileReader;
@@ -7,12 +7,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonObject;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 
 public class ParseDRD extends Parse {
+	
 	public ParseDRD() {
 		sourceName = ExperimentalConstants.strSourceDRD;
 		this.init();
@@ -27,7 +30,7 @@ public class ParseDRD extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordDRD> records = RecordDRD.parseDRDRecordsFromExcel();
+		Vector<JsonObject> records = RecordDRD.parseDRDRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -86,7 +89,7 @@ public class ParseDRD extends Parse {
 		er.property_value_units_original = "binary";
 		er.property_value_units_final = "binary";
 		
-		if (!dr.shouldNotBeUsed.trim().isBlank()) {
+		if (dr.shouldNotBeUsed!=null && !dr.shouldNotBeUsed.trim().isBlank()) {
 			er.keep = false;
 			er.reason = "Source indicates study should not be used: shouldNotBeUsed = \"" + dr.shouldNotBeUsed +"\"";
 		}
