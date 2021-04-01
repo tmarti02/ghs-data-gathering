@@ -20,6 +20,11 @@ import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 
 import com.google.gson.JsonObject;
 
+/**
+ * Class to read data sources provided as a single, column-based Excel spreadsheet
+ * @author GSINCL01 (Gabriel Sinclair)
+ *
+ */
 public class ExcelSourceReader {
 	public String sourceName;
 	public String lastUpdated;
@@ -28,6 +33,12 @@ public class ExcelSourceReader {
 	private String fileName;
 	private Sheet sheet;
 	
+	/**
+	 * Initializes a new reader for the given source from the given filename
+	 * NOTE: Currently can only read a single sheet from a single file
+	 * @param fileName		The file to read records from
+	 * @param sourceName	The data source to assign records to
+	 */
 	public ExcelSourceReader(String fileName, String sourceName) {
 		this.sourceName = sourceName;
 		this.fileName = fileName;
@@ -78,9 +89,9 @@ public class ExcelSourceReader {
 		}
 		return records;
 	}
-	
+
 	/**
-	 * Writes records from a spreadsheet to JSON original records format assuming the generated Record[SourceName] template
+	 * Writes records from a spreadsheet to JSON original records format assuming the template created by generateRecordClassTemplate()
 	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
 	 */
 	public Vector<JsonObject> parseRecordsFromExcel(int chemicalNameIndex) {
@@ -88,15 +99,11 @@ public class ExcelSourceReader {
 		HashMap<Integer,String> hm = generateDefaultMap(fieldNames, 0);
 		return parseRecordsFromExcel(hm, chemicalNameIndex);
 	}
-	
-	public HashMap<Integer,String> generateDefaultMap(String[] fieldNames, int offset) {
-		HashMap<Integer,String> hmFieldNames = new HashMap<Integer,String>();
-		for (int i = 0; i < fieldNames.length; i++) {
-			hmFieldNames.put(i + offset, fieldNames[i]);
-		}
-		return hmFieldNames;
-	}
-	
+
+	/**
+	 * Gets column headers in appropriate format for field naming (alphanumeric and _ only)
+	 * @return	Formatted column headers as a string array
+	 */
 	private String[] getHeaders() {
 		Row headerRow = sheet.getRow(0);
 		int numHeaders = headerRow.getLastCellNum();
@@ -113,15 +120,43 @@ public class ExcelSourceReader {
 		}
 		return headers;
 	}
-	
+
+	/**
+	 * Generates a default map from column number to field name, i.e. field names in same order as columns and none skipped
+	 * Offset allows skipping blank columns at beginning of sheet
+	 * @param fieldNames	The field names of the Record[SourceName] class
+	 * @param offset		The number of blank columns at the beginning of the sheet
+	 * @return				A map from column number to field names
+	 */
+	public HashMap<Integer,String> generateDefaultMap(String[] fieldNames, int offset) {
+		HashMap<Integer,String> hmFieldNames = new HashMap<Integer,String>();
+		for (int i = 0; i < fieldNames.length; i++) {
+			hmFieldNames.put(i + offset, fieldNames[i]);
+		}
+		return hmFieldNames;
+	}
+
+	/**
+	 * Creates templates for Record[SourceName] and Parse[SourceName] classes and saves them as TXT files
+	 */
 	public void createClassTemplateFiles() {
-		String recordClassTemplate = generateRecordClassTemplate();
-		String parseClassTemplate = generateParseClassTemplate();
-		writeClassTemplateFile(recordClassTemplate, "Record");
-		writeClassTemplateFile(parseClassTemplate, "Parse");
+		writeClassTemplateFile("Record");
+		writeClassTemplateFile("Parse");
 	}
 	
-	private void writeClassTemplateFile(String classTemplate, String classType) {
+	/**
+	 * Helper method to write class templates
+	 * @param classType			The class type (i.e. "Record" or "Parse")
+	 */
+	private void writeClassTemplateFile(String classType) {
+		String classTemplate = "";
+		switch (classType) {
+		case "Record":
+			classTemplate = generateRecordClassTemplate();
+			break;
+		case "Parse":
+			classTemplate = generateParseClassTemplate();
+		}
 		String templateFilePath = sourceFolderPath + File.separator + classType + sourceName + "_ClassTemplate.txt";
 		File file = new File(templateFilePath);
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
@@ -132,6 +167,10 @@ public class ExcelSourceReader {
 		System.out.println("Wrote " + classType + sourceName + " template to " + templateFilePath);
 	}
 	
+	/**
+	 * Generates a template for the Record[SourceName] class corresponding to the structure of the Excel file
+	 * @return	The template as a string
+	 */
 	private String generateRecordClassTemplate() {
 		String[] fieldNames = getHeaders();
 		int chemicalNameIndex = -1;
@@ -166,24 +205,28 @@ public class ExcelSourceReader {
 		return sb.toString();
 	}
 	
+	/**
+	 * Generates a template for the Parse[SourceName] class with createRecords() method already constructed
+	 * @return	The template as a string
+	 */
 	private String generateParseClassTemplate() {
-		StringBuilder sb = new StringBuilder("public class Parse" + sourceName + "extends Parse {\n\n");
+		StringBuilder sb = new StringBuilder("public class Parse" + sourceName + " extends Parse {\n\n");
 		sb.append("\tpublic Parse" + sourceName + "() {\n");
 		sb.append("\t\tsourceName = \"" + sourceName + "\";");
 		sb.append(" // TODO Consider creating ExperimentalConstants.strSource" + sourceName + " instead.\n");
-		sb.append("\t\tthis.init()\n\n");
+		sb.append("\t\tthis.init();\n\n");
 		sb.append("\t\t// TODO Is this a toxicity source? If so, rename original and experimental records files here.\n\t}\n\n");
 		sb.append("\t@Override\n\tprotected void createRecords() {\n");
 		sb.append("\t\tVector<JsonObject> records = Record" + sourceName + ".parse" + sourceName + "RecordsFromExcel();\n");
 		sb.append("\t\twriteOriginalRecordsToFile(records);\n\t}\n\n");
-		sb.append("\t@Override\n\tprotected void goThroughOriginalRecords() {\n");
+		sb.append("\t@Override\n\tprotected ExperimentalRecords goThroughOriginalRecords() {\n");
 		sb.append("\t\t// TODO\n\t}\n}");
 		
 		return sb.toString();
 	}
 
 	public static void main(String[] args) {
-		ExcelSourceReader esr = new ExcelSourceReader("NICEATM LLNA DB_original.xlsx","NICEATM");
+		ExcelSourceReader esr = new ExcelSourceReader("Bagleyclean.xlsx","Bagley");
 		esr.createClassTemplateFiles();
 	}
 
