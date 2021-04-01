@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonObject;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
@@ -26,7 +28,7 @@ public class ParseAqSolDB extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordAqSolDB> records = RecordAqSolDB.parseAqSolDBRecordsFromExcel();
+		Vector<JsonObject> records = RecordAqSolDB.parseAqSolDBRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -69,43 +71,43 @@ public class ParseAqSolDB extends Parse {
 	}
 	
 	private void addExperimentalRecords(RecordAqSolDB ar,ExperimentalRecords records) {
-		if (ar.solubility!=null && !ar.solubility.isBlank()) {
+		if (ar.Solubility!=null && !ar.Solubility.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.date_accessed = RecordAqSolDB.lastUpdated;
 			er.source_name = ExperimentalConstants.strSourceAqSolDB;
-			if (ar.id.contains("A")) { 
+			if (ar.ID.contains("A")) { 
 				er.original_source_name = ExperimentalConstants.strSourceEChemPortal;
 				er.url = "https://www.echemportal.org/echemportal/property-search";
-			} else if (ar.id.contains("B")) { 
+			} else if (ar.ID.contains("B")) { 
 				er.original_source_name = "EPI Suite Data 1995";
 				er.url = "http://esc.syrres.com/interkow/Download/WaterFragmentDataFiles.zip";
-			} else if (ar.id.contains("C")) { 
+			} else if (ar.ID.contains("C")) { 
 				er.original_source_name = "Raevsky, Grigorev, Poliancyk, et al. 2014";
 				er.url = "https://doi.org/10.1021/ci400692n";
-			} else if (ar.id.contains("D")) { 
+			} else if (ar.ID.contains("D")) { 
 				er.original_source_name = "EPI Suite Data 1994";
 				er.url = "http://esc.syrres.com/interkow/Download/WSKOWWIN_Datasets.zip";
-			} else if (ar.id.contains("E")) { 
+			} else if (ar.ID.contains("E")) { 
 				er.original_source_name = "Huuskonen 2000";
 				er.url = "http://cheminformatics.org/datasets/";
-			} else if (ar.id.contains("F")) { 
+			} else if (ar.ID.contains("F")) { 
 				er.original_source_name = "Wang, Hou, & Xu 2009";
 				er.url = "https://doi.org/10.1021/ci800406y";
-			} else if (ar.id.contains("G")) { 
+			} else if (ar.ID.contains("G")) { 
 				er.original_source_name = "Delaney 2004";
 				er.url = "https://doi.org/10.1021/ci034243x";
-			} else if (ar.id.contains("H")) { 
+			} else if (ar.ID.contains("H")) { 
 				er.original_source_name = "Wang, Hou, & Xu 2009";
 				er.url = "https://doi.org/10.1021/ci800406y";
-			} else if (ar.id.contains("I")) {
+			} else if (ar.ID.contains("I")) {
 				er.original_source_name = "Llinas, Glen, & Goodman 2008";
 				er.url = "http://www-jmg.ch.cam.ac.uk/data/solubility/";
 			}
-			er.chemical_name = ar.name;
-			er.smiles = ar.smiles;
+			er.chemical_name = ar.Name;
+			er.smiles = ar.SMILES;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			er.property_value_string = "LogS: "+ar.solubility;
-			er.property_value_point_estimate_original = Double.parseDouble(ar.solubility);
+			er.property_value_string = "LogS: "+ar.Solubility;
+			er.property_value_point_estimate_original = Double.parseDouble(ar.Solubility);
 			er.property_value_units_original = ExperimentalConstants.str_log_M;
 			uc.convertRecord(er);
 			records.add(er);

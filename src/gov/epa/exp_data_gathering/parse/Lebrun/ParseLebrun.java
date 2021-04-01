@@ -7,12 +7,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonObject;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 
 public class ParseLebrun extends Parse {
+
 	public ParseLebrun() {
 		sourceName = ExperimentalConstants.strSourceLebrun;
 		this.init();
@@ -27,7 +30,7 @@ public class ParseLebrun extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordLebrun> records = RecordLebrun.parseLebrunRecordsFromExcel();
+		Vector<JsonObject> records = RecordLebrun.parseLebrunRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
