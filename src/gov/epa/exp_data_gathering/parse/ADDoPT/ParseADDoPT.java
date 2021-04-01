@@ -71,7 +71,7 @@ public class ParseADDoPT extends Parse {
 	}
 	
 	private void addExperimentalRecords(RecordADDoPT ar,ExperimentalRecords records) {
-		if (ar.Observed_solubility_lg_mol_L_!=null && !ar.Observed_solubility_lg_mol_L_.isBlank()) {
+		if (ar.Observed_solubility_lg_mol_L!=null && !ar.Observed_solubility_lg_mol_L.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.source_name = ExperimentalConstants.strSourceADDoPT;
 			er.date_accessed = RecordADDoPT.lastUpdated;
@@ -79,8 +79,8 @@ public class ParseADDoPT extends Parse {
 			er.url = "https://doi.org/10.1002/jcc.24424";
 			er.casrn = ar.CAS_number;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			er.property_value_string = "Observed solubility, log(M): "+ar.Observed_solubility_lg_mol_L_+"; Temperature: "+ar.T;
-			er.property_value_point_estimate_original = Double.parseDouble(ar.Observed_solubility_lg_mol_L_);
+			er.property_value_string = "Observed solubility, log(M): "+ar.Observed_solubility_lg_mol_L+"; Temperature: "+ar.T;
+			er.property_value_point_estimate_original = Double.parseDouble(ar.Observed_solubility_lg_mol_L);
 			er.property_value_units_original = ExperimentalConstants.str_log_M;
 			er.temperature_C = Double.parseDouble(ar.T);
 			uc.convertRecord(er);

@@ -72,7 +72,7 @@ public class ParseBradley extends Parse {
 	}
 	
 	private void addExperimentalRecords(RecordBradley br,ExperimentalRecords records) {
-		if (br.concentration_M_!=null && !br.concentration_M_.isBlank()) {
+		if (br.concentration_M!=null && !br.concentration_M.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.date_accessed = RecordBradley.lastUpdated;
 			er.source_name = ExperimentalConstants.strSourceBradley;
@@ -81,8 +81,8 @@ public class ParseBradley extends Parse {
 			er.chemical_name = br.solute;
 			er.smiles = br.solute_SMILES;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			er.property_value_string = "Concentration (M): "+br.concentration_M_;
-			ParseUtilities.getNumericalValue(er,br.concentration_M_,br.concentration_M_.length(),false);
+			er.property_value_string = "Concentration (M): "+br.concentration_M;
+			ParseUtilities.getNumericalValue(er,br.concentration_M,br.concentration_M.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_M;
 			if (br.notes!=null && !br.notes.isBlank()) {
 				ParseUtilities.getTemperatureCondition(er,br.notes);

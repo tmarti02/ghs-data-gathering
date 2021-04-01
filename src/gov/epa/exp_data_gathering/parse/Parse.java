@@ -5,13 +5,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Vector;
 
-import org.apache.commons.text.StringEscapeUtils;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.eChemPortalAPI.eChemPortalAPI;
 import gov.epa.eChemPortalAPI.Processing.FinalRecords;
 import gov.epa.exp_data_gathering.parse.ADDoPT.ParseADDoPT;
 import gov.epa.exp_data_gathering.parse.AqSolDB.ParseAqSolDB;
@@ -310,7 +307,10 @@ public class Parse {
 				ExperimentalConstants.strSourceEpisuiteISIS};
 		
 		String[] reparseSources = {
-				ExperimentalConstants.strSourceQSARDB};
+				ExperimentalConstants.strSourceADDoPT,
+				ExperimentalConstants.strSourceAqSolDB,
+				ExperimentalConstants.strSourceBradley
+				};
 		
 		boolean reparse=true;
 		boolean reparseAll=false;
@@ -351,9 +351,7 @@ public class Parse {
 		}
 		
 		String[] parseSources = {
-//				ExperimentalConstants.strSourceChemidplus,
-//				ExperimentalConstants.strSourceNICEATM,
-//				ExperimentalConstants.strSourceOECD_Toolbox ,
+				ExperimentalConstants.strSourceNICEATM,
 				ExperimentalConstants.strSourceCFSAN,
 				ExperimentalConstants.strSourceLebrun,
 				ExperimentalConstants.strSourceDRD,

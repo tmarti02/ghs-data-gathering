@@ -104,7 +104,7 @@ public class ExcelSourceReader {
 		for (int i = 0; i < numHeaders; i++) {
 			Cell headerCell = headerRow.getCell(i, MissingCellPolicy.CREATE_NULL_AS_BLANK);
 			headerCell.setCellType(CELL_TYPE_STRING);
-			String headerContent = headerCell.getStringCellValue().trim().replaceAll("[^\\p{Alnum}]+", "_");
+			String headerContent = headerCell.getStringCellValue().trim().replaceAll("[^\\p{Alnum}]+", "_").replaceAll("^_", "").replaceAll("_$", "");
 			if (headerContent.equals("_")) {
 				headers[i] = "blank" + i;
 			} else {
@@ -114,16 +114,36 @@ public class ExcelSourceReader {
 		return headers;
 	}
 	
-	private void generateClassTemplate() {
+	public void createClassTemplateFiles() {
+		String recordClassTemplate = generateRecordClassTemplate();
+		String parseClassTemplate = generateParseClassTemplate();
+		writeClassTemplateFile(recordClassTemplate, "Record");
+		writeClassTemplateFile(parseClassTemplate, "Parse");
+	}
+	
+	private void writeClassTemplateFile(String classTemplate, String classType) {
+		String templateFilePath = sourceFolderPath + File.separator + classType + sourceName + "_ClassTemplate.txt";
+		File file = new File(templateFilePath);
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+			bw.write(classTemplate);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Wrote " + classType + sourceName + " template to " + templateFilePath);
+	}
+	
+	private String generateRecordClassTemplate() {
 		String[] fieldNames = getHeaders();
 		int chemicalNameIndex = -1;
 		for (int i = 0; i < fieldNames.length; i++) {
 			String fieldName = fieldNames[i];
-			if (fieldName.toLowerCase().contains("name") || fieldName.toLowerCase().contains("chemical") || fieldName.toLowerCase().contains("material")) {
+			if (fieldName.toLowerCase().contains("name") || fieldName.toLowerCase().contains("chemical") || fieldName.toLowerCase().contains("material")
+					|| fieldName.toLowerCase().contains("compound") || fieldName.toLowerCase().contains("substance")) {
 				chemicalNameIndex = i;
 				break;
 			}
 		}
+		
 		StringBuilder sb = new StringBuilder("public class Record" + sourceName + " {\n");
 		String fieldNamesString = "{";
 		for (String fieldName:fieldNames) {
@@ -143,19 +163,28 @@ public class ExcelSourceReader {
 		sb.append("\t\treturn records;\n");
 		sb.append("\t}\n}");
 		
-		String templateFilePath = sourceFolderPath + File.separator + "Record" + sourceName + "_ClassTemplate.txt";
-		File file = new File(templateFilePath);
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
-			bw.write(sb.toString());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		System.out.println("Wrote Record" + sourceName + " template to " + templateFilePath);
+		return sb.toString();
+	}
+	
+	private String generateParseClassTemplate() {
+		StringBuilder sb = new StringBuilder("public class Parse" + sourceName + "extends Parse {\n\n");
+		sb.append("\tpublic Parse" + sourceName + "() {\n");
+		sb.append("\t\tsourceName = \"" + sourceName + "\";");
+		sb.append(" // TODO Consider creating ExperimentalConstants.strSource" + sourceName + " instead.\n");
+		sb.append("\t\tthis.init()\n\n");
+		sb.append("\t\t// TODO Is this a toxicity source? If so, rename original and experimental records files here.\n\t}\n\n");
+		sb.append("\t@Override\n\tprotected void createRecords() {\n");
+		sb.append("\t\tVector<JsonObject> records = Record" + sourceName + ".parse" + sourceName + "RecordsFromExcel();\n");
+		sb.append("\t\twriteOriginalRecordsToFile(records);\n\t}\n\n");
+		sb.append("\t@Override\n\tprotected void goThroughOriginalRecords() {\n");
+		sb.append("\t\t// TODO\n\t}\n}");
+		
+		return sb.toString();
 	}
 
 	public static void main(String[] args) {
-		ExcelSourceReader esr = new ExcelSourceReader("Aqueous Solubility Nature Scientific Data with DTXSIDs.xlsx","AqSolDB2");
-		esr.generateClassTemplate();
+		ExcelSourceReader esr = new ExcelSourceReader("NICEATM LLNA DB_original.xlsx","NICEATM");
+		esr.createClassTemplateFiles();
 	}
 
 }

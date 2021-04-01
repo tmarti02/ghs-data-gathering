@@ -95,17 +95,17 @@ public class ParseNICEATM extends Parse {
 		er.smiles=recN.SMILES;
 		er.property_name=ExperimentalConstants.strSkinSensitizationLLNA;
 				
-		er.property_value_string=recN.EC3_;
+		er.property_value_string=recN.EC3;
 				
-		if (recN.EC3_.contentEquals("NC")) {
+		if (recN.EC3.contentEquals("NC")) {
 			er.property_value_point_estimate_final=Double.valueOf(0);
 			er.property_value_units_final="binary";
-		} else if (recN.EC3_.contains(">") || recN.EC3_.isEmpty() || recN.EC3_.contentEquals("IDR")) {
+		} else if (recN.EC3.contains(">") || recN.EC3.isEmpty() || recN.EC3.contentEquals("IDR")) {
 			er.keep=false;
 			er.reason="Ambiguous value";	
 		} else {
 			try {
-				double EC3=Double.parseDouble(recN.EC3_);							
+				double EC3=Double.parseDouble(recN.EC3);							
 				er.property_value_point_estimate_final=Double.valueOf(1);
 				er.property_value_units_final="binary";
 				er.property_value_string+=" %";
@@ -113,7 +113,7 @@ public class ParseNICEATM extends Parse {
 			}  catch (Exception ex) {				
 				er.keep=false;
 				er.reason="Ambiguous value";
-				System.out.println(er.casrn+"\t"+recN.EC3_+"\tAmbiguous");				
+				System.out.println(er.casrn+"\t"+recN.EC3+"\tAmbiguous");				
 			}
 		}
 		

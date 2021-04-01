@@ -42,7 +42,7 @@ public class RecordAqSolDB {
 	public String BertzCT;
 	public static final String[] fieldNames = {"ID","Name","InChI","InChIKey","DTXSID","SMILES","Solubility","SD","Ocurrences","Group","MolWt","MolLogP","MolMR","HeavyAtomCount","NumHAcceptors","NumHDonors","NumHeteroatoms","NumRotatableBonds","NumValenceElectrons","NumAromaticRings","NumSaturatedRings","NumAliphaticRings","RingCount","TPSA","LabuteASA","BalabanJ","BertzCT"};
 
-	public static final String lastUpdated = "04/01/2021";
+	public static final String lastUpdated = "12/04/2020";
 	public static final String sourceName = ExperimentalConstants.strSourceAqSolDB;
 
 	private static final String fileName = "Aqueous Solubility Nature Scientific Data with DTXSIDs.xlsx";

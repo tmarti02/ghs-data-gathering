@@ -13,12 +13,12 @@ public class RecordNICEATM {
 	public String SMILES;
 	public String Activity;
 	public String Class;
-	public String EC3_;
+	public String EC3;
 	public String MW;
 	public String Chemical_Class;
-	public static final String[] fieldNames = {"Compound_name","CASRN","SMILES","Activity","Class","EC3_","MW","Chemical_Class"};
+	public static final String[] fieldNames = {"Compound_name","CASRN","SMILES","Activity","Class","EC3","MW","Chemical_Class"};
 
-	public static final String lastUpdated = "04/01/2021";
+	public static final String lastUpdated = "02/08/2021";
 	public static final String sourceName = ExperimentalConstants.strSourceNICEATM;
 
 	private static final String fileName = "NICEATM LLNA DB_original.xlsx";
@@ -28,5 +28,4 @@ public class RecordNICEATM {
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(0);
 		return records;
 	}
-
 }

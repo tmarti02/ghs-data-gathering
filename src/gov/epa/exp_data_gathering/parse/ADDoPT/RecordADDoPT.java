@@ -15,10 +15,10 @@ import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
 public class RecordADDoPT {
 	public String CAS_number;
 	public String T;
-	public String Observed_solubility_lg_mol_L_;
-	public static final String[] fieldNames = {"CAS_number","T","Observed_solubility_lg_mol_L_"};
+	public String Observed_solubility_lg_mol_L;
+	public static final String[] fieldNames = {"CAS_number","T","Observed_solubility_lg_mol_L"};
 
-	public static final String lastUpdated = "03/30/2021";
+	public static final String lastUpdated = "12/14/2020";
 	public static final String sourceName = ExperimentalConstants.strSourceADDoPT;
 
 	private static final String fileName = "Klimenko_SuppInfo_Table1.xlsx";
