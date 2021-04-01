@@ -81,7 +81,8 @@ public class ParseDRD extends Parse {
 		}
 		er.url = "https://pubmed.ncbi.nlm.nih.gov/26997338/";
 		
-		er.chemical_name = dr.testChemicalName.replaceAll("[\n\r]", " ");
+		String chemicalName = dr.testChemicalName.replaceAll("[\n\r]", " ").replaceAll(" \\([0-9]+ of [0-9]+\\)", "");
+		er.chemical_name = chemicalName;
 		er.casrn = dr.casrn.replaceAll("[\n\r]", " ");
 		er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
 		er.property_value_string = dr.ghsClassification.replaceAll("[\n\r]", " ");
