@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonObject;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
@@ -27,7 +29,7 @@ public class ParseBradley extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordBradley> records = RecordBradley.parseBradleyRecordsFromExcel();
+		Vector<JsonObject> records = RecordBradley.parseBradleyRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -70,17 +72,17 @@ public class ParseBradley extends Parse {
 	}
 	
 	private void addExperimentalRecords(RecordBradley br,ExperimentalRecords records) {
-		if (br.concentration!=null && !br.concentration.isBlank()) {
+		if (br.concentration_M_!=null && !br.concentration_M_.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.date_accessed = RecordBradley.lastUpdated;
 			er.source_name = ExperimentalConstants.strSourceBradley;
-			er.original_source_name = br.citation;
-			er.url = br.refURL;
+			er.original_source_name = br.sample_or_citation;
+			er.url = br.ref;
 			er.chemical_name = br.solute;
-			er.smiles = br.soluteSMILES;
+			er.smiles = br.solute_SMILES;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			er.property_value_string = "Concentration (M): "+br.concentration;
-			ParseUtilities.getNumericalValue(er,br.concentration,br.concentration.length(),false);
+			er.property_value_string = "Concentration (M): "+br.concentration_M_;
+			ParseUtilities.getNumericalValue(er,br.concentration_M_,br.concentration_M_.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_M;
 			if (br.notes!=null && !br.notes.isBlank()) {
 				ParseUtilities.getTemperatureCondition(er,br.notes);
