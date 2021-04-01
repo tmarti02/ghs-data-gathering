@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonObject;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
@@ -35,9 +37,7 @@ public class ParseNICEATM extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		String folder="data\\experimental\\"+sourceName+"\\";
-		String filename="NICEATM LLNA DB_original.xlsx";
-		Vector<RecordNICEATM> records = RecordNICEATM.parseExcel2(folder+filename);
+		Vector<JsonObject> records = RecordNICEATM.parseNICEATMRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -90,22 +90,22 @@ public class ParseNICEATM extends Parse {
 		ExperimentalRecord er=new ExperimentalRecord();
 		
 		er.source_name=sourceName;		
-		er.chemical_name=recN.Chemical_Name;
+		er.chemical_name=recN.Compound_name;
 		er.casrn=recN.CASRN;
-		er.smiles=recN.Smiles;
+		er.smiles=recN.SMILES;
 		er.property_name=ExperimentalConstants.strSkinSensitizationLLNA;
 				
-		er.property_value_string=recN.EC3;
+		er.property_value_string=recN.EC3_;
 				
-		if (recN.EC3.contentEquals("NC")) {
+		if (recN.EC3_.contentEquals("NC")) {
 			er.property_value_point_estimate_final=Double.valueOf(0);
 			er.property_value_units_final="binary";
-		} else if (recN.EC3.contains(">") || recN.EC3.isEmpty() || recN.EC3.contentEquals("IDR")) {
+		} else if (recN.EC3_.contains(">") || recN.EC3_.isEmpty() || recN.EC3_.contentEquals("IDR")) {
 			er.keep=false;
 			er.reason="Ambiguous value";	
 		} else {
 			try {
-				double EC3=Double.parseDouble(recN.EC3);							
+				double EC3=Double.parseDouble(recN.EC3_);							
 				er.property_value_point_estimate_final=Double.valueOf(1);
 				er.property_value_units_final="binary";
 				er.property_value_string+=" %";
@@ -113,7 +113,7 @@ public class ParseNICEATM extends Parse {
 			}  catch (Exception ex) {				
 				er.keep=false;
 				er.reason="Ambiguous value";
-				System.out.println(er.casrn+"\t"+recN.EC3+"\tAmbiguous");				
+				System.out.println(er.casrn+"\t"+recN.EC3_+"\tAmbiguous");				
 			}
 		}
 		
