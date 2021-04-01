@@ -1,5 +1,6 @@
 package gov.epa.exp_data_gathering.parse.Takahashi;
 
+import java.util.HashMap;
 import java.util.Vector;
 
 import com.google.gson.JsonObject;
@@ -25,7 +26,8 @@ public class RecordTakahashi {
 	
 	public static Vector<JsonObject> parseTakahashiRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
-		Vector<JsonObject> records = esr.parseRecordsFromExcel(0);
+		HashMap<Integer,String> hm = esr.generateDefaultMap(fieldNames, 0);
+		Vector<JsonObject> records = esr.parseRecordsFromExcel(hm, 0);
 		return records;
 	}
 }

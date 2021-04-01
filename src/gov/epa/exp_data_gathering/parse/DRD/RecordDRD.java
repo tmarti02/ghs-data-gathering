@@ -1,5 +1,6 @@
 package gov.epa.exp_data_gathering.parse.DRD;
 
+import java.util.HashMap;
 import java.util.Vector;
 
 import com.google.gson.JsonObject;
@@ -38,6 +39,7 @@ public class RecordDRD {
 	
 	public static Vector<JsonObject> parseDRDRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
+		HashMap<Integer,String> hm = esr.generateDefaultMap(fieldNames, 0);
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(1);
 		return records;
 	}
