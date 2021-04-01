@@ -76,7 +76,9 @@ public class ParseDRD extends Parse {
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.date_accessed = RecordDRD.lastUpdated;
 		er.source_name = ExperimentalConstants.strSourceDRD;
-		er.original_source_name = dr.dataSource.replaceAll("[\n\r]", " ");
+		if (dr.dataSource!=null) {
+			er.original_source_name = dr.dataSource.replaceAll("[\n\r]", " ");
+		}
 		er.url = "https://pubmed.ncbi.nlm.nih.gov/26997338/";
 		
 		er.chemical_name = dr.testChemicalName.replaceAll("[\n\r]", " ");

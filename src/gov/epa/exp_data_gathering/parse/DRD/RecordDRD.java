@@ -40,7 +40,7 @@ public class RecordDRD {
 	public static Vector<JsonObject> parseDRDRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
 		HashMap<Integer,String> hm = esr.generateDefaultMap(fieldNames, 0);
-		Vector<JsonObject> records = esr.parseRecordsFromExcel(1);
+		Vector<JsonObject> records = esr.parseRecordsFromExcel(hm, 1);
 		return records;
 	}
 
