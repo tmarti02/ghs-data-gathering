@@ -226,7 +226,7 @@ public class ExcelSourceReader {
 	}
 
 	public static void main(String[] args) {
-		ExcelSourceReader esr = new ExcelSourceReader("Bagleyclean.xlsx","Bagley");
+		ExcelSourceReader esr = new ExcelSourceReader("physchem_data_QCed.xlsx","ICF");
 		esr.createClassTemplateFiles();
 	}
 
