@@ -121,6 +121,7 @@ public class ExperimentalConstants {
 	public static final String strSourceOPERA="OPERA";
 	public static final String strSourceEpisuiteOriginal="EpisuiteOriginal";
 	public static final String strSourceEpisuiteISIS="EpisuiteISIS";
+	public static final String strSourceICF="ICF";
 	
 	public static final String strSourceOECD_Toolbox="OECD Toolbox";
 	public static final String strSourceNICEATM="NICEATM";

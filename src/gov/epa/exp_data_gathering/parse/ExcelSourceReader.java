@@ -226,7 +226,7 @@ public class ExcelSourceReader {
 	}
 
 	public static void main(String[] args) {
-		ExcelSourceReader esr = new ExcelSourceReader("physchem_data_QCed.xlsx","ICF");
+		ExcelSourceReader esr = new ExcelSourceReader("physchem_data_QCed_w_url_and_longref.xlsx","ICF");
 		esr.createClassTemplateFiles();
 	}
 
