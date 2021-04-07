@@ -157,27 +157,8 @@ public class Parse {
 			ExperimentalRecords merge = new ExperimentalRecords();
 			merge.addAll(records);
 			merge.addAll(recordsBad);
-			if (merge.size() <= 100000) {
-				merge.toExcel_File(mainFolder+File.separator+fileNameExcelExperimentalRecords);
-			} else {
-				ExperimentalRecords temp = new ExperimentalRecords();
-				Iterator<ExperimentalRecord> it = merge.iterator();
-				int i = 0;
-				int batch = 0;
-				while (it.hasNext()) {
-					temp.add(it.next());
-					i++;
-					if (i!=0 && i%100000==0) {
-						batch++;
-						String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + " " + batch + ".xlsx";
-						temp.toExcel_File(mainFolder+File.separator+batchFileName);
-						temp.clear();
-					}
-				}
-				batch++;
-				String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + " " + batch + ".xlsx";
-				temp.toExcel_File(mainFolder+File.separator+batchFileName);
-			}
+			merge.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+			
 		}
 		
 		System.out.println("done\n");
