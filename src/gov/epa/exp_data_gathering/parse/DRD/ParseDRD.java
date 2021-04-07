@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.DRD;
+package gov.epa.exp_data_gathering.parse.DRD;
 
 import java.io.File;
 import java.io.FileReader;
@@ -7,12 +7,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonObject;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 
 public class ParseDRD extends Parse {
+	
 	public ParseDRD() {
 		sourceName = ExperimentalConstants.strSourceDRD;
 		this.init();
@@ -27,7 +30,7 @@ public class ParseDRD extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordDRD> records = RecordDRD.parseDRDRecordsFromExcel();
+		Vector<JsonObject> records = RecordDRD.parseDRDRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -73,12 +76,15 @@ public class ParseDRD extends Parse {
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.date_accessed = RecordDRD.lastUpdated;
 		er.source_name = ExperimentalConstants.strSourceDRD;
-		er.original_source_name = dr.dataSource.replaceAll("[\n\r]", " ");
+		if (dr.dataSource!=null) {
+			er.original_source_name = dr.dataSource.replaceAll("[\n\r]", " ");
+		}
 		er.url = "https://pubmed.ncbi.nlm.nih.gov/26997338/";
 		
-		er.chemical_name = dr.testChemicalName.replaceAll("[\n\r]", " ");
+		String chemicalName = dr.testChemicalName.replaceAll("[\n\r]", " ").replaceAll(" \\([0-9]+ of [0-9]+\\)", "");
+		er.chemical_name = chemicalName;
 		er.casrn = dr.casrn.replaceAll("[\n\r]", " ");
-		er.property_name = ExperimentalConstants.strEyeIrritation;
+		er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
 		er.property_value_string = dr.ghsClassification.replaceAll("[\n\r]", " ");
 	
 		er.property_value_point_estimate_original = drdGHSToBinary(dr.ghsClassification.replaceAll("[\n\r]", " "));
@@ -86,7 +92,7 @@ public class ParseDRD extends Parse {
 		er.property_value_units_original = "binary";
 		er.property_value_units_final = "binary";
 		
-		if (!dr.shouldNotBeUsed.trim().isBlank()) {
+		if (dr.shouldNotBeUsed!=null && !dr.shouldNotBeUsed.trim().isBlank()) {
 			er.keep = false;
 			er.reason = "Source indicates study should not be used: shouldNotBeUsed = \"" + dr.shouldNotBeUsed +"\"";
 		}

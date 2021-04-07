@@ -1,23 +1,15 @@
 package gov.epa.exp_data_gathering.parse;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Vector;
-
-import org.apache.commons.text.StringEscapeUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.eChemPortalAPI.eChemPortalAPI;
 import gov.epa.eChemPortalAPI.Processing.FinalRecords;
-import gov.epa.exp_data_gathering.DRD.ParseDRD;
 import gov.epa.exp_data_gathering.parse.ADDoPT.ParseADDoPT;
 import gov.epa.exp_data_gathering.parse.AqSolDB.ParseAqSolDB;
 import gov.epa.exp_data_gathering.parse.Bradley.ParseBradley;
@@ -25,6 +17,7 @@ import gov.epa.exp_data_gathering.parse.CFSAN.ParseCFSAN;
 import gov.epa.exp_data_gathering.parse.ChemBL.ParseChemBL;
 import gov.epa.exp_data_gathering.parse.ChemicalBook.ParseChemicalBook;
 import gov.epa.exp_data_gathering.parse.Chemidplus.ParseChemidplus;
+import gov.epa.exp_data_gathering.parse.DRD.ParseDRD;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortal;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ToxParseEChemPortalAPI;
@@ -148,8 +141,8 @@ public class Parse {
 		if (writeJsonExperimentalRecordsFile) {
 			System.out.println("Writing json file for chemical records");
 			System.out.println(mainFolder+File.separator+fileNameJsonExperimentalRecords);
-			batchAndWriteJSON(new Vector<ExperimentalRecord>(records),mainFolder+File.separator+fileNameJsonExperimentalRecords);
-			batchAndWriteJSON(new Vector<ExperimentalRecord>(recordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
+			JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(records),mainFolder+File.separator+fileNameJsonExperimentalRecords);
+			JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(recordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
 		}
 		
 		if (writeExcelExperimentalRecordsFile) {
@@ -167,65 +160,7 @@ public class Parse {
 	protected void writeOriginalRecordsToFile(Vector<?> records) {
 		try {
 			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
-			howManyOriginalRecordsFiles = batchAndWriteJSON(records,jsonPath);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	private static int batchAndWriteJSON(Vector<?> records, String baseFileName) {
-		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues();
-		Gson gson = builder.create();
-		int batch = 0;
-		
-		if (records.size() <= 100000) {
-			String jsonRecords = gson.toJson(records);
-			writeJSONLineByLine(jsonRecords,baseFileName);
-			batch = 1;
-		} else {
-			List<Object> temp = new ArrayList<Object>();
-			Iterator<?> it = records.iterator();
-			int i = 0;
-			while (it.hasNext()) {
-				temp.add(it.next());
-				i++;
-				if (i!=0 && i%100000==0) {
-					batch++;
-					String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".")) + " " + batch + ".json";
-					String jsonRecords = gson.toJson(temp);
-					writeJSONLineByLine(jsonRecords,batchFileName);
-					temp.clear();
-				}
-			}
-			batch++;
-			String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".")) + " " + batch + ".json";
-			String jsonRecords = gson.toJson(temp);
-			writeJSONLineByLine(jsonRecords,batchFileName);
-		}
-		
-		return batch;
-	}
-	
-	private static void writeJSONLineByLine(String jsonRecords,String filePath) {
-		String[] strRecords = jsonRecords.split("\n");
-		
-		File file = new File(filePath);
-		if(!file.getParentFile().exists()) { file.getParentFile().mkdirs(); }
-		
-		try {
-			// Clear existing file contents
-			FileWriter fw = new FileWriter(filePath);
-			fw.close();
-			
-			BufferedWriter bwAppend = new BufferedWriter(new FileWriter(filePath,true));
-		
-			for (String s:strRecords) {
-				s=ParseUtilities.fixChars(s);
-				bwAppend.write(s+"\n");
-			}
-			
-			bwAppend.close();
+			howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(records,jsonPath);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -353,10 +288,12 @@ public class Parse {
 				ExperimentalConstants.strSourceEpisuiteISIS};
 		
 		String[] reparseSources = {
-				ExperimentalConstants.strSourcePubChem,
-				ExperimentalConstants.strSourceLookChem};
+				ExperimentalConstants.strSourceADDoPT,
+				ExperimentalConstants.strSourceAqSolDB,
+				ExperimentalConstants.strSourceBradley
+				};
 		
-		boolean reparse=false;
+		boolean reparse=true;
 		boolean reparseAll=false;
 
 		String [] parseSources=reparseSources;
@@ -395,12 +332,10 @@ public class Parse {
 		}
 		
 		String[] parseSources = {
-//				ExperimentalConstants.strSourceChemidplus,
-//				ExperimentalConstants.strSourceNICEATM,
-//				ExperimentalConstants.strSourceOECD_Toolbox ,
-//				ExperimentalConstants.strSourceCFSAN,
-//				ExperimentalConstants.strSourceLebrun,
-//				ExperimentalConstants.strSourceDRD,
+				ExperimentalConstants.strSourceNICEATM,
+				ExperimentalConstants.strSourceCFSAN,
+				ExperimentalConstants.strSourceLebrun,
+				ExperimentalConstants.strSourceDRD,
 				ExperimentalConstants.strSourceTakahashi
 		};
 				

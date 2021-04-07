@@ -104,6 +104,12 @@
 			<version>3.8.4</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/WekaExcel -->
+		<dependency>
+		    <groupId>nz.ac.waikato.cms.weka</groupId>
+		    <artifactId>WekaExcel</artifactId>
+		    <version>1.0.8</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>

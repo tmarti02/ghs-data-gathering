@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonObject;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
@@ -26,7 +28,7 @@ public class ParseADDoPT extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordADDoPT> records = RecordADDoPT.parseADDoPTRecordsFromExcel();
+		Vector<JsonObject> records = RecordADDoPT.parseADDoPTRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -69,18 +71,18 @@ public class ParseADDoPT extends Parse {
 	}
 	
 	private void addExperimentalRecords(RecordADDoPT ar,ExperimentalRecords records) {
-		if (ar.solubility!=null && !ar.solubility.isBlank()) {
+		if (ar.Observed_solubility_lg_mol_L!=null && !ar.Observed_solubility_lg_mol_L.isBlank()) {
 			ExperimentalRecord er = new ExperimentalRecord();
 			er.source_name = ExperimentalConstants.strSourceADDoPT;
 			er.date_accessed = RecordADDoPT.lastUpdated;
 			er.original_source_name = "Yalchowsky & He 2003";
 			er.url = "https://doi.org/10.1002/jcc.24424";
-			er.casrn = ar.cas;
+			er.casrn = ar.CAS_number;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
-			er.property_value_string = "Observed solubility, log(M): "+ar.solubility+"; Temperature: "+ar.temp;
-			er.property_value_point_estimate_original = Double.parseDouble(ar.solubility);
+			er.property_value_string = "Observed solubility, log(M): "+ar.Observed_solubility_lg_mol_L+"; Temperature: "+ar.T;
+			er.property_value_point_estimate_original = Double.parseDouble(ar.Observed_solubility_lg_mol_L);
 			er.property_value_units_original = ExperimentalConstants.str_log_M;
-			er.temperature_C = Double.parseDouble(ar.temp);
+			er.temperature_C = Double.parseDouble(ar.T);
 			uc.convertRecord(er);
 			records.add(er);
 		}

@@ -1,19 +1,11 @@
 package gov.epa.exp_data_gathering.parse.Bradley;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.util.Vector;
 
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.google.gson.JsonObject;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.exp_data_gathering.parse.DownloadWebpageUtilities;
+import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
 
 /**
  * Stores data from Bradley, accessible at: https://www.nature.com/articles/npre.2010.4243.3
@@ -21,74 +13,49 @@ import gov.epa.exp_data_gathering.parse.DownloadWebpageUtilities;
  *
  */
 public class RecordBradley {
-	String solute;
-	String soluteSMILES;
-	String concentration;
-	String notes;
-	String citation;
-	String refURL;
-	
+	public String Experiment_Number_900_series_refer_to_external_references;
+	public String sample_or_citation;
+	public String ref;
+	public String solute;
+	public String DONOTUSE;
+	public String solute_SMILES;
+	public String solvent;
+	public String solvent_SMILES;
+	public String concentration_M;
+	public String wiki_page;
+	public String gONS;
+	public String notes;
+	public String identifier;
+	public String solute_type;
+	public String solubility_solute_mass_g;
+	public String solvent_mass_g;
+	public String solvent_density_g_ml;
+	public String solute_density_g_ml_from_ChemSpider_prediction;
+	public String solvent_volume_ml;
+	public String solute_volume_ml;
+	public String total_vol_ml;
+	public String solute_MW;
+	public String moles_solute;
+	public String calculated_concentration_M_assumes_no_expansion_or_contraction_upon_mixing;
+	public String calc_conc_M_from_g_100ml;
+	public String liquid_at_room_temp_y_n;
+	public String solute_reacts_with_solvent;
+	public String csid;
+	public String TRUE;
+	public String solubility_g_l;
+	public String calculated_conc_in_moles_liter;
+	public String solubility_mole_fraction;
+	public String solvent_MW_g_mol;
+	public static final String[] fieldNames = {"Experiment_Number_900_series_refer_to_external_references","sample_or_citation","ref","solute","DONOTUSE","solute_SMILES","solvent","solvent_SMILES","concentration_M","wiki_page","gONS","notes","identifier","solute_type","solubility_solute_mass_g","solvent_mass_g","solvent_density_g_ml","solute_density_g_ml_from_ChemSpider_prediction","solvent_volume_ml","solute_volume_ml","total_vol_ml","solute_MW","moles_solute","calculated_concentration_M_assumes_no_expansion_or_contraction_upon_mixing","calc_conc_M_from_g_100ml","liquid_at_room_temp_y_n","solute_reacts_with_solvent","csid","TRUE","solubility_g_l","calculated_conc_in_moles_liter","solubility_mole_fraction","solvent_MW_g_mol"};
+
 	public static final String lastUpdated = "12/04/2020";
 	public static final String sourceName = ExperimentalConstants.strSourceBradley;
-	
-	public static Vector<RecordBradley> parseBradleyRecordsFromExcel() {
-		Vector<RecordBradley> records = new Vector<RecordBradley>();
-		String folderNameExcel = "excel files";
-		String mainFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
-		String excelFilePath = mainFolder + File.separator+folderNameExcel;
-		File folder = new File(excelFilePath);
-		String[] filenames = folder.list();
-		for (String filename:filenames) {
-			if (filename.endsWith(".xlsx")) {
-				try {
-					String filepath = excelFilePath+File.separator+filename;
-					String date = DownloadWebpageUtilities.getStringCreationDate(filepath);
-					if (!date.equals(lastUpdated)) {
-						System.out.println(sourceName+" warning: Last updated date does not match creation date of file "+filename);
-					}
-					FileInputStream fis = new FileInputStream(new File(filepath));
-					Workbook wb = new XSSFWorkbook(fis);
-					Sheet sheet = wb.getSheetAt(0);
-					Row headerRow = sheet.getRow(0);
-					int soluteIndex = -1;
-					int citationIndex = -1;
-					int refIndex = -1;
-					int soluteSMILESIndex = -1;
-					int concIndex = -1;
-					int notesIndex = -1;
-					for (Cell cell:headerRow) {
-						cell.setCellType(Cell.CELL_TYPE_STRING);
-						String header = cell.getStringCellValue().toLowerCase();
-						int col = cell.getColumnIndex();
-						
-						if (header.equals("solute")) {
-							soluteIndex = col;
-							soluteSMILESIndex = col+2;
-						} else if (header.equals("sample or citation")) { citationIndex = col;
-						} else if (header.equals("ref")) { refIndex = col;
-						} else if (header.equals("concentration (m)")) { concIndex = col;
-						} else if (header.contains("notes")) { notesIndex = col;
-						}
-					}
-					int rows = sheet.getLastRowNum();
-					for (int i = 1; i < rows; i++) {
-						Row row = sheet.getRow(i);
-						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
-						RecordBradley br = new RecordBradley();
-						br.solute = StringEscapeUtils.escapeHtml4(row.getCell(soluteIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
-						br.citation = row.getCell(citationIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-						br.refURL = row.getCell(refIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-						br.soluteSMILES = row.getCell(soluteSMILESIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-						br.concentration = row.getCell(concIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-						br.notes = row.getCell(notesIndex,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
-						if (br.solute!=null && !br.solute.isBlank()) { records.add(br); }
-					}
-					wb.close();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-		}
+
+	private static final String fileName = "Water Solubility Subset_v2.xlsx";
+
+	public static Vector<JsonObject> parseBradleyRecordsFromExcel() {
+		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
+		Vector<JsonObject> records = esr.parseRecordsFromExcel(3);
 		return records;
 	}
 }

@@ -7,12 +7,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonObject;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 
 public class ParseTakahashi extends Parse {
+	
 	public ParseTakahashi() {
 		sourceName = ExperimentalConstants.strSourceTakahashi;
 		this.init();
@@ -27,7 +30,7 @@ public class ParseTakahashi extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordTakahashi> records = RecordTakahashi.parseTakahashiRecordsFromExcel();
+		Vector<JsonObject> records = RecordTakahashi.parseTakahashiRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -77,7 +80,7 @@ public class ParseTakahashi extends Parse {
 		
 		er.chemical_name = tr.testMaterial;
 		er.casrn = tr.casNo;
-		er.property_name = ExperimentalConstants.strEyeIrritation;
+		er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
 		er.property_value_string = "Draize score (binary classification): " + tr.draizeScore100;
 	
 		er.property_value_point_estimate_original = getTakahashiBinary(tr.draizeScore100);
@@ -95,6 +98,7 @@ public class ParseTakahashi extends Parse {
 	}
 	
 	private double getTakahashiBinary(String draizeScore) {
+		if (draizeScore==null) { return -1.0; }
 		if (draizeScore.contains("NI")) {
 			return 0.0;
 		} else if (draizeScore.contains("I")) {

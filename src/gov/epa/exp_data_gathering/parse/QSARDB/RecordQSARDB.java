@@ -2,7 +2,6 @@ package gov.epa.exp_data_gathering.parse.QSARDB;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Date;
 import java.util.Vector;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -85,7 +84,9 @@ public class RecordQSARDB {
 						RecordQSARDB qr = new RecordQSARDB();
 						qr.reference = getReference;
 						qr.url = getURL;
-						qr.name = row.getCell(nameIndex).getStringCellValue().replaceAll("′", "'");
+						String name = row.getCell(nameIndex).getStringCellValue().replaceAll("′", "'");
+						if (name.trim().endsWith("i")) { name = name.trim().substring(0, name.length() - 1); }
+						qr.name = name;
 						qr.casrn = row.getCell(casrnIndex).getStringCellValue();
 						if (logSIndex >= 0) { qr.logS = row.getCell(logSIndex).getStringCellValue(); }
 						if (mpIndex >= 0) { qr.mp = row.getCell(mpIndex).getStringCellValue(); }

@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import com.google.gson.JsonObject;
+
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
@@ -28,7 +30,7 @@ public class ParseCFSAN extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordCFSAN> records = RecordCFSAN.parseCFSANRecordsFromExcel();
+		Vector<JsonObject> records = RecordCFSAN.parseCFSANRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -79,7 +81,7 @@ public class ParseCFSAN extends Parse {
 			
 			er.chemical_name = cr.chemName;
 			er.casrn = cr.casNr;
-			er.property_name = ExperimentalConstants.strEyeIrritation;
+			er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
 			er.property_value_string = cr.activity;
 			er.property_value_point_estimate_original = Double.parseDouble(cr.activity);
 			er.property_value_point_estimate_final = er.property_value_point_estimate_original;
