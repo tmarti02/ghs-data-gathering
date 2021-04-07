@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gson.JsonObject;
 
@@ -17,9 +19,13 @@ import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 
 public class ParseICF extends Parse {
+	
+	private static Pattern bpPressure;
 
 	public ParseICF() {
 		sourceName = ExperimentalConstants.strSourceICF;
+		// Compile pattern here and generate matcher later to avoid excessive computation
+		bpPressure = Pattern.compile("at ([0-9]+\\.?[0-9]*) mm");
 		this.init();
 	}
 
@@ -68,8 +74,10 @@ public class ParseICF extends Parse {
 	}
 	
 	private void addExperimentalRecord(RecordICF r, ExperimentalRecords recordsExperimental) {
+		
 		ExperimentalRecord er = new ExperimentalRecord();
 		er.casrn = r.casrn;
+		if (er.casrn!=null && er.casrn.equals("unsure")) { er.casrn = null; }
 		er.chemical_name = r.chemical_name;
 		er.synonyms = r.synonyms;
 		er.url = r.url;
@@ -110,6 +118,10 @@ public class ParseICF extends Parse {
 			er.property_value_min_original = Double.parseDouble(r.property_value_min);
 			er.property_value_max_original = Double.parseDouble(r.property_value_max);
 			er.property_value_string = "Value: " + r.property_value_min + "-" + r.property_value_max;
+		} else if (r.property_value_max!=null && !r.property_value_max.isBlank()) {
+			er.property_value_point_estimate_original = Double.parseDouble(r.property_value_max);
+			er.property_value_numeric_qualifier = "<";
+			er.property_value_string = "Value: <" + r.property_value_max;
 		}
 		
 		if (r.property_value_units!=null) {
@@ -146,6 +158,13 @@ public class ParseICF extends Parse {
 			double p = Double.parseDouble(r.pressure_atm);
 			er.pressure_mmHg = ParseUtilities.formatDouble(p*UnitConverter.atm_to_mmHg);
 			er.property_value_string += "; Pressure: " + r.pressure_atm + " atm";
+		} else if (er.property_name.equals(ExperimentalConstants.strBoilingPoint) && r.note!=null) {
+			Matcher bpPressureMatcher = bpPressure.matcher(r.note);
+			if (bpPressureMatcher.find()) {
+				double p = Double.parseDouble(bpPressureMatcher.group(1));
+				er.pressure_mmHg = ParseUtilities.formatDouble(p);
+				er.property_value_string += "; Pressure: " + bpPressureMatcher.group();
+			}
 		}
 		
 		if (r.pH!=null && !r.pH.isBlank()) {
@@ -163,6 +182,33 @@ public class ParseICF extends Parse {
 		
 		if (r.Uncertainty!=null && !r.Uncertainty.isBlank()) {
 			er.updateNote("Uncertainty: (+/-) " + ParseUtilities.formatDouble(Double.parseDouble(r.Uncertainty)));
+		}
+		
+		if (er.note!=null) {
+			if (er.note.contains("seawater") || er.note.toLowerCase().contains("nacl solution")) {
+				er.keep = false;
+				er.reason = "Non-aqueous solubility";
+			}
+			
+			if (er.note.contains("salt")) {
+				er.keep = false;
+				er.reason = "Solubility for salt form with wrong CAS";
+			}
+			
+			if (er.note.contains("extrapolated")) {
+				er.keep = false;
+				er.reason = "Extrapolated value";
+			}
+			
+			if (er.note.contains("Author suggests this method inaccurate")) {
+				er.keep = false;
+				er.reason = "Author suggests this method inaccurate";
+			}
+			
+			if (er.note.contains("Unclear if experimental")) {
+				er.keep = false;
+				er.reason = "Unclear if experimental";
+			}
 		}
 		
 		uc.convertRecord(er);

@@ -23,6 +23,7 @@ import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ToxParseEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteISIS;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteOriginal;
+import gov.epa.exp_data_gathering.parse.ICF.ParseICF;
 import gov.epa.exp_data_gathering.parse.Lebrun.ParseLebrun;
 import gov.epa.exp_data_gathering.parse.LookChem.ParseLookChem;
 import gov.epa.exp_data_gathering.parse.NICEATM.ParseNICEATM;
@@ -281,6 +282,9 @@ public class Parse {
 		case ExperimentalConstants.strSourceTakahashi:
 			p = new ParseTakahashi();
 			break;
+		case ExperimentalConstants.strSourceICF:
+			p = new ParseICF();
+			break;
 		default:
 			System.out.println("Need to add parse case for "+sourceName);
 			return;
@@ -304,12 +308,11 @@ public class Parse {
 				ExperimentalConstants.strSourcePubChem,
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander,
-				ExperimentalConstants.strSourceEpisuiteISIS};
+				ExperimentalConstants.strSourceEpisuiteISIS,
+				ExperimentalConstants.strSourceICF};
 		
 		String[] reparseSources = {
-				ExperimentalConstants.strSourceADDoPT,
-				ExperimentalConstants.strSourceAqSolDB,
-				ExperimentalConstants.strSourceBradley
+				ExperimentalConstants.strSourceICF
 				};
 		
 		boolean reparse=true;
@@ -317,7 +320,6 @@ public class Parse {
 
 		String [] parseSources=reparseSources;
 		if (reparseAll) parseSources=allSources;
-
 		if (reparse) {
 			for (String s:parseSources) {
 				runParse(s,recordType);
@@ -376,8 +378,8 @@ public class Parse {
 	
 	
 	public static void main(String[] args) {
-//		parsePhyschem();
-		parseTox();
+		parsePhyschem();
+//		parseTox();
 	}
 }
 
