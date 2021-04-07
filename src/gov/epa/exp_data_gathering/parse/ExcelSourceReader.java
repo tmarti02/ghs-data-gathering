@@ -220,7 +220,21 @@ public class ExcelSourceReader {
 		sb.append("\t\tVector<JsonObject> records = Record" + sourceName + ".parse" + sourceName + "RecordsFromExcel();\n");
 		sb.append("\t\twriteOriginalRecordsToFile(records);\n\t}\n\n");
 		sb.append("\t@Override\n\tprotected ExperimentalRecords goThroughOriginalRecords() {\n");
-		sb.append("\t\t// TODO\n\t}\n}");
+		sb.append("\t\tExperimentalRecords recordsExperimental=new ExperimentalRecords();\n");
+		sb.append("\t\ttry {\n\t\t\tString jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;\n\t\t\tFile jsonFile = new File(jsonFileName);\n");
+		sb.append("\t\t\tList<Record" + sourceName + "> records" + sourceName + " = new ArrayList<Record" + sourceName + ">();\n");
+		sb.append("\t\t\tRecord" + sourceName + "[] tempRecords = null;\n");
+		sb.append("\t\t\tif (howManyOriginalRecordsFiles==1) {\n\t\t\t\ttempRecords = gson.fromJson(new FileReader(jsonFile), Record" + sourceName + "[].class);\n");
+		sb.append("\t\t\t\tfor (int i = 0; i < tempRecords.length; i++) {\n\t\t\t\t\trecords" + sourceName + ".add(tempRecords[i]);\n\t\t\t\t}\n\t\t\t} else {\n");
+		sb.append("\t\t\t\tfor (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {\n");
+		sb.append("\t\t\t\t\tString batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(\".\")) + \" \" + batch + \".json\";\n");
+		sb.append("\t\t\t\t\tFile batchFile = new File(batchFileName);\n\t\t\t\t\ttempRecords = gson.fromJson(new FileReader(batchFile), Record" + sourceName + "[].class);\n");
+		sb.append("\t\t\t\t\tfor (int i = 0; i < tempRecords.length; i++) {\n\t\t\t\t\t\trecords" + sourceName + ".add(tempRecords[i]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\n");
+		sb.append("\t\t\tIterator<Record" + sourceName + "> it = records" + sourceName + ".iterator();\n");
+		sb.append("\t\t\twhile (it.hasNext()) {\n\t\t\t\tRecord" + sourceName + " r = it.next();\n\t\t\t\taddExperimentalRecord(r,recordsExperimental);\n");
+		sb.append("\t\t\t\t// TODO Write addExperimentalRecord() method to parse this source.\n\t\t\t}\n");
+		sb.append("\t\t} catch (Exception ex) {\n\t\t\tex.printStackTrace();\n\t\t}\n\n\t\treturn recordsExperimental;\n");
+		sb.append("\t}\n}");
 		
 		return sb.toString();
 	}
