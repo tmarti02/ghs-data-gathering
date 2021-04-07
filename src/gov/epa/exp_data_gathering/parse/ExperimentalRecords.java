@@ -381,6 +381,37 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	public void toExcel_File(String filePath) {
 		toExcel_File(filePath,ExperimentalRecord.outputFieldNames);
 	}
+	
+	public void toExcel_File_Split(String filePath) {
+		
+		File file=new File(filePath);
+		String fileNameExcelExperimentalRecords=file.getName();
+		String mainFolder=file.getParentFile().getAbsolutePath();
+		
+		
+		if (size() <= 100000) {
+			toExcel_File(filePath);
+		} else {
+			ExperimentalRecords temp = new ExperimentalRecords();
+			Iterator<ExperimentalRecord> it = iterator();
+			int i = 0;
+			int batch = 0;
+			while (it.hasNext()) {
+				temp.add(it.next());
+				i++;
+				if (i!=0 && i%100000==0) {
+					batch++;
+					String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + " " + batch + ".xlsx";
+					temp.toExcel_File(mainFolder+File.separator+batchFileName);
+					temp.clear();
+				}
+			}
+			batch++;
+			String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + " " + batch + ".xlsx";
+			temp.toExcel_File(mainFolder+File.separator+batchFileName);
+		}
+	}
+	
 
 	public ExperimentalRecords dumpBadRecords() {
 		ExperimentalRecords recordsBad = new ExperimentalRecords();
