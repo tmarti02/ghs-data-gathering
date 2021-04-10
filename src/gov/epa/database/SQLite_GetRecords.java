@@ -130,8 +130,8 @@ public class SQLite_GetRecords {
 
 			// The column count starts from 1
 			for (int i = 1; i <= columnCount; i++ ) {
-				String name = rsmd.getColumnName(i);
-				//				System.out.println(name);								
+				String name = rsmd.getColumnLabel(i);
+												
 				String val=rs.getString(i);
 
 				//				System.out.println(name+"\t"+val);
