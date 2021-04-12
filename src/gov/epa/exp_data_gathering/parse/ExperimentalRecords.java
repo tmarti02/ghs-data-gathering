@@ -15,11 +15,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.poi.common.usermodel.Hyperlink;
+import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -295,8 +293,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		writeSheet(headers, "Records",true,wb,styleURL);
 		writeSheet(headers, "Records_Bad",false,wb,styleURL);
 		
-		try {
-			OutputStream fos = new FileOutputStream(filePath);
+		try (OutputStream fos = new FileOutputStream(filePath)) {
 			wb.write(fos);
 			wb.close();
 		} catch (Exception ex) {
@@ -330,7 +327,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		}
 		int recCurrentRow = 2;
 		for (ExperimentalRecord er:this) {
-			if (!er.keep==keep) continue; 
+			if (!er.keep==keep) continue;
 			
 			Class erClass = er.getClass();
 			Object value = null;
@@ -346,14 +343,17 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 					if (value==null) continue;
 					
 					if (headers[i].contentEquals("url")) {
+						String strValue = (String) value;
 						Cell cell = row.createCell(i);     						
 						Hyperlink href = wb.getCreationHelper().createHyperlink(HyperlinkType.URL);
-						cell.setHyperlink((org.apache.poi.ss.usermodel.Hyperlink) href);
-						href.setAddress((String)value);
+						href.setAddress(strValue);
+						cell.setHyperlink(href);
 						cell.setCellStyle(styleURL);
-						cell.setCellValue(value+"");
+						
+						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
+						cell.setCellValue(strValue);
 
-					}else if (!(value instanceof Double)) { 
+					} else if (!(value instanceof Double)) { 
 						String strValue = ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
 						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
 						row.createCell(i).setCellValue(strValue);
@@ -389,7 +389,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		String mainFolder=file.getParentFile().getAbsolutePath();
 		
 		
-		if (size() <= 100000) {
+		if (size() <= 65000) {
 			toExcel_File(filePath);
 		} else {
 			ExperimentalRecords temp = new ExperimentalRecords();
@@ -399,7 +399,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			while (it.hasNext()) {
 				temp.add(it.next());
 				i++;
-				if (i!=0 && i%100000==0) {
+				if (i!=0 && i%65000==0) {
 					batch++;
 					String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + " " + batch + ".xlsx";
 					temp.toExcel_File(mainFolder+File.separator+batchFileName);

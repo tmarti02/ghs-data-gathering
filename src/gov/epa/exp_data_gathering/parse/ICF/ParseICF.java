@@ -195,9 +195,9 @@ public class ParseICF extends Parse {
 				er.reason = "Solubility for salt form with wrong CAS";
 			}
 			
-			if (er.note.contains("extrapolated")) {
+			if (er.note.contains("not found in cited source")) {
 				er.keep = false;
-				er.reason = "Extrapolated value";
+				er.reason = "Not found in cited source";
 			}
 			
 			if (er.note.contains("Author suggests this method inaccurate")) {
