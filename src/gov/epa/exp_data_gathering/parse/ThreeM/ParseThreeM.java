@@ -25,7 +25,7 @@ import gov.epa.exp_data_gathering.parse.UnitConverter;
 public class ParseThreeM extends Parse {
 
 	public ParseThreeM() {
-		sourceName = "ThreeM";
+		sourceName = ExperimentalConstants.strSource3M;
 		this.init();
 	}
 
@@ -92,12 +92,13 @@ public class ParseThreeM extends Parse {
 				er.property_name = ExperimentalConstants.strVaporPressure;
 			} else if (r3m.property.toLowerCase().equals("normal boiling point")) {
 				er.property_name = ExperimentalConstants.strBoilingPoint;
+				er.pressure_mmHg = "760";
 			} else if (r3m.property.equals("Freezing Temperature")) {
 				er.property_name = ExperimentalConstants.strMeltingPoint;
 			} else if (r3m.property.toLowerCase().contains("partition") || r3m.property.toLowerCase().contains("octanol")) {
 				er.property_name = ExperimentalConstants.strLogKow;
 			} else if (r3m.property.toLowerCase().equals("k_oc")) {
-				er.property_name = ExperimentalConstants.strLogKOC; // need to convert to log units
+				er.property_name = ExperimentalConstants.strLogKOC;
 			} else if (r3m.property.toLowerCase().equals("bcf")) {
 				er.property_name = ExperimentalConstants.strLogBCF;
 			} else if (r3m.property.toLowerCase().equals("solubility in water")) {
@@ -108,8 +109,10 @@ public class ParseThreeM extends Parse {
 				er.property_name = ExperimentalConstants.strMeltingPoint;
 			} else if (r3m.property.toLowerCase().contains("dissociation constant")) {
 				er.property_name = ExperimentalConstants.str_pKA;
-
+			} else if (r3m.property.toLowerCase().equals("Pka")) {
+				er.property_name = ExperimentalConstants.str_pKA;
 			}
+		
 			
 			
 			else {
@@ -127,9 +130,12 @@ public class ParseThreeM extends Parse {
 			} else if (r3m.property_value_units.equals("not determined")) {
 				er.property_value_units_original = "";
 			} else { 
-				er.property_value_units_original = r3m.property_value_units;
+				er.property_value_units_original = r3m.property_value_units.replace("mm Hg", "mmHg");
+				if (r3m.property_value_units != null && r3m.property_value_units.equals("mm"))
+					er.property_value_units_original = ExperimentalConstants.str_mmHg;
 		}
 		}
+		
 		
 		if (r3m.property_value!=null && !r3m.property_value.isBlank() && 
 				!(r3m.property_value.equals("not determined") || r3m.property_value.equals("ff 3.7") || r3m.property_value.equals("ff 349") || r3m.property_value.contains("+"))) {
@@ -165,7 +171,9 @@ public class ParseThreeM extends Parse {
 				getTemperatureRange(er, r3m.property_measurement_conditions);
 			}
 			else {
-		ParseUtilities.getTemperatureCondition(er, r3m.property_measurement_conditions.replace("degrees", ""));
+				ParseUtilities.getTemperatureCondition(er, r3m.property_measurement_conditions.replace("degrees", "").replace("+", ""));
+				if (r3m.property_measurement_conditions.contains("+-1"))
+					er.temperature_C = 20.0;
 			}
 		ParseUtilities.getPressureCondition(er, r3m.property_measurement_conditions, "r3m");
 		}
@@ -179,6 +187,7 @@ public class ParseThreeM extends Parse {
 				er.keep = false;
 				er.reason = "empty property";
 			} else if (er.property_name != null && (er.property_name.toLowerCase().contains("so2")
+					|| er.property_name.toLowerCase().contains("sof2")
 					|| er.property_name.toLowerCase().contains("kraft")
 					|| er.property_name.toLowerCase().contains("hydrolysis")
 					|| er.property_name.toLowerCase().contains("acetone")
@@ -205,14 +214,67 @@ public class ParseThreeM extends Parse {
 					|| er.property_name.toLowerCase().contains("relative density")
 					|| er.property_name.toLowerCase().contains("ethanol")
 					|| er.property_name.toLowerCase().contains("ld")
+					|| er.property_name.toLowerCase().equals("log k_aw")
 
 
 		)) {
 				er.keep = false;
 				er.reason = "not a physicochemical property";
 				
+			} else if (er.property_name.toLowerCase().equals("solubility")){
+				er.keep = false;
+				er.reason = "calculation/prediction";
 			}
 		
+		if (r3m.property_value.equals("") && r3m.property_value_max.equals("") && r3m.property_value_min.equals("")) {
+			er.keep = false;
+			er.reason = "no data";
+		} else if ((er.pressure_mmHg != null) && (Double.parseDouble(er.pressure_mmHg) < 736.0)) {
+			er.keep = false;
+			er.reason = "not atmospheric pressure";
+		}
+		if (er.property_name != null && (er.property_name == ExperimentalConstants.strLogKow || er.property_name.equals("K_ow"))) {
+			er.property_name = ExperimentalConstants.strLogKow;
+			if (er.property_value_point_estimate_final != null) {
+				er.property_value_point_estimate_final = Math.log10(er.property_value_point_estimate_final);	
+			} else if (er.property_value_min_final != null) {
+				er.property_value_min_final = Math.log10(er.property_value_min_final);
+			}
+		} else if (er.property_name != null && (er.property_name.equals(ExperimentalConstants.strLogKOC))){
+			if (er.property_value_max_final != null && er.property_value_min_final != null) {
+				er.property_value_min_final = Math.log10(er.property_value_min_final);
+				er.property_value_max_final = Math.log10(er.property_value_min_final);
+			}	else if (er.property_value_point_estimate_final != null) { er.property_value_point_estimate_final = Math.log10(er.property_value_point_estimate_final); }
+			else {er.keep = false; er.reason = "no data";}
+		
+			
+
+		}
+
+		if (er.property_name != null && er.casrn != null && er.property_name == ExperimentalConstants.strLogKow && er.casrn.equals("2795-39-3")) {
+			er.keep = false;
+			er.reason = "unspecified or out of bounds logP";
+		} else if (er.chemical_name.equals("Chemical name redacted")) {
+			er.keep = false;
+			er.reason = "no identifying information";
+		} else if (r3m.comments.contains("Testing was not conducted")) {
+			er.keep = false;
+			er.reason = "testing was not conducted";
+		} else if (r3m.comments.contains("very likely reduced pressure")) {
+			er.keep = false;
+			er.reason = "very likely reduced pressure";
+		} else if (er.property_name !=null && er.property_name.equals(ExperimentalConstants.strWaterSolubility) && !(er.property_value_units_final.equals(ExperimentalConstants.str_g_L))) {
+			er.keep = false;
+			er.reason = "not convertible or redundant";
+		} else if (er.property_value_units_final != null && er.property_value_units_final.equals("torr")) {
+			er.keep=false;
+			er.reason = "bad records";
+		}
+		
+		if (er.property_name != null && er.property_name.toLowerCase().equals("log k_ow")) {
+			er.property_name = ExperimentalConstants.strLogKow;
+		} 
+		// else if (er.property_name.toLowerCase().equals(""))
 		
 		recordsExperimental.add(er);
 

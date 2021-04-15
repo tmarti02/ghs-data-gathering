@@ -26,7 +26,7 @@ public class RecordThreeM {
 	public static final String lastUpdated = "04/08/2021";
 	public static final String sourceName = "ThreeM";
 
-	private static final String fileName = "physchem_brief_extraction_16mar2021.xlsx";
+	private static final String fileName = "physchem_brief_extraction_16mar2021_CR_edits.xlsx";
 
 	public static Vector<JsonObject> parseThreeMRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
