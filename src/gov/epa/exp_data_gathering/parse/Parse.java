@@ -334,11 +334,7 @@ public class Parse {
 		}
 		
 		String[] parseSources = {
-				ExperimentalConstants.strSourceNICEATM,
 				ExperimentalConstants.strSourceCFSAN,
-				ExperimentalConstants.strSourceLebrun,
-				ExperimentalConstants.strSourceDRD,
-				ExperimentalConstants.strSourceTakahashi
 		};
 				
 		if (reparse) for (String s:parseSources) runParse(s,recordType);
@@ -359,8 +355,8 @@ public class Parse {
 	
 	
 	public static void main(String[] args) {
-		parsePhyschem();
-//		parseTox();
+//		parsePhyschem();
+		parseTox();
 	}
 }
 

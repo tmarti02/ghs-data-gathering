@@ -93,6 +93,12 @@ public class ParseCFSAN extends Parse {
 				er.keep=false;
 				er.reason="Ambiguous eye irritation score";
 			}
+			
+			if (er.property_value_point_estimate_final==0) {
+				er.keep=false;
+				er.reason="Non-irritants were gleaned from pharmaceutical adverse event data rather than in vivo testing";
+			}
+			
 			records.add(er);
 		}
 	}
