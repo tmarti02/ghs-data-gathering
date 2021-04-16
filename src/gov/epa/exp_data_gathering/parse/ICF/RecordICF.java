@@ -41,7 +41,7 @@ public class RecordICF {
 	public static final String lastUpdated = "04/06/2021";
 	public static final String sourceName = ExperimentalConstants.strSourceICF;
 
-	private static final String fileName = "physchem_data_QCed_w_url_and_longref.xlsx";
+	private static final String fileName = "physchem_data_QCed_w_url_and_longref_checked.xlsx";
 
 	public static Vector<JsonObject> parseICFRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);

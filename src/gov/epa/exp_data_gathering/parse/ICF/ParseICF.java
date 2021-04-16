@@ -114,7 +114,7 @@ public class ParseICF extends Parse {
 		if (r.property_value_point_estimate!=null && !r.property_value_point_estimate.isBlank()) {
 			er.property_value_point_estimate_original = Double.parseDouble(r.property_value_point_estimate);
 			er.property_value_string = "Value: " + r.property_value_point_estimate;
-		} else if (r.property_value_min!=null && !r.property_value_min.isBlank()) {
+		} else if (r.property_value_min!=null && !r.property_value_min.isBlank() && r.property_value_max!=null && !r.property_value_max.isBlank()) {
 			er.property_value_min_original = Double.parseDouble(r.property_value_min);
 			er.property_value_max_original = Double.parseDouble(r.property_value_max);
 			er.property_value_string = "Value: " + r.property_value_min + "-" + r.property_value_max;
@@ -122,6 +122,10 @@ public class ParseICF extends Parse {
 			er.property_value_point_estimate_original = Double.parseDouble(r.property_value_max);
 			er.property_value_numeric_qualifier = "<";
 			er.property_value_string = "Value: <" + r.property_value_max;
+		} else if (r.property_value_min!=null && !r.property_value_min.isBlank()) {
+			er.property_value_point_estimate_original = Double.parseDouble(r.property_value_min);
+			er.property_value_numeric_qualifier = ">";
+			er.property_value_string = "Value: >" + r.property_value_min;
 		}
 		
 		if (r.property_value_units!=null) {
@@ -150,11 +154,11 @@ public class ParseICF extends Parse {
 			er.property_value_string += "; Temp: " + r.temperature_C + " C";
 		}
 		
-		if (r.pressure_kPa!=null && !r.pressure_kPa.isBlank()) {
+		if (r.pressure_kPa!=null && !r.pressure_kPa.isBlank() && !er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
 			double p = Double.parseDouble(r.pressure_kPa);
 			er.pressure_mmHg = ParseUtilities.formatDouble(p*UnitConverter.kPa_to_mmHg);
 			er.property_value_string += "; Pressure: " + r.pressure_kPa + " kPa";
-		} else if (r.pressure_atm!=null && !r.pressure_atm.isBlank()) {
+		} else if (r.pressure_atm!=null && !r.pressure_atm.isBlank() && !er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
 			double p = Double.parseDouble(r.pressure_atm);
 			er.pressure_mmHg = ParseUtilities.formatDouble(p*UnitConverter.atm_to_mmHg);
 			er.property_value_string += "; Pressure: " + r.pressure_atm + " atm";
