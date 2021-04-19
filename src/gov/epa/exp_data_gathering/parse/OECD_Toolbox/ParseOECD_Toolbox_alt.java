@@ -122,6 +122,12 @@ public class ParseOECD_Toolbox_alt extends Parse {
 			String number_alone_string = numbermatcher.group(0);
 			er.property_value_point_estimate_final = Double.parseDouble(number_alone_string);
 		}
+		if (recOT.species != null && (!(recOT.species.equals("Test organisms (species): Rabbit")))) {
+			er.keep= false;
+			er.reason="not a rabbit test";
+			if (recOT.species != null)
+				er.note = recOT.species;
+		}
 
 		records.add(er);
 	}
