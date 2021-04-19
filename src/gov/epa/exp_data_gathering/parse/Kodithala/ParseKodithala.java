@@ -1,4 +1,4 @@
-package gov.epa.exp_data_gathering.parse.Bagley;
+package gov.epa.exp_data_gathering.parse.Kodithala;
 
 import java.io.File;
 import java.io.FileReader;
@@ -14,6 +14,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.Hayashi.ParseHayashi;
 import gov.epa.exp_data_gathering.parse.OECD_Toolbox.ParseOECD_Toolbox_alt;
 
 import java.util.regex.Matcher;
@@ -21,10 +22,10 @@ import java.util.regex.Pattern;
 
 import com.google.gson.JsonObject;
 
-public class ParseBagley extends Parse {
+public class ParseKodithala extends Parse {
 
-	public ParseBagley() {
-		sourceName = "Bagley"; // TODO Consider creating ExperimentalConstants.strSourceBagley instead.
+	public ParseKodithala() {
+		sourceName = "Kodithala"; // TODO Consider creating ExperimentalConstants.strSourceKodithala instead.
 		this.init();
 
 		// TODO Is this a toxicity source? If so, rename original and experimental records files here.
@@ -32,7 +33,7 @@ public class ParseBagley extends Parse {
 
 	@Override
 	protected void createRecords() {
-		Vector<JsonObject> records = RecordBagley.parseBagleyRecordsFromExcel();
+		Vector<JsonObject> records = RecordKodithala.parseKodithalaRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 
@@ -42,27 +43,27 @@ public class ParseBagley extends Parse {
 		try {
 			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
 			File jsonFile = new File(jsonFileName);
-			List<RecordBagley> recordsBagley = new ArrayList<RecordBagley>();
-			RecordBagley[] tempRecords = null;
+			List<RecordKodithala> recordsKodithala = new ArrayList<RecordKodithala>();
+			RecordKodithala[] tempRecords = null;
 			if (howManyOriginalRecordsFiles==1) {
-				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordBagley[].class);
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordKodithala[].class);
 				for (int i = 0; i < tempRecords.length; i++) {
-					recordsBagley.add(tempRecords[i]);
+					recordsKodithala.add(tempRecords[i]);
 				}
 			} else {
 				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
 					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
 					File batchFile = new File(batchFileName);
-					tempRecords = gson.fromJson(new FileReader(batchFile), RecordBagley[].class);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordKodithala[].class);
 					for (int i = 0; i < tempRecords.length; i++) {
-						recordsBagley.add(tempRecords[i]);
+						recordsKodithala.add(tempRecords[i]);
 					}
 				}
 			}
 
-			Iterator<RecordBagley> it = recordsBagley.iterator();
+			Iterator<RecordKodithala> it = recordsKodithala.iterator();
 			while (it.hasNext()) {
-				RecordBagley r = it.next();
+				RecordKodithala r = it.next();
 				addExperimentalRecord(r,recordsExperimental);
 				// TODO Write addExperimentalRecord() method to parse this source.
 			}
@@ -72,28 +73,31 @@ public class ParseBagley extends Parse {
 
 		return recordsExperimental;
 	}
-private void addExperimentalRecord(RecordBagley r, ExperimentalRecords recordsExperimental) {
-	SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
-	Date date = new Date();  
-	String strDate=formatter.format(date);
-	String dayOnly = strDate.substring(0,strDate.indexOf(" "));		
 
-	ExperimentalRecord er=new ExperimentalRecord();
-	er.date_accessed=dayOnly;
-	er.source_name=sourceName;
-	er.property_name=ExperimentalConstants.strSkinIrritationPII;
-	er.property_value_units_final=ExperimentalConstants.str_pii;
-	er.chemical_name=r.Chemical;
-	er.property_value_string=r.PII;
-	er.note = "Purity: " + r.Purity;
-	er.original_source_name="Bagley DM, Gardner JR, Holland G, Lewis RW, Regnier JF, Stringer DA, Walker AP. Skin irritation: Reference chemicals data bank. Toxicol In Vitro. 1996 Feb;10(1):1-6. doi: 10.1016/0887-2333(95)00099-2. PMID: 20650176.";
-	recordsExperimental.add(er);
+	private void addExperimentalRecord(RecordKodithala r, ExperimentalRecords recordsExperimental) {
+		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+		Date date = new Date();  
+		String strDate=formatter.format(date);
+		String dayOnly = strDate.substring(0,strDate.indexOf(" "));		
+
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.date_accessed=dayOnly;
+		er.source_name=sourceName;
+		er.property_name=ExperimentalConstants.strSkinIrritationPII;
+		er.property_value_units_final=ExperimentalConstants.str_pii;
+		er.chemical_name=r.Compound_name;
+		er.property_value_point_estimate_final = Double.parseDouble(r.Observed_PII);
+		recordsExperimental.add(er);
 
 		
 	}
 	
+	
 	public static void main(String[] args) {
-		ParseBagley p = new ParseBagley();
+		ParseKodithala p = new ParseKodithala();
 		p.createFiles();
+		
+
 	}
+
 }

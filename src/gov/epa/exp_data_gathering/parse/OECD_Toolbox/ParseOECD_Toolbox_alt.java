@@ -2,7 +2,9 @@ package gov.epa.exp_data_gathering.parse.OECD_Toolbox;
 
 import java.io.File;
 import java.io.FileReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -11,6 +13,9 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class ParseOECD_Toolbox_alt extends Parse {
@@ -89,44 +94,43 @@ public class ParseOECD_Toolbox_alt extends Parse {
 	 * @param records
 	 */
 	private void addExperimentalRecords(RecordOECD_Toolbox_alt recOT, ExperimentalRecords records) {
+		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+		Date date = new Date();  
+		String strDate=formatter.format(date);
+		String dayOnly = strDate.substring(0,strDate.indexOf(" "));		
 
 		ExperimentalRecord er=new ExperimentalRecord();
-		
+		er.date_accessed= dayOnly;
 		er.source_name=sourceName;		
 		er.chemical_name=recOT.chemical_name;
 		er.casrn=recOT.CAS;
 		er.smiles=recOT.smiles;
-		// er.property_name=ExperimentalConstants.strSkinSensitizationLLNA;
-		er.property_name="Skin irritation";
-		er.original_source_name=recOT.reference;
-		
+		er.property_name=ExperimentalConstants.strSkinIrritationPII;
+		er.original_source_name=recOT.reference;		
 		er.property_value_string=recOT.PII;
-		/*		
-		if (recOT.EC3.contentEquals("Negative")) {
-			er.property_value_point_estimate_final=Double.valueOf(0);
-			er.property_value_units_final="binary";
-		} else if (recOT.EC3.contentEquals("Strongly positive") || recOT.EC3.contentEquals("Weakly positive")) {
-			er.property_value_point_estimate_final=Double.valueOf(1);
-			er.property_value_units_final="binary";
-		} else {
-			try {
-				double EC3=Double.parseDouble(recOT.EC3);							
-				er.property_value_point_estimate_final=Double.valueOf(1);
-				er.property_value_units_final="binary";
-				
-			}  catch (Exception ex) {				
-				er.keep=false;
-				er.reason="Ambiguous value";
-				System.out.println(recOT.CAS+"\t"+recOT.EC3+"\tAmbiguous");				
-			}
+		er.property_value_units_final= ExperimentalConstants.str_pii;
+		// handles the numeric qualifiers and then assigns a value to property value point estimate final.
+		Pattern digitpattern = Pattern.compile("\\d");
+		Matcher matcher = digitpattern.matcher(recOT.PII);
+		if(matcher.find()) {
+			int index = matcher.start();
+			er.property_value_numeric_qualifier = ParseUtilities.getNumericQualifier(recOT.PII, index);
 		}
-		*/
+		Pattern numericpat = Pattern.compile("[0-9]*\\.?[0-9]+");
+		Matcher numbermatcher = numericpat.matcher(recOT.PII);
+		if(numbermatcher.find()) {
+			String number_alone_string = numbermatcher.group(0);
+			er.property_value_point_estimate_final = Double.parseDouble(number_alone_string);
+		}
+
 		records.add(er);
 	}
 	
 	public static void main(String[] args) {
-		ParseOECD_Toolbox p = new ParseOECD_Toolbox("tox");
+		ParseOECD_Toolbox_alt p = new ParseOECD_Toolbox_alt("tox");
 		p.createFiles();
+		
+
 	}
 
 }

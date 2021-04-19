@@ -27,6 +27,7 @@ public class ExperimentalConstants {
 	public static final String strRatInhalationLC50="rat_inhalation_LC50";
 	public static final String strSkinSensitizationLLNA="SkinSensitizationLLNA";
 	public static final String strEyeIrritation="EyeIrritation";
+	public static final String strSkinIrritationPII="SkinIrritationPII";
 	
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
@@ -90,6 +91,7 @@ public class ExperimentalConstants {
 	public static final String str_mg_10mL = "mg/10mL";
 	public static final String str_g_10mL = "g/10mL";
 	public static final String str_oz_gal = "oz/gal";
+	public static final String str_pii="PII";
 	
 	//Other:
 	public static final String str_dec="decomposes";
@@ -122,6 +124,7 @@ public class ExperimentalConstants {
 	public static final String strSourceEpisuiteOriginal="EpisuiteOriginal";
 	public static final String strSourceEpisuiteISIS="EpisuiteISIS";
 	public static final String strSourceICF="ICF";
+	public static final String strSource3M="ThreeM";
 	
 	public static final String strSourceOECD_Toolbox="OECD Toolbox";
 	public static final String strSourceNICEATM="NICEATM";
@@ -130,4 +133,7 @@ public class ExperimentalConstants {
 	public static final String strSourceDRD="DRD";
 	public static final String strSourceTakahashi="Takahashi";
 	public static final String strSourceBurkhard="Burkhard";
+	public static final String strSourceHayashi="Hayashi";
+	public static final String strSourceBagley="Bagley";
+	public static final String strSourceKodithala="Kodithala";
 }
