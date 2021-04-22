@@ -21,12 +21,13 @@ public class RecordThreeM {
 	public String property_measurement_conditions;
 	public String comments;
 	public String property_value_method;
-	public static final String[] fieldNames = {"Name","reason_not_extracted","test_substance_name","other_test_substance_name","CASRN","property","property_value","property_value_min","property_value_max","property_value_units","property_measurement_conditions","comments","property_value_method"};
+	public String CR_Notes;
+	public static final String[] fieldNames = {"Name","reason_not_extracted","test_substance_name","other_test_substance_name","CASRN","property","property_value","property_value_min","property_value_max","property_value_units","property_measurement_conditions","comments","property_value_method","CR_Notes"};
 
 	public static final String lastUpdated = "04/08/2021";
 	public static final String sourceName = "ThreeM";
 
-	private static final String fileName = "physchem_brief_extraction_16mar2021_CR_edits.xlsx";
+	private static final String fileName = "physchem_brief_extraction_16mar2021_CRnotes2.xlsx";
 
 	public static Vector<JsonObject> parseThreeMRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);

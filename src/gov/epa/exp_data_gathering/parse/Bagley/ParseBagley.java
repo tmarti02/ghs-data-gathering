@@ -64,7 +64,6 @@ public class ParseBagley extends Parse {
 			while (it.hasNext()) {
 				RecordBagley r = it.next();
 				addExperimentalRecord(r,recordsExperimental);
-				// TODO Write addExperimentalRecord() method to parse this source.
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
