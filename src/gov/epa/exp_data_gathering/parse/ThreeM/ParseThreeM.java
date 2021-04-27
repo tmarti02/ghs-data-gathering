@@ -25,7 +25,7 @@ import gov.epa.exp_data_gathering.parse.UnitConverter;
 public class ParseThreeM extends Parse {
 
 	public ParseThreeM() {
-		sourceName = "Threem";
+		sourceName = "ThreeM";
 		this.init();
 	}
 
@@ -60,11 +60,10 @@ public class ParseThreeM extends Parse {
 			}
 
 			Iterator<RecordThreeM> it = recordsThreeM.iterator();
-			
-			
+						
 			while (it.hasNext()) {
 				RecordThreeM r = it.next();
-				addExperimentalRecord2(r,recordsExperimental);
+				addExperimentalRecord(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -94,7 +93,7 @@ public class ParseThreeM extends Parse {
 	
 
 
-	private void addExperimentalRecord2(RecordThreeM r3m, ExperimentalRecords recordsExperimental) {
+	private void addExperimentalRecord(RecordThreeM r3m, ExperimentalRecords recordsExperimental) {
 		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 		Date date = new Date();  
 		String strDate=formatter.format(date);
@@ -302,31 +301,46 @@ public class ParseThreeM extends Parse {
 			er.reason = "no way of identifying this";
 		}
 		// flags the compounds that the documents had something suspect about the record
-		if (r3m.CR_Notes.toLowerCase().contains("flag"))
+		if (r3m.CR_Notes != null && r3m.CR_Notes.toLowerCase().contains("flag"))
 			er.flag = true;
 
 		
 		// assessment criteria for not keeping
-		if (r3m.CR_Notes.toLowerCase().contains("none") || r3m.property_value.toLowerCase().contains("not determined")) {
+		if (r3m.CR_Notes != null && (r3m.CR_Notes.toLowerCase().contains("none") || r3m.property_value.toLowerCase().contains("not determined") || r3m.Keep.equals("FALSE"))) {
 			er.keep = false;
 			er.reason = "absent data or misleading representation in original spreadsheet";
-		} else if (r3m.CR_Notes.contains("calculated")) {
+		} else if (r3m.CR_Notes != null && r3m.CR_Notes.contains("calculated")) {
 			er.keep = false;
 			er.reason = "not an experimental data point";
 		}
 		// handles pH
-		if (r3m.CR_Notes.contains("pH 7")) {
+		if (r3m.CR_Notes != null && r3m.CR_Notes.contains("pH 7")) {
 			er.pH = "7";
 		}
 		// handles references
-		if (r3m.comments.toLowerCase().contains("Reference: ")) {
-			er.original_source_name = r3m.comments.replace("Reference: ", "");
+		if (r3m.comments != null && (r3m.comments.toLowerCase().contains("reference: ") || r3m.comments.contains("references: "))) {
+			er.original_source_name = r3m.comments;
 		}
 		// handles the unit conversions 
 		if (er.property_name != null && OriginallyKOW == false) {
 			uc.convertRecord(er);
 			er.updateNote(r3m.CR_Notes);
 		}
+		// handles the logKOC
+		if (er.property_name != null && er.property_name.equals(ExperimentalConstants.strLogKOC)) {
+			if (er.property_value_point_estimate_original != null) {
+				er.property_value_point_estimate_final = Math.log10(er.property_value_point_estimate_original);
+			} else if (er.property_value_min_original != null && er.property_value_max_original != null){
+				er.property_value_min_final = Math.log10(er.property_value_min_original);
+				er.property_value_max_final = Math.log10(er.property_value_max_original);
+			}
+		}
+		
+		// handles the logBCF
+		if (er.property_name != null && er.property_name.equals(ExperimentalConstants.strLogBCF)) {
+			er.property_value_point_estimate_final = Math.log10(er.property_value_point_estimate_original);
+		}
+		
 		System.out.println(er.property_value_point_estimate_original);
 		recordsExperimental.add(er);
 
