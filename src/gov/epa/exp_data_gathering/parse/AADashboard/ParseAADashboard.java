@@ -88,11 +88,13 @@ public class ParseAADashboard extends Parse {
 		
 		if (r.hazardName.equals("Skin Irritation") && r.source.equals("Japan")) {
 			er.casrn = r.CAS;
+			er.property_value_string = r.category;
+			er.property_value_qualitative = r.category;
+			er.property_name = r.hazardName;
 			er.chemical_name = r.name;
-			er.original_source_name = r.url;
-			er.property_value_string = r.category + r.hazardCode;
-			er.updateNote(r.rationale);
 			er.updateNote(r.note);
+			er.source_name = r.source;
+			er.url = r.url;
 			recordsExperimental.add(er);
 		}
 		

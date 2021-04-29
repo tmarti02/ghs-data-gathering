@@ -54,8 +54,7 @@ public static final String sourceName = "AADashboard";
 	public static Vector<RecordAADashboard> databaseReader(String fileName, String sourceName) {
 		Vector<RecordAADashboard> records = new Vector<>();
 		
-		String sourceFolderPath = "data" + File.separator + "experimental" + File.separator + sourceName;
-		String filePath = sourceFolderPath + File.separator + "databases" + File.separator + fileName;
+		String filePath = "databases" + File.separator + fileName;
         Connection conn = SQLite_Utilities.getConnection(filePath);
         
         try {
