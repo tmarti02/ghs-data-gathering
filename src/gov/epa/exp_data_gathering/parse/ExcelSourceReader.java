@@ -112,8 +112,8 @@ public class ExcelSourceReader {
 			Cell headerCell = headerRow.getCell(i, MissingCellPolicy.CREATE_NULL_AS_BLANK);
 			headerCell.setCellType(CELL_TYPE_STRING);
 			String headerContent = headerCell.getStringCellValue().trim().replaceAll("[^\\p{Alnum}]+", "_").replaceAll("^_", "").replaceAll("_$", "");
-			if (headerContent.equals("_")) {
-				headers[i] = "blank" + i;
+			if (headerContent==null || headerContent.equals("_") || headerContent.equals("")) {
+				headers[i] = "field" + i;
 			} else {
 				headers[i] = headerContent;
 			}
@@ -240,7 +240,7 @@ public class ExcelSourceReader {
 	}
 
 	public static void main(String[] args) {
-		ExcelSourceReader esr = new ExcelSourceReader("physchem_data_QCed_w_url_and_longref.xlsx","ICF");
+		ExcelSourceReader esr = new ExcelSourceReader("etc5010-sup-0002-data_bcf_baf_pfas.xlsx","Burkhard");
 		esr.createClassTemplateFiles();
 	}
 

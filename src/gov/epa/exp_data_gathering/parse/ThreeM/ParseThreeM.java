@@ -105,6 +105,7 @@ public class ParseThreeM extends Parse {
 		er.casrn = r3m.CASRN;
 		er.synonyms = r3m.other_test_substance_name;
 		er.synonyms = r3m.other_test_substance_name;
+		er.source_name=sourceName;
 		er.date_accessed = dayOnly;
 		
 		boolean OriginallyKOW = false;
