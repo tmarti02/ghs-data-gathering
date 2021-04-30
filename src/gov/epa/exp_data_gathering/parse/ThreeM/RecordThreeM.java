@@ -27,7 +27,7 @@ public class RecordThreeM {
 	public static final String[] fieldNames = {"Name","reason_not_extracted","test_substance_name","other_test_substance_name","CASRN","property","property_value","property_value_min","property_value_max","property_value_units","property_measurement_conditions","comments","property_value_method","CR_Notes", "Keep"};
 
 	public static final String lastUpdated = "04/08/2021";
-	public static final String sourceName = "ThreeM";
+	public static final String sourceName = "3M";
 
 	private static final String fileName = "physchem_brief_extraction_16mar2021_CRnotes2.xlsx";
 

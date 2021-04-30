@@ -25,7 +25,7 @@ import gov.epa.exp_data_gathering.parse.UnitConverter;
 public class ParseThreeM extends Parse {
 
 	public ParseThreeM() {
-		sourceName = "ThreeM";
+		sourceName = RecordThreeM.sourceName;
 		this.init();
 	}
 
@@ -99,6 +99,8 @@ public class ParseThreeM extends Parse {
 		String strDate=formatter.format(date);
 		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
 		ExperimentalRecord er = new ExperimentalRecord();
+		
+		er.source_name=sourceName;
 		er.chemical_name = r3m.test_substance_name;
 		er.casrn = r3m.CASRN;
 		er.synonyms = r3m.other_test_substance_name;
