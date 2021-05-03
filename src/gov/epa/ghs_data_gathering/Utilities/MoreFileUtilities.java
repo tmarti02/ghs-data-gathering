@@ -118,4 +118,9 @@ public class MoreFileUtilities {
 		
 		return dict;
 	}
+	
+	public static void delay(long start, long duration) {
+		long wait = System.currentTimeMillis();
+		while (wait - start < duration) { wait = System.currentTimeMillis(); }
+	}
 }

@@ -4,12 +4,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.StringJoiner;
 import java.util.Vector;
 
@@ -221,12 +222,53 @@ public class RecordECHADossier {
 		}
 	}
 	
+	public static void addHeadersToExistingDatabase() {
+		Connection conn= SQLite_Utilities.getConnection(databasePath);
+		try (Statement stat = conn.createStatement()) {
+			String query = "select url from " + sourceName + " WHERE header IS NULL;";
+			ResultSet rs = stat.executeQuery(query);
+			
+			Random rand = new Random();
+			int count = 0;
+			while (rs.next()) {
+				long delay = 0;
+				String url = rs.getString("url");
+				long start = System.currentTimeMillis();
+				Document doc = Jsoup.connect(url).get();
+				long end = System.currentTimeMillis();
+				delay = end - start;
+			
+				String header = doc.selectFirst("div#Header").outerHtml();
+				String safeHeader = (header==null || header.isBlank()) ? null : header.replaceAll("'", "''").replaceAll(";", "\\;");
+				if (safeHeader!=null) {
+					String updateHeader = "UPDATE " + sourceName + " SET header = '" + safeHeader + "' WHERE url = '" + url + "';";
+					try (Statement stat2 = conn.createStatement()) {
+						stat2.execute(updateHeader);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+						System.out.println(updateHeader);
+					}
+				}
+				
+				count++;
+				if (count % 100 == 0) { System.out.println("Made " + count + " updates..."); }
+				
+				Thread.sleep((long) (delay*(1+rand.nextDouble())));
+			}
+			System.out.println("Updated " + count + " records!");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void main(String[] args) {
-		String filePath =  sourceFolder + "/SkinSensitizationLLNA_records_DossierChecked.xlsx";
+//		String filePath = sourceFolder + "/SkinSensitizationLLNA_records_DossierChecked.xlsx";
 //		downloadWebpagesFromExcelToDatabase(filePath, 7, true, true);
 		
-		List<RecordECHADossier> records = parseWebpagesInDatabase();
-		HashMap<String, RecordECHADossier> hm = mapRecords(records);
-		addRecordsToExcel(hm, 5, 6, filePath);
+//		List<RecordECHADossier> records = parseWebpagesInDatabase();
+//		HashMap<String, RecordECHADossier> hm = mapRecords(records);
+//		addRecordsToExcel(hm, 5, 6, filePath);
+		
+		addHeadersToExistingDatabase();
 	}
 }
