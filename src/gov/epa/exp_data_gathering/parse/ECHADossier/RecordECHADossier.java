@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.StringJoiner;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -31,6 +33,9 @@ import gov.epa.ghs_data_gathering.Utilities.MoreFileUtilities;
 
 public class RecordECHADossier {
 	String url;
+	public String headerName;
+	public String headerECNumber;
+	public String headerCASNumber;
 	public String testMaterialForm;
 	public String detailsOnTestMaterial;
 	List<RecordECHAConstituent> constituents;
@@ -49,13 +54,19 @@ public class RecordECHADossier {
 	public static final String sourceFolder = "data/experimental/" + sourceName;
 	public static final String databasePath = sourceFolder + "/" + sourceName + "_raw_html.db";
 	
-	public static final String[] headers = { "Details on test material", "Test material form", "Molecular formula", "Remarks",
-			"EC Number", "EC Name", "Cas Number", "IUPAC Name", "Reference substance name" };
+	public static final String[] headers = { "Header Name", "Header EC Number", "Header CAS Number", "Details on test material", "Test material form",
+			"Molecular formula", "Remarks", "EC Number", "EC Name", "Cas Number", "IUPAC Name", "Reference substance name" };
+	
+	private static Pattern ecNumberPattern = Pattern.compile("[0-9]{3}-[0-9]{3}-[0-9]");
+	private static Pattern casNumberPattern = Pattern.compile("[0-9]+-[0-9]{2}-[0-9]");
 	
 	public String[] values() {
 		String[] values = new String[headers.length];
-		values[0] = detailsOnTestMaterial;
-		values[1] = testMaterialForm;
+		values[0] = headerName;
+		values[1] = headerECNumber;
+		values[2] = headerCASNumber;
+		values[3] = detailsOnTestMaterial;
+		values[4] = testMaterialForm;
 		
 		StringJoiner molecularFormula = new StringJoiner("|");
 		StringJoiner remarks = new StringJoiner("|");
@@ -76,13 +87,13 @@ public class RecordECHADossier {
 					!constituent.referenceSubstanceName.isBlank()) { referenceSubstanceName.add(constituent.referenceSubstanceName); }
 		}
 		
-		values[2] = molecularFormula.toString();
-		values[3] = remarks.toString();
-		values[4] = ecNumber.toString();
-		values[5] = ecName.toString();
-		values[6] = casNumber.toString();
-		values[7] = iupacName.toString();
-		values[8] = referenceSubstanceName.toString();
+		values[5] = molecularFormula.toString();
+		values[6] = remarks.toString();
+		values[7] = ecNumber.toString();
+		values[8] = ecName.toString();
+		values[9] = casNumber.toString();
+		values[10] = iupacName.toString();
+		values[11] = referenceSubstanceName.toString();
 		
 		return values;
 	}
@@ -105,68 +116,19 @@ public class RecordECHADossier {
 			ResultSet rs = SQLite_GetRecords.getAllRecords(stat, sourceName);
 
 			while (rs.next()) {
-				String html = rs.getString("content");
-				String url = rs.getString("url");
-				Document doc = Jsoup.parse(html);
+				String headerDiv = rs.getString("header");
+				String testMaterialDiv = rs.getString("content");
+				
+				Document headerDoc = Jsoup.parse(headerDiv);
+				Document testMaterialDoc = Jsoup.parse(testMaterialDiv);
 				
 				RecordECHADossier rec = new RecordECHADossier();
+				String url = rs.getString("url");
 				rec.url = url;
 				
-				Elements testDLs = doc.select("dl");
-				for (Element testDL:testDLs) {
-					Elements testDTs = testDL.select("dt");
-					for (Element testDT:testDTs) {
-						String header = testDT.text().trim();
-						String content = testDT.nextElementSibling().text().trim();
-						switch (header) {
-						case "Test material form:":
-							rec.testMaterialForm = content;
-							break;
-						case "Details on test material:":
-							rec.detailsOnTestMaterial = content;
-							break;
-						}
-					}
-				}
-				Elements sBlocks = doc.select("div.sBlock");
-				for (Element sBlock:sBlocks) {
-					RecordECHAConstituent constituent = new RecordECHAConstituent();
-					Elements constituentDLs = sBlock.select("dl");
-					for (Element constituentDL:constituentDLs) {
-						Elements constituentDTs = constituentDL.select("dt");
-						for (Element constituentDT:constituentDTs) {
-							String header = constituentDT.text().trim();
-							String content = constituentDT.nextElementSibling().text().trim();
-							switch (header) {
-							case "Molecular formula:":
-								constituent.molecularFormula = content;
-								break;
-							case "Remarks:":
-								constituent.remarks = content;
-								break;
-							case "EC Number:":
-								constituent.ecNumber = content;
-								break;
-							case "EC Name:":
-								constituent.ecName = content;
-								break;
-							case "Cas Number:":
-								constituent.casNumber = content;
-								break;
-							case "IUPAC Name:":
-								constituent.iupacName = content;
-								break;
-							case "Reference substance name:":
-								constituent.referenceSubstanceName = content;
-								break;
-							default:
-								System.out.println("Unhandled header: " + header + " with content: " + content);
-								break;
-							}
-						}
-					}
-					rec.constituents.add(constituent);
-				}
+				parseHeaderDoc(headerDoc, rec);
+				parseTestMaterialDoc(testMaterialDoc, rec);
+				
 				records.add(rec);
 			}
 		} catch (Exception e) {
@@ -174,6 +136,81 @@ public class RecordECHADossier {
 		}
 		
 		return records;
+	}
+	
+	private static void parseHeaderDoc(Document headerDoc, RecordECHADossier rec) {
+		rec.headerName = headerDoc.selectFirst("h1").text();
+		
+		String headerNumbers = headerDoc.selectFirst("div#SubstanceDescription").text();
+		System.out.println(headerNumbers);
+		Matcher ecNumberMatcher = ecNumberPattern.matcher(headerNumbers);
+		Matcher casNumberMatcher = casNumberPattern.matcher(headerNumbers);
+		
+		if (ecNumberMatcher.find()) {
+			rec.headerECNumber = ecNumberMatcher.group();
+		}
+		
+		if (casNumberMatcher.find()) {
+			rec.headerCASNumber = casNumberMatcher.group();
+		}
+	}
+	
+	private static void parseTestMaterialDoc(Document testMaterialDoc, RecordECHADossier rec) {
+		Elements testDLs = testMaterialDoc.select("dl");
+		for (Element testDL:testDLs) {
+			Elements testDTs = testDL.select("dt");
+			for (Element testDT:testDTs) {
+				String header = testDT.text().trim();
+				String content = testDT.nextElementSibling().text().trim();
+				switch (header) {
+				case "Test material form:":
+					rec.testMaterialForm = content;
+					break;
+				case "Details on test material:":
+					rec.detailsOnTestMaterial = content;
+					break;
+				}
+			}
+		}
+		Elements sBlocks = testMaterialDoc.select("div.sBlock");
+		for (Element sBlock:sBlocks) {
+			RecordECHAConstituent constituent = new RecordECHAConstituent();
+			Elements constituentDLs = sBlock.select("dl");
+			for (Element constituentDL:constituentDLs) {
+				Elements constituentDTs = constituentDL.select("dt");
+				for (Element constituentDT:constituentDTs) {
+					String header = constituentDT.text().trim();
+					String content = constituentDT.nextElementSibling().text().trim();
+					switch (header) {
+					case "Molecular formula:":
+						constituent.molecularFormula = content;
+						break;
+					case "Remarks:":
+						constituent.remarks = content;
+						break;
+					case "EC Number:":
+						constituent.ecNumber = content;
+						break;
+					case "EC Name:":
+						constituent.ecName = content;
+						break;
+					case "Cas Number:":
+						constituent.casNumber = content;
+						break;
+					case "IUPAC Name:":
+						constituent.iupacName = content;
+						break;
+					case "Reference substance name:":
+						constituent.referenceSubstanceName = content;
+						break;
+					default:
+						System.out.println("Unhandled header: " + header + " with content: " + content);
+						break;
+					}
+				}
+			}
+			rec.constituents.add(constituent);
+		}
 	}
 	
 	public static HashMap<String, RecordECHADossier> mapRecords(List<RecordECHADossier> records) {
@@ -262,13 +299,13 @@ public class RecordECHADossier {
 	}
 	
 	public static void main(String[] args) {
-//		String filePath = sourceFolder + "/SkinSensitizationLLNA_records_DossierChecked.xlsx";
-//		downloadWebpagesFromExcelToDatabase(filePath, 7, true, true);
+		String filePath = sourceFolder + "/SkinSensitizationLLNA_records_DossierChecked.xlsx";
+//		downloadWebpagesFromExcelToDatabase(filePath, 4, true, true);
 		
-//		List<RecordECHADossier> records = parseWebpagesInDatabase();
-//		HashMap<String, RecordECHADossier> hm = mapRecords(records);
-//		addRecordsToExcel(hm, 5, 6, filePath);
+		List<RecordECHADossier> records = parseWebpagesInDatabase();
+		HashMap<String, RecordECHADossier> hm = mapRecords(records);
+		addRecordsToExcel(hm, 4, 5, filePath);
 		
-		addHeadersToExistingDatabase();
+//		addHeadersToExistingDatabase();
 	}
 }
