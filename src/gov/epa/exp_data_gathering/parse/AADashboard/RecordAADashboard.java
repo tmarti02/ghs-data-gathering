@@ -14,31 +14,31 @@ import java.util.Vector;
 
 
 public class RecordAADashboard {
-	String CAS;
-	String name;
-	String hazardName;
-	String source;
-	String sourceOriginal;
-	String score;
-	String listType;
-	String route;
-	String category;
-	String hazardCode;
-	String hazardStatement;
-	String rationale;
-	String note;
-	String note2;
-	String toxvalID;
-	String testOrganism;
-	String testType;
-	String valueMassOperator;
-	String valueMass;
-	String valueMassUnits;
-	String effect;
-	String duration;
-	String durationUnits;
-	String url;
-	String longRef;
+	public String CAS;
+	public String name;
+	public String hazardName;
+	public String source;
+	public String sourceOriginal;
+	public String score;
+	public String listType;
+	public String route;
+	public String category;
+	public String hazardCode;
+	public String hazardStatement;
+	public String rationale;
+	public String note;
+	public String note2;
+	public String toxvalID;
+	public String testOrganism;
+	public String testType;
+	public String valueMassOperator;
+	public String valueMass;
+	public String valueMassUnits;
+	public String effect;
+	public String duration;
+	public String durationUnits;
+	public String url;
+	public String longRef;
 	
 public static final String sourceName = "AADashboard";
 
@@ -64,37 +64,13 @@ public static final String sourceName = "AADashboard";
     		int counter = 1;
     		
     		while (rs.next()) {
-    			RecordAADashboard raad = new RecordAADashboard();
     			if (counter % 100==0) { System.out.println("Parsed "+counter+" pages"); }
     			
-    			raad.CAS = rs.getString("CAS");
-    			raad.name = rs.getString("name");
-    			raad.hazardName = rs.getString("hazardName");
-    			raad.source = rs.getString("source");
-    			raad.sourceOriginal = rs.getString("sourceOriginal");
-    			raad.score = rs.getString("score");
-    			raad.listType = rs.getString("listType");
-    			raad.route = rs.getString("route");
-    			raad.category = rs.getString("category");
-    			raad.hazardCode = rs.getString("hazardCode");
-    			raad.hazardStatement = rs.getString("hazardStatement");
-    			raad.rationale = rs.getString("rationale");
-    			raad.note = rs.getString("note");
-    			raad.note2 = rs.getString("note2");
-    			raad.toxvalID = rs.getString("toxvalID");
-    			raad.testOrganism = rs.getString("testOrganism");
-    			raad.testType = rs.getString("testType");
-    			raad.valueMassOperator = rs.getString("valueMassOperator");
-    			raad.valueMass = rs.getString("valueMass");
-    			raad.valueMassUnits = rs.getString("valueMassUnits");
-    			raad.effect = rs.getString("effect");
-    			raad.duration = rs.getString("duration");
-    			raad.durationUnits = rs.getString("durationUnits");
-    			raad.url = rs.getString("url");
-    			raad.longRef = rs.getString("longRef");
-    			
-    			counter++;
+    			RecordAADashboard raad = new RecordAADashboard();
+    			SQLite_GetRecords.createRecord(rs, raad);
     			records.add(raad);
+
+    			counter++;
         		}
 
     	} catch (Exception e) {

@@ -21,6 +21,8 @@ import gov.epa.exp_data_gathering.parse.Bagley.RecordBagley;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.gson.JsonObject;
 
 
@@ -94,7 +96,7 @@ public class ParseAADashboard extends Parse {
 			er.chemical_name = r.name;
 			er.updateNote(r.note);
 			er.source_name = r.source;
-			er.url = r.url;
+			er.url = StringUtils.substringBefore(r.url, ";");
 			recordsExperimental.add(er);
 		}
 		

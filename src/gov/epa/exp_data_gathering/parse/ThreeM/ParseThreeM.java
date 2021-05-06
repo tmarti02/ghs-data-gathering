@@ -101,10 +101,13 @@ public class ParseThreeM extends Parse {
 		ExperimentalRecord er = new ExperimentalRecord();
 		
 		er.source_name=sourceName;
-		er.chemical_name = r3m.test_substance_name;
+		er.chemical_name = r3m.NAME_FINAL;
 		er.casrn = r3m.CASRN;
-		er.synonyms = r3m.other_test_substance_name;
-		er.synonyms = r3m.other_test_substance_name;
+		if (r3m.NAME_FINAL != null && r3m.NAME_FINAL.equals(r3m.test_substance_name)) {
+			er.synonyms = r3m.other_test_substance_name;
+		} else if (r3m.NAME_FINAL != null && r3m.NAME_FINAL.equals(r3m.other_test_substance_name)) {
+			er.synonyms = r3m.test_substance_name;
+		}
 		er.source_name=sourceName;
 		er.date_accessed = dayOnly;
 		
@@ -273,7 +276,7 @@ public class ParseThreeM extends Parse {
 		
 		// gets the units
 		
-		if (r3m.property_value_units!=null) {
+		if (r3m.property_value_units!=null && er.property_name!= null) {
 			if (r3m.property_value_units.equals("degrees C") || (r3m.property_value_units.equals("C"))) {
 				er.property_value_units_original = ExperimentalConstants.str_C;
 			} else if (r3m.property_value_units.equals("Pa")) {
@@ -282,7 +285,7 @@ public class ParseThreeM extends Parse {
 				er.property_value_units_original = ExperimentalConstants.str_kpa;
 			} else if (r3m.property_value_units.equals("not determined")) {
 				er.property_value_units_original = "";
-			} else if (r3m.property_value_units.contains("mm") || r3m.property_value_units.toLowerCase().contains("torr")){ 
+			} else if ((er.property_name.equals(ExperimentalConstants.strVaporPressure)) && r3m.property_value_units.contains("mm") || r3m.property_value_units.toLowerCase().contains("torr")){ 
 				er.property_value_units_original = ExperimentalConstants.str_mmHg;
 			} else if (r3m.property_value_units.equals("mg ai/L") || r3m.property_value_units.toLowerCase().equals("mg/l")) {
 				er.property_value_units_original = ExperimentalConstants.str_mg_L;
@@ -325,7 +328,7 @@ public class ParseThreeM extends Parse {
 			er.original_source_name = r3m.comments;
 		}
 		// handles the unit conversions 
-		if (er.property_name != null && OriginallyKOW == false) {
+		if (er.property_name != null && OriginallyKOW == false && er.keep == true) {
 			uc.convertRecord(er);
 			er.updateNote(r3m.CR_Notes);
 		}
@@ -344,7 +347,6 @@ public class ParseThreeM extends Parse {
 			er.property_value_point_estimate_final = Math.log10(er.property_value_point_estimate_original);
 		}
 		
-		System.out.println(er.property_value_point_estimate_original);
 		recordsExperimental.add(er);
 
 	}
