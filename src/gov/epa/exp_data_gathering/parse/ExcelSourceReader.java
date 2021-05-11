@@ -31,7 +31,7 @@ public class ExcelSourceReader {
 
 	private String sourceFolderPath;
 	private String fileName;
-	private Sheet sheet;
+	public Sheet sheet;
 	
 	/**
 	 * Initializes a new reader for the given source from the given filename
@@ -104,7 +104,7 @@ public class ExcelSourceReader {
 	 * Gets column headers in appropriate format for field naming (alphanumeric and _ only)
 	 * @return	Formatted column headers as a string array
 	 */
-	private String[] getHeaders() {
+	public String[] getHeaders() {
 		Row headerRow = sheet.getRow(0);
 		int numHeaders = headerRow.getLastCellNum();
 		String[] headers = new String[numHeaders];

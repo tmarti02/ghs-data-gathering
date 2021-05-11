@@ -22,164 +22,8 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
+import gov.epa.exp_data_gathering.parse.ChemicalBook.RecordChemicalBook;
 
-
-
-class FinalRecord2{
-	/**
-	 * Chemical or substance name
-	 */
-	public String name;
-	/**
-	 * Chemical or substance ID number
-	 */
-	public String number;
-	/**
-	 * Type of chemical or substance name (e.g. IUPAC)
-	 */
-	public String nameType;
-	/**
-	 * Type of chemical or substance number (CAS or EINECS)
-	 */
-	public String numberType;
-	public boolean memberOfCategory;
-	/**
-	 * Original source (ECHA CHEM, ECHA REACH, J-CHECK, CCR, or OECD SIDS IUCLID)
-	 */
-	public String participant;
-	/**
-	 * Dossier URL
-	 */
-	public String url;
-	
-	/**
-	 * Type of information, filtered to "experimental study" only by default
-	 */
-	public String infoType;
-	/**
-	 * Reliability of information
-	 */
-	public String reliability;
-	/**
-	 * Endpoint type more specific than proeprty name, if provided
-	 */
-	public String endpointType;
-	/**
-	 * Year(s) of record
-	 */
-	public Set<String> years;
-	/**
-	 * Qualifier(s) for test guideline(s)
-	 */
-	public List<String> guidelineQualifiers;
-	/**
-	 * Test guideline(s)
-	 */
-	public List<String> guidelines;
-	/**
-	 * GLP compliance of information
-	 */
-	public String glpCompliance;
-	/**
-	 * Type of experiment
-	 */
-	public String testType;
-	/**
-	 * Species of test organisms
-	 */
-	public List<String> species;
-	/**
-	 * Strain of test organisms
-	 */
-	public String strain;
-	/**
-	 * Route of administration for experiment
-	 */
-	public String routeOfAdministration;
-	/**
-	 * Type of exposure for inhalation experiments
-	 */
-	public String inhalationExposureType;
-	/**
-	 * Type of cover for dermal/skin experiments
-	 */
-	public String coverageType;
-	/**
-	 * Water media type for bioaccumulation experiments
-	 */
-	public String waterMediaType;
-	/**
-	 * Type of experimental value ("dose descriptor" in most results)
-	 */
-	public List<String> valueTypes;
-	/**
-	 * Quantitative experimental value ("effect level", "effect concentration", "half-life", "% degraded", etc.)
-	 */
-	public List<String> experimentalValues;
-	/**
-	 * Histopathological findings for carcinogenicity experiments
-	 */
-	public String histoFindings;
-	/**
-	 * Duration(s) or sampling time(s) of experiment
-	 */
-	public List<String> durations;
-	/**
-	 * Basis for effect assessment
-	 */
-	public List<String> basis;
-	/**
-	 * Qualitative interpretation of results
-	 */
-	public String interpretationOfResults;
-	/**
-	 * Presence or absence of metabolic activation for <i>in vitro</i> experiments
-	 */
-	public List<String> metabolicActivation;
-	/**
-	 * Oxygen conditions for biodegradation experiments
-	 */
-	public String oxygenConditions;
-	/**
-	 * Presence or absence of genotoxicity
-	 */
-	public List<String> genotoxicity;
-	/**
-	 * Presence or absence of non-genetic toxicity for genotoxicity experiments
-	 */
-	public List<String> toxicity;
-	/**
-	 * Presence or absence of non-genetic cytotoxicity for genotoxicity experiments
-	 */
-	public List<String> cytotoxicity;
-	
-	/**
-	 * Date downloaded
-	 */
-	public String dateAccessed;
-	/**
-	 * Name of property
-	 */
-	public String propertyName;
-	/**
-	 * Internal ID to match to ExperimentalRecords for dashboard processing
-	 */
-	public String id;
-	
-	public static String[] headers = {"Name","Name Type","Number","Number Type","Member of Category","Participant","URL","Info Type","Reliability","Endpoint Type",
-			"Years","Guidelines & Qualifiers","GLP Compliance","Test Type","Species","Strain","Metabolic Activation","Route of Administration/Exposure",
-			"Inhalation Exposure Type","Coverage Type","Water Media Type","Value Type","Experimental Value","Histopathological Findings: Neoplastic","Duration/Sampling Time","Basis",
-			"Interpretation of Results","Oxygen Conditions","Genotoxicity","Toxicity","Cytotoxicity","Date Accessed","Property Name"};
-	public static String[] fieldNames = {"name","nameType","number","numberType","memberOfCategory","participant","url","infoType","reliability","endpointType",
-			"years","guidelineQualifiers+guidelines","glpCompliance","testType","species","strain","metabolicActivation","routeOfAdministration","inhalationExposureType",
-			"coverageType","waterMediaType","valueTypes","experimentalValues","histoFindings","durations","basis","interpretationOfResults",
-			"oxygenConditions","genotoxicity","toxicity","cytotoxicity","dateAccessed","propertyName"};
-	public static String[] outputFieldNames = {"id","name","nameType","number","numberType","memberOfCategory","participant","url","infoType","reliability","endpointType",
-			"years","guidelineQualifiers","guidelines","glpCompliance","testType","species","strain","metabolicActivation","routeOfAdministration","inhalationExposureType",
-			"coverageType","waterMediaType","valueTypes","experimentalValues","histoFindings","durations","basis","interpretationOfResults",
-			"oxygenConditions","genotoxicity","toxicity","cytotoxicity","dateAccessed","propertyName"};
-
-}
 
 
 public class ParseBurkhard extends Parse {
@@ -224,7 +68,7 @@ public class ParseBurkhard extends Parse {
 			Iterator<RecordBurkhard> it = recordsBurkhard.iterator();
 			while (it.hasNext()) {
 				RecordBurkhard r = it.next();
-				addExperimentalRecord(r,recordsExperimental);
+				addExperimentalRecords(r,recordsExperimental);
 				// TODO Write addExperimentalRecord() method to parse this source.
 			}
 		} catch (Exception ex) {
@@ -234,12 +78,50 @@ public class ParseBurkhard extends Parse {
 		return recordsExperimental;
 	}
 	
+	private void addExperimentalRecords(RecordBurkhard rb, ExperimentalRecords recordsExperimental) {
+		if (rb.Log_BCF_Steady_State_mean != null && !rb.Log_BCF_Steady_State_mean.isBlank()) {
+			addNewExperimentalRecord(rb,"LogBCF", recordsExperimental);
+		}
+		if (rb.Log_BCF_Kinetic_mean != null && !rb.Log_BCF_Kinetic_mean.isBlank()) {
+			addNewExperimentalRecord(rb,"LogBCFKinetic", recordsExperimental);
+		}
+		if (rb.Log_BAF_mean != null && !rb.Log_BAF_mean.isBlank()) {
+			addNewExperimentalRecord(rb,"LogBAF", recordsExperimental);
+		}
+		
+	}
 	
 	
-	private static void addExperimentalRecord(RecordBurkhard rb, ExperimentalRecords records) {
+	private void addNewExperimentalRecord(RecordBurkhard rb, String propertyName, ExperimentalRecords recordsExperimental) {
+		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
+		Date date = new Date();  
+		String strDate=formatter.format(date);
+		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
 		ExperimentalRecord er = new ExperimentalRecord();
-		records.add(er);
-	
+		er.updateNote("species:" + rb.Common_Name + ";" + "tissue:" + rb.Tissue + ";" + "exposure concentrations: " + rb.Exposure_Concentrations);
+		er.source_name=sourceName;
+		er.chemical_name = rb.Chemical;
+		er.casrn = rb.CAS;
+		er.original_source_name = rb.Reference;
+		
+		if (propertyName=="LogBCF") {
+			er.property_name=propertyName;
+			if (!rb.Log_BCF_Steady_State_mean.equals("NA")) {
+			er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Steady_State_mean);
+			}
+		}	else if (propertyName == "LogBCFKinetic") {
+			er.property_name=propertyName;
+			if (!rb.Log_BCF_Kinetic_mean.equals("NA")) {
+			er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Kinetic_mean);
+			}
+		} else if (propertyName == "LogBAF") {
+			er.property_name=propertyName;
+			if (!rb.Log_BAF_mean.equals("NA")) {
+			er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BAF_mean);
+		}
+		}
+		recordsExperimental.add(er);
+
 	}
 	
 	public static void main(String[] args) {

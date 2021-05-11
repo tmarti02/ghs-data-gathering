@@ -1,13 +1,28 @@
 package gov.epa.exp_data_gathering.parse.Burkhard;
 
+import static org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 
 import com.google.gson.JsonObject;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
+
 
 
 
@@ -131,8 +146,76 @@ public class RecordBurkhard {
 	private static final String fileName = "Copy of Copy of etc5010-sup-0002-data_bcf_baf_pfas_GFBS_partially_cleaned_CR_more_edits2.xlsx";
 
 	public static Vector<JsonObject> parseBurkhardRecordsFromExcel() {
-		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
+		ExcelSourceReader esr = new ExcelSourceReaderBurkhard(fileName, sourceName);
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(0); // TODO Chemical name index guessed from header. Is this accurate?
 		return records;
 	}
+	
+	
+	
+
+	// TODO Auto-generated constructor stub
+}
+
+
+
+class ExcelSourceReaderBurkhard extends ExcelSourceReader {
+
+	public ExcelSourceReaderBurkhard(String fileName, String sourceName) {
+		super(fileName, sourceName);
+		// TODO Auto-generated constructor stub
+	}
+	
+	
+	/**
+	 * Writes records from a spreadsheet to JSON original records format assuming the template created by generateRecordClassTemplate()
+	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
+	 */
+	@Override
+	public Vector<JsonObject> parseRecordsFromExcel(int chemicalNameIndex) {
+		String[] fieldNames = getHeaders();
+		HashMap<Integer,String> hm = generateDefaultMap(fieldNames, 0);
+		return parseRecordsFromExcelBurkhard(hm, chemicalNameIndex);
+	}
+	
+	/**
+	 * Writes records from a spreadsheet to JSON original records format consistent with field names of an existing Record[SourceName] class
+	 * @param hmFieldNames	Matches column numbers to output fields of a Record[SourceName] class
+	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
+	 */
+	public Vector<JsonObject> parseRecordsFromExcelBurkhard(HashMap<Integer,String> hmFieldNames, int chemicalNameIndex) {
+		Vector<JsonObject> records = new Vector<JsonObject>();
+		try {
+			int numRows = sheet.getLastRowNum();
+			for (int i = 1; i < numRows; i++) {
+				Row row = sheet.getRow(i);
+				if (row==null) { continue; }
+				JsonObject jo = new JsonObject();
+				boolean hasAnyFields = false;
+				for (int k:hmFieldNames.keySet()) {
+					Cell cell = row.getCell(k);
+					if (cell==null) { continue; }
+					cell.setCellType(CELL_TYPE_STRING);
+					String content = "";
+					if (k==chemicalNameIndex) {
+						content = StringEscapeUtils.escapeHtml4(row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
+					} else {
+						content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+					}
+					if (content!=null && !content.isBlank()) { hasAnyFields = true; }
+					jo.addProperty(hmFieldNames.get(k), content);
+					jo.addProperty("ID", "Original_Record" + String.valueOf(i)); // this is the only thing that changes, a way to map experimental records and or
+				}
+				if (hasAnyFields) { records.add(jo); }
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return records;
+	}
+
+	
+
+	
+	
 }
