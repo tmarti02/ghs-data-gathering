@@ -28,7 +28,9 @@ import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 
 
 public class RecordBurkhard {
+
 	public String Chemical;
+	public String ID;
 	public String CAS;
 	public String Abbreviation;
 	public String Log_BCF_Steady_State_mean;
@@ -108,19 +110,19 @@ public class RecordBurkhard {
 	public String Concentration_in_Biota;
 	public String Concentration_in_Biota_min;
 	public String Concentration_in_Biota_max;
-	public String sd1;
-	public String units1;
-	public String MDL1;
+	public String Concentration_in_Biota_sd;
+	public String Concentration_in_Biota_units;
+	public String Concentration_in_Biota_MDL;
 	public String Comments_Biota_Samples;
 	public String Concentration_in_environmental_media;
-	public String sd2;
-	public String units2;
-	public String MDL2;
+	public String Concentration_in_environmental_media_sd;
+	public String Concentration_in_environmental_media_units;
+	public String Concentration_in_environmental_media_MDL;
 	public String Comments_Environmental_Media;
 	public String field89;
 	public String Organic_Carbon;
-	public String sd3;
-	public String units3;
+	public String Organic_Carbon_sd;
+	public String Organic_Carbon_units;
 	public String Comments_OC;
 	public String Marine_Brackish_Freshwater;
 	public String Comments_Marine_Brackish_Freshwater;
@@ -128,7 +130,7 @@ public class RecordBurkhard {
 	public String Taxonomy_Name_Level;
 	public String kingdom;
 	public String phylum;
-	public String class0;
+	public String taxonomic_class;
 	public String order;
 	public String family;
 	public String genus;
@@ -138,12 +140,11 @@ public class RecordBurkhard {
 	public String GBIF_TaxID;
 	public String Common_Name_NCBI_ITIS;
 	public String Taxomony_Name_Source;
-	public static final String[] fieldNames = {"Chemical","CAS","Abbreviation","Log_BCF_Steady_State_mean","Log_BCF_Steady_State_sd","Log_BCF_Steady_State_min","Log_BCF_Steady_State_max","Log_BCF_Steady_State_type","Log_BCF_Steady_State_units","Log_BCF_Kinetic_mean","Log_BCF_Kinetic_sd","Log_BCF_Kinetic_95_CI","Log_BCF_Kinetic_type","Log_BCF_Kinetic_units","Log_BAF_mean","Log_BAF_sd","Log_BAF_95_CI","Log_BAF_min","Log_BAF_max","Log_BAF_type","Log_BAF_units","Measured_Trophic_Level","Measured_Trophic_Level_sd","field23","Estimated_Trophic_Level","Common_Name","Species_Latin_Name","Species_Weight_g","field28","Tissue","Location","Reference","OECD_305","ku","ku_sd","field35","days_of_uptake","ke","ke_sd","field39","days_of_elimination","half_life_days","half_life_sd_days","SS","Kinetic","Modeled","Exposure_Concentrations","Study_Quality_BCF","Comments_BCF","k_dietary","k_dietary_sd","field51","Assimulation_Efficiency","Assimulation_Efficiency_SD","field54","BAF","of_water_samples","start_date1","end_date1","field59","of_biota_samples","start_date2","end_date2","Average_weight_g","Average_Length_cm","Sex_F_M","Average_Age","Age_sd","General_experimental_design","Water_Biota_spatial_coordination","Water_Biota_temporal_coordination","Number_Biota_Samples","Number_of_Water","Study_Quality_BAF","Comments_BAFs","field75","Mixture_Exposure","Concentration_in_Biota","Concentration_in_Biota_min","Concentration_in_Biota_max","sd1","units1","MDL1","Comments_Biota_Samples","Concentration_in_environmental_media","sd2","units2","MDL2","Comments_Environmental_Media","field89","Organic_Carbon","sd3","units3","Comments_OC","Marine_Brackish_Freshwater","Comments_Marine_Brackish_Freshwater","field96","Taxonomy_Name_Level","kingdom","phylum","class0","order","family","genus","species","ITIS_TaxID","NCBI_TaxID","GBIF_TaxID","Common_Name_NCBI_ITIS","Taxomony_Name_Source"};
-
+	public static final String[] fieldNames = {"Chemical","CAS","Abbreviation","Log_BCF_Steady_State_mean","Log_BCF_Steady_State_sd","Log_BCF_Steady_State_min","Log_BCF_Steady_State_max","Log_BCF_Steady_State_type","Log_BCF_Steady_State_units","Log_BCF_Kinetic_mean","Log_BCF_Kinetic_sd","Log_BCF_Kinetic_95_CI","Log_BCF_Kinetic_type","Log_BCF_Kinetic_units","Log_BAF_mean","Log_BAF_sd","Log_BAF_95_CI","Log_BAF_min","Log_BAF_max","Log_BAF_type","Log_BAF_units","Measured_Trophic_Level","Measured_Trophic_Level_sd","field23","Estimated_Trophic_Level","Common_Name","Species_Latin_Name","Species_Weight_g","field28","Tissue","Location","Reference","OECD_305","ku","ku_sd","field35","days_of_uptake","ke","ke_sd","field39","days_of_elimination","half_life_days","half_life_sd_days","SS","Kinetic","Modeled","Exposure_Concentrations","Study_Quality_BCF","Comments_BCF","k_dietary","k_dietary_sd","field51","Assimulation_Efficiency","Assimulation_Efficiency_SD","field54","BAF","of_water_samples","start_date1","end_date1","field59","of_biota_samples","start_date2","end_date2","Average_weight_g","Average_Length_cm","Sex_F_M","Average_Age","Age_sd","General_experimental_design","Water_Biota_spatial_coordination","Water_Biota_temporal_coordination","Number_Biota_Samples","Number_of_Water","Study_Quality_BAF","Comments_BAFs","field75","Mixture_Exposure","Concentration_in_Biota","Concentration_in_Biota_min","Concentration_in_Biota_max","Concentration_in_Biota_sd","Concentration_in_Biota_units","Concentration_in_Biota_MDL","Comments_Biota_Samples","Concentration_in_environmental_media","Concentration_in_environmental_media_sd","Concentration_in_environmental_media_units","Concentration_in_environmental_media_MDL","Comments_Environmental_Media","field89","Organic_Carbon","Organic_Carbon_sd","Organic_Carbon_units","Comments_OC","Marine_Brackish_Freshwater","Comments_Marine_Brackish_Freshwater","field96","Taxonomy_Name_Level","kingdom","phylum","taxonomic_class","order","family","genus","species","ITIS_TaxID","NCBI_TaxID","GBIF_TaxID","Common_Name_NCBI_ITIS","Taxomony_Name_Source"};
 	public static final String lastUpdated = "05/05/2021";
 	public static final String sourceName = "Burkhard"; // TODO Consider creating ExperimentalConstants.strSourceBurkhard instead.
 
-	private static final String fileName = "Copy of Copy of etc5010-sup-0002-data_bcf_baf_pfas_GFBS_partially_cleaned_CR_more_edits2.xlsx";
+	private static final String fileName = "Copy of Copy of Copy of etc5010-sup-0002-data_bcf_baf_pfas_GFBS_partially_cleaned_CR_more_edits2_nofilters.xlsx";
 
 	public static Vector<JsonObject> parseBurkhardRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReaderBurkhard(fileName, sourceName);
