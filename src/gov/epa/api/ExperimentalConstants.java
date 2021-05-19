@@ -27,6 +27,7 @@ public class ExperimentalConstants {
 	public static final String strRatInhalationLC50="rat_inhalation_LC50";
 	public static final String strSkinSensitizationLLNA="SkinSensitizationLLNA";
 	public static final String strEyeIrritation="EyeIrritation";
+	public static final String strEyeCorrosion="EyeCorrosion";
 	public static final String strSkinIrritationPII="SkinIrritationPII";
 	
 	//Add list of well defined property units here:

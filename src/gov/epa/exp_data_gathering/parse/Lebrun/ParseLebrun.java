@@ -73,50 +73,96 @@ public class ParseLebrun extends Parse {
 	}
 	
 	private void addExperimentalRecord(RecordLebrun lr,ExperimentalRecords records) {
-		ExperimentalRecord er = new ExperimentalRecord();
-		er.date_accessed = RecordLebrun.lastUpdated;
-		er.source_name = ExperimentalConstants.strSourceLebrun;
-		er.url = "https://doi.org/10.1016/j.tiv.2020.105070";
+		ExperimentalRecord erIrr = new ExperimentalRecord();
+		erIrr.date_accessed = RecordLebrun.lastUpdated;
+		erIrr.source_name = ExperimentalConstants.strSourceLebrun;
+		erIrr.url = "https://doi.org/10.1016/j.tiv.2020.105070";
 		
-		er.chemical_name = lr.chemicalName;
-		er.casrn = lr.casrn.replaceAll("/", "|");
-		er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
-		er.property_value_string = "";
+		erIrr.chemical_name = lr.chemicalName;
+		erIrr.casrn = lr.casrn.replaceAll("/", "|");
+		erIrr.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
+		erIrr.property_value_string = "";
 		String ghs = "";
 		String epa = "";
 		if (lr.inVivoGHS!=null && !lr.inVivoGHS.isBlank()) {
 			ghs = lr.inVivoGHS.substring(0,lr.inVivoGHS.indexOf("[")).trim();
-			er.property_value_string += "GHS: " + ghs;
+			erIrr.property_value_string += "GHS: " + ghs;
 		}
 		if (lr.inVivoEPA!=null && !lr.inVivoEPA.isBlank()) {
 			epa = lr.inVivoEPA.substring(0,lr.inVivoEPA.indexOf("[")).trim();
-			if (!er.property_value_string.equals("")) { er.property_value_string += "; "; }
-			er.property_value_string += "EPA: " + epa;
+			if (!erIrr.property_value_string.equals("")) { erIrr.property_value_string += "; "; }
+			erIrr.property_value_string += "EPA: " + epa;
 		}
-		er.property_value_point_estimate_original = convertCodesToBinary(ghs, epa);
-		er.property_value_point_estimate_final = er.property_value_point_estimate_original;
-		er.property_value_units_original = "binary";
-		er.property_value_units_final = "binary";
-		uc.convertRecord(er);
+		erIrr.property_value_point_estimate_original = convertCodesToBinaryIrritation(ghs, epa);
+		erIrr.property_value_point_estimate_final = erIrr.property_value_point_estimate_original;
+		erIrr.property_value_units_original = "binary";
+		erIrr.property_value_units_final = "binary";
+		uc.convertRecord(erIrr);
 		
-		if (er.property_value_point_estimate_final==-1) {
-			er.keep=false;
-			er.reason="Ambiguous eye irritation score";
+		if (erIrr.property_value_point_estimate_final==-1) {
+			erIrr.keep=false;
+			erIrr.reason="Ambiguous eye irritation score";
 		}
-		records.add(er);
+		
+		// Deep copy existing ER by serialization-deserialization
+		ExperimentalRecord erCorr = gson.fromJson(gson.toJson(erIrr), ExperimentalRecord.class);
+		erCorr.property_name = "rabbit_" + ExperimentalConstants.strEyeCorrosion;
+		erCorr.property_value_point_estimate_original = convertCodesToBinaryCorrosion(ghs, epa, erIrr.property_value_point_estimate_final);
+		erCorr.property_value_point_estimate_final = erCorr.property_value_point_estimate_original;
+		
+		records.add(erIrr);
+		records.add(erCorr);
 	}
 	
-	private static double convertCodesToBinary(String ghs, String epa) {
-		if (ghs!=null && !ghs.isBlank() && (ghs.startsWith("1") || ghs.startsWith("2"))) {
-			return 1;
-		} else if (epa!=null && !epa.isBlank() && epa.startsWith("I")) {
+	private static double convertCodesToBinaryIrritation(String ghs, String epa) {
+		double ghsBinary = 0;
+		if (ghs==null || ghs.isBlank()) {
+			ghsBinary = -1;
+		} else if (ghs.startsWith("1") || ghs.startsWith("2")) {
+			ghsBinary = 1;
+		} else if (ghs.startsWith("NC")) {
+			ghsBinary = 0;
+		} else {
+			ghsBinary = -1;
+		}
+		
+		double epaBinary = 0;
+		if (epa==null || epa.isBlank()) {
+			epaBinary = -1;
+		} else if (epa.startsWith("I")) {
 			if (epa.startsWith("IV")) {
-				return 0;
+				epaBinary = 0;
 			} else {
-				return 1;
+				epaBinary = 1;
 			}
 		} else {
-			return -1;
+			epaBinary = -1;
+		}
+		
+		return Math.max(ghsBinary, epaBinary);
+	}
+	
+	private static double convertCodesToBinaryCorrosion(String ghs, String epa, double isIrritant) {
+		if (isIrritant<=0) {
+			return isIrritant;
+		} else {
+			double ghsBinary = 0;
+			if (ghs==null || ghs.isBlank()) {
+				ghsBinary = -1;
+			} else if (ghs.startsWith("1")) {
+				ghsBinary = 1;
+			}
+			
+			double epaBinary = 0;
+			if (epa==null || epa.isBlank()) {
+				epaBinary = -1;
+			} else if (epa.startsWith("IV") || epa.startsWith("II")) {
+				epaBinary = 0;
+			} else {
+				epaBinary = 1;
+			}
+			
+			return Math.max(ghsBinary,epaBinary);
 		}
 	}
 	

@@ -334,7 +334,8 @@ public class Parse {
 		}
 		
 		String[] parseSources = {
-				ExperimentalConstants.strSourceCFSAN,
+				ExperimentalConstants.strSourceLebrun,
+				ExperimentalConstants.strSourceDRD
 		};
 				
 		if (reparse) for (String s:parseSources) runParse(s,recordType);
@@ -349,7 +350,6 @@ public class Parse {
 		FinalRecords finalRecordsEChemPortal=d.getFinalRecordsFromNumberedFiles(ExperimentalConstants.strSourceEChemPortalAPI);
 		System.out.println("FinalRecords from eChemportalAPI:"+finalRecordsEChemPortal.size());
 		d.addFinalRecordsTableToDatabase(finalRecordsEChemPortal);
-		
 
 	}
 	

@@ -73,52 +73,71 @@ public class ParseDRD extends Parse {
 	}
 	
 	private void addExperimentalRecord(RecordDRD dr,ExperimentalRecords records) {
-		ExperimentalRecord er = new ExperimentalRecord();
-		er.date_accessed = RecordDRD.lastUpdated;
-		er.source_name = ExperimentalConstants.strSourceDRD;
+		ExperimentalRecord erIrr = new ExperimentalRecord();
+		erIrr.date_accessed = RecordDRD.lastUpdated;
+		erIrr.source_name = ExperimentalConstants.strSourceDRD;
 		if (dr.dataSource!=null) {
-			er.original_source_name = dr.dataSource.replaceAll("[\n\r]", " ");
+			erIrr.original_source_name = dr.dataSource.replaceAll("[\n\r]", " ");
 		}
-		er.url = "https://pubmed.ncbi.nlm.nih.gov/26997338/";
+		erIrr.url = "https://pubmed.ncbi.nlm.nih.gov/26997338/";
 		
 		String chemicalName = dr.testChemicalName.replaceAll("[\n\r]", " ").replaceAll(" \\([0-9]+ of [0-9]+\\)", "");
-		er.chemical_name = chemicalName;
-		er.casrn = dr.casrn.replaceAll("[\n\r]", " ");
-		er.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
-		er.property_value_string = dr.ghsClassification.replaceAll("[\n\r]", " ");
-	
-		er.property_value_point_estimate_original = drdGHSToBinary(dr.ghsClassification.replaceAll("[\n\r]", " "));
-		er.property_value_point_estimate_final = er.property_value_point_estimate_original;
-		er.property_value_units_original = "binary";
-		er.property_value_units_final = "binary";
+		erIrr.chemical_name = chemicalName;
+		erIrr.casrn = dr.casrn.replaceAll("[\n\r]", " ");
+		erIrr.property_name = "rabbit_" + ExperimentalConstants.strEyeIrritation;
+		erIrr.property_value_string = dr.ghsClassification.replaceAll("[\n\r]", " ");
+
+		erIrr.property_value_point_estimate_original = drdGHSToBinaryIrritation(erIrr.property_value_string);
+		erIrr.property_value_point_estimate_final = erIrr.property_value_point_estimate_original;
+		erIrr.property_value_units_original = "binary";
+		erIrr.property_value_units_final = "binary";
 		
 		if (dr.shouldNotBeUsed!=null && !dr.shouldNotBeUsed.trim().isBlank()) {
-			er.keep = false;
-			er.reason = "Source indicates study should not be used: shouldNotBeUsed = \"" + dr.shouldNotBeUsed +"\"";
+			erIrr.keep = false;
+			erIrr.reason = "Source indicates study should not be used: shouldNotBeUsed = \"" + dr.shouldNotBeUsed +"\"";
 		}
 		
 		// TODO eliminate records based on test substance purity?
 		
-		uc.convertRecord(er);
+		uc.convertRecord(erIrr);
 		
-		if (er.property_value_point_estimate_final==-1) {
-			er.keep=false;
-			er.reason="Ambiguous eye irritation score";
+		if (erIrr.property_value_point_estimate_final==-1) {
+			erIrr.keep=false;
+			erIrr.reason="Ambiguous eye irritation score";
 		}
-		records.add(er);
+
+		// Deep copy existing ER by serialization-deserialization
+		// Will have same SCNM/shouldNotBeUsed -> same "keep" field, etc.
+		ExperimentalRecord erCorr = gson.fromJson(gson.toJson(erIrr), ExperimentalRecord.class);
+		erCorr.property_name = "rabbit_" + ExperimentalConstants.strEyeCorrosion;
+		erCorr.property_value_point_estimate_original = drdGHSToBinaryCorrosion(erIrr.property_value_string, erIrr.property_value_point_estimate_final);
+		erCorr.property_value_point_estimate_final = erCorr.property_value_point_estimate_original;
+		
+		records.add(erIrr);
+		records.add(erCorr);
 	}
 	
-	private double drdGHSToBinary(String ghs) {
+	private double drdGHSToBinaryIrritation(String ghs) {
 		// Possible values: Cat 1, Cat 2A, Cat 2, Cat 2B, No Cat, "SCNM(Cat 1)", "SCNM(Cat 2A or higher)", "SCNM(Cat 2 or Cat 1)", "SCNM(Cat 2A)"
-		// "SCNM(Cat 2)", "SCNM(Cat 2B)", "SCNM(No Cat)", SCNM
+		// "SCNM(Cat 2)", "SCNM(Cat 2B)", "SCNM(No Cat)", "SCNM"
 		// SCNM = study criteria not met
 
 		if (ghs.contains("SCNM")) {
-			return -1.0;
+			return -1;
 		} else if (ghs.contains("Cat 1") || ghs.contains("Cat 2")) {
-			return 1.0;
+			return 1;
 		} else {
-			return 0.0;
+			return 0;
+		}
+	}
+	
+	private double drdGHSToBinaryCorrosion(String ghs, double isIrritant) {
+		if (isIrritant<=0) {
+			return isIrritant;
+		} else if (ghs.contains("Cat 1")) {
+			return 1;
+		} else {
+			return 0;
 		}
 	}
 	
