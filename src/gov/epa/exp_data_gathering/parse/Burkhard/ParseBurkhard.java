@@ -28,8 +28,11 @@ import gov.epa.exp_data_gathering.parse.ChemicalBook.RecordChemicalBook;
 
 public class ParseBurkhard extends Parse {
 
+	public boolean removeDuplicates=true; // not sure how we want this changed later on.
+
+	
 	public ParseBurkhard() {
-		sourceName = "Burkhard"; // TODO Consider creating ExperimentalConstants.strSourceBurkhard instead.
+		sourceName = "Burkhard";
 		this.init();
 
 		// TODO Is this a toxicity source? If so, rename original and experimental records files here.
@@ -80,7 +83,7 @@ public class ParseBurkhard extends Parse {
 	
 	private void addExperimentalRecords(RecordBurkhard rb, ExperimentalRecords recordsExperimental) {
 		if (rb.Log_BCF_Steady_State_mean != null && !rb.Log_BCF_Steady_State_mean.isBlank()) {
-			addNewExperimentalRecord(rb,"LogBCF", recordsExperimental);
+			addNewExperimentalRecord(rb,"LogBCFSteadyState", recordsExperimental);
 		}
 		if (rb.Log_BCF_Kinetic_mean != null && !rb.Log_BCF_Kinetic_mean.isBlank()) {
 			addNewExperimentalRecord(rb,"LogBCFKinetic", recordsExperimental);
@@ -98,28 +101,88 @@ public class ParseBurkhard extends Parse {
 		String strDate=formatter.format(date);
 		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
 		ExperimentalRecord er = new ExperimentalRecord();
+		er.fr_id = rb.ID;
 		er.updateNote("species:" + rb.Common_Name + ";" + "tissue:" + rb.Tissue + ";" + "exposure concentrations: " + rb.Exposure_Concentrations);
 		er.source_name=sourceName;
 		er.chemical_name = rb.Chemical;
 		er.casrn = rb.CAS;
 		er.original_source_name = rb.Reference;
 		
-		if (propertyName=="LogBCF") {
+		if (propertyName=="LogBCFSteadyState") {
 			er.property_name=propertyName;
-			if (!rb.Log_BCF_Steady_State_mean.equals("NA")) {
-			er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Steady_State_mean);
-			}
+			er.property_value_units_final = rb.Log_BCF_Steady_State_units;
+			er.updateNote("study quality: " + rb.Study_Quality_BCF);
+			try {
+				er.property_value_string = "Value: " + rb.Log_BCF_Steady_State_mean;
+				if (rb.Log_BCF_Steady_State_type.toLowerCase().contains("arithmetic") || rb.Log_BCF_Steady_State_units.toLowerCase().contains("arithmetic")) {
+					er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_mean));
+				}
+				else {
+	        	er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Steady_State_mean);
+				}
+	        	if (rb.Log_BCF_Steady_State_max != null && rb.Log_BCF_Steady_State_min != null) {
+	        	er.property_value_string = "Value: " + rb.Log_BCF_Steady_State_min + "~" + rb.Log_BCF_Steady_State_max;
+	        	if (rb.Log_BCF_Steady_State_type.toLowerCase().contains("arithmetic") || rb.Log_BCF_Steady_State_units.toLowerCase().contains("arithmetic")) {
+					er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_max));
+					er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_min));
+				} else {
+	        	er.property_value_max_final = Double.parseDouble(rb.Log_BCF_Steady_State_max);
+	        	er.property_value_min_final = Double.parseDouble(rb.Log_BCF_Steady_State_min);
+	        	}
+	        	}
+	        } catch (NumberFormatException e) {
+
+	        }
 		}	else if (propertyName == "LogBCFKinetic") {
 			er.property_name=propertyName;
-			if (!rb.Log_BCF_Kinetic_mean.equals("NA")) {
-			er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Kinetic_mean);
+			er.property_value_units_final = rb.Log_BCF_Kinetic_units;
+			try {
+				er.property_value_string = "Value: " + rb.Log_BCF_Kinetic_mean;
+	        	if (rb.Log_BCF_Kinetic_type.toLowerCase().contains("arithmetic") || rb.Log_BCF_Kinetic_units.toLowerCase().contains("arithmetic")) {
+					er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_mean));
+	        	} else {
+	        		er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Kinetic_mean);
+	        	}
+			
+			} catch (NumberFormatException e) {
+				
 			}
 		} else if (propertyName == "LogBAF") {
 			er.property_name=propertyName;
-			if (!rb.Log_BAF_mean.equals("NA")) {
-			er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BAF_mean);
+			er.property_value_units_final = rb.Log_BAF_units;
+			er.updateNote("study quality: " + rb.Study_Quality_BAF);
+			try {
+			er.property_value_string = "Value: " + rb.Log_BAF_mean;
+			if ((rb.Log_BAF_type != null && !(rb.Log_BAF_type.isBlank())) &&
+					rb.Log_BAF_type.toLowerCase().contains("arithmetic")) {
+				er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BAF_mean));
+			}
+			else {
+        	er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BAF_mean);
+			}
+        	if (rb.Log_BAF_min != null && rb.Log_BAF_max != null) {
+	        er.property_value_string = "Value: " + rb.Log_BAF_min + "~" + rb.Log_BAF_max;
+
+        	er.property_value_max_final = Double.parseDouble(rb.Log_BAF_min);
+        	er.property_value_min_final = Double.parseDouble(rb.Log_BAF_max);
+        	}
+			} catch (NumberFormatException e) {
+
+			}
 		}
+		
+		// limiting our search to fish
+		if (!(rb.taxonomic_class.toLowerCase().contains("actinopteri") || rb.taxonomic_class.toLowerCase().contains("actinopterygii") || rb.taxonomic_class.toLowerCase().contains("teleostei"))) {
+			er.keep = false;
+			er.reason = "not a fish";
 		}
+		
+		// limiting our search to whole body
+		if ((rb.Tissue != null && !rb.Tissue.isBlank()) && !(rb.Tissue.toLowerCase().contains("whole body"))) {
+			er.keep = false;
+			er.reason = "not a whole body record";
+		}
+		
 		recordsExperimental.add(er);
 
 	}
