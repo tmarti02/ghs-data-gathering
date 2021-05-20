@@ -18,12 +18,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class ParseOECD_Toolbox_alt extends Parse {
+public class ParseOECD_Toolbox_SkinIrrit extends Parse {
 	String recordTypeToParse;
 	
-	public ParseOECD_Toolbox_alt(String recordTypeToParse) {
+	public ParseOECD_Toolbox_SkinIrrit(String recordTypeToParse) {
 		this.recordTypeToParse=recordTypeToParse;
-		sourceName = ExperimentalConstants.strSourceOECD_Toolbox;
+		sourceName = ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit;
 		removeDuplicates=false;
 		this.init();
 		
@@ -43,7 +43,7 @@ public class ParseOECD_Toolbox_alt extends Parse {
 		String folder="Data\\experimental\\"+sourceName+"\\";
 		// String filename="Data matrix_1_8_19__15_52_25.xlsx";
 		String filename="Data matrix Skin Irritation.xlsx";
-		Vector<RecordOECD_Toolbox_alt> records = RecordOECD_Toolbox_alt.parseExcel2(folder+filename);
+		Vector<RecordOECD_Toolbox_SkinIrrit> records = RecordOECD_Toolbox_SkinIrrit.parseExcel2(folder+filename);
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -55,27 +55,27 @@ public class ParseOECD_Toolbox_alt extends Parse {
 			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
 			File jsonFile = new File(jsonFileName);
 			
-			List<RecordOECD_Toolbox_alt> recordsOECD_Toolbox_alt = new ArrayList<RecordOECD_Toolbox_alt>();
-			RecordOECD_Toolbox_alt[] tempRecords = null;
+			List<RecordOECD_Toolbox_SkinIrrit> recordsOECD_Toolbox_SkinIrrit = new ArrayList<RecordOECD_Toolbox_SkinIrrit>();
+			RecordOECD_Toolbox_SkinIrrit[] tempRecords = null;
 			if (howManyOriginalRecordsFiles==1) {
-				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordOECD_Toolbox_alt[].class);
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordOECD_Toolbox_SkinIrrit[].class);
 				for (int i = 0; i < tempRecords.length; i++) {
-					recordsOECD_Toolbox_alt.add(tempRecords[i]);
+					recordsOECD_Toolbox_SkinIrrit.add(tempRecords[i]);
 				}
 			} else {
 				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
 					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
 					File batchFile = new File(batchFileName);
-					tempRecords = gson.fromJson(new FileReader(batchFile), RecordOECD_Toolbox_alt[].class);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordOECD_Toolbox_SkinIrrit[].class);
 					for (int i = 0; i < tempRecords.length; i++) {
-						recordsOECD_Toolbox_alt.add(tempRecords[i]);
+						recordsOECD_Toolbox_SkinIrrit.add(tempRecords[i]);
 					}
 				}
 			}
 			
-			Iterator<RecordOECD_Toolbox_alt> it = recordsOECD_Toolbox_alt.iterator();
+			Iterator<RecordOECD_Toolbox_SkinIrrit> it = recordsOECD_Toolbox_SkinIrrit.iterator();
 			while (it.hasNext()) {
-				RecordOECD_Toolbox_alt r = it.next();
+				RecordOECD_Toolbox_SkinIrrit r = it.next();
 				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
@@ -93,7 +93,7 @@ public class ParseOECD_Toolbox_alt extends Parse {
 	 * @param recOT
 	 * @param records
 	 */
-	private void addExperimentalRecords(RecordOECD_Toolbox_alt recOT, ExperimentalRecords records) {
+	private void addExperimentalRecords(RecordOECD_Toolbox_SkinIrrit recOT, ExperimentalRecords records) {
 		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 		Date date = new Date();  
 		String strDate=formatter.format(date);
@@ -129,11 +129,60 @@ public class ParseOECD_Toolbox_alt extends Parse {
 				er.note = recOT.species;
 		}
 
-		records.add(er);
+		ExperimentalRecord erCorr = gson.fromJson(gson.toJson(er), ExperimentalRecord.class);
+		erCorr.property_name = "rabbit_" + ExperimentalConstants.strSkinCorrosion;
+		erCorr.property_value_numeric_qualifier = "";
+		erCorr.property_value_units_final="binary";
+		erCorr.property_value_point_estimate_original = convertPIIToBinaryCorrosion(er.property_value_point_estimate_final);
+		erCorr.property_value_point_estimate_final = erCorr.property_value_point_estimate_original;
+		if (erCorr.property_value_point_estimate_final==-1) {
+			erCorr.keep=false;
+			erCorr.reason="Not a corrosion record";
+		}
+
+		ExperimentalRecord erIrr = gson.fromJson(gson.toJson(er), ExperimentalRecord.class);
+		erIrr.property_name = "rabbit_" + ExperimentalConstants.strSkinIrritation;
+		erCorr.property_value_numeric_qualifier = "";
+		erIrr.property_value_units_final="binary";
+		erIrr.property_value_point_estimate_original = convertPIIToBinaryIrritation(er.property_value_point_estimate_final);
+		erIrr.property_value_point_estimate_final = erIrr.property_value_point_estimate_original;
+		if (erIrr.property_value_point_estimate_final==-1) {
+			erIrr.keep=false;
+			erIrr.reason="Ambiguous skin irritation score";
+		}
+
+		records.add(erCorr);
+		records.add(erIrr);
+		// if you wanted the primary irritation index values
+		// records.add(er); 
+
+	
 	}
 	
+	
+	private static double convertPIIToBinaryCorrosion(double propertyValue) {
+		double CorrBinary = -1; // inapplicable record to be discarded
+		if ((propertyValue >= 2.3) && (propertyValue < 4.0)) {
+			CorrBinary = 0;
+		} else if ((propertyValue >= 4.0)) {
+			CorrBinary = 1;
+		}
+		return CorrBinary;
+	}
+	
+	private static double convertPIIToBinaryIrritation(double propertyValue) {
+		double IrritBinary = -1;
+		if ((propertyValue >= 2.3)) {
+			IrritBinary = 1.0;
+		} else if ((propertyValue < 2.3) && (propertyValue >= 0)) {
+			IrritBinary = 0.0;
+		}
+		return IrritBinary;
+	}
+
+	
 	public static void main(String[] args) {
-		ParseOECD_Toolbox_alt p = new ParseOECD_Toolbox_alt("tox");
+		ParseOECD_Toolbox_SkinIrrit p = new ParseOECD_Toolbox_SkinIrrit("tox");
 		p.createFiles();
 		
 
