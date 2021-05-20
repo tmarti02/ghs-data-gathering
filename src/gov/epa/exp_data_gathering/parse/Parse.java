@@ -35,6 +35,7 @@ import gov.epa.exp_data_gathering.parse.PubChem.ParsePubChem;
 import gov.epa.exp_data_gathering.parse.QSARDB.ParseQSARDB;
 import gov.epa.exp_data_gathering.parse.Sander.ParseSander;
 import gov.epa.exp_data_gathering.parse.Takahashi.ParseTakahashi;
+import gov.epa.exp_data_gathering.parse.ThreeM.ParseThreeM;
 
 public class Parse {
 	
@@ -266,6 +267,9 @@ public class Parse {
 		case ExperimentalConstants.strSourceICF:
 			p = new ParseICF();
 			break;
+		case ExperimentalConstants.strSource3M:
+			p = new ParseThreeM();
+			break;
 		default:
 			System.out.println("Need to add parse case for "+sourceName);
 			return;
@@ -290,11 +294,13 @@ public class Parse {
 				ExperimentalConstants.strSourceQSARDB,
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuiteISIS,
-				ExperimentalConstants.strSourceICF};
+				ExperimentalConstants.strSourceICF,
+				ExperimentalConstants.strSource3M};
 		
 		String[] reparseSources = {
-				ExperimentalConstants.strSourceICF
-				};
+				ExperimentalConstants.strSourceICF,
+				ExperimentalConstants.strSource3M
+			};
 		
 		boolean reparse=true;
 		boolean reparseAll=false;
@@ -355,8 +361,8 @@ public class Parse {
 	
 	
 	public static void main(String[] args) {
-//		parsePhyschem();
-		parseTox();
+		parsePhyschem();
+//		parseTox();
 	}
 }
 

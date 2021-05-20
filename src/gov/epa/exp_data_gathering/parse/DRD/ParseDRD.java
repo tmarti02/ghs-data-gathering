@@ -108,13 +108,16 @@ public class ParseDRD extends Parse {
 
 		// Deep copy existing ER by serialization-deserialization
 		// Will have same SCNM/shouldNotBeUsed -> same "keep" field, etc.
-		ExperimentalRecord erCorr = gson.fromJson(gson.toJson(erIrr), ExperimentalRecord.class);
-		erCorr.property_name = "rabbit_" + ExperimentalConstants.strEyeCorrosion;
-		erCorr.property_value_point_estimate_original = drdGHSToBinaryCorrosion(erIrr.property_value_string, erIrr.property_value_point_estimate_final);
-		erCorr.property_value_point_estimate_final = erCorr.property_value_point_estimate_original;
+		if (erIrr.property_value_point_estimate_final>0) {
+			ExperimentalRecord erCorr = gson.fromJson(gson.toJson(erIrr), ExperimentalRecord.class);
+			erCorr.property_name = "rabbit_" + ExperimentalConstants.strEyeCorrosion;
+			erCorr.property_value_point_estimate_original = drdGHSToBinaryCorrosion(erIrr.property_value_string, erIrr.property_value_point_estimate_final);
+			erCorr.property_value_point_estimate_final = erCorr.property_value_point_estimate_original;
+			
+			records.add(erCorr);
+		}
 		
 		records.add(erIrr);
-		records.add(erCorr);
 	}
 	
 	private double drdGHSToBinaryIrritation(String ghs) {

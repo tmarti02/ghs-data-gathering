@@ -105,13 +105,16 @@ public class ParseLebrun extends Parse {
 		}
 		
 		// Deep copy existing ER by serialization-deserialization
-		ExperimentalRecord erCorr = gson.fromJson(gson.toJson(erIrr), ExperimentalRecord.class);
-		erCorr.property_name = "rabbit_" + ExperimentalConstants.strEyeCorrosion;
-		erCorr.property_value_point_estimate_original = convertCodesToBinaryCorrosion(ghs, epa, erIrr.property_value_point_estimate_final);
-		erCorr.property_value_point_estimate_final = erCorr.property_value_point_estimate_original;
+		if (erIrr.property_value_point_estimate_final>0) {
+			ExperimentalRecord erCorr = gson.fromJson(gson.toJson(erIrr), ExperimentalRecord.class);
+			erCorr.property_name = "rabbit_" + ExperimentalConstants.strEyeCorrosion;
+			erCorr.property_value_point_estimate_original = convertCodesToBinaryCorrosion(ghs, epa, erIrr.property_value_point_estimate_final);
+			erCorr.property_value_point_estimate_final = erCorr.property_value_point_estimate_original;
+			
+			records.add(erCorr);
+		}
 		
 		records.add(erIrr);
-		records.add(erCorr);
 	}
 	
 	private static double convertCodesToBinaryIrritation(String ghs, String epa) {
