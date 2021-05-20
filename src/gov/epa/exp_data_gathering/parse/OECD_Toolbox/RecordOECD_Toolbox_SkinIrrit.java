@@ -21,7 +21,7 @@ import gov.epa.ghs_data_gathering.GetData.Scifinder;
 import gov.epa.ghs_data_gathering.GetData.ScifinderRecord;
 import gov.epa.ghs_data_gathering.Utilities.ExcelUtilities;
 
-public class RecordOECD_Toolbox_alt {
+public class RecordOECD_Toolbox_SkinIrrit {
 
 	public String chemical_number;
 	public String chemical_name;
@@ -248,11 +248,11 @@ public class RecordOECD_Toolbox_alt {
 		}
 
 
-	static Vector<RecordOECD_Toolbox_alt> parseExcel2(String filePathExcel) {
+	static Vector<RecordOECD_Toolbox_SkinIrrit> parseExcel2(String filePathExcel) {
 			
 		
 		
-		Vector<RecordOECD_Toolbox_alt> records = new Vector<>();
+		Vector<RecordOECD_Toolbox_SkinIrrit> records = new Vector<>();
 	
 			try {
 	
@@ -277,7 +277,7 @@ public class RecordOECD_Toolbox_alt {
 					for (int rowNumber = 13; rowNumber <= 20; rowNumber++) {
 						XSSFRow rowEC3 = sheet.getRow(rowNumber);
 	
-						RecordOECD_Toolbox_alt r = new RecordOECD_Toolbox_alt();
+						RecordOECD_Toolbox_SkinIrrit r = new RecordOECD_Toolbox_SkinIrrit();
 	
 						r.chemical_name = ExcelUtilities.getStringValue(rowName.getCell(col));
 						r.chemical_number = ExcelUtilities.getStringValue(rowChemicalNumber.getCell(col));
@@ -339,11 +339,11 @@ public class RecordOECD_Toolbox_alt {
 		}
 	
 	
-	static Vector<RecordOECD_Toolbox_alt> parseExcel3(String filePathExcel) {
+	static Vector<RecordOECD_Toolbox_SkinIrrit> parseExcel3(String filePathExcel) {
 			
 		
 		
-		Vector<RecordOECD_Toolbox_alt> records = new Vector<>();
+		Vector<RecordOECD_Toolbox_SkinIrrit> records = new Vector<>();
 	
 			try {
 	
@@ -368,7 +368,7 @@ public class RecordOECD_Toolbox_alt {
 					for (int rowNumber = 15; rowNumber <= 17; rowNumber++) {
 						XSSFRow rowEC3 = sheet.getRow(rowNumber);
 	
-						RecordOECD_Toolbox_alt r = new RecordOECD_Toolbox_alt();
+						RecordOECD_Toolbox_SkinIrrit r = new RecordOECD_Toolbox_SkinIrrit();
 	
 						r.chemical_name = ExcelUtilities.getStringValue(rowName.getCell(col));
 						r.chemical_number = ExcelUtilities.getStringValue(rowChemicalNumber.getCell(col));

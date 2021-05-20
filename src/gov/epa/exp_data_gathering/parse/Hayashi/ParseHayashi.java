@@ -14,7 +14,6 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
-import gov.epa.exp_data_gathering.parse.OECD_Toolbox.ParseOECD_Toolbox_alt;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,8 +26,6 @@ public class ParseHayashi extends Parse {
 	public ParseHayashi() {
 		sourceName = ExperimentalConstants.strSourceHayashi; // TODO Consider creating ExperimentalConstants.strSourceHayashi instead.
 		this.init();
-
-		// TODO Is this a toxicity source? If so, rename original and experimental records files here.
 	}
 
 	@Override
@@ -91,9 +88,53 @@ public class ParseHayashi extends Parse {
 		er.property_value_point_estimate_final = Double.parseDouble(r.Experimental_skin_irritation_score);
 		er.note = "MW =" + r.MW;
 		er.original_source_name="Hayashi M, Nakamura Y, Higashi K, Kato H, Kishida F, Kaneko H. A quantitative structure-Activity relationship study of the skin irritation potential of phenols. Toxicol In Vitro. 1999 Dec;13(6):915-22. doi: 10.1016/s0887-2333(99)00077-6. PMID: 20654567.";
-		recordsExperimental.add(er);
+		
+		ExperimentalRecord erCorr = gson.fromJson(gson.toJson(er), ExperimentalRecord.class);
+		erCorr.property_name = "rabbit_" + ExperimentalConstants.strSkinCorrosion;
+		erCorr.property_value_units_final="binary";
+		erCorr.property_value_point_estimate_original = convertPIIToBinaryCorrosion(er.property_value_point_estimate_final);
+		erCorr.property_value_point_estimate_final = erCorr.property_value_point_estimate_original;
+		if (erCorr.property_value_point_estimate_final==-1) {
+			erCorr.keep=false;
+			erCorr.reason="Not a corrosion record";
+		}
+
+		ExperimentalRecord erIrr = gson.fromJson(gson.toJson(er), ExperimentalRecord.class);
+		erIrr.property_name = "rabbit_" + ExperimentalConstants.strSkinIrritation;
+		erIrr.property_value_units_final="binary";
+		erIrr.property_value_point_estimate_original = convertPIIToBinaryIrritation(er.property_value_point_estimate_final);
+		erIrr.property_value_point_estimate_final = erIrr.property_value_point_estimate_original;
+		if (erIrr.property_value_point_estimate_final==-1) {
+			erIrr.keep=false;
+			erIrr.reason="Ambiguous skin irritation score";
+		}
+
+		recordsExperimental.add(erCorr);
+		recordsExperimental.add(erIrr);
 		
 	}
+	
+	private static double convertPIIToBinaryCorrosion(double propertyValue) {
+		double CorrBinary = -1; // inapplicable record to be discarded
+		if ((propertyValue >= 2.3) && (propertyValue < 4.0)) {
+			CorrBinary = 0;
+		} else if ((propertyValue >= 4.0)) {
+			CorrBinary = 1;
+		}
+		return CorrBinary;
+	}
+	
+	private static double convertPIIToBinaryIrritation(double propertyValue) {
+		double IrritBinary = -1;
+		if ((propertyValue >= 2.3)) {
+			IrritBinary = 1.0;
+		} else if ((propertyValue < 2.3) && (propertyValue >= 0)) {
+			IrritBinary = 0.0;
+		}
+		return IrritBinary;
+	}
+
+	
 	
 	
 	public static void main(String[] args) {

@@ -14,7 +14,6 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
-import gov.epa.exp_data_gathering.parse.OECD_Toolbox.ParseOECD_Toolbox_alt;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,10 +23,9 @@ import com.google.gson.JsonObject;
 public class ParseBagley extends Parse {
 
 	public ParseBagley() {
-		sourceName = "Bagley"; // TODO Consider creating ExperimentalConstants.strSourceBagley instead.
+		sourceName = ExperimentalConstants.strSourceBagley; 
 		this.init();
 
-		// TODO Is this a toxicity source? If so, rename original and experimental records files here.
 	}
 
 	@Override
@@ -71,6 +69,8 @@ public class ParseBagley extends Parse {
 
 		return recordsExperimental;
 	}
+	
+	
 private void addExperimentalRecord(RecordBagley r, ExperimentalRecords recordsExperimental) {
 	SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 	Date date = new Date();  
@@ -100,11 +100,58 @@ private void addExperimentalRecord(RecordBagley r, ExperimentalRecords recordsEx
 		er.property_value_point_estimate_final = Double.parseDouble(number_alone_string);
 	}
 
+
+	ExperimentalRecord erCorr = gson.fromJson(gson.toJson(er), ExperimentalRecord.class);
+	erCorr.property_name = "rabbit_" + ExperimentalConstants.strSkinCorrosion;
+	erCorr.property_value_units_final="binary";
+	erCorr.property_value_point_estimate_original = convertPIIToBinaryCorrosion(er.property_value_point_estimate_final);
+	erCorr.property_value_numeric_qualifier = "";
+	erCorr.property_value_point_estimate_final = erCorr.property_value_point_estimate_original;
+	if (erCorr.property_value_point_estimate_final==-1) {
+		erCorr.keep=false;
+		erCorr.reason="Not a corrosion record";
+	}
+
 	
-	recordsExperimental.add(er);
+	ExperimentalRecord erIrr = gson.fromJson(gson.toJson(er), ExperimentalRecord.class);
+	erIrr.property_name = "rabbit_" + ExperimentalConstants.strSkinIrritation;
+	erIrr.property_value_units_final="binary";
+	erIrr.property_value_point_estimate_original = convertPIIToBinaryIrritation(er.property_value_point_estimate_final);
+	erCorr.property_value_numeric_qualifier = "";
+	erIrr.property_value_point_estimate_final = erIrr.property_value_point_estimate_original;
+	if (erIrr.property_value_point_estimate_final==-1) {
+		erIrr.keep=false;
+		erIrr.reason="Ambiguous skin irritation score";
+	}
+
+
+	recordsExperimental.add(erCorr);
+	recordsExperimental.add(erIrr);
 
 		
 	}
+
+
+	private static double convertPIIToBinaryCorrosion(double propertyValue) {
+		double CorrBinary = -1; // inapplicable record to be discarded
+		if ((propertyValue >= 2.3) && (propertyValue < 4.0)) {
+			CorrBinary = 0;
+		} else if ((propertyValue >= 4.0)) {
+			CorrBinary = 1;
+		}
+		return CorrBinary;
+	}
+
+	private static double convertPIIToBinaryIrritation(double propertyValue) {
+		double IrritBinary = -1;
+		if ((propertyValue >= 2.3)) {
+			IrritBinary = 1.0;
+		} else if ((propertyValue < 2.3) && (propertyValue >= 0)) {
+			IrritBinary = 0.0;
+		}
+		return IrritBinary;
+	}
+
 	
 	public static void main(String[] args) {
 		ParseBagley p = new ParseBagley();
