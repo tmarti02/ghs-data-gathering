@@ -28,7 +28,7 @@ import gov.epa.exp_data_gathering.parse.ThreeM.RecordThreeM;
 public class ParseVerheyen extends Parse {
 
 	public ParseVerheyen() {
-		sourceName = "Verheyen"; // TODO Consider creating ExperimentalConstants.strSourceVerheyen instead.
+		sourceName = ExperimentalConstants.strSourceVerheyen;
 		this.init();
 		
 		fileNameJSON_Records = sourceName +" Toxicity Original Records.json";
@@ -88,10 +88,11 @@ public class ParseVerheyen extends Parse {
 		String strDate=formatter.format(date);
 		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
 		ExperimentalRecord er = new ExperimentalRecord();
-		er.source_name = "Verheyen";
+		er.source_name = ExperimentalConstants.strSourceVerheyen;
 		er.chemical_name = r.Name;
 		er.casrn = r.CAS;
 		er.date_accessed = dayOnly;
+		er.property_value_string = r.Skin;
 		int binary = 0;
 		if (r.Skin != null && !(r.Skin.isBlank())) {
 			if (r.Skin.equals("pos")) {
@@ -107,7 +108,7 @@ public class ParseVerheyen extends Parse {
 			er.reason = "no data";
 		}
 		er.original_source_name = "Geert R. Verheyen, Els Braeken, Koen Van Deun, Sabine Van Miert, Evaluation of existing (Q)SAR models for skin and eye irritation and corrosion to use for REACH registration,Toxicology Letters, Volume 265, 2017, Pages 47-52, ISSN 0378-4274, https://doi.org/10.1016/j.toxlet.2016.11.007.";
-		er.property_name = "Skin Irritation";
+		er.property_name = "rabbit_" + ExperimentalConstants.strSkinIrritation;
 		recordsExperimental.add(er);
 	}
 

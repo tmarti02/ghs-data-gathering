@@ -16,6 +16,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.ToxicityDictionary.DictionarySkinCorrosionIrritation;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -96,6 +97,7 @@ public class ParseKodithala extends Parse {
 		er.property_value_point_estimate_final = Double.parseDouble(r.Observed_PII);
 		er.original_source_name="Kiran Kodithala, A. J. Hopfinger, Edward D. Thompson, Michael K. Robinson, Prediction of Skin Irritation from Organic Chemicals Using Membrane-Interaction QSAR Analysis, Toxicological Sciences, Volume 66, Issue 2, April 2002, Pages 336-346, https://doi.org/10.1093/toxsci/66.2.336";
 		
+		/*
 		ExperimentalRecord erCorr = gson.fromJson(gson.toJson(er), ExperimentalRecord.class);
 		erCorr.property_name = "rabbit_" + ExperimentalConstants.strSkinCorrosion;
 		erCorr.property_value_units_final="binary";
@@ -105,12 +107,12 @@ public class ParseKodithala extends Parse {
 			erCorr.keep=false;
 			erCorr.reason="Not a corrosion record";
 		}
-
+		*/
 		
 		ExperimentalRecord erIrr = gson.fromJson(gson.toJson(er), ExperimentalRecord.class);
 		erIrr.property_name = "rabbit_" + ExperimentalConstants.strSkinIrritation;
 		erIrr.property_value_units_final="binary";
-		erIrr.property_value_point_estimate_original = convertPIIToBinaryIrritation(er.property_value_point_estimate_final);
+		erIrr.property_value_point_estimate_original = DictionarySkinCorrosionIrritation.convertPIIToBinaryIrritation(er.property_value_point_estimate_final);
 		erIrr.property_value_point_estimate_final = erIrr.property_value_point_estimate_original;
 		if (erIrr.property_value_point_estimate_final==-1) {
 			erIrr.keep=false;
@@ -118,13 +120,13 @@ public class ParseKodithala extends Parse {
 		}
 
 
-		recordsExperimental.add(erCorr);
+		// recordsExperimental.add(erCorr);
 		recordsExperimental.add(erIrr);
 		
 	}
 	
 	
-	
+	/*
 	private static double convertPIIToBinaryCorrosion(double propertyValue) {
 		double CorrBinary = -1; // inapplicable record to be discarded
 		if ((propertyValue >= 2.3) && (propertyValue < 4.0)) {
@@ -134,16 +136,8 @@ public class ParseKodithala extends Parse {
 		}
 		return CorrBinary;
 	}
+	*/
 	
-	private static double convertPIIToBinaryIrritation(double propertyValue) {
-		double IrritBinary = -1;
-		if ((propertyValue >= 2.3)) {
-			IrritBinary = 1.0;
-		} else if ((propertyValue < 2.3) && (propertyValue >= 0)) {
-			IrritBinary = 0.0;
-		}
-		return IrritBinary;
-	}
 
 	
 	public static void main(String[] args) {
