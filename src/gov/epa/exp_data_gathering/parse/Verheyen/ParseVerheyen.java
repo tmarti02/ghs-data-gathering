@@ -30,8 +30,13 @@ public class ParseVerheyen extends Parse {
 	public ParseVerheyen() {
 		sourceName = "Verheyen"; // TODO Consider creating ExperimentalConstants.strSourceVerheyen instead.
 		this.init();
-
-		// TODO Is this a toxicity source? If so, rename original and experimental records files here.
+		
+		fileNameJSON_Records = sourceName +" Toxicity Original Records.json";
+		fileNameFlatExperimentalRecords = sourceName +" Toxicity Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.txt";
+		fileNameJsonExperimentalRecords = sourceName +" Toxicity Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +" Toxicity Experimental Records.xlsx";
 	}
 
 	@Override

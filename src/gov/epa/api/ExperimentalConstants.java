@@ -29,6 +29,8 @@ public class ExperimentalConstants {
 	public static final String strEyeIrritation="EyeIrritation";
 	public static final String strEyeCorrosion="EyeCorrosion";
 	public static final String strSkinIrritationPII="SkinIrritationPII";
+	public static final String strSkinIrritation="SkinIrritation";
+	public static final String strSkinCorrosion="SkinCorrosion";
 	
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
@@ -129,6 +131,7 @@ public class ExperimentalConstants {
 	public static final String strSource3M="ThreeM";
 	
 	public static final String strSourceOECD_Toolbox="OECD Toolbox";
+	public static final String strSourceOECD_Toolbox_SkinIrrit = "OECD Toolbox Skin Irritation";
 	public static final String strSourceNICEATM="NICEATM";
 	public static final String strSourceCFSAN="CFSAN";
 	public static final String strSourceLebrun="Lebrun";

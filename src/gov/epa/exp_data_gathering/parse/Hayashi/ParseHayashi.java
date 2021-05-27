@@ -26,6 +26,14 @@ public class ParseHayashi extends Parse {
 	public ParseHayashi() {
 		sourceName = ExperimentalConstants.strSourceHayashi; // TODO Consider creating ExperimentalConstants.strSourceHayashi instead.
 		this.init();
+		
+		fileNameJSON_Records = sourceName +" Toxicity Original Records.json";
+		fileNameFlatExperimentalRecords = sourceName +" Toxicity Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.txt";
+		fileNameJsonExperimentalRecords = sourceName +" Toxicity Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +" Toxicity Experimental Records.xlsx";
+
 	}
 
 	@Override

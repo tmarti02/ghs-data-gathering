@@ -27,8 +27,14 @@ public class ParseKodithala extends Parse {
 	public ParseKodithala() {
 		sourceName = "Kodithala"; // TODO Consider creating ExperimentalConstants.strSourceKodithala instead.
 		this.init();
+		
+		fileNameJSON_Records = sourceName +" Toxicity Original Records.json";
+		fileNameFlatExperimentalRecords = sourceName +" Toxicity Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.txt";
+		fileNameJsonExperimentalRecords = sourceName +" Toxicity Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +" Toxicity Experimental Records.xlsx";
 
-		// TODO Is this a toxicity source? If so, rename original and experimental records files here.
 	}
 
 	@Override
