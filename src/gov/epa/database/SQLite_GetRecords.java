@@ -165,7 +165,7 @@ public class SQLite_GetRecords {
 //						System.out.println(name+"\t"+val);
 						val=val.replace("[", "").replace("]", "");
 						
-						String  [] values = val.split(",");
+						String  [] values = val.split(", ");
 						Set<String>list=new HashSet<>();
 						for (String value:values) {
 							list.add(value.trim());
