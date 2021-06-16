@@ -42,6 +42,10 @@ import gov.epa.exp_data_gathering.parse.Takahashi.ParseTakahashi;
 import gov.epa.exp_data_gathering.parse.ThreeM.ParseThreeM;
 import gov.epa.exp_data_gathering.parse.Verheyen.ParseVerheyen;
 
+/**
+ * @author gsinclair, tmartin, cramsland
+ *
+ */
 public class Parse {
 	
 	public String sourceName;
@@ -76,6 +80,10 @@ public class Parse {
 	
 	protected int howManyOriginalRecordsFiles=1;
 
+	/**
+	 * init method for parse class that specifies folder locations of the files to be found or written to.
+	 * tool for consistent, readable json formatting is called here
+	 */
 	public void init() {
 		fileNameJSON_Records = sourceName +" Original Records.json";
 		fileNameFlatExperimentalRecords = sourceName +" Experimental Records.txt";
@@ -112,6 +120,11 @@ public class Parse {
 		return null;
 	}
 	
+	/**
+	 * the method called by every parse class to create the json and excel files that are saved to source specific main folder
+	 * duplicate records are removed according to identical property_value_strings, original_source_name and property_name.
+	 * 
+	 */
 	public void createFiles() {
 		if (generateOriginalJSONRecords) {
 			System.out.println("Creating " + sourceName + " json files...");
@@ -164,6 +177,10 @@ public class Parse {
 		System.out.println("done\n");
 	}
 	
+	/**
+	 * writes original records to JSON format to the specified json folder
+	 * @param records - a vector of original record objects (e.g. RecordLookChem)
+	 */
 	protected void writeOriginalRecordsToFile(Vector<?> records) {
 		try {
 			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
@@ -173,6 +190,11 @@ public class Parse {
 		}
 	}
 	
+	/**
+	 * Parses multiple sources, calls the classes that parse their data into the experimentalrecords json and excel files
+	 * @param sourceName a string with the source name matching those found in the ExperimentalConstants dictionary
+	 * @param recordTypeToParse tox or physchem, those exact strings can be found in parsePhyschem and parseTox methods
+	 */
 	public static void runParse(String sourceName,String recordTypeToParse) {
 		String[] toxSources = {
 				ExperimentalConstants.strSourceChemidplus,
@@ -303,6 +325,10 @@ public class Parse {
 		p.createFiles();
 	}
 	
+	/**
+	 * parses all physchem sources in the allsources string array
+	 * sources in the reparsesources string array are parsed when the parsePhyschem method is called, sources not in reparsesources have existing saved files collected by data fetcher to build database
+	 */
 	static void parsePhyschem() { 
 		String recordType = "physchem";
 		String[] allSources = {ExperimentalConstants.strSourceADDoPT,
@@ -342,6 +368,10 @@ public class Parse {
 		d.createRecordsDatabase();
 	}
 	
+	/**
+	 * parses all tox sources in the allsources string array
+	 * sources in the parseSources string array are parsed when the parseTox method is called, sources not in parseSources have existing saved files collected by data fetcher to build database
+	 */
 	static void parseTox() { 
 		
 		boolean updateEchemportal=false;
