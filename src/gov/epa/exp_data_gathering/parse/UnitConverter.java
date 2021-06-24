@@ -67,7 +67,7 @@ public class UnitConverter {
 	public void convertRecord(ExperimentalRecord er) {
 		er.casrn = ParseUtilities.fixCASLeadingZero(er.casrn);
 		if (er.casrn!=null && !ParseUtilities.isValidCAS(er.casrn)) {
-			er.keep = false;
+			er.flag = true;
 			er.reason = "Invalid CAS";
 		} else if (er.casrn!=null && er.casrn.toLowerCase().contains("mixture")) {
 			er.keep = false;
