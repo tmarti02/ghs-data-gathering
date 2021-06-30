@@ -2,6 +2,7 @@ package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -66,6 +67,7 @@ public class Parse {
 	protected String fileNameFlatExperimentalRecords;//records in flat format
 	protected String fileNameJsonExperimentalRecords;//records in ExperimentalRecord class format
 	protected String fileNameExcelExperimentalRecords;
+	protected String fileNameExcelExperimentalRecordsCheck;
 	protected String fileNameFlatExperimentalRecordsBad;
 	protected String fileNameJsonExperimentalRecordsBad;
 	public String mainFolder;
@@ -91,6 +93,7 @@ public class Parse {
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
 		fileNameJsonExperimentalRecordsBad = sourceName +" Experimental Records-Bad.json";
 		fileNameExcelExperimentalRecords = sourceName +" Experimental Records.xlsx";
+		fileNameExcelExperimentalRecordsCheck = sourceName +" Experimental Records Check.xlsx";
 		mainFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
 		databaseFolder = mainFolder;
 		jsonFolder= mainFolder;
@@ -171,6 +174,14 @@ public class Parse {
 			merge.addAll(records);
 			merge.addAll(recordsBad);
 			merge.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+			
+			//Create check file:			
+			double fracCheck=0.01;
+			Collections.shuffle(records);
+			int count=(int)(fracCheck*records.size());
+			ExperimentalRecords recordsCheck=new ExperimentalRecords();
+			for (int i=0;i<count;i++) recordsCheck.add(records.get(i));			
+			recordsCheck.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck);
 			
 		}
 		
