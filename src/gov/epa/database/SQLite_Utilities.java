@@ -414,6 +414,23 @@ public class SQLite_Utilities {
 	}
 	
 
+	
+	public static void dropTable(String tableName, String dbPath) {
+		
+		try {
+			String sql="DROP TABLE "+tableName+";";
+			Connection conn=SQLite_Utilities.getConnection(dbPath);
+			Statement stat=conn.createStatement();
+			
+//			System.out.println(sql);
+			stat.execute(sql);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
 
 
 

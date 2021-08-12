@@ -98,6 +98,7 @@ public class ScoreRecord {
 
 
 
+
 	public static final String scoreVH = "VH";
 	public static final String scoreH = "H";
 	public static final String scoreM = "M";
@@ -147,7 +148,9 @@ public class ScoreRecord {
 	public static final String sourceReproductive_Toxicity_Data_In_Vitro_from_EPA_HPVIS = "Reproductive Toxicity Data in Vitro from EPA HPVIS";
 
 	public static final String sourceToxVal="ToxVal";
-	
+	public static final String strSourceCERAPP_Exp="CERAPP_Exp";//in vitro evaluation set from CERAPP EHP paper
+	public static final String strSourceCOMPARA_Exp="COMPARA_Exp";//in vitro evaluation set from COMPARA EHP paper
+	public static final String strSourceOPERA_MDH="OPERA_MDH";
 	
 //	public static final float weightECHA_CLP = 20.0f;
 //	public static final float weightIRIS = 20.0f;
@@ -290,6 +293,10 @@ public class ScoreRecord {
 	public static final String listTypeDenmark = typePredicted; // don't see it on the GreenScreen list
 	
 	private static final String listTypeChemidplus=typeScreening;
+	
+	
+	public static final String listTypeCERAPP_Exp=typeScreening;
+	public static final String listTypeCOMPARA_Exp=typeScreening;
 	
 	
 //public static final String listTypeECHA_CLP = ""; // typeAuthoritative? // Is this the same as EU-GHS?
@@ -862,7 +869,9 @@ public class ScoreRecord {
 		} else if (source.equals(ScoreRecord.sourceChemIDplus)) {
 			listType=listTypeChemidplus;
 		} else if (source.contentEquals(ScoreRecord.sourceToxVal)) {
-		}
+			
+		} 
+		
 
 
 		if (!source.equals("") && listType.equals(""))
