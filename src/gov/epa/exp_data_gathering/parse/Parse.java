@@ -175,14 +175,7 @@ public class Parse {
 			merge.addAll(recordsBad);
 			merge.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords);
 			
-			//Create check file:			
-			double fracCheck=0.01;
-			Collections.shuffle(records);
-			int count=(int)(fracCheck*records.size());
-			ExperimentalRecords recordsCheck=new ExperimentalRecords();
-			for (int i=0;i<count;i++) recordsCheck.add(records.get(i));			
-			recordsCheck.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck);
-			
+			merge.createCheckingFile(records, mainFolder, fileNameExcelExperimentalRecordsCheck);
 		}
 		
 		System.out.println("done\n");
