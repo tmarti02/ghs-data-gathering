@@ -86,7 +86,7 @@ public class ParseEpisuiteISIS extends Parse {
 		
 		ExperimentalRecord er = new ExperimentalRecord();
 		
-		er.keep=false;
+		boolean keep=false;
 		er.date_accessed = dayOnly;
 		er.temperature_C = r.Temperature;
 		er.casrn=ParseUtilities.fixCASLeadingZero(r.CAS);		
@@ -94,7 +94,8 @@ public class ParseEpisuiteISIS extends Parse {
 		er.smiles=r.Smiles;
 		
 		// why isn't this check working
-		if (abbrev.equals("HL") && r.HL_dimensionless != null) {
+		if (r.HL_dimensionless != null) {
+			keep = true;
 			er.keep=true;
 			er.property_name = ExperimentalConstants.strHenrysLawConstant;
 			er.property_value_units_original = ExperimentalConstants.str_dimensionless_H;
@@ -110,8 +111,8 @@ public class ParseEpisuiteISIS extends Parse {
 		er.original_source_name=r.Reference;
 		er.url="http://esc.syrres.com/interkow/EpiSuiteData_ISIS_SDF.htm";
 				
-		if (er.keep=true) {
-		records.add(er);
+		if (keep=true) {
+		// records.add(er);
 		}
 	}
 
