@@ -112,7 +112,7 @@ public class ParseEpisuiteISIS extends Parse {
 		er.url="http://esc.syrres.com/interkow/EpiSuiteData_ISIS_SDF.htm";
 				
 		if (keep=true) {
-		// records.add(er);
+		records.add(er);
 		}
 	}
 
