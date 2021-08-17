@@ -56,6 +56,32 @@ public class ExcelSourceReader {
 	}
 	
 	/**
+	 * Initializes a new reader for the given source from the given filename
+	 * NOTE: Currently can only read a single sheet from a single file
+	 * @param fileName		The file to read records from
+	 * @param sourceName	The data source to assign records to
+	 */
+	public ExcelSourceReader(String fileName, String mainFolderPath, String sourceName) {
+		this.sourceName = sourceName;
+		this.fileName = fileName;
+		
+		sourceFolderPath = mainFolderPath + File.separator + sourceName;
+		
+		String filePath = sourceFolderPath + File.separator + "excel files" + File.separator + fileName;
+		
+		System.out.println(filePath);
+		
+		this.lastUpdated = DownloadWebpageUtilities.getStringCreationDate(filePath); // TODO add lastUpdated as parameter instead?
+		try {
+			FileInputStream fis = new FileInputStream(new File(filePath));
+			Workbook wb = WorkbookFactory.create(fis);
+			sheet = wb.getSheetAt(0);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * Writes records from a spreadsheet to JSON original records format consistent with field names of an existing Record[SourceName] class
 	 * @param hmFieldNames	Matches column numbers to output fields of a Record[SourceName] class
 	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)

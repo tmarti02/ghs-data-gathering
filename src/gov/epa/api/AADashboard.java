@@ -40,6 +40,11 @@ public class AADashboard {
 		sources.add(ScoreRecord.sourceTSCA_Work_Plan);
 		sources.add(ScoreRecord.sourceUMD);
 		
+		sources.add(ScoreRecord.strSourceCERAPP_Exp);
+		sources.add(ScoreRecord.strSourceCOMPARA_Exp);
+		sources.add(ScoreRecord.strSourceOPERA_MDH);
+		
+		
 	}
 
 	// class DataRow {

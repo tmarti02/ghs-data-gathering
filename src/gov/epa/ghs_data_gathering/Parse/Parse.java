@@ -297,7 +297,7 @@ public class Parse {
 
 	}
 	
-	void writeOriginalRecordsToFile(Vector<?>records) {
+	protected void writeOriginalRecordsToFile(Vector<?>records) {
 
 		try {
 			GsonBuilder builder = new GsonBuilder();
@@ -625,7 +625,8 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 				
 				for (int k=0;k<score.records.size();k++) {
 					ScoreRecord sr=score.records.get(k);
-					sr.listType=sr.getListType();
+					if (sr.listType==null)
+						sr.listType=sr.getListType();
 				}
 				
 			}

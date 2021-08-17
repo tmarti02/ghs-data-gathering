@@ -1,0 +1,243 @@
+package gov.epa.ghs_data_gathering.Parse.COMPARA_EXP;
+
+import java.util.HashMap;
+import java.util.Vector;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import gov.epa.api.ScoreRecord;
+import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
+
+
+public class RecordCOMPARA_Exp {
+	public String dsstox_substance_id;
+	public String code;
+	public String casrn;
+	public String name;
+	public String EDSP_Universe;
+	public String refchem_agonist_potency;
+	public String refchem_antagonist_potency;
+	public String average_antagonist_zscore;
+	public String antagonist_auc_score;
+	public String antagonist_shift_score;
+	public String antagonist_zscore_score;
+	public String antagonist_max_receptor_score;
+	public String antagonist_cell_free_score;
+	public String antagonist_confidence_score;
+	public String cytotox_median_um;
+	public String cytotox_lower_bound_um;
+	public String cytotox_assays_hit;
+	public String AUC_Agonist;
+	public String AUC_Antagonist;
+	public String AUC_R3;
+	public String AUC_R4;
+	public String AUC_R5;
+	public String AUC_R6;
+	public String AUC_A1;
+	public String AUC_A2;
+	public String AUC_A3;
+	public String AUC_A4;
+	public String AUC_A5;
+	public String AUC_A6;
+	public String AUC_A7;
+	public String AUC_A8;
+	public String AUC_A9;
+	public String AUC_A10;
+	public String AUC_A11;
+	public String AUC_A12;
+	public String AUC_A13;
+	public String AUC_A14;
+	public String NVS_NR_hAR_logAC50;
+	public String NVS_NR_cAR_logAC50;
+	public String NVS_NR_rAR_logAC50;
+	public String OT_AR_ARSRC1_0480_logAC50;
+	public String OT_AR_ARSRC1_0960_logAC50;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_logAC50;
+	public String ATG_AR_TRANS_up_logAC50;
+	public String OT_AR_ARELUC_AG_1440_logAC50;
+	public String TOX21_AR_BLA_Agonist_ratio_logAC50;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_logAC50;
+	public String ACEA_AR_agonist_80hr_logAC50;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_logAC50;
+	public String TOX21_AR_BLA_Antagonist_ratio_logAC50;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_logAC50;
+	public String NVS_NR_hAR_Emax;
+	public String NVS_NR_cAR_Emax;
+	public String NVS_NR_rAR_Emax;
+	public String OT_AR_ARSRC1_0480_Emax;
+	public String OT_AR_ARSRC1_0960_Emax;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_Emax;
+	public String ATG_AR_TRANS_up_Emax;
+	public String OT_AR_ARELUC_AG_1440_Emax;
+	public String TOX21_AR_BLA_Agonist_ratio_Emax;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_Emax;
+	public String ACEA_AR_agonist_80hr_Emax;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_Emax;
+	public String TOX21_AR_BLA_Antagonist_ratio_Emax;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_Emax;
+	public String NVS_NR_hAR_T;
+	public String NVS_NR_cAR_T;
+	public String NVS_NR_rAR_T;
+	public String OT_AR_ARSRC1_0480_T;
+	public String OT_AR_ARSRC1_0960_T;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_T;
+	public String ATG_AR_TRANS_up_T;
+	public String OT_AR_ARELUC_AG_1440_T;
+	public String TOX21_AR_BLA_Agonist_ratio_T;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_T;
+	public String ACEA_AR_agonist_80hr_T;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_T;
+	public String TOX21_AR_BLA_Antagonist_ratio_T;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_T;
+	public String NVS_NR_hAR_W;
+	public String NVS_NR_cAR_W;
+	public String NVS_NR_rAR_W;
+	public String OT_AR_ARSRC1_0480_W;
+	public String OT_AR_ARSRC1_0960_W;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_W;
+	public String ATG_AR_TRANS_up_W;
+	public String OT_AR_ARELUC_AG_1440_W;
+	public String TOX21_AR_BLA_Agonist_ratio_W;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_W;
+	public String ACEA_AR_agonist_80hr_W;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_W;
+	public String TOX21_AR_BLA_Antagonist_ratio_W;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_W;
+	public String NVS_NR_hAR_Zscore;
+	public String NVS_NR_cAR_Zscore;
+	public String NVS_NR_rAR_Zscore;
+	public String OT_AR_ARSRC1_0480_Zscore;
+	public String OT_AR_ARSRC1_0960_Zscore;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_Zscore;
+	public String ATG_AR_TRANS_up_Zscore;
+	public String OT_AR_ARELUC_AG_1440_Zscore;
+	public String TOX21_AR_BLA_Agonist_ratio_Zscore;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_Zscore;
+	public String ACEA_AR_agonist_80hr_Zscore;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_Zscore;
+	public String TOX21_AR_BLA_Antagonist_ratio_Zscore;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_Zscore;
+	public String NVS_NR_hAR_maxConc;
+	public String NVS_NR_cAR_maxConc;
+	public String NVS_NR_rAR_maxConc;
+	public String OT_AR_ARSRC1_0480_maxConc;
+	public String OT_AR_ARSRC1_0960_maxConc;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_maxConc;
+	public String ATG_AR_TRANS_up_maxConc;
+	public String OT_AR_ARELUC_AG_1440_maxConc;
+	public String TOX21_AR_BLA_Agonist_ratio_maxConc;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_maxConc;
+	public String ACEA_AR_agonist_80hr_maxConc;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_maxConc;
+	public String TOX21_AR_BLA_Antagonist_ratio_maxConc;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_maxConc;
+	public String NVS_NR_hAR_logAC10;
+	public String NVS_NR_cAR_logAC10;
+	public String NVS_NR_rAR_logAC10;
+	public String OT_AR_ARSRC1_0480_logAC10;
+	public String OT_AR_ARSRC1_0960_logAC10;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_logAC10;
+	public String ATG_AR_TRANS_up_logAC10;
+	public String OT_AR_ARELUC_AG_1440_logAC10;
+	public String TOX21_AR_BLA_Agonist_ratio_logAC10;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_logAC10;
+	public String ACEA_AR_agonist_80hr_logAC10;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_logAC10;
+	public String TOX21_AR_BLA_Antagonist_ratio_logAC10;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_logAC10;
+	public String NVS_NR_hAR_logACC;
+	public String NVS_NR_cAR_logACC;
+	public String NVS_NR_rAR_logACC;
+	public String OT_AR_ARSRC1_0480_logACC;
+	public String OT_AR_ARSRC1_0960_logACC;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_logACC;
+	public String ATG_AR_TRANS_up_logACC;
+	public String OT_AR_ARELUC_AG_1440_logACC;
+	public String TOX21_AR_BLA_Agonist_ratio_logACC;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_logACC;
+	public String ACEA_AR_agonist_80hr_logACC;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_logACC;
+	public String TOX21_AR_BLA_Antagonist_ratio_logACC;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_logACC;
+	public String NVS_NR_hAR_logACB;
+	public String NVS_NR_cAR_logACB;
+	public String NVS_NR_rAR_logACB;
+	public String OT_AR_ARSRC1_0480_logACB;
+	public String OT_AR_ARSRC1_0960_logACB;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_logACB;
+	public String ATG_AR_TRANS_up_logACB;
+	public String OT_AR_ARELUC_AG_1440_logACB;
+	public String TOX21_AR_BLA_Agonist_ratio_logACB;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_logACB;
+	public String ACEA_AR_agonist_80hr_logACB;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_logACB;
+	public String TOX21_AR_BLA_Antagonist_ratio_logACB;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_logACB;
+	public String NVS_NR_hAR_flags;
+	public String NVS_NR_cAR_flags;
+	public String NVS_NR_rAR_flags;
+	public String OT_AR_ARSRC1_0480_flags;
+	public String OT_AR_ARSRC1_0960_flags;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_flags;
+	public String ATG_AR_TRANS_up_flags;
+	public String OT_AR_ARELUC_AG_1440_flags;
+	public String TOX21_AR_BLA_Agonist_ratio_flags;
+	public String TOX21_AR_LUC_MDAKB2_Agonist_flags;
+	public String ACEA_AR_agonist_80hr_flags;
+	public String UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_flags;
+	public String TOX21_AR_BLA_Antagonist_ratio_flags;
+	public String TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_flags;
+	public String pseudo_logAC50_median;
+	public String pseudo_logAC50_min;
+	public String pseudo_logAC10_median;
+	public String pseudo_logAC10_min;
+	public String pseudo_logACC_median;
+	public String pseudo_logACC_min;
+	public String pseudo_logACB_median;
+	public String pseudo_logACB_min;
+	public String maximum_receptor;
+	public String N_assays_hit;
+	public String N_assays_hit_hi_Z;
+	public String N_assays_hit_lo_Z;
+	public String promiscuity_hi_Z;
+	public String promiscuity_lo_Z;
+	public String specificity_score;
+	public String ga_min_left;
+	public String ga_med_left;
+	public String ga_max_left;
+	public String hit_pct_left;
+	public String ga_min_right;
+	public String ga_med_right;
+	public String ga_max_right;
+	public String hit_pct_right;
+	public static final String[] fieldNames = {"dsstox_substance_id","code","casrn","name","EDSP_Universe","refchem_agonist_potency","refchem_antagonist_potency","average_antagonist_zscore","antagonist_auc_score","antagonist_shift_score","antagonist_zscore_score","antagonist_max_receptor_score","antagonist_cell_free_score","antagonist_confidence_score","cytotox_median_um","cytotox_lower_bound_um","cytotox_assays_hit","AUC_Agonist","AUC_Antagonist","AUC_R3","AUC_R4","AUC_R5","AUC_R6","AUC_A1","AUC_A2","AUC_A3","AUC_A4","AUC_A5","AUC_A6","AUC_A7","AUC_A8","AUC_A9","AUC_A10","AUC_A11","AUC_A12","AUC_A13","AUC_A14","NVS_NR_hAR_logAC50","NVS_NR_cAR_logAC50","NVS_NR_rAR_logAC50","OT_AR_ARSRC1_0480_logAC50","OT_AR_ARSRC1_0960_logAC50","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_logAC50","ATG_AR_TRANS_up_logAC50","OT_AR_ARELUC_AG_1440_logAC50","TOX21_AR_BLA_Agonist_ratio_logAC50","TOX21_AR_LUC_MDAKB2_Agonist_logAC50","ACEA_AR_agonist_80hr_logAC50","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_logAC50","TOX21_AR_BLA_Antagonist_ratio_logAC50","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_logAC50","NVS_NR_hAR_Emax","NVS_NR_cAR_Emax","NVS_NR_rAR_Emax","OT_AR_ARSRC1_0480_Emax","OT_AR_ARSRC1_0960_Emax","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_Emax","ATG_AR_TRANS_up_Emax","OT_AR_ARELUC_AG_1440_Emax","TOX21_AR_BLA_Agonist_ratio_Emax","TOX21_AR_LUC_MDAKB2_Agonist_Emax","ACEA_AR_agonist_80hr_Emax","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_Emax","TOX21_AR_BLA_Antagonist_ratio_Emax","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_Emax","NVS_NR_hAR_T","NVS_NR_cAR_T","NVS_NR_rAR_T","OT_AR_ARSRC1_0480_T","OT_AR_ARSRC1_0960_T","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_T","ATG_AR_TRANS_up_T","OT_AR_ARELUC_AG_1440_T","TOX21_AR_BLA_Agonist_ratio_T","TOX21_AR_LUC_MDAKB2_Agonist_T","ACEA_AR_agonist_80hr_T","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_T","TOX21_AR_BLA_Antagonist_ratio_T","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_T","NVS_NR_hAR_W","NVS_NR_cAR_W","NVS_NR_rAR_W","OT_AR_ARSRC1_0480_W","OT_AR_ARSRC1_0960_W","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_W","ATG_AR_TRANS_up_W","OT_AR_ARELUC_AG_1440_W","TOX21_AR_BLA_Agonist_ratio_W","TOX21_AR_LUC_MDAKB2_Agonist_W","ACEA_AR_agonist_80hr_W","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_W","TOX21_AR_BLA_Antagonist_ratio_W","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_W","NVS_NR_hAR_Zscore","NVS_NR_cAR_Zscore","NVS_NR_rAR_Zscore","OT_AR_ARSRC1_0480_Zscore","OT_AR_ARSRC1_0960_Zscore","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_Zscore","ATG_AR_TRANS_up_Zscore","OT_AR_ARELUC_AG_1440_Zscore","TOX21_AR_BLA_Agonist_ratio_Zscore","TOX21_AR_LUC_MDAKB2_Agonist_Zscore","ACEA_AR_agonist_80hr_Zscore","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_Zscore","TOX21_AR_BLA_Antagonist_ratio_Zscore","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_Zscore","NVS_NR_hAR_maxConc","NVS_NR_cAR_maxConc","NVS_NR_rAR_maxConc","OT_AR_ARSRC1_0480_maxConc","OT_AR_ARSRC1_0960_maxConc","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_maxConc","ATG_AR_TRANS_up_maxConc","OT_AR_ARELUC_AG_1440_maxConc","TOX21_AR_BLA_Agonist_ratio_maxConc","TOX21_AR_LUC_MDAKB2_Agonist_maxConc","ACEA_AR_agonist_80hr_maxConc","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_maxConc","TOX21_AR_BLA_Antagonist_ratio_maxConc","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_maxConc","NVS_NR_hAR_logAC10","NVS_NR_cAR_logAC10","NVS_NR_rAR_logAC10","OT_AR_ARSRC1_0480_logAC10","OT_AR_ARSRC1_0960_logAC10","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_logAC10","ATG_AR_TRANS_up_logAC10","OT_AR_ARELUC_AG_1440_logAC10","TOX21_AR_BLA_Agonist_ratio_logAC10","TOX21_AR_LUC_MDAKB2_Agonist_logAC10","ACEA_AR_agonist_80hr_logAC10","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_logAC10","TOX21_AR_BLA_Antagonist_ratio_logAC10","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_logAC10","NVS_NR_hAR_logACC","NVS_NR_cAR_logACC","NVS_NR_rAR_logACC","OT_AR_ARSRC1_0480_logACC","OT_AR_ARSRC1_0960_logACC","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_logACC","ATG_AR_TRANS_up_logACC","OT_AR_ARELUC_AG_1440_logACC","TOX21_AR_BLA_Agonist_ratio_logACC","TOX21_AR_LUC_MDAKB2_Agonist_logACC","ACEA_AR_agonist_80hr_logACC","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_logACC","TOX21_AR_BLA_Antagonist_ratio_logACC","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_logACC","NVS_NR_hAR_logACB","NVS_NR_cAR_logACB","NVS_NR_rAR_logACB","OT_AR_ARSRC1_0480_logACB","OT_AR_ARSRC1_0960_logACB","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_logACB","ATG_AR_TRANS_up_logACB","OT_AR_ARELUC_AG_1440_logACB","TOX21_AR_BLA_Agonist_ratio_logACB","TOX21_AR_LUC_MDAKB2_Agonist_logACB","ACEA_AR_agonist_80hr_logACB","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_logACB","TOX21_AR_BLA_Antagonist_ratio_logACB","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_logACB","NVS_NR_hAR_flags","NVS_NR_cAR_flags","NVS_NR_rAR_flags","OT_AR_ARSRC1_0480_flags","OT_AR_ARSRC1_0960_flags","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Agonist_flags","ATG_AR_TRANS_up_flags","OT_AR_ARELUC_AG_1440_flags","TOX21_AR_BLA_Agonist_ratio_flags","TOX21_AR_LUC_MDAKB2_Agonist_flags","ACEA_AR_agonist_80hr_flags","UPITT_HCI_U2OS_AR_TIF2_Nucleoli_Antagonist_flags","TOX21_AR_BLA_Antagonist_ratio_flags","TOX21_AR_LUC_MDAKB2_Antagonist_0_5nM_R1881_flags","pseudo_logAC50_median","pseudo_logAC50_min","pseudo_logAC10_median","pseudo_logAC10_min","pseudo_logACC_median","pseudo_logACC_min","pseudo_logACB_median","pseudo_logACB_min","maximum_receptor","N_assays_hit","N_assays_hit_hi_Z","N_assays_hit_lo_Z","promiscuity_hi_Z","promiscuity_lo_Z","specificity_score","ga_min_left","ga_med_left","ga_max_left","hit_pct_left","ga_min_right","ga_med_right","ga_max_right","hit_pct_right"};
+
+	public static final String lastUpdated = "04/14/2021";//email from richard judson
+	public static final String sourceName = ScoreRecord.strSourceCOMPARA_Exp;	
+	private static final String fileName = "AR Model Supplemental Table S2 - superMatrix_final.xlsx";
+
+	public static Vector<JsonObject> parseCOMPARA_ExpRecordsFromExcel() {
+		String mainFolderPath="AA Dashboard\\Data";
+		ExcelSourceReader esr = new ExcelSourceReader(fileName, mainFolderPath,sourceName);
+		
+//		esr.createClassTemplateFiles();
+		
+		
+		HashMap<Integer,String> hm = esr.generateDefaultMap(fieldNames, 0);
+		Vector<JsonObject> records = esr.parseRecordsFromExcel(hm, 0);
+		return records;
+	}
+	
+	
+	public static void main(String[] args) {
+		Vector<JsonObject> records =parseCOMPARA_ExpRecordsFromExcel();
+		
+		Gson gson= new Gson();
+		for (JsonObject record:records) {
+			RecordCOMPARA_Exp r = gson.fromJson(record.toString(),RecordCOMPARA_Exp.class);
+			System.out.println(r.casrn+"\t"+r.AUC_Agonist+"\t"+r.AUC_Antagonist);
+		}
+		
+	}
+}

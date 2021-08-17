@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -13,21 +14,28 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Hyperlink;
+import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.google.gson.Gson;
@@ -382,6 +390,80 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		toExcel_File(filePath,ExperimentalRecord.outputFieldNames);
 	}
 	
+	public void createCheckingFile(ExperimentalRecords records,String mainFolder,String fileNameExcelExperimentalRecordsCheck ) {
+		
+		//Create check file:			
+		double fracCheck=0.01;
+		
+		ExperimentalRecords recordsClone=(ExperimentalRecords) records.clone();
+		
+		Collections.shuffle(recordsClone);
+		int count=(int)(fracCheck*recordsClone.size());
+		ExperimentalRecords recordsCheck=new ExperimentalRecords();
+		for (int i=0;i<count;i++) recordsCheck.add(recordsClone.get(i));			
+		
+		String filePath=mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck;
+		
+		recordsCheck.toExcel_File_Split(filePath);
+	
+		createLogEntrySheet(filePath); 
+		
+	}
+
+	private void createLogEntrySheet(String filePath) {
+		try {
+//			XSSFWorkbook workbook = (XSSFWorkbook)WorkbookFactory.create(excelFile);
+			
+			FileInputStream fileinp = new FileInputStream(filePath);
+			XSSFWorkbook workbook = new XSSFWorkbook(fileinp);
+			
+			XSSFSheet sheet = workbook.createSheet("Log entry");
+			Row row=sheet.createRow(0);
+			
+			Cell cell = row.createCell(0);
+			cell.setCellValue("Auditor name");
+			
+			cell = row.createCell(1);
+			cell.setCellValue("Add name");
+
+			row=sheet.createRow(1);
+
+			cell = row.createCell(0);
+			cell.setCellValue("Audit date");
+			
+
+            cell = row.createCell(1);  
+			CellStyle cellStyle = workbook.createCellStyle();  
+			CreationHelper createHelper = workbook.getCreationHelper();
+			cellStyle.setDataFormat(  
+                createHelper.createDataFormat().getFormat("m/d/yyyy"));  
+            cell.setCellValue(new Date());  
+            cell.setCellStyle(cellStyle);  
+            
+			
+			cell.setCellValue(new Date());
+			
+			row=sheet.createRow(2);
+			
+			cell = row.createCell(0);
+			cell.setCellValue("All cells have been checked for accuracy");
+			
+			cell = row.createCell(1);
+			cell.setCellValue("No");
+			
+			sheet.setColumnWidth(0, 40*256);
+			sheet.setColumnWidth(1, 15*256);
+			
+			OutputStream fos = new FileOutputStream(filePath);
+			workbook.write(fos);
+			workbook.close();
+
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	public void toExcel_File_Split(String filePath) {
 		
 		File file=new File(filePath);
