@@ -56,6 +56,7 @@ public class ExperimentalConstants {
 	public static final String str_ppm="ppm";
 	public static final String str_ppb="ppb";
 	public static final String str_atm_m3_mol="atm-m3/mol";
+	public static final String str_mol_m3_atm = "mol/m3-Pa";
 	public static final String str_Pa_m3_mol="Pa-m3/mol";
 	public static final String str_mmHg="mmHg";
 	public static final String str_atm="atm";

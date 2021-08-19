@@ -23,11 +23,14 @@ public class RecordEpisuiteISIS {
 	String Smiles;	
 	Double WS_LogMolar;	
 	Double WS_mg_L;
-	Double HL_dimensionless = null;
+	Double HL = null;
 	Double VP;
 	Double MP;
 	Double BP;
 	Double KOW;
+	Double BCF;
+	Double KOA;
+	Double Km;
 	Double Temperature;
 	String DataSet;
 	String Reference;
@@ -88,7 +91,7 @@ public class RecordEpisuiteISIS {
 				
 				if (abbrev.contentEquals("HL")) {
 					if (m.getProperty(abbrev)!=null) {
-						r.HL_dimensionless = Double.parseDouble(m.getProperty(abbrev));			
+						r.HL = Double.parseDouble(m.getProperty(abbrev));			
 					}
 				}
 				
@@ -111,6 +114,29 @@ public class RecordEpisuiteISIS {
 						r.KOW = Double.parseDouble(m.getProperty(abbrev));
 					}
 				}
+				
+				if (abbrev.contentEquals("LogBCF")) {
+					if (m.getProperty(abbrev)!=null) {
+						r.BCF = Double.parseDouble(m.getProperty(abbrev));
+					}
+
+				}
+				
+				if (abbrev.contentEquals("LogKOA")) {
+					if (m.getProperty(abbrev)!=null) {
+						r.KOA = Double.parseDouble(m.getProperty(abbrev));
+					}
+
+				}
+				
+				
+				if (abbrev.contentEquals("LogKmHL")) {
+					if (m.getProperty(abbrev)!=null) {
+						r.Km = Double.parseDouble(m.getProperty(abbrev));
+					}
+
+				}
+				
 
 				
 				if (abbrev.contentEquals("BP")) {
@@ -235,20 +261,21 @@ public class RecordEpisuiteISIS {
 		
 		
 		Vector<RecordEpisuiteISIS> records3 = getRecords(strFolder+"EPI_Henry_Data_SDF.sdf","HL");
-		System.out.println(ReflectionToStringBuilder.toString(records3.get(0)));
 		Vector<RecordEpisuiteISIS> records4 = getRecords(strFolder+"EPI_VP_Data_SDF.sdf","VP");
-		System.out.println(ReflectionToStringBuilder.toString(records4.get(0)));
 		Vector<RecordEpisuiteISIS> records5 = getRecords(strFolder+"EPI_Melt_Pt_Data_SDF.sdf","MP");
-		System.out.println(ReflectionToStringBuilder.toString(records5.get(0)));
 		Vector<RecordEpisuiteISIS> records6 = getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP");
-		System.out.println(ReflectionToStringBuilder.toString(records6.get(0)));
 		Vector<RecordEpisuiteISIS> records7 = getRecords(strFolder+"EPI_Kowwin_Data_SDF.sdf","Kow");
-		System.out.println(ReflectionToStringBuilder.toString(records7.get(0)));
-//		Vector<RecordEpisuiteISIS> records8 = getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP");
+		Vector<RecordEpisuiteISIS> records8 = getRecords(strFolder+"EPI_BCF_Data_SDF.sdf","LogBCF");
+		Vector<RecordEpisuiteISIS> records9 = getRecords(strFolder+"EPI_KOA_Data_SDF.sdf","LogKOA");
+		Vector<RecordEpisuiteISIS> records10 = getRecords(strFolder+"EPI_KM_Data_SDF.sdf","LogKmHL");
+
+		
+		
 	//	Vector<RecordEpisuiteISIS> records9 = getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP");
 		//Vector<RecordEpisuiteISIS> records10 = getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP");
 		//Vector<RecordEpisuiteISIS> records11 = getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP");
-
+		
+		
 		
 		
 		
@@ -256,6 +283,11 @@ public class RecordEpisuiteISIS {
 		records.addAll(records4);
 		records.addAll(records5);
 		records.addAll(records6);
+		records.addAll(records7);
+		records.addAll(records8);
+		records.addAll(records9);
+		records.addAll(records10);
+
 
 
 		return(records);
