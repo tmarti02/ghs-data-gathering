@@ -399,9 +399,20 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		
 		Collections.shuffle(recordsClone);
 		int count=(int)(fracCheck*recordsClone.size());
-		ExperimentalRecords recordsCheck=new ExperimentalRecords();
-		for (int i=0;i<count;i++) recordsCheck.add(recordsClone.get(i));			
 		
+		// CR: if 1% of total records is greater than fifty, only use that many
+		
+		ExperimentalRecords recordsCheck=new ExperimentalRecords();
+
+		if (count >= 50) {
+		for (int i=0;i<count;i++) recordsCheck.add(recordsClone.get(i));			
+		} else if (recordsClone.size() >= 50) {
+			count = 50;
+			for (int i=0;i<count;i++) recordsCheck.add(recordsClone.get(i));			
+		} else {
+			count = recordsClone.size();
+			for (int i=0;i<count;i++) recordsCheck.add(recordsClone.get(i));
+		}
 		String filePath=mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck;
 		
 		recordsCheck.toExcel_File_Split(filePath);

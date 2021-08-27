@@ -112,7 +112,7 @@ public class ParseEpisuiteISIS extends Parse {
 			keep=true;
 			er.keep=true;
 			er.property_name = ExperimentalConstants.strBoilingPoint;
-			er.property_value_units_original = ExperimentalConstants.str_C;
+			er.property_value_units_original = ExperimentalConstants.str_C+ " " + ExperimentalConstants.str_C;
 			er.property_value_string = String.valueOf(r.BP);
 			er.property_value_point_estimate_original = r.BP;
 			

@@ -109,6 +109,9 @@ public class ParseSander extends Parse {
 				if (er.casrn.contains("???")) {
 					er.casrn = "";
 				}
+				
+				String fullreferences = Gabrieldemo(rs);
+				
 				er.property_value_string = rs.hcp.get(i) + ExperimentalConstants.str_mol_m3_atm;
 				er.chemical_name = rs.chemicalName.replace("? ? ? ", "");
 				er.property_name = ExperimentalConstants.strHenrysLawConstant;

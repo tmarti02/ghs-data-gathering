@@ -60,6 +60,7 @@ public class ExperimentalRecord {
 	public String source_name;//use Experimental constants
 	public String original_source_name;//If specific reference/paper provided
 								//"original_source_name" rather than "source_name_original" to avoid syntactic confusion with "*_original" vs "*_final" fields above
+	public String reference; // traceable reference for a given record
 	public String fr_id;
 	public String date_accessed;//use Experimental constants
 	
@@ -93,6 +94,7 @@ public class ExperimentalRecord {
 			"note",
 			"flag",
 			"original_source_name",
+			"reference",
 			"url",
 			"date_accessed"};
 	
