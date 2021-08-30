@@ -206,12 +206,12 @@ public class ParseThreeM extends Parse {
 				!(r3m.property_value.equals("not determined") || r3m.property_value.equals("ff 3.7") || r3m.property_value.equals("ff 349") || r3m.property_value.contains("+"))) {
 			er.property_value_point_estimate_original = Double.parseDouble(r3m.property_value.replace(",", ""));
 			
-			er.property_value_string = "Value: " + r3m.property_value;
+			er.property_value_string = "Value: " + r3m.property_value + " " + r3m.property_value_units;
 		} else if (r3m.property_value_min!=null && !(r3m.property_value_min.isBlank())) {
 			er.property_value_min_original = Double.parseDouble(r3m.property_value_min);
 			if (r3m.property_value_max!=null && !r3m.property_value_max.isBlank()) {
 				er.property_value_max_original = Double.parseDouble(r3m.property_value_max);
-				er.property_value_string = "Value: " + r3m.property_value_min + "-" + r3m.property_value_max;
+				er.property_value_string = "Value: " + r3m.property_value_min + "-" + r3m.property_value_max + " " + r3m.property_value_units;
 			}
 			else {
 				er.property_value_string = "Value: >" + r3m.property_value_min;
@@ -219,7 +219,7 @@ public class ParseThreeM extends Parse {
 			}	
 		} else if (r3m.property_value_max!=null && !r3m.property_value_max.isBlank()) {
 			er.property_value_max_original = Double.parseDouble(r3m.property_value_max);
-			er.property_value_string = "Value: <" + r3m.property_value_max;
+			er.property_value_string = "Value: <" + r3m.property_value_max + " " + r3m.property_value_units;
 			er.property_value_numeric_qualifier = "<";
 		}
 		
@@ -327,6 +327,9 @@ public class ParseThreeM extends Parse {
 		if (r3m.comments != null && (r3m.comments.toLowerCase().contains("reference: ") || r3m.comments.contains("references: "))) {
 			er.original_source_name = r3m.comments;
 		}
+		// handles the pdf identification
+		er.reference = r3m.Name;
+		
 		// handles the unit conversions 
 		if (er.property_name != null && OriginallyKOW == false && er.keep == true) {
 			uc.convertRecord(er);

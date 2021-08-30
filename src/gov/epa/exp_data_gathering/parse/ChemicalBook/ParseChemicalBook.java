@@ -103,7 +103,11 @@ public class ParseChemicalBook extends Parse {
 	    }
         if (cbr.solubility != null && !cbr.solubility.isBlank()) {
 			addNewExperimentalRecord(cbr,ExperimentalConstants.strWaterSolubility,cbr.solubility,recordsExperimental);
-        } 
+        }
+		if (cbr.vaporpressure != null && !cbr.vaporpressure.isBlank()) {
+			addNewExperimentalRecord(cbr,ExperimentalConstants.strVaporPressure,cbr.vaporpressure,recordsExperimental);
+	    }
+
          
 	}
 
@@ -124,7 +128,7 @@ public class ParseChemicalBook extends Parse {
 		if (cbr.synonyms != null) { er.synonyms=cbr.synonyms.replace(';','|'); }
 		er.property_name=propertyName;
 		er.property_value_string=propertyValue;
-		er.source_name= "Chemical Book";
+		er.source_name= ExperimentalConstants.strSourceChemicalBook;
 		er.url = "https://www.chemicalbook.com/" + cbr.fileName;		
 		
 		// Adds measurement methods and notes to valid records
@@ -159,6 +163,24 @@ public class ParseChemicalBook extends Parse {
 			getQualitativeSolubility(er, propertyValue);
 		}
 		
+		if (propertyName==ExperimentalConstants.strVaporPressure) {
+			if (propertyValue.contains("l")) {
+				String s = propertyValue.replaceAll("l", "1");
+				propertyValue = s;
+				foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);
+				ParseUtilities.getTemperatureCondition(er,propertyValue);
+
+			} else {
+			foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);
+			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			}
+			
+
+
+		}
+
+		
+		
 		if (foundNumeric) {
 			uc.convertRecord(er);
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
@@ -192,6 +214,7 @@ public class ParseChemicalBook extends Parse {
 		if (propertyName==ExperimentalConstants.strBoilingPoint){
 			getPressureRange(er,propertyValue);
 		}
+		
 		
 		recordsExperimental.add(er);
 	}
