@@ -650,7 +650,7 @@ public class CreateGHS_Database  {
 //		Parse.recreateFilesAllSources();
 		
 		String folder=AADashboard.dataFolder+"\\dictionary\\text output";
-		String filename="flat file 2021-07-20.txt";
+		String filename="flat file 2021-08-25.txt";
 		String textFilePath=folder+"\\"+filename;
 
 //		ScoreRecord.createFlatFileFromAllSources(textFilePath);

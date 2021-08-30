@@ -161,8 +161,9 @@ public class ExperimentalRecord {
 	}
 
 	public boolean isValidConditions() {
-		
-		if (property_name.contentEquals(ExperimentalConstants.strWaterSolubility)) {			
+		if (property_name.equals(ExperimentalConstants.strRatInhalationLC50)) return true;
+				
+		if (property_name.contentEquals(ExperimentalConstants.strWaterSolubility) || property_name.contentEquals(ExperimentalConstants.strHenrysLawConstant)) {			
 			if (temperature_C==null) return true;			
 			else if (temperature_C>=20 && temperature_C<=30) {
 				return true;
@@ -172,6 +173,8 @@ public class ExperimentalRecord {
 			
 		} else {
 			System.out.println("Need to add condition criteria for "+property_name);
+			
+			System.out.println(temperature_C+"\t"+pressure_mmHg+"\t"+pH);
 			return false;
 		}
 		

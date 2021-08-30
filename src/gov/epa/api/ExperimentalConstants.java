@@ -25,6 +25,8 @@ public class ExperimentalConstants {
 
 	public static final String strInhalationLC50="inhalation_LC50";
 	public static final String strRatInhalationLC50="rat_inhalation_LC50";
+	public static final String strRatOralLD50="rat_oral_LD50";
+	
 	public static final String strSkinSensitizationLLNA="SkinSensitizationLLNA";
 	public static final String strEyeIrritation="EyeIrritation";
 	public static final String strEyeCorrosion="EyeCorrosion";

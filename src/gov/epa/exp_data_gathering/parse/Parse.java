@@ -108,14 +108,18 @@ public class Parse {
 	}
 	
 	/**
-	 * Need to override
+	 * Loads original records from source files and stores as json file in original format
+	 * 
+	 * Needs to be overridden
 	 */
 	protected void createRecords() {
 		System.out.println("Need to override createRecords()!");	
 	}
 	
 	/**
-	 * Need to override
+	 * Loads original records from Json file and converts to ExperimentalRecords
+	 * 
+	 * Need to overridden
 	 * @return
 	 */
 	protected ExperimentalRecords goThroughOriginalRecords() {

@@ -43,6 +43,7 @@ public class AADashboard {
 		sources.add(ScoreRecord.strSourceCERAPP_Exp);
 		sources.add(ScoreRecord.strSourceCOMPARA_Exp);
 		sources.add(ScoreRecord.strSourceOPERA_MDH);
+		sources.add(ScoreRecord.strSourceSEEM3);
 		
 		
 	}

@@ -151,6 +151,7 @@ public class ScoreRecord {
 	public static final String strSourceCERAPP_Exp="CERAPP_Exp";//in vitro evaluation set from CERAPP EHP paper
 	public static final String strSourceCOMPARA_Exp="COMPARA_Exp";//in vitro evaluation set from COMPARA EHP paper
 	public static final String strSourceOPERA_MDH="OPERA_MDH";
+	public static final String strSourceSEEM3="SEEM3";//in vitro evaluation set from CERAPP EHP paper
 	
 //	public static final float weightECHA_CLP = 20.0f;
 //	public static final float weightIRIS = 20.0f;

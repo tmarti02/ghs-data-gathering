@@ -72,6 +72,8 @@ public class Chemical {
 
 	public transient Score scoreWaterSolubility=new Score();
 	
+	public transient Score scoreExposure=new Score();
+	
 	//Transformation products from CTS:
 	ArrayList<Chemical> transformationProducts = new ArrayList<Chemical>();
 	
@@ -110,6 +112,7 @@ public class Chemical {
 
 	public static final String strPersistence = "Persistence";
 	public static final String strBioaccumulation = "Bioaccumulation";
+	public static final String strExposure = "Exposure";
 
 	//Array of hazard_names for convenience:
 //	public static String[] hazard_names = { strAcute_Mammalian_Toxicity, strCarcinogenicity,
@@ -161,6 +164,7 @@ public class Chemical {
 		scoreChronic_Aquatic_Toxicity.hazard_name = strChronic_Aquatic_Toxicity;
 		scorePersistence.hazard_name = strPersistence;
 		scoreBioaccumulation.hazard_name = strBioaccumulation;
+		scoreExposure.hazard_name=strExposure;
 		
 //		scores.add(scoreAcute_Mammalian_Toxicity);
 		
@@ -187,7 +191,7 @@ public class Chemical {
 		scores.add(scoreChronic_Aquatic_Toxicity);
 		scores.add(scorePersistence);
 		scores.add(scoreBioaccumulation);
-		
+		scores.add(scoreExposure);	
 	}
 	
 	public Chemical clone() {
