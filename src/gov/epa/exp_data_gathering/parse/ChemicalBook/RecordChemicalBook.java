@@ -151,7 +151,7 @@ private static Vector<String> getSearchURLsFromDashboardRecords (Vector<RecordDa
  * @return	A vector of RecordChemicalBook objects containing the data from the raw HTML database
  */
 public static Vector<RecordChemicalBook> parseWebpagesInDatabase() {
-	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName + File.separator + "General";
+	String databaseFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName;
 	String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";
 	Vector<RecordChemicalBook> records = new Vector<>();
 

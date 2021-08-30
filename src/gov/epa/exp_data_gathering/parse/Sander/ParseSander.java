@@ -109,19 +109,27 @@ public class ParseSander extends Parse {
 				if (er.casrn.contains("???")) {
 					er.casrn = "";
 				}
-				er.property_value_string = rs.hcp.get(i);
+				
+				String fullreferences = Gabrieldemo(rs);
+				
+				er.property_value_string = rs.hcp.get(i) + ExperimentalConstants.str_mol_m3_atm;
 				er.chemical_name = rs.chemicalName.replace("? ? ? ", "");
 				er.property_name = ExperimentalConstants.strHenrysLawConstant;
 				String propertyValue = rs.hcp.get(i);
-				er.property_value_units_original = "mol/m3-Pa";
+				er.property_value_units_original = ExperimentalConstants.str_mol_m3_atm;
 				er.property_value_units_final = ExperimentalConstants.str_atm_m3_mol;
 				getnumericalhcp(er, propertyValue);
 				// below converts Sander's weird inverted units to atm*m3/mol
 				if (!(er.property_value_point_estimate_original == null)) {
 					er.property_value_point_estimate_final = 1/(er.property_value_point_estimate_original*101325);
 				}
+				
+				/*
+				 * CR: (Wednesday August 18) temperature and pressure information, if it is given at all is found in the notes.
 				er.temperature_C = (double)25;
 				er.pressure_mmHg = "760";
+				*/
+				
 				
 				er.source_name=ExperimentalConstants.strSourceSander;
 				er.original_source_name = rs.referenceAbbreviated.get(i);
