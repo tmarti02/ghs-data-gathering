@@ -15,6 +15,7 @@ import gov.epa.exp_data_gathering.parse.ADDoPT.ParseADDoPT;
 import gov.epa.exp_data_gathering.parse.AqSolDB.ParseAqSolDB;
 import gov.epa.exp_data_gathering.parse.Bagley.ParseBagley;
 import gov.epa.exp_data_gathering.parse.Bradley.ParseBradley;
+import gov.epa.exp_data_gathering.parse.Burkhard.ParseBurkhard;
 import gov.epa.exp_data_gathering.parse.CFSAN.ParseCFSAN;
 import gov.epa.exp_data_gathering.parse.ChemBL.ParseChemBL;
 import gov.epa.exp_data_gathering.parse.ChemicalBook.ParseChemicalBook;
@@ -213,7 +214,8 @@ public class Parse {
 				ExperimentalConstants.strSourceHayashi,
 				ExperimentalConstants.strSourceKodithala,
 				ExperimentalConstants.strSourceVerheyen,
-				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit
+				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit,
+				ExperimentalConstants.strSourceBurkhard
 		};
 		
 		if (!Arrays.asList(toxSources).contains(sourceName) && recordTypeToParse.toLowerCase().contains("tox")) {
@@ -321,6 +323,9 @@ public class Parse {
 		case ExperimentalConstants.strSourceVerheyen:
 			p = new ParseVerheyen();
 			break;
+		case ExperimentalConstants.strSourceBurkhard:
+			p = new ParseBurkhard();
+			break;
 		default:
 			System.out.println("Need to add parse case for "+sourceName);
 			return;
@@ -394,7 +399,8 @@ public class Parse {
 				ExperimentalConstants.strSourceHayashi,
 				ExperimentalConstants.strSourceKodithala,
 				ExperimentalConstants.strSourceVerheyen,
-				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit};
+				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit,
+				ExperimentalConstants.strSourceBurkhard};
 						
 		//Update echemportal data: 
 		
@@ -410,7 +416,8 @@ public class Parse {
 				ExperimentalConstants.strSourceHayashi,
 				ExperimentalConstants.strSourceKodithala,
 				ExperimentalConstants.strSourceVerheyen,
-				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit
+				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit,
+				ExperimentalConstants.strSourceBurkhard
 
 		};
 				
