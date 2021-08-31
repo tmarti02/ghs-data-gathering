@@ -126,7 +126,7 @@ public class ParseQSARDB extends Parse {
 			er.chemical_name = qr.name;
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strVaporPressure;
-			er.property_value_string = "LogVP: "+qr.vp;
+			er.property_value_string = "LogVP (Log_mmHg): "+qr.vp;
 			ParseUtilities.getNumericalValue(er,qr.vp,qr.vp.length(),false);
 			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
 			er.property_value_units_original = ExperimentalConstants.str_log_mmHg;
