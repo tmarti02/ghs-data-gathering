@@ -1,8 +1,10 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -94,7 +96,11 @@ public class Parse {
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
 		fileNameJsonExperimentalRecordsBad = sourceName +" Experimental Records-Bad.json";
 		fileNameExcelExperimentalRecords = sourceName +" Experimental Records.xlsx";
-		fileNameExcelExperimentalRecordsCheck = sourceName +" Experimental Records Check.xlsx";
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HHmm");
+		String timestamp = sdf.format(new Date());
+		fileNameExcelExperimentalRecordsCheck = sourceName +" Experimental Records Check " + timestamp + ".xlsx";
+		
 		mainFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
 		databaseFolder = mainFolder;
 		jsonFolder= mainFolder;
@@ -169,15 +175,16 @@ public class Parse {
 			JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(recordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
 		}
 		
+		ExperimentalRecords merge = new ExperimentalRecords();
+		merge.addAll(records);
+		merge.addAll(recordsBad);
 		if (writeExcelExperimentalRecordsFile) {
 			System.out.println("Writing Excel file for chemical records");
-			ExperimentalRecords merge = new ExperimentalRecords();
-			merge.addAll(records);
-			merge.addAll(recordsBad);
 			merge.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords);
-			
-			merge.createCheckingFile(records, mainFolder, fileNameExcelExperimentalRecordsCheck);
 		}
+		
+		// GS: Should always generate checking file, not just when Excel files are generated
+		merge.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck);
 		
 		System.out.println("done\n");
 	}
@@ -439,7 +446,8 @@ public class Parse {
 	
 	public static void main(String[] args) {
 //		parsePhyschem();
-		parseTox();
+//		parseTox();
+		runParse(ExperimentalConstants.strSourceADDoPT, "physchem");
 	}
 }
 
