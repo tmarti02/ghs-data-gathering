@@ -15,21 +15,29 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
-import gov.epa.exp_data_gathering.parse.Burkhard2.RecordBurkhard2;
+import gov.epa.exp_data_gathering.parse.Burkhard.RecordBurkhard;
+import kong.unirest.json.JSONObject;
 
 
 public class ParseBurkhard extends Parse {
 
 	public ParseBurkhard() {
-		sourceName = ExperimentalConstants.strSourceBurkhard; // TODO Consider creating ExperimentalConstants.strSourceBurkhard2 instead.
+		sourceName = ExperimentalConstants.strSourceBurkhard;
 		this.init();
 
-		// TODO Is this a toxicity source? If so, rename original and experimental records files here.
+		fileNameJSON_Records = sourceName +" Toxicity Original Records.json";
+		fileNameFlatExperimentalRecords = sourceName +" Toxicity Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.txt";
+		fileNameJsonExperimentalRecords = sourceName +" Toxicity Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +" Toxicity Experimental Records.xlsx";
+
+
 	}
 
 	@Override
 	protected void createRecords() {
-		Vector<JsonObject> records = RecordBurkhard2.parseBurkhard2RecordsFromExcel();
+		Vector<JsonObject> records = RecordBurkhard.parseBurkhardRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 
@@ -39,27 +47,27 @@ public class ParseBurkhard extends Parse {
 		try {
 			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
 			File jsonFile = new File(jsonFileName);
-			List<RecordBurkhard2> recordsBurkhard2 = new ArrayList<RecordBurkhard2>();
-			RecordBurkhard2[] tempRecords = null;
+			List<RecordBurkhard> recordsBurkhard = new ArrayList<RecordBurkhard>();
+			RecordBurkhard[] tempRecords = null;
 			if (howManyOriginalRecordsFiles==1) {
-				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordBurkhard2[].class);
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordBurkhard[].class);
 				for (int i = 0; i < tempRecords.length; i++) {
-					recordsBurkhard2.add(tempRecords[i]);
+					recordsBurkhard.add(tempRecords[i]);
 				}
 			} else {
 				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
 					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
 					File batchFile = new File(batchFileName);
-					tempRecords = gson.fromJson(new FileReader(batchFile), RecordBurkhard2[].class);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordBurkhard[].class);
 					for (int i = 0; i < tempRecords.length; i++) {
-						recordsBurkhard2.add(tempRecords[i]);
+						recordsBurkhard.add(tempRecords[i]);
 					}
 				}
 			}
 
-			Iterator<RecordBurkhard2> it = recordsBurkhard2.iterator();
+			Iterator<RecordBurkhard> it = recordsBurkhard.iterator();
 			while (it.hasNext()) {
-				RecordBurkhard2 r = it.next();
+				RecordBurkhard r = it.next();
 				addExperimentalRecords(r,recordsExperimental);
 			}
 		} catch (Exception ex) {
@@ -72,7 +80,7 @@ public class ParseBurkhard extends Parse {
 	
 	
 	
-	private void addExperimentalRecords(RecordBurkhard2 rb, ExperimentalRecords recordsExperimental) {
+	private void addExperimentalRecords(RecordBurkhard rb, ExperimentalRecords recordsExperimental) {
 		if (rb.Log_BCF_Steady_State_mean != null && !rb.Log_BCF_Steady_State_mean.isBlank()) {
 			addNewExperimentalRecord(rb,"LogBCFSteadyState", recordsExperimental);
 		}
@@ -86,96 +94,147 @@ public class ParseBurkhard extends Parse {
 	}
 	
 	
-	private void addNewExperimentalRecord(RecordBurkhard2 rb, String propertyName, ExperimentalRecords recordsExperimental) {
+	private void addNewExperimentalRecord(RecordBurkhard rb, String propertyName, ExperimentalRecords recordsExperimental) {
 		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 		Date date = new Date();  
 		String strDate=formatter.format(date);
 		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
 		ExperimentalRecord er = new ExperimentalRecord();
-		er.updateNote("species:" + rb.Common_Name + ";" + "tissue:" + rb.Tissue + ";" + "exposure concentrations: " + rb.Exposure_Concentrations);
+		
+		JSONObject jsonNote = new JSONObject();
+		jsonNote.put("species", rb.Common_Name);
+		jsonNote.put("tissue", rb.Tissue);
+		jsonNote.put("exposure concentrations", rb.Exposure_Concentrations);
+		
+		
 		er.source_name=sourceName;
 		er.chemical_name = rb.Chemical;
 		er.casrn = rb.CASRN;
 		er.dsstox_substance_id = rb.DTXSID;
-		er.original_source_name = rb.Reference;
+		er.reference = rb.Reference;
 		
 		if (propertyName=="LogBCFSteadyState") {
-			er.property_name=propertyName;
+			er.property_name=ExperimentalConstants.strLogBCF;
 			er.property_value_units_final = rb.Log_BCF_Steady_State_units;
-			er.updateNote("study quality: " + rb.Study_Quality_BCF);
+			jsonNote.put("study quality", rb.Study_Quality_BCF);
+			er.updateNote(jsonNote.toString());
+
 			try {
-				er.property_value_string = "Value: " + rb.Log_BCF_Steady_State_mean;
+				String propertyValue = rb.Log_BCF_Steady_State_mean;
 				if (rb.Log_BCF_Steady_State_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
 					er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_mean));
+		        	er.property_value_string = propertyValue + " (arithmetic)";
+
 				}
 				else {
 	        	er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Steady_State_mean);
+	        	er.property_value_string = propertyValue + " (log)";
+
 				}
 	        	if ((!rb.Log_BCF_Steady_State_max.isBlank()) && (!rb.Log_BCF_Steady_State_min.isBlank())) {
-	        	er.property_value_string = "Value: " + rb.Log_BCF_Steady_State_min + "~" + rb.Log_BCF_Steady_State_max;
+	        	String property_value = rb.Log_BCF_Steady_State_min + "~" + rb.Log_BCF_Steady_State_max;
 	        	if (rb.Log_BCF_Steady_State_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
 					er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_max));
 					er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_min));
+					er.property_value_string = property_value + " (arithmetic)";
 				} else {
 	        	er.property_value_max_final = Double.parseDouble(rb.Log_BCF_Steady_State_max);
 	        	er.property_value_min_final = Double.parseDouble(rb.Log_BCF_Steady_State_min);
+	        	er.property_value_string = property_value + " (log)";
 	        	}
 	        	}
 	        } catch (NumberFormatException e) {
 
 	        }
 		}	else if (propertyName == "LogBCFKinetic") {
-			er.property_name=propertyName;
+			er.property_name=ExperimentalConstants.strLogBCF;
 			er.property_value_units_final = rb.Log_BCF_Kinetic_units;
+			jsonNote.put("study quality", rb.Study_Quality_BCF);
+			er.updateNote(jsonNote.toString());
+
 			try {
-				er.property_value_string = "Value: " + rb.Log_BCF_Kinetic_mean;
+				String property_value = rb.Log_BCF_Kinetic_mean;
 	        	if (rb.Log_BCF_Kinetic_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
 					er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_mean));
+					er.property_value_string = property_value + " (arithmetic)";
 	        	} else {
 	        		er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Kinetic_mean);
+					er.property_value_string = property_value + " (log)";
 	        	}
 	        	if ((!rb.Log_BCF_Kinetic_min.isBlank()) && (!rb.Log_BCF_Kinetic_max.isBlank())) {
-		        	er.property_value_string = "Value: " + rb.Log_BCF_Kinetic_min + "~" + rb.Log_BCF_Kinetic_max;
+		        	String propertyValue =  rb.Log_BCF_Kinetic_min + "~" + rb.Log_BCF_Kinetic_max;
 		        	if (rb.Log_BCF_Kinetic_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
 						er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_min));
 						er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_max));
+						er.property_value_string = propertyValue + " (arithmetic)";
 					} else {
 		        	er.property_value_max_final = Double.parseDouble(rb.Log_BCF_Kinetic_max);
 		        	er.property_value_min_final = Double.parseDouble(rb.Log_BCF_Kinetic_min);
+					er.property_value_string = propertyValue + " (log)";
+
 		        	}
 		        	}
 			} catch (NumberFormatException e) {
 				
 			}
+		
+			
+			
+		
 		} else if (propertyName == "LogBAF") {
 			er.property_name=propertyName;
+			er.keep = false;
+			er.reason = "BAF value";
 			er.property_value_units_final = rb.Log_BAF_units;
 			er.updateNote("study quality: " + rb.Study_Quality_BAF);
 			try {
-			er.property_value_string = "Value: " + rb.Log_BAF_mean;
+			String propertyValue = rb.Log_BAF_mean;
 			if ((!(rb.Log_BAF_arithmetic_or_logarithmic.isBlank())) &&
 					rb.Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+				er.property_value_string = propertyValue + " (arithmetic)";
 				er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BAF_mean));
 			}
 			else {
         	er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BAF_mean);
+			er.property_value_string = propertyValue + " (log)";
+
 			}
         	if (!(rb.Log_BAF_min.isBlank() && rb.Log_BAF_max.isBlank())) {
-	        er.property_value_string = "Value: " + rb.Log_BAF_min + "~" + rb.Log_BAF_max;
+        	String propertyValue2 =  rb.Log_BAF_min + "~" + rb.Log_BAF_max;
 
-        	er.property_value_max_final = Double.parseDouble(rb.Log_BAF_min);
-        	er.property_value_min_final = Double.parseDouble(rb.Log_BAF_max);
+			if ((!(rb.Log_BAF_arithmetic_or_logarithmic.isBlank())) &&
+					rb.Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+				er.property_value_string = propertyValue2 + " (arithmetic)";
+
+        	er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BAF_min));
+        	er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BAF_max));
+        	} else {
+            	er.property_value_max_final = Double.parseDouble(rb.Log_BAF_min);
+            	er.property_value_min_final = Double.parseDouble(rb.Log_BAF_max);
+				er.property_value_string = propertyValue2 + " (log)";
+
+        	}
         	}
 			} catch (NumberFormatException e) {
 
 			}
 		}
 		
+		// limiting things to whole body BCF based on feedback from Todd Martin 9/1/2019
+		if (!(rb.Tissue.contains("whole body"))) {
+			er.keep = false;
+			er.reason = "not whole body";
+		} else if (rb.Tissue.contains("whole body") && !(propertyName.equals("LogBAF"))) {
+			er.keep = true;
+		}
+
+		
 		// limiting our search to fish
 		if (!(rb.class_taxonomy.toLowerCase().contains("actinopteri") || rb.class_taxonomy.toLowerCase().contains("actinopterygii") || rb.class_taxonomy.toLowerCase().contains("teleostei"))) {
 			er.keep = false;
 			er.reason = "not a fish";
 		}
+		
 		
 		// limiting to only high and medium quality studies
 		if (rb.Study_Quality_BAF.toLowerCase().contains("low") || rb.Study_Quality_BCF.toLowerCase().contains("low")){
@@ -185,7 +244,7 @@ public class ParseBurkhard extends Parse {
 
 		
 		
-		// limiting our search to whole body
+		
 		
 		/*
 		if ((rb.Tissue != null && !rb.Tissue.isBlank()) && (rb.Tissue.toLowerCase().contains("plasma"))) {
@@ -201,8 +260,9 @@ public class ParseBurkhard extends Parse {
 		}
 		
 		recordsExperimental.add(er);
+		}
 
-	}
+	
 	
 	public static void main(String[] args) {
 		ParseBurkhard p = new ParseBurkhard();

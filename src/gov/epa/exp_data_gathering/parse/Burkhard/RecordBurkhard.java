@@ -156,7 +156,7 @@ public class RecordBurkhard {
 
 	private static final String fileName = "Copy of BurkhardPFAS_BCF_BAF_DATA_for Christian_with DTXSIDs_edits.xlsx";
 
-	public static Vector<JsonObject> parseBurkhard2RecordsFromExcel() {
+	public static Vector<JsonObject> parseBurkhardRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(0); // TODO Chemical name index guessed from header. Is this accurate?
 		return records;

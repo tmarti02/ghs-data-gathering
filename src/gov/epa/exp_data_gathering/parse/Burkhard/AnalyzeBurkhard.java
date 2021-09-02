@@ -91,15 +91,15 @@ public class AnalyzeBurkhard extends Parse {
 		builder.setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues();
 		gson = builder.create();
 		try {
-			String jsonFileName = "Data" + File.separator + "Experimental" + File.separator + "Burkhard" + File.separator + "Burkhard Experimental Records.json";
+			String jsonFileName = "Data" + File.separator + "Experimental" + File.separator + "Burkhard" + File.separator + "Burkhard Toxicity Experimental Records.json";
 			File jsonFile = new File(jsonFileName);
-				List<ExperimentalRecord> recordsBurkhard2 = new ArrayList<ExperimentalRecord>();
+				List<ExperimentalRecord> recordsBurkhard = new ArrayList<ExperimentalRecord>();
 				ExperimentalRecord[] tempRecords = null;
 					tempRecords = gson.fromJson(new FileReader(jsonFile), ExperimentalRecord[].class);
 					for (int i = 0; i < tempRecords.length; i++) {
-						recordsBurkhard2.add(tempRecords[i]);
+						recordsBurkhard.add(tempRecords[i]);
 					}
-		Iterator<ExperimentalRecord> it = recordsBurkhard2.iterator();
+		Iterator<ExperimentalRecord> it = recordsBurkhard.iterator();
 			while (it.hasNext()) {
 				ExperimentalRecord r = it.next();
 				recordsOriginal.add(r);
