@@ -107,7 +107,7 @@ public class ParseVerheyen extends Parse {
 			er.keep = false;
 			er.reason = "no data";
 		}
-		er.original_source_name = "Geert R. Verheyen, Els Braeken, Koen Van Deun, Sabine Van Miert, Evaluation of existing (Q)SAR models for skin and eye irritation and corrosion to use for REACH registration,Toxicology Letters, Volume 265, 2017, Pages 47-52, ISSN 0378-4274, https://doi.org/10.1016/j.toxlet.2016.11.007.";
+		er.reference = "Geert R. Verheyen, Els Braeken, Koen Van Deun, Sabine Van Miert, Evaluation of existing (Q)SAR models for skin and eye irritation and corrosion to use for REACH registration,Toxicology Letters, Volume 265, 2017, Pages 47-52, ISSN 0378-4274, https://doi.org/10.1016/j.toxlet.2016.11.007.";
 		er.property_name = "rabbit_" + ExperimentalConstants.strSkinIrritation;
 		recordsExperimental.add(er);
 	}
