@@ -94,7 +94,7 @@ private void addExperimentalRecord(RecordBagley r, ExperimentalRecords recordsEx
 	er.chemical_name=r.Chemical;
 	er.property_value_string=r.PII;
 	er.note = "Purity: " + r.Purity;
-	er.original_source_name="Bagley DM, Gardner JR, Holland G, Lewis RW, Regnier JF, Stringer DA, Walker AP. Skin irritation: Reference chemicals data bank. Toxicol In Vitro. 1996 Feb;10(1):1-6. doi: 10.1016/0887-2333(95)00099-2. PMID: 20650176.";
+	er.reference="Bagley DM, Gardner JR, Holland G, Lewis RW, Regnier JF, Stringer DA, Walker AP. Skin irritation: Reference chemicals data bank. Toxicol In Vitro. 1996 Feb;10(1):1-6. doi: 10.1016/0887-2333(95)00099-2. PMID: 20650176.";
 	// handles the numeric qualifiers and then assigns a value to property value point estimate final.
 	Pattern digitpattern = Pattern.compile("\\d");
 	Matcher matcher = digitpattern.matcher(r.PII);

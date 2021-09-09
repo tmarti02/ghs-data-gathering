@@ -110,7 +110,7 @@ public class ParseSander extends Parse {
 					er.casrn = "";
 				}
 				
-				String fullreferences = Gabrieldemo(rs);
+				// er.reference = Gabrieldemo(rs);
 				
 				er.property_value_string = rs.hcp.get(i) + ExperimentalConstants.str_mol_m3_atm;
 				er.chemical_name = rs.chemicalName.replace("? ? ? ", "");
@@ -194,11 +194,12 @@ public class ParseSander extends Parse {
 			for (int i = 0; i < Referencelong.size(); i++) {
 				if ((Referencelong.get(i).contains(name)) && (Referencelong.get(i).contains(year))) {
 					output = output + rs.chemicalName.replace("? ? ? ", "") + "|" + Reference + "|" + Referencelong.get(i) + "\n";
+					return Referencelong.get(i);
 				}
 			}
 		}
 		}
-	return output;	
+	return null;	
 	}
 
 	/**

@@ -140,7 +140,15 @@ public class ParseEChemPortalAPI extends Parse {
 			break;
 		case APIConstants.density:
 			er.property_name = ExperimentalConstants.strDensity;
+			// CR 9/8/2021 fixes strings of the form Value: 0.72 (corresponds to D4(20)); Temperature: 22 °C" being read as 20 for density
+			if (r.value.contains("corresponds")) { 
+				String temp = r.value;
+				temp = temp.replaceAll("corresponds to D4(.*?)(\\d+)(.*?)", "");
+				ParseUtilities.getDensity(er, temp);
+			} else {
+			
 			ParseUtilities.getDensity(er,r.value);
+			}
 			break;
 		case APIConstants.vaporPressure:
 			er.property_name = ExperimentalConstants.strVaporPressure;

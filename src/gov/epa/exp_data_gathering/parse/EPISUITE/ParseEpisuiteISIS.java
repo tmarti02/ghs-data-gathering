@@ -83,6 +83,9 @@ public class ParseEpisuiteISIS extends Parse {
 		er.chemical_name = r.Name;
 		er.smiles=r.Smiles;
 		
+		
+		
+		
 		if (r.HL != null) {
 			keep = true;
 			er.keep=true;
@@ -112,8 +115,8 @@ public class ParseEpisuiteISIS extends Parse {
 			keep=true;
 			er.keep=true;
 			er.property_name = ExperimentalConstants.strBoilingPoint;
-			er.property_value_units_original = ExperimentalConstants.str_C+ " " + ExperimentalConstants.str_C;
-			er.property_value_string = String.valueOf(r.BP);
+			er.property_value_units_original = ExperimentalConstants.str_C;
+			er.property_value_string = String.valueOf(r.BP) + " " + ExperimentalConstants.str_C;
 			er.property_value_point_estimate_original = r.BP;
 			
 			uc.convertRecord(er);
@@ -168,6 +171,17 @@ public class ParseEpisuiteISIS extends Parse {
 
 		}
 
+		
+		if (r.BioHC != null) {
+			keep = true;
+			er.keep=true;
+			er.property_name = ExperimentalConstants.strLogHalfLifeBiodegradation;
+			er.property_value_string = String.valueOf(r.BioHC);
+			ParseUtilities.getLogProperty(er, er.property_value_string);
+			uc.convertRecord(er);
+
+		}
+
 
 
 		if (r.WS_LogMolar != null || r.WS_LogMolarCalc != null) {
@@ -205,7 +219,7 @@ public class ParseEpisuiteISIS extends Parse {
 		
 		
 		er.source_name = ExperimentalConstants.strSourceEpisuiteISIS;
-		er.original_source_name=r.Reference;
+		er.reference=r.Reference;
 		er.url="http://esc.syrres.com/interkow/EpiSuiteData_ISIS_SDF.htm";
 				
 		if (keep==true) {

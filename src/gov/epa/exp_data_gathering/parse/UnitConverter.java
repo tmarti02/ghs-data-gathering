@@ -208,7 +208,7 @@ public class UnitConverter {
 	
 	private static void convertDensity(ExperimentalRecord er) {
 		if (er.property_value_units_original!=null && (er.property_value_units_original.equals(ExperimentalConstants.str_g_cm3) ||
-				er.property_value_units_original.equals(ExperimentalConstants.str_g_mL))) {
+				er.property_value_units_original.equals(ExperimentalConstants.str_g_mL) || er.property_value_units_original.equals(ExperimentalConstants.str_kg_dm3))) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_g_cm3;
 		} else if (er.property_value_units_original==null && er.note!=null && (er.note.contains(ExperimentalConstants.str_relative_density))) {

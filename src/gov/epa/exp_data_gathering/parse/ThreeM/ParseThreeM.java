@@ -325,10 +325,10 @@ public class ParseThreeM extends Parse {
 		}
 		// handles references
 		if (r3m.comments != null && (r3m.comments.toLowerCase().contains("reference: ") || r3m.comments.contains("references: "))) {
-			er.original_source_name = r3m.comments;
+			er.reference = r3m.comments;
 		}
 		// handles the pdf identification
-		er.reference = r3m.Name;
+		er.original_source_name = r3m.Name;
 		
 		// handles the unit conversions 
 		if (er.property_name != null && OriginallyKOW == false && er.keep == true) {
