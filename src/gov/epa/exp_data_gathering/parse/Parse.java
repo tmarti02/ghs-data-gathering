@@ -348,7 +348,7 @@ public class Parse {
 	static void parsePhyschem() { 
 		String recordType = "physchem";
 		String[] allSources = {ExperimentalConstants.strSourceADDoPT,
-				ExperimentalConstants.strSourceAqSolDB,
+				// ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,
 				ExperimentalConstants.strSourceChemicalBook,
 				ExperimentalConstants.strSourceChemidplus,
@@ -362,11 +362,13 @@ public class Parse {
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuiteISIS,
 				ExperimentalConstants.strSourceICF,
-				ExperimentalConstants.strSource3M};
+				ExperimentalConstants.strSource3M,
+				ExperimentalConstants.strSourceBurkhard};
 		
 		String[] reparseSources = {
 				ExperimentalConstants.strSourceICF,
-				ExperimentalConstants.strSource3M
+				ExperimentalConstants.strSource3M,
+				ExperimentalConstants.strSourceAqSolDB
 			};
 		
 		boolean reparse=true;
@@ -445,9 +447,9 @@ public class Parse {
 	
 	
 	public static void main(String[] args) {
-//		parsePhyschem();
+		parsePhyschem();
 //		parseTox();
-		runParse(ExperimentalConstants.strSourceADDoPT, "physchem");
+//		runParse(ExperimentalConstants.strSourceADDoPT, "physchem");
 	}
 }
 

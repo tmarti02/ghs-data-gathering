@@ -74,6 +74,7 @@ public class ExperimentalRecord {
 			"keep",
 			"reason",
 			"casrn",
+			"dsstox_substance_id",
 			"einecs",
 			"chemical_name",
 			"synonyms",

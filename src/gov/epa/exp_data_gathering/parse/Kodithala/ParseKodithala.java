@@ -91,9 +91,8 @@ public class ParseKodithala extends Parse {
 		er.date_accessed=dayOnly;
 		er.source_name=sourceName;
 		er.property_name=ExperimentalConstants.strSkinIrritationPII;
-		er.property_value_units_final=ExperimentalConstants.str_pii;
 		er.chemical_name=r.Compound_name;
-		er.property_value_string=r.Observed_PII;
+		er.property_value_string=r.Observed_PII + " " + ExperimentalConstants.str_pii;
 		er.property_value_point_estimate_final = Double.parseDouble(r.Observed_PII);
 		er.reference="Kiran Kodithala, A. J. Hopfinger, Edward D. Thompson, Michael K. Robinson, Prediction of Skin Irritation from Organic Chemicals Using Membrane-Interaction QSAR Analysis, Toxicological Sciences, Volume 66, Issue 2, April 2002, Pages 336-346, https://doi.org/10.1093/toxsci/66.2.336";
 		

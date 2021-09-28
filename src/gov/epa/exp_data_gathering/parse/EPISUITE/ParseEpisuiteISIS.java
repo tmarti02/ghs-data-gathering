@@ -8,6 +8,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
@@ -140,6 +142,21 @@ public class ParseEpisuiteISIS extends Parse {
 			er.property_name = ExperimentalConstants.strLogKow;
 			er.property_value_string = String.valueOf(r.KOW);
 			ParseUtilities.getLogProperty(er, er.property_value_string);
+			
+			// references having pH values included
+			if (r.Reference.toLowerCase().contains("ph")) {
+				String regex = "(.*)(\\;)?pH:(\\s)*(^\\d*\\.\\d+|\\d+\\.\\d*$)";
+				String string = r.Reference;
+				Pattern pattern = Pattern.compile(regex);
+				Matcher matcher = pattern.matcher(string);
+				if (matcher.matches()) {
+					String pHGroup = matcher.group(4);
+					er.pH = pHGroup;
+					String refGroup = matcher.group(1);
+					er.reference = refGroup;
+				}
+
+			}			
 			uc.convertRecord(er);
 		}
 
@@ -222,6 +239,9 @@ public class ParseEpisuiteISIS extends Parse {
 		er.reference=r.Reference;
 		er.url="http://esc.syrres.com/interkow/EpiSuiteData_ISIS_SDF.htm";
 				
+		
+		er.keep = false;
+		er.reason = "Episuite duplicate";
 		if (keep==true) {
 		records.add(er);
 		}

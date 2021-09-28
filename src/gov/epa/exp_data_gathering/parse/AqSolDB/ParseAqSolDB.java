@@ -106,6 +106,7 @@ public class ParseAqSolDB extends Parse {
 			er.chemical_name = ar.Name;
 			er.smiles = ar.SMILES;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
+			er.dsstox_substance_id = ar.DTXSID;
 			er.property_value_string = "LogS: "+ar.Solubility;
 			er.property_value_point_estimate_original = Double.parseDouble(ar.Solubility);
 			er.property_value_units_original = ExperimentalConstants.str_log_M;
