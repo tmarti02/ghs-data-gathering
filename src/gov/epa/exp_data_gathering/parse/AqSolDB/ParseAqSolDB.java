@@ -13,6 +13,7 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
+import kong.unirest.json.JSONObject;
 
 /**
  * Parses data from AqSolDB, accessible at: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OVHAW8
@@ -107,10 +108,17 @@ public class ParseAqSolDB extends Parse {
 			er.smiles = ar.SMILES;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 			er.dsstox_substance_id = ar.DTXSID;
-			er.property_value_string = "LogS: "+ar.Solubility;
+			// er.property_value_string = "LogS: "+ar.Solubility;
 			er.property_value_point_estimate_original = Double.parseDouble(ar.Solubility);
 			er.property_value_units_original = ExperimentalConstants.str_log_M;
 			uc.convertRecord(er);
+			
+			// the json property value string
+			JSONObject propertyValueJSON = new JSONObject();
+			propertyValueJSON.put("LogS",ar.Solubility);
+			er.property_value_string = propertyValueJSON.toString();
+			
+			
 			records.add(er);
 		}
 	}

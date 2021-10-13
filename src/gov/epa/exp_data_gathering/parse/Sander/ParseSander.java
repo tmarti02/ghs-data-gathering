@@ -18,6 +18,7 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
+import kong.unirest.json.JSONObject;
 
 public class ParseSander extends Parse {
 	
@@ -112,7 +113,7 @@ public class ParseSander extends Parse {
 				
 				// er.reference = Gabrieldemo(rs);
 				
-				er.property_value_string = rs.hcp.get(i) + ExperimentalConstants.str_mol_m3_atm;
+				er.property_value_string = rs.hcp.get(i) + " " + ExperimentalConstants.str_mol_m3_atm;
 				er.chemical_name = rs.chemicalName.replace("? ? ? ", "");
 				er.property_name = ExperimentalConstants.strHenrysLawConstant;
 				String propertyValue = rs.hcp.get(i);
@@ -124,9 +125,11 @@ public class ParseSander extends Parse {
 					er.property_value_point_estimate_final = 1/(er.property_value_point_estimate_original*101325);
 				}
 				
+				
+				er.temperature_C = (double)25;
+
 				/*
 				 * CR: (Wednesday August 18) temperature and pressure information, if it is given at all is found in the notes.
-				er.temperature_C = (double)25;
 				er.pressure_mmHg = "760";
 				*/
 				

@@ -90,7 +90,7 @@ public class ExcelSourceReader {
 		Vector<JsonObject> records = new Vector<JsonObject>();
 		try {
 			int numRows = sheet.getLastRowNum();
-			for (int i = 1; i < numRows; i++) {
+			for (int i = 1; i <= numRows; i++) {
 				Row row = sheet.getRow(i);
 				if (row==null) { continue; }
 				JsonObject jo = new JsonObject();

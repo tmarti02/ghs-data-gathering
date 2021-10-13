@@ -363,12 +363,13 @@ public class Parse {
 				ExperimentalConstants.strSourceEpisuiteISIS,
 				ExperimentalConstants.strSourceICF,
 				ExperimentalConstants.strSource3M,
-				ExperimentalConstants.strSourceBurkhard};
+				ExperimentalConstants.strSourceBurkhard,
+				ExperimentalConstants.strSourceAqSolDB
+};
 		
 		String[] reparseSources = {
 				ExperimentalConstants.strSourceICF,
 				ExperimentalConstants.strSource3M,
-				ExperimentalConstants.strSourceAqSolDB
 			};
 		
 		boolean reparse=true;
