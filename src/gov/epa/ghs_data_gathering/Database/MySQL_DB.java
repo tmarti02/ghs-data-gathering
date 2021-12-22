@@ -902,6 +902,45 @@ public static void create_table_key_with_duplicates (Statement stat,String table
 		}
 		
 	}
+
+
+public static void create_table_key_with_duplicates_with_auto_id (Statement stat,String table,String []fields,String keyFieldName) {
+	
+	try {
+		
+		String sql = "create table if not exists " + table + " (\n";
+
+		int count = 0;// number of fields
+
+		sql+="id INTEGER PRIMARY KEY AUTOINCREMENT,\n";
+		
+		for (int i = 0; i < fields.length; i++) {
+			sql += fields[i] + " TEXT";
+			
+			if (fields[i].equals(keyFieldName)) {
+				sql+=" KEY";
+			}
+			
+			if (i<fields.length-1) {
+				sql+=",";
+			}
+			
+			sql+="\n";
+			
+			count++;
+		}
+
+		sql += ");";
+		
+//		System.out.println(sql);
+		
+		stat.executeUpdate(sql);
+		
+	} catch (Exception ex) {
+		ex.printStackTrace();
+	}
+	
+}
 	
 	public static void create_table (Statement stat,String table,String []fields,String primaryKey) {
 		

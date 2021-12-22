@@ -165,14 +165,15 @@ public class ExperimentalRecord {
 	public boolean isValidConditions() {
 		if (property_name.equals(ExperimentalConstants.strRatInhalationLC50)) return true;
 				
-		if (property_name.contentEquals(ExperimentalConstants.strWaterSolubility) || property_name.contentEquals(ExperimentalConstants.strHenrysLawConstant)) {			
+		if (property_name.contentEquals(ExperimentalConstants.strWaterSolubility) || property_name.contentEquals(ExperimentalConstants.strHenrysLawConstant) || property_name.contentEquals(ExperimentalConstants.strVaporPressure)) {			
 			if (temperature_C==null) return true;			
 			else if (temperature_C>=20 && temperature_C<=30) {
 				return true;
 			} else {
 				return false;
 			}
-			
+		} else if (property_name.contentEquals(ExperimentalConstants.strDensity)) {
+			return true;//omit condition check because 90% of records have no temperature
 		} else {
 			System.out.println("Need to add condition criteria for "+property_name);
 			
@@ -218,13 +219,61 @@ public class ExperimentalRecord {
 			good = isWithinLogTolerance(logTolerance,zeroTolerance);
 			
 			if (!good) {
-//				System.out.println("dont have min and max:"+this);
+				System.out.println("not within log tolerance:"+this);
 			} else {
 //				System.out.println("ok:"+this);
 			}
 		}
 		
 		return good;
+	}
+	
+	
+	public String getValidPointEstimateString() {
+		if (property_value_numeric_qualifier!=null && !property_value_numeric_qualifier.equals("~")) { 
+//			System.out.println("bad qualifier:"+this);
+			return "Bad numeric qualifier";
+		}
+		if (property_value_point_estimate_final!=null) return "OK"; 
+		
+		boolean hasMinAndMax = property_value_min_final!=null && property_value_max_final!=null;
+		if (!hasMinAndMax) { 
+//			System.out.println("dont have min and max:"+this);			
+			if (property_value_qualitative!=null) return "property value is qualitative"; 				
+			return "Don't have min and max value"; 
+		}
+		
+		boolean good = true;
+		
+		double logTolerance = 1.0;//log units for properties that vary many orders of magnitude; if value was 1, then max would be 10x bigger than min
+		double temperatureTolerance = 10.0;//C For Melting point, boiling point, flash point
+		double densityTolerance = 0.1;//g/cm^3 for density
+		double zeroTolerance = Math.pow(10.0, -6.0);
+		
+		//Properties which are usually modeled as log of the property value: pKA, logKow, WS, HLC, VP, LC50, LD50
+		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
+			good = isWithinTolerance(logTolerance);
+		} else if ((property_name.equals(ExperimentalConstants.strMeltingPoint) || property_name.equals(ExperimentalConstants.strBoilingPoint) ||
+				property_name.equals(ExperimentalConstants.strFlashPoint))) {
+			good = isWithinTolerance(temperatureTolerance);
+		} else if (property_name.equals(ExperimentalConstants.strDensity)) {
+			good = isWithinTolerance(densityTolerance);
+		} else if (property_name.equals(ExperimentalConstants.strVaporPressure) || property_name.equals(ExperimentalConstants.strHenrysLawConstant) ||
+				property_name.equals(ExperimentalConstants.strWaterSolubility) || property_name.toLowerCase().contains("lc50") ||
+				property_name.toLowerCase().contains("ld50")) {
+			good = isWithinLogTolerance(logTolerance,zeroTolerance);
+			
+			if (!good) {
+//				System.out.println("not within log tolerance:"+this);
+			} else {
+//				System.out.println("ok:"+this);
+			}
+		} else {
+			System.out.println(property_name +" not handled in get valid point estimate");
+		}
+		
+		if (good) return "OK";
+		else return "min and max not within tolerance";
 	}
 
 	public String toJSON() {
@@ -416,7 +465,9 @@ public class ExperimentalRecord {
 		}
 	}
 
-	public double rangeAverage() {
+	public Double rangeAverage() {
+		
+		if (property_value_min_final==null || property_value_max_final==null) return null;
 		return (property_value_min_final + property_value_max_final)/2.0;
 	}
 

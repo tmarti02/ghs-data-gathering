@@ -140,6 +140,19 @@ public class RecordDashboard {
 		}
 
 	}
+	
+	public void setValue(String fieldName,double fieldValue) {
+
+		try {
+			Field myField =this.getClass().getField(fieldName);				
+
+			myField.setDouble(this, fieldValue);
+
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+
+	}
 
 	public String toString(String[] varlist) {
 		String str="";
