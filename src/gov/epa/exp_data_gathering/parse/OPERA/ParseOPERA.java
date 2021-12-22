@@ -125,7 +125,9 @@ ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 			er.keep = true;
 			er.property_name = ro.property_name;
 			er.property_value_point_estimate_original = ro.getPropertyValueOriginal();
-			if (er.property_value_point_estimate_original != null) {
+			if (er.property_value_point_estimate_original != null && ro.property_value_units_original != null) {
+				er.property_value_string = er.property_value_point_estimate_original.toString() + " " + ro.property_value_units_original;
+			} else if (er.property_value_point_estimate_original != null) {
 				er.property_value_string = er.property_value_point_estimate_original.toString();
 			}
 			if (ro.property_name == ExperimentalConstants.strLogKow) {

@@ -109,7 +109,7 @@ public class ParseOECD_Toolbox_SkinIrrit extends Parse {
 		er.smiles=recOT.smiles;
 		er.property_name=ExperimentalConstants.strSkinIrritationPII;
 		er.original_source_name=recOT.reference;		
-		er.property_value_string=recOT.PII;
+		er.property_value_string=recOT.PII + " " + ExperimentalConstants.str_pii;
 		er.property_value_units_final= ExperimentalConstants.str_pii;
 		// handles the numeric qualifiers and then assigns a value to property value point estimate final.
 		Pattern digitpattern = Pattern.compile("\\d");

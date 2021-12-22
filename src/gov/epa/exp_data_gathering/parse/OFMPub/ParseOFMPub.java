@@ -14,6 +14,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import kong.unirest.json.JSONObject;
 
 public class ParseOFMPub extends Parse {
 
@@ -112,7 +113,7 @@ public class ParseOFMPub extends Parse {
 			er.property_name = ExperimentalConstants.strLogKow;
 			break;
 		}
-		
+		// the property value string gabriel uses for further code
 		er.property_value_string = "Value: "+opr.value;
 		if (opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) { er.property_value_string = er.property_value_string + "; Remarks: " + opr.resultRemarks; }
 		
@@ -231,6 +232,11 @@ public class ParseOFMPub extends Parse {
 				er.reason = "Model output without experimental database match";
 			}
 		}
+		// the json property value string
+		JSONObject propertyValueJSON = new JSONObject();
+		propertyValueJSON.put("Value", opr.value);
+		if (opr.resultRemarks!=null && !opr.resultRemarks.isBlank()) { propertyValueJSON.put("Remarks", opr.resultRemarks); }
+		er.property_value_string = propertyValueJSON.toString();
 		
 		uc.convertRecord(er);
 		records.add(er);

@@ -84,9 +84,9 @@ public class ParseICF extends Parse {
 		
 		er.source_name = ExperimentalConstants.strSourceICF;
 		if (r.Record_source_level.equals("Primary")) {
-			er.original_source_name = r.long_ref;
+			er.reference = r.long_ref;
 		} else if (r.Record_source_level.equals("Secondary")) {
-			er.original_source_name = r.Record_source_primary;
+			er.reference = r.Record_source_primary;
 		}
 		
 		switch (r.property_name) {

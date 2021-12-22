@@ -7,12 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.commons.exec.util.StringUtils;
 
 import com.google.gson.JsonObject;
 
@@ -20,22 +15,26 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
-import gov.epa.exp_data_gathering.parse.ParseUtilities;
-import gov.epa.exp_data_gathering.parse.UnitConverter;
-import gov.epa.exp_data_gathering.parse.ChemicalBook.RecordChemicalBook;
-
+import gov.epa.exp_data_gathering.parse.Burkhard.RecordBurkhard;
+import kong.unirest.json.JSONObject;
 
 
 public class ParseBurkhard extends Parse {
 
-	public boolean removeDuplicates=true; // not sure how we want this changed later on.
-
-	
 	public ParseBurkhard() {
-		sourceName = "Burkhard";
+		sourceName = ExperimentalConstants.strSourceBurkhard;
 		this.init();
+		
+		// toxicity record status commented out for now
+		/*
+		fileNameJSON_Records = sourceName +" Toxicity Original Records.json";
+		fileNameFlatExperimentalRecords = sourceName +" Toxicity Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.txt";
+		fileNameJsonExperimentalRecords = sourceName +" Toxicity Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +" Toxicity Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +" Toxicity Experimental Records.xlsx";
+		*/
 
-		// TODO Is this a toxicity source? If so, rename original and experimental records files here.
 	}
 
 	@Override
@@ -72,7 +71,6 @@ public class ParseBurkhard extends Parse {
 			while (it.hasNext()) {
 				RecordBurkhard r = it.next();
 				addExperimentalRecords(r,recordsExperimental);
-				// TODO Write addExperimentalRecord() method to parse this source.
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -80,6 +78,9 @@ public class ParseBurkhard extends Parse {
 
 		return recordsExperimental;
 	}
+	
+	
+	
 	
 	private void addExperimentalRecords(RecordBurkhard rb, ExperimentalRecords recordsExperimental) {
 		if (rb.Log_BCF_Steady_State_mean != null && !rb.Log_BCF_Steady_State_mean.isBlank()) {
@@ -101,94 +102,174 @@ public class ParseBurkhard extends Parse {
 		String strDate=formatter.format(date);
 		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
 		ExperimentalRecord er = new ExperimentalRecord();
-		er.fr_id = rb.ID;
-		er.updateNote("species:" + rb.Common_Name + ";" + "tissue:" + rb.Tissue + ";" + "exposure concentrations: " + rb.Exposure_Concentrations);
+		
+		JSONObject jsonNote = new JSONObject();
+		jsonNote.put("species", rb.Common_Name);
+		jsonNote.put("tissue", rb.Tissue);
+		jsonNote.put("exposure concentrations", rb.Exposure_Concentrations);
+		
+		
 		er.source_name=sourceName;
 		er.chemical_name = rb.Chemical;
-		er.casrn = rb.CAS;
-		er.original_source_name = rb.Reference;
+		er.casrn = rb.CASRN;
+		er.dsstox_substance_id = rb.DTXSID;
+		er.reference = rb.Reference;
 		
 		if (propertyName=="LogBCFSteadyState") {
-			er.property_name=propertyName;
+			er.property_name=ExperimentalConstants.strLogBCF;
 			er.property_value_units_final = rb.Log_BCF_Steady_State_units;
-			er.updateNote("study quality: " + rb.Study_Quality_BCF);
+			jsonNote.put("study quality", rb.Study_Quality_BCF);
+			er.updateNote(jsonNote.toString());
+
 			try {
-				er.property_value_string = "Value: " + rb.Log_BCF_Steady_State_mean;
-				if (rb.Log_BCF_Steady_State_type.toLowerCase().contains("arithmetic") || rb.Log_BCF_Steady_State_units.toLowerCase().contains("arithmetic")) {
+				String propertyValue = rb.Log_BCF_Steady_State_mean;
+				if (rb.Log_BCF_Steady_State_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
 					er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_mean));
+		        	er.property_value_string = propertyValue + " (arithmetic)";
+
 				}
 				else {
 	        	er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Steady_State_mean);
+	        	er.property_value_string = propertyValue + " (log)";
+
 				}
-	        	if (rb.Log_BCF_Steady_State_max != null && rb.Log_BCF_Steady_State_min != null) {
-	        	er.property_value_string = "Value: " + rb.Log_BCF_Steady_State_min + "~" + rb.Log_BCF_Steady_State_max;
-	        	if (rb.Log_BCF_Steady_State_type.toLowerCase().contains("arithmetic") || rb.Log_BCF_Steady_State_units.toLowerCase().contains("arithmetic")) {
+	        	if ((!rb.Log_BCF_Steady_State_max.isBlank()) && (!rb.Log_BCF_Steady_State_min.isBlank())) {
+	        	String property_value = rb.Log_BCF_Steady_State_min + "~" + rb.Log_BCF_Steady_State_max;
+	        	if (rb.Log_BCF_Steady_State_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
 					er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_max));
 					er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_min));
+					er.property_value_string = property_value + " (arithmetic)";
 				} else {
 	        	er.property_value_max_final = Double.parseDouble(rb.Log_BCF_Steady_State_max);
 	        	er.property_value_min_final = Double.parseDouble(rb.Log_BCF_Steady_State_min);
+	        	er.property_value_string = property_value + " (log)";
 	        	}
 	        	}
 	        } catch (NumberFormatException e) {
 
 	        }
 		}	else if (propertyName == "LogBCFKinetic") {
-			er.property_name=propertyName;
+			er.property_name=ExperimentalConstants.strLogBCF;
 			er.property_value_units_final = rb.Log_BCF_Kinetic_units;
+			jsonNote.put("study quality", rb.Study_Quality_BCF);
+			er.updateNote(jsonNote.toString());
+
 			try {
-				er.property_value_string = "Value: " + rb.Log_BCF_Kinetic_mean;
-	        	if (rb.Log_BCF_Kinetic_type.toLowerCase().contains("arithmetic") || rb.Log_BCF_Kinetic_units.toLowerCase().contains("arithmetic")) {
+				String property_value = rb.Log_BCF_Kinetic_mean;
+	        	if (rb.Log_BCF_Kinetic_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
 					er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_mean));
+					er.property_value_string = property_value + " (arithmetic)";
 	        	} else {
 	        		er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Kinetic_mean);
+					er.property_value_string = property_value + " (log)";
 	        	}
-			
+	        	if ((!rb.Log_BCF_Kinetic_min.isBlank()) && (!rb.Log_BCF_Kinetic_max.isBlank())) {
+		        	String propertyValue =  rb.Log_BCF_Kinetic_min + "~" + rb.Log_BCF_Kinetic_max;
+		        	if (rb.Log_BCF_Kinetic_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+						er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_min));
+						er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_max));
+						er.property_value_string = propertyValue + " (arithmetic)";
+					} else {
+		        	er.property_value_max_final = Double.parseDouble(rb.Log_BCF_Kinetic_max);
+		        	er.property_value_min_final = Double.parseDouble(rb.Log_BCF_Kinetic_min);
+					er.property_value_string = propertyValue + " (log)";
+
+		        	}
+		        	}
 			} catch (NumberFormatException e) {
 				
 			}
+		
+			
+			
+		
 		} else if (propertyName == "LogBAF") {
 			er.property_name=propertyName;
+			er.keep = false;
+			er.reason = "BAF value";
 			er.property_value_units_final = rb.Log_BAF_units;
 			er.updateNote("study quality: " + rb.Study_Quality_BAF);
 			try {
-			er.property_value_string = "Value: " + rb.Log_BAF_mean;
-			if ((rb.Log_BAF_type != null && !(rb.Log_BAF_type.isBlank())) &&
-					rb.Log_BAF_type.toLowerCase().contains("arithmetic")) {
+			String propertyValue = rb.Log_BAF_mean;
+			if ((!(rb.Log_BAF_arithmetic_or_logarithmic.isBlank())) &&
+					rb.Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+				er.property_value_string = propertyValue + " (arithmetic)";
 				er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BAF_mean));
 			}
 			else {
         	er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BAF_mean);
-			}
-        	if (rb.Log_BAF_min != null && rb.Log_BAF_max != null) {
-	        er.property_value_string = "Value: " + rb.Log_BAF_min + "~" + rb.Log_BAF_max;
+			er.property_value_string = propertyValue + " (log)";
 
-        	er.property_value_max_final = Double.parseDouble(rb.Log_BAF_min);
-        	er.property_value_min_final = Double.parseDouble(rb.Log_BAF_max);
+			}
+        	if (!(rb.Log_BAF_min.isBlank() && rb.Log_BAF_max.isBlank())) {
+        	String propertyValue2 =  rb.Log_BAF_min + "~" + rb.Log_BAF_max;
+
+			if ((!(rb.Log_BAF_arithmetic_or_logarithmic.isBlank())) &&
+					rb.Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+				er.property_value_string = propertyValue2 + " (arithmetic)";
+
+        	er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BAF_min));
+        	er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BAF_max));
+        	} else {
+            	er.property_value_max_final = Double.parseDouble(rb.Log_BAF_min);
+            	er.property_value_min_final = Double.parseDouble(rb.Log_BAF_max);
+				er.property_value_string = propertyValue2 + " (log)";
+
+        	}
         	}
 			} catch (NumberFormatException e) {
 
 			}
 		}
 		
+		// limiting things to whole body BCF based on feedback from Todd Martin 9/1/2019
+		if (!(rb.Tissue.contains("whole body"))) {
+			er.keep = false;
+			er.reason = "not whole body";
+		} else if (rb.Tissue.contains("whole body") && !(propertyName.equals("LogBAF"))) {
+			er.keep = true;
+		}
+
+		
 		// limiting our search to fish
-		if (!(rb.taxonomic_class.toLowerCase().contains("actinopteri") || rb.taxonomic_class.toLowerCase().contains("actinopterygii") || rb.taxonomic_class.toLowerCase().contains("teleostei"))) {
+		if (!(rb.class_taxonomy.toLowerCase().contains("actinopteri") || rb.class_taxonomy.toLowerCase().contains("actinopterygii") || rb.class_taxonomy.toLowerCase().contains("teleostei"))) {
 			er.keep = false;
 			er.reason = "not a fish";
 		}
 		
-		// limiting our search to whole body
-		if ((rb.Tissue != null && !rb.Tissue.isBlank()) && !(rb.Tissue.toLowerCase().contains("whole body"))) {
+		
+		// limiting to only high and medium quality studies
+		if (rb.Study_Quality_BAF.toLowerCase().contains("low") || rb.Study_Quality_BCF.toLowerCase().contains("low")){
+			er.keep=false;
+			er.reason = "untrusted study";
+		}
+
+		
+		
+		
+		
+		/*
+		if ((rb.Tissue != null && !rb.Tissue.isBlank()) && (rb.Tissue.toLowerCase().contains("plasma"))) {
 			er.keep = false;
-			er.reason = "not a whole body record";
+			er.reason = "empty tissue or plasma record";
+		}
+		*/
+		
+		
+		if (!(er.property_value_point_estimate_final != null)) {
+			er.keep = false;
+			er.reason = "unable to parse a value";
 		}
 		
 		recordsExperimental.add(er);
+		}
 
-	}
+	
 	
 	public static void main(String[] args) {
 		ParseBurkhard p = new ParseBurkhard();
 		p.createFiles();
 	}
+
+
 }

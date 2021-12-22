@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Vector;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -390,35 +391,41 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		toExcel_File(filePath,ExperimentalRecord.outputFieldNames);
 	}
 	
-	public void createCheckingFile(ExperimentalRecords records,String mainFolder,String fileNameExcelExperimentalRecordsCheck ) {
+	public void createCheckingFile(ExperimentalRecords records,String filePath) {
+		double pct = 0.01;
+		int min = 100;
+		int max = 500;
 		
-		//Create check file:			
-		double fracCheck=0.01;
-		
-		ExperimentalRecords recordsClone=(ExperimentalRecords) records.clone();
-		
-		Collections.shuffle(recordsClone);
-		int count=(int)(fracCheck*recordsClone.size());
-		
-		// CR: if 1% of total records is greater than fifty, only use that many
-		
-		ExperimentalRecords recordsCheck=new ExperimentalRecords();
-
-		if (count >= 50) {
-		for (int i=0;i<count;i++) recordsCheck.add(recordsClone.get(i));			
-		} else if (recordsClone.size() >= 50) {
-			count = 50;
-			for (int i=0;i<count;i++) recordsCheck.add(recordsClone.get(i));			
-		} else {
-			count = recordsClone.size();
-			for (int i=0;i<count;i++) recordsCheck.add(recordsClone.get(i));
+		int size = records.size();
+		int n = (int) Math.ceil(pct*size); // GS: Round up instead of just truncating
+		if (size < min) {
+			n = size;
+		} else if (n < min) {
+			n = min;
+		} else if (n > max) {
+			n = max;
 		}
-		String filePath=mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck;
 		
+		// GS: You can't use clone() without implementing Cloneable! This doesn't actually create a deep copy.
+		// GS: But also...why clone at all? The order of records is immaterial; we can just shuffle them in place.
+//		ExperimentalRecords recordsClone=(ExperimentalRecords) records.clone();
+		
+		// GS: Why shuffle >2M records when we're only using 1% of them?
+		// GS: Use Durstenfeld's algorithm: https://stackoverflow.com/questions/4702036/take-n-random-elements-from-a-liste
+//		Collections.shuffle(records);
+		
+		Random rand = new Random();
+		for (int i = size - 1; i >= size - n; --i) {
+			Collections.swap(records, i, rand.nextInt(i + 1));
+	    }
+		
+		ExperimentalRecords recordsCheck = new ExperimentalRecords();
+		for (int j = size - n; j < size; j++) {
+			recordsCheck.add(records.get(j));
+		}
 		recordsCheck.toExcel_File_Split(filePath);
 	
-		createLogEntrySheet(filePath); 
-		
+		createLogEntrySheet(filePath); 		
 	}
 
 	private void createLogEntrySheet(String filePath) {

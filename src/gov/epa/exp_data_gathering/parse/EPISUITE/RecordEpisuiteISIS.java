@@ -31,6 +31,7 @@ public class RecordEpisuiteISIS {
 	Double BCF;
 	Double KOA;
 	Double Km;
+	Double BioHC;
 	Double Temperature;
 	String DataSet;
 	String Reference;
@@ -158,6 +159,14 @@ public class RecordEpisuiteISIS {
 				
 					}
 				}
+				
+				
+				if (abbrev.contentEquals("LogHalfLife")) {
+					if (m.getProperty(abbrev)!=null) {
+						r.BioHC = Double.parseDouble(m.getProperty(abbrev));
+					}
+
+				}
 
 							
 				r.DataSet=m.getProperty("DataSet");
@@ -268,6 +277,8 @@ public class RecordEpisuiteISIS {
 		Vector<RecordEpisuiteISIS> records8 = getRecords(strFolder+"EPI_BCF_Data_SDF.sdf","LogBCF");
 		Vector<RecordEpisuiteISIS> records9 = getRecords(strFolder+"EPI_KOA_Data_SDF.sdf","LogKOA");
 		Vector<RecordEpisuiteISIS> records10 = getRecords(strFolder+"EPI_KM_Data_SDF.sdf","LogKmHL");
+		Vector<RecordEpisuiteISIS> records11 = getRecords(strFolder+"EPI_BioHC_Data_SDF.sdf","LogHalfLife");
+
 
 		
 		
@@ -287,6 +298,7 @@ public class RecordEpisuiteISIS {
 		records.addAll(records8);
 		records.addAll(records9);
 		records.addAll(records10);
+		records.addAll(records11);
 
 
 

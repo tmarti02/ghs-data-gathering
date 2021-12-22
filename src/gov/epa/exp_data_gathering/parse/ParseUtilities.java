@@ -158,6 +158,10 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_g_L;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g/l");
 			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("kg/dm3")) {
+			er.property_value_units_original = ExperimentalConstants.str_kg_dm3;
+			unitsIndex = propertyValue.toLowerCase().indexOf("kg/dm3");
+			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("relative")) {
 			if (er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
 				int relativeIndex = propertyValue.toLowerCase().indexOf("relative");
@@ -674,6 +678,7 @@ public class ParseUtilities extends Parse {
 		if (er.source_name!=ExperimentalConstants.strSourceOFMPub && propertyValue.contains(":")) {
 			unitsIndex = propertyValue.length();
 		}
+		
 
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;

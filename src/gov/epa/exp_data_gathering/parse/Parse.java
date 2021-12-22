@@ -1,8 +1,10 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -15,6 +17,7 @@ import gov.epa.exp_data_gathering.parse.ADDoPT.ParseADDoPT;
 import gov.epa.exp_data_gathering.parse.AqSolDB.ParseAqSolDB;
 import gov.epa.exp_data_gathering.parse.Bagley.ParseBagley;
 import gov.epa.exp_data_gathering.parse.Bradley.ParseBradley;
+import gov.epa.exp_data_gathering.parse.Burkhard.ParseBurkhard;
 import gov.epa.exp_data_gathering.parse.CFSAN.ParseCFSAN;
 import gov.epa.exp_data_gathering.parse.ChemBL.ParseChemBL;
 import gov.epa.exp_data_gathering.parse.ChemicalBook.ParseChemicalBook;
@@ -93,7 +96,11 @@ public class Parse {
 		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
 		fileNameJsonExperimentalRecordsBad = sourceName +" Experimental Records-Bad.json";
 		fileNameExcelExperimentalRecords = sourceName +" Experimental Records.xlsx";
-		fileNameExcelExperimentalRecordsCheck = sourceName +" Experimental Records Check.xlsx";
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HHmm");
+		String timestamp = sdf.format(new Date());
+		fileNameExcelExperimentalRecordsCheck = sourceName +" Experimental Records Check " + timestamp + ".xlsx";
+		
 		mainFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
 		databaseFolder = mainFolder;
 		jsonFolder= mainFolder;
@@ -172,15 +179,16 @@ public class Parse {
 			JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(recordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
 		}
 		
+		ExperimentalRecords merge = new ExperimentalRecords();
+		merge.addAll(records);
+		merge.addAll(recordsBad);
 		if (writeExcelExperimentalRecordsFile) {
 			System.out.println("Writing Excel file for chemical records");
-			ExperimentalRecords merge = new ExperimentalRecords();
-			merge.addAll(records);
-			merge.addAll(recordsBad);
 			merge.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords);
-			
-			merge.createCheckingFile(records, mainFolder, fileNameExcelExperimentalRecordsCheck);
 		}
+		
+		// GS: Should always generate checking file, not just when Excel files are generated
+		merge.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck);
 		
 		System.out.println("done\n");
 	}
@@ -217,7 +225,8 @@ public class Parse {
 				ExperimentalConstants.strSourceHayashi,
 				ExperimentalConstants.strSourceKodithala,
 				ExperimentalConstants.strSourceVerheyen,
-				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit
+				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit,
+				ExperimentalConstants.strSourceBurkhard
 		};
 		
 		if (!Arrays.asList(toxSources).contains(sourceName) && recordTypeToParse.toLowerCase().contains("tox")) {
@@ -325,6 +334,9 @@ public class Parse {
 		case ExperimentalConstants.strSourceVerheyen:
 			p = new ParseVerheyen();
 			break;
+		case ExperimentalConstants.strSourceBurkhard:
+			p = new ParseBurkhard();
+			break;
 		default:
 			System.out.println("Need to add parse case for "+sourceName);
 			return;
@@ -340,7 +352,7 @@ public class Parse {
 	static void parsePhyschem() { 
 		String recordType = "physchem";
 		String[] allSources = {ExperimentalConstants.strSourceADDoPT,
-				ExperimentalConstants.strSourceAqSolDB,
+				// ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,
 				ExperimentalConstants.strSourceChemicalBook,
 				ExperimentalConstants.strSourceChemidplus,
@@ -354,11 +366,14 @@ public class Parse {
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuiteISIS,
 				ExperimentalConstants.strSourceICF,
-				ExperimentalConstants.strSource3M};
+				ExperimentalConstants.strSource3M,
+				ExperimentalConstants.strSourceBurkhard,
+				ExperimentalConstants.strSourceAqSolDB
+};
 		
 		String[] reparseSources = {
 				ExperimentalConstants.strSourceICF,
-				ExperimentalConstants.strSource3M
+				ExperimentalConstants.strSource3M,
 			};
 		
 		boolean reparse=true;
@@ -398,7 +413,8 @@ public class Parse {
 				ExperimentalConstants.strSourceHayashi,
 				ExperimentalConstants.strSourceKodithala,
 				ExperimentalConstants.strSourceVerheyen,
-				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit};
+				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit,
+				ExperimentalConstants.strSourceBurkhard};
 						
 		//Update echemportal data: 
 		
@@ -414,7 +430,8 @@ public class Parse {
 				ExperimentalConstants.strSourceHayashi,
 				ExperimentalConstants.strSourceKodithala,
 				ExperimentalConstants.strSourceVerheyen,
-				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit
+				ExperimentalConstants.strSourceOECD_Toolbox_SkinIrrit,
+				ExperimentalConstants.strSourceBurkhard
 
 		};
 				
@@ -435,8 +452,9 @@ public class Parse {
 	
 	
 	public static void main(String[] args) {
-//		parsePhyschem();
-		parseTox();
+		parsePhyschem();
+//		parseTox();
+//		runParse(ExperimentalConstants.strSourceADDoPT, "physchem");
 	}
 }
 

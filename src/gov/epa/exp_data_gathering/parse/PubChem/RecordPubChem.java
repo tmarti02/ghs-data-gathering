@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Vector;
@@ -26,6 +27,7 @@ import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Data;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.IdentifierData;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Information;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Property;
+import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Reference;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Section;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.StringWithMarkup;
 
@@ -47,6 +49,18 @@ public class RecordPubChem {
 	Vector<String> henrysLawConstant;
 	Vector<String> logP;
 	Vector<String> pKa;
+	Hashtable<Integer, String> physicalDescriptionHT = new Hashtable<>();
+	Hashtable<Integer, String> densityHT = new Hashtable<>();
+	Hashtable<Integer, String> meltingPointHT = new Hashtable<>();
+	Hashtable<Integer, String> boilingPointHT = new Hashtable<>();
+	Hashtable<Integer, String> solubilityHT = new Hashtable<>();
+	Hashtable<Integer, String> flashPointHT = new Hashtable<>();
+	Hashtable<Integer, String> vaporPressureHT = new Hashtable<>();
+	Hashtable<Integer, String> hlcHT = new Hashtable<>();
+	Hashtable<Integer, String> logPHT = new Hashtable<>();
+	Hashtable<Integer, String> pKaHT = new Hashtable<>();
+	
+	String reference;
 	String date_accessed;
 	
 	static final String sourceName=ExperimentalConstants.strSourcePubChem;
@@ -238,6 +252,20 @@ public class RecordPubChem {
 				pcr.date_accessed = date.substring(0,date.indexOf(" "));
 				pcr.cid = experimentalData.record.recordNumber;
 				List<Section> experimentalProperties = experimentalData.record.section.get(0).section.get(0).section;
+				// Christian's new block
+				if (experimentalData.record.reference != null) {
+					Gson gson2 = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
+					String s1 = gson2.toJson(experimentalData.record.reference);
+					
+					// to be honest I have no idea what this does
+				    // MainResponse mainResponse = gson.fromJson(response, MainResponse.class);
+					
+					// System.out.println(s1);
+					pcr.reference = s1;
+					// no idea why i commented these out either
+					// List<Reference> referenceProperties = experimentalData.record.reference;
+					// pcr.getReferenceInfo(referenceProperties);
+				}
 				pcr.getExperimentalData(experimentalProperties);
 				String identifiers = rs.getString("identifiers");
 				IdentifierData identifierData = gson.fromJson(identifiers, IdentifierData.class);
@@ -246,6 +274,8 @@ public class RecordPubChem {
 					pcr.iupacName = identifierProperty.iupacName;
 					pcr.smiles = identifierProperty.canonicalSMILES;
 				}
+				
+				
 				String cas = rs.getString("cas");
 				Data casData = gson.fromJson(cas, Data.class);
 				if (casData!=null) {
@@ -264,33 +294,83 @@ public class RecordPubChem {
 		return records;
 	}
 	
+		
 	private void getExperimentalData(List<Section> properties) {
 		for (Section prop:properties) {
 			String heading = prop.tocHeading;
 			List<Information> info = prop.information;
 			if (heading.equals("Physical Description") || heading.equals("Color/Form")) {
-				for (Information i:info) { physicalDescription.add(getStringFromInformation(i)); }
+				for (Information i:info) { physicalDescription.add(getStringFromInformation(i)); 
+				getStringAndReferenceFromInformation(i,physicalDescriptionHT);
+
+				}
 			} else if (heading.equals("Density")) {
-				for (Information i:info) { density.add(getStringFromInformation(i)); }
+				for (Information i:info) { density.add(getStringFromInformation(i));
+				getStringAndReferenceFromInformation(i,densityHT);
+
+				}
 			} else if (heading.equals("Melting Point")) {
-				for (Information i:info) { meltingPoint.add(getStringFromInformation(i)); }
+				for (Information i:info) { meltingPoint.add(getStringFromInformation(i)); 
+				getStringAndReferenceFromInformation(i,meltingPointHT);
+
+				}
 			} else if (heading.equals("Boiling Point")) {
-				for (Information i:info) { boilingPoint.add(getStringFromInformation(i)); }
+				for (Information i:info) { boilingPoint.add(getStringFromInformation(i)); 
+				getReferenceFromInformation(i); 
+				getStringAndReferenceFromInformation(i,boilingPointHT);
+}
 			} else if (heading.equals("Flash Point")) {
-				for (Information i:info) { flashPoint.add(getStringFromInformation(i)); }
+				for (Information i:info) { flashPoint.add(getStringFromInformation(i)); 
+				getStringAndReferenceFromInformation(i,flashPointHT);
+}
 			} else if (heading.equals("Solubility")) {
-				for (Information i:info) { solubility.add(getStringFromInformation(i)); }
+				for (Information i:info) { solubility.add(getStringFromInformation(i));
+				getStringAndReferenceFromInformation(i,solubilityHT);
+				}
 			} else if (heading.equals("Vapor Pressure")) {
-				for (Information i:info) { vaporPressure.add(getStringFromInformation(i)); }
+				for (Information i:info) { vaporPressure.add(getStringFromInformation(i)); 
+				getStringAndReferenceFromInformation(i,vaporPressureHT);
+
+				}
 			} else if (heading.equals("Henrys Law Constant")) {
-				for (Information i:info) { henrysLawConstant.add(getStringFromInformation(i)); }
+				for (Information i:info) { henrysLawConstant.add(getStringFromInformation(i)); 
+				getStringAndReferenceFromInformation(i,hlcHT);
+
+				}
 			} else if (heading.equals("LogP")) {
-				for (Information i:info) { logP.add(getStringFromInformation(i)); }
+				for (Information i:info) { logP.add(getStringFromInformation(i)); 
+				getStringAndReferenceFromInformation(i,logPHT);
+
+				}
 			} else if (heading.equals("pKa")) {
-				for (Information i:info) { pKa.add(getStringFromInformation(i)); }
+				for (Information i:info) { pKa.add(getStringFromInformation(i)); 
+				getStringAndReferenceFromInformation(i,pKaHT);
+
+				}
 			}
 		}
 	}
+	
+	// Christian's doing
+	private Double getReferenceFromInformation(Information i) {
+		if (i.referenceNumber != null) {
+			String refStr = i.referenceNumber;
+			System.out.println(i.referenceNumber);
+			return Double.parseDouble(refStr);
+		}
+		else {
+			return null;
+		}
+	}
+	
+	private void getStringAndReferenceFromInformation(Information i, Hashtable<Integer, String> ht) {
+		List<StringWithMarkup> strings = i.value.stringWithMarkup;
+		Integer refNum = Integer.parseInt(i.referenceNumber);
+		if (strings != null && refNum != null) {
+			ht.put(refNum, strings.get(0).string);
+		}
+	}
+	
 	
 	private String getStringFromInformation(Information i) {
 		List<StringWithMarkup> strings = i.value.stringWithMarkup;
@@ -307,5 +387,10 @@ public class RecordPubChem {
 		List<String> cidsList = gov.epa.QSAR.utilities.FileUtilities.readFile("Data\\Experimental\\PubChem\\solubilitycids.txt");
 		Vector<String> cids = new Vector<String>(cidsList);
 		downloadJSONsToDatabase(cids,false);
+	}
+	
+	public void printObject(Object object) {
+	    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	    System.out.println(gson.toJson(object));
 	}
 }
