@@ -1,22 +1,14 @@
 package gov.epa.ghs_data_gathering.Parse.OPERA;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Vector;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
-import ToxPredictor.Database.DSSToxRecord;
-import ToxPredictor.Database.ResolverDb2;
 import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
 import gov.epa.api.Score;
@@ -24,7 +16,6 @@ import gov.epa.api.ScoreRecord;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.ghs_data_gathering.Database.MySQL_DB;
 import gov.epa.ghs_data_gathering.Parse.Parse;
-import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 public class ParseOPERA extends Parse {
 	public ParseOPERA() {

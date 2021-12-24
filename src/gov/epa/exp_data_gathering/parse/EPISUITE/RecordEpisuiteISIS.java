@@ -12,8 +12,9 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.iterator.IteratingSDFReader;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
+import org.openscience.cdk.tools.AtomicProperties;
 
-import gov.epa.TEST.Descriptors.DescriptorUtilities.AtomicProperties;
+//import gov.epa.TEST.Descriptors.DescriptorUtilities.AtomicProperties;
 import gov.epa.api.ExperimentalConstants;
 
 public class RecordEpisuiteISIS {
@@ -201,9 +202,9 @@ public class RecordEpisuiteISIS {
 				else if (a.getSymbol().contentEquals("Ba")) MW+=137.33;		
 				else if (a.getSymbol().contentEquals("U")) MW+=238.029;
 				else if (a.getSymbol().contentEquals("Sr")) MW+=87.62;
-				else MW+=ap.GetMass(a.getSymbol());
-				
-				MW+=a.getImplicitHydrogenCount()*ap.GetMass("H");
+				else MW+=ap.getMass(a.getSymbol());
+								
+				MW+=a.getImplicitHydrogenCount()*ap.getMass("H");
 				
 			}
 		
