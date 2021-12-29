@@ -18,6 +18,10 @@ import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
 import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
+import gov.epa.ghs_data_gathering.Parse.Annex13.Parse_Annex13;
+import gov.epa.ghs_data_gathering.Parse.CERAPP_EXP.ParseCERAPP_Exp;
+import gov.epa.ghs_data_gathering.Parse.COMPARA_EXP.ParseCOMPARA_Exp;
+import gov.epa.ghs_data_gathering.Parse.Exposure_MDH.ParseExposure_MDH;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 
@@ -186,78 +190,78 @@ public class Parse {
 	}
 
 	protected void handleMultipleCAS(Chemicals chemicals, Chemical chemical) {
-		
-		boolean print=false;
-		
-		if (chemical.CAS!=null) {
-			if (chemical.CAS.equals("NOCAS")  || chemical.CAS.equals("NA")) chemical.CAS="";
-			if (chemical.CAS.equals("132-73-9")) chemical.CAS="123-73-9";
-			if (chemical.CAS.equals("25136-40-9")) chemical.CAS="25316-40-9";
-		}
-		
-		if (chemical.CAS==null || chemical.CAS.equals("") || chemical.CAS.equals("-") || chemical.CAS.equals("NA") || chemical.CAS.contains("--")) {
-			chemical.CAS="";
-			chemicals.add(chemical);
-			if(print) System.out.println("No CAS\t"+chemical.name);
-		
-		} else if (chemical.CAS.contains("<br/>")) {
-			chemical.CAS = chemical.CAS.replace("\n", "").replace("*", "");
-			String [] numbers=chemical.CAS.split("<br/>");
-			for (String CAS:numbers) {
-				if (CAS.contains("deleted"))continue;
-				Chemical clone=chemical.clone();
-				clone.CAS=CAS;
-				chemicals.add(clone);
-				if(print) System.out.println("Have <br> tag\t"+CAS);
+
+		boolean print = false;
+
+		if (chemical.CAS != null) {
+			if (chemical.CAS.equals("132-73-9"))
+				chemical.CAS = "123-73-9";
+			if (chemical.CAS.equals("25136-40-9"))
+				chemical.CAS = "25316-40-9";
+			if (chemical.CAS.contains("NOCAS") || chemical.CAS.equals("NA") || chemical.CAS.equals("-")
+					|| chemical.CAS.equals("NA") || chemical.CAS.contains("--") 
+					|| chemical.CAS.equals("-") || chemical.CAS.equals("-")) {
+				chemical.CAS = "";
 			}
-		
-		} else if (chemical.CAS.contains(";")) {	
-			String [] numbers=chemical.CAS.split(";");
-			for (String CAS:numbers) {
-				Chemical clone=chemical.clone();
-				clone.CAS=CAS.trim();
-				chemicals.add(clone);
-				if(print) System.out.println("Have semicolon\t"+CAS);
-			}
-			
-		} else if (chemical.CAS.contains("/")) {
-			String [] numbers=chemical.CAS.split("/");
-			for (String CAS:numbers) {
-				Chemical clone=chemical.clone();
-				clone.CAS=CAS.trim();
-				chemicals.add(clone);
-				if(print) System.out.println("Have slash\t"+CAS);
-			}
-			
-		} else if (chemical.CAS.indexOf(",") > -1) {
-			String [] numbers=chemical.CAS.split(",");
-			for (String CAS:numbers) {
-				if (CAS.contains("deleted"))continue;
-				Chemical clone=chemical.clone();
-				clone.CAS=CAS.trim();
-				chemicals.add(clone);
-				if(print) System.out.println("Have comma\t"+CAS);
-			}
-		} else if (chemical.CAS.contains("\n")) {
-			String [] numbers=chemical.CAS.split("\n");
-			for (String CAS:numbers) {
-				if(CAS.contains("[")) CAS=CAS.substring(0,CAS.indexOf("[")).trim();
-				Chemical clone=chemical.clone();
-				clone.CAS=CAS.trim();
-				chemicals.add(clone);
-				if(print) System.out.println("have new line character\t"+CAS);
-			}
-		} else if (chemical.CAS.contains("[")) {
-			chemical.CAS=chemical.CAS.substring(0,chemical.CAS.indexOf("[")).trim();
-			chemicals.add(chemical);
-			if(print) System.out.println("Have [ and no carriage return\t"+chemical.CAS);
-		} else if (!chemical.isCAS_OK()) {
-			System.out.println(chemical.CAS + "\tbad cas\t" + chemical.name);// doesnt happen
-			chemicals.add(chemical);
 		} else {
-			if(print) System.out.println("Ok CAS\t"+chemical.CAS);
+			chemical.CAS = "";
+		}
+
+		if (chemical.CAS.contains("[")) chemical.CAS=chemical.CAS.substring(0,chemical.CAS.indexOf("[")).trim();
+			
+		
+		// Make them match:
+		for (Score score : chemical.scores) {
+			for (ScoreRecord sr : score.records) {
+				sr.CAS = chemical.CAS;
+			}
+		}
+
+		if (chemical.CAS.contains("<br/>") || chemical.CAS.contains(";") || chemical.CAS.contains("/")
+				|| chemical.CAS.contains(",") || chemical.CAS.contains("\n")) {
+			String del = null;
+
+			if (chemical.CAS.contains("<br/>"))
+				del = "<br/>";
+			else if (chemical.CAS.contains(";"))
+				del = ";";
+			else if (chemical.CAS.contains("/"))
+				del = "/";
+			else if (chemical.CAS.contains(","))
+				del = ",";
+			else if (chemical.CAS.contains("\n"))
+				del = "\n";
+
+			String[] numbers = chemical.CAS.split(del);
+
+			for (String CAS : numbers) {
+				if (CAS.contains("deleted"))
+					continue;
+				Chemical clone = chemical.clone();
+				clone.CAS = CAS.trim();
+				System.out.println("*"+chemical.CAS.replace("\n", "")+"*"+"\t|"+clone.CAS+"|");
+				
+				for (Score score : clone.scores) {
+					for (ScoreRecord sr : score.records) {
+						sr.CAS = clone.CAS;
+					}
+				}
+								
+				chemicals.add(clone);
+				if (print)
+					System.out.println("Have <br> tag\t" + CAS);
+			}
+			
+		} else {
+			if (!chemical.isCAS_OK()) {
+				if (chemical.CAS.contains("-")) {
+					System.out.println("*"+chemical.CAS+"*\tbad cas\t" + chemical.name);// doesnt happen
+				}
+			}
+			if (print) System.out.println("Ok CAS\t" + chemical.CAS);
 			chemicals.add(chemical);
 		}
+
 	}
 	
 	public void createRecord(Chemical chemical,Score score, String hazardClassification, String toxCode, String hazardStatement,
@@ -437,6 +441,12 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 //		}
 //		if (true) return;
 
+
+		
+		Parse_Annex13 parseAnnex13 = new Parse_Annex13();
+		parseAnnex13.createFiles();
+
+		
 		//TODO: For some reason running here messes up the character encoding- but is fine if run from ParseAustralia
 		ParseAustralia parseAustralia = new ParseAustralia();
 		parseAustralia.createFiles();
@@ -452,6 +462,7 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 
 		ParseDSL parseDSL = new ParseDSL();
 		parseDSL.createFiles();
+		
 		ParseECHACLP parseECHACLP = new ParseECHACLP();
 		parseECHACLP.createFiles();
 
@@ -514,6 +525,15 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 
 		ParseUMD parseUMD = new ParseUMD();
 		parseUMD.createFiles();
+		
+		ParseCERAPP_Exp parseCERAPP_Exp=new ParseCERAPP_Exp();
+		parseCERAPP_Exp.createFiles();
+		
+		ParseCOMPARA_Exp parseCOMPARA_Exp=new ParseCOMPARA_Exp();
+		parseCOMPARA_Exp.createFiles();
+		
+		ParseExposure_MDH parseExposure_MDH=new ParseExposure_MDH();
+		parseExposure_MDH.createFiles();
 
 	}
 	

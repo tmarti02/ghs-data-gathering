@@ -251,6 +251,9 @@ public class ParseChemidplus extends Parse {
 					er.reason = "No identifiers";
 				}
 				
+				// temporary database generation solution
+				er.keep = false;
+				er.reason = "Episuite duplicate";
 				uc.convertRecord(er);
 				
 				recordsExperimental.add(er);	

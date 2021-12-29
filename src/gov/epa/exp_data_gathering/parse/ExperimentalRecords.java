@@ -597,7 +597,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return records;
 
 	}
-	public static ExperimentalRecords getExperimentalRecordsFromDB(String property, String expRecordsDBPath, boolean useKeep) {
+	public static ExperimentalRecords getExperimentalRecordsFromDB_Omit_Echemportal(String property, String expRecordsDBPath, boolean useKeep) {
 
 		ExperimentalRecords records = new ExperimentalRecords();
 
@@ -621,6 +621,69 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 				records.add(record);
 			}
 			System.out.println(records.size() + " record for " + property + " where keep=true");
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return records;
+	}
+	
+	
+	public static ExperimentalRecords getExperimentalRecordsFromDB(String property, String expRecordsDBPath, boolean useKeep) {
+
+		ExperimentalRecords records = new ExperimentalRecords();
+
+		String sql="select * from "+tableName+" where property_name=\"" + property + "\""
+				+ "order by casrn";
+		
+		if (useKeep) {
+			sql="select * from "+tableName+" where property_name=\"" + property + "\" and keep=\"true\" " + "\r\n"
+					+ "order by casrn";
+		}
+		
+		try {
+			Connection conn = SQLite_Utilities.getConnection(expRecordsDBPath);
+			Statement stat = conn.createStatement();
+			ResultSet rs = stat.executeQuery(sql);
+
+			while (rs.next()) {
+				ExperimentalRecord record = new ExperimentalRecord();
+
+				SQLite_GetRecords.createRecord(rs, record);
+				records.add(record);
+			}
+//			System.out.println(records.size() + " record for " + property + " where keep=true");
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return records;
+	}
+	
+	public static ExperimentalRecords getAllExperimentalRecordsFromDBKeepEchemportal(String expRecordsDBPath, boolean useKeep) {
+
+		ExperimentalRecords records = new ExperimentalRecords();
+
+		String sql="select * from "+tableName+" order by casrn";
+		
+		if (useKeep) {
+			sql="select * from "+tableName+" where keep=\"true\" " + "\r\n"
+					+ "order by casrn";
+//			System.out.println(sql);
+		}
+		
+		try {
+			Connection conn = SQLite_Utilities.getConnection(expRecordsDBPath);
+			Statement stat = conn.createStatement();
+			ResultSet rs = stat.executeQuery(sql);
+
+			while (rs.next()) {
+				ExperimentalRecord record = new ExperimentalRecord();
+
+				SQLite_GetRecords.createRecord(rs, record);
+				records.add(record);
+			}
+//			System.out.println(records.size() + " record for " + property + " where keep=true");
 
 		} catch (SQLException e) {
 			e.printStackTrace();

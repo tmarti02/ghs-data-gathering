@@ -392,7 +392,7 @@ public class CreateExcelDictionary {
 	}
 
 	private void goThroughSources(JsonObject joAll, Vector<String> sources) {
-		AADashboard a=new AADashboard();
+		AADashboard a=new AADashboard(false);
 		String del="\t";
 		
 		

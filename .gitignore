@@ -16,3 +16,5 @@ debug.log
 /databases/
 /src Python/
 *.log
+*.rtf
+*.pdf

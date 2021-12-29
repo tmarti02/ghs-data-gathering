@@ -14,6 +14,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import kong.unirest.json.JSONObject;
 
 /**
  * Parses data from Bradley, accessible at: https://www.nature.com/articles/npre.2010.4243.3
@@ -81,14 +82,22 @@ public class ParseBradley extends Parse {
 			er.chemical_name = br.solute;
 			er.smiles = br.solute_SMILES;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
+
 			er.property_value_string = "Concentration (M): "+br.concentration_M;
 			ParseUtilities.getNumericalValue(er,br.concentration_M,br.concentration_M.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_M;
+			// Christian's JSON property value string
+			JSONObject propertyValueJSON = new JSONObject();
+			propertyValueJSON.put("Concentration (M)", br.concentration_M);
+
 			if (br.notes!=null && !br.notes.isBlank()) {
 				ParseUtilities.getTemperatureCondition(er,br.notes);
-				er.property_value_string = er.property_value_string + "; Temperature: "+br.notes;
+				// er.property_value_string = er.property_value_string + "; Temperature: "+br.notes;
+				propertyValueJSON.put("Temperature", br.notes);
 			}
 			uc.convertRecord(er);
+			// Christian JSON
+			er.property_value_string = propertyValueJSON.toString();
 			records.add(er);
 		}
 	}

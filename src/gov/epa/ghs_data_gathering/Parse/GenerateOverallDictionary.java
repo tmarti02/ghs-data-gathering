@@ -58,6 +58,7 @@ public class GenerateOverallDictionary {
 
 			FileWriter fw = new FileWriter(destFolder + "/" + source + ".txt");
 
+			fw.write("source\thazardName\tscore\tcategory\thazardCode\r\n");
 			for (int i = 1; i < lines.size(); i++) {
 				fw.write(lines.get(i) + "\r\n");
 			}
@@ -82,6 +83,7 @@ public class GenerateOverallDictionary {
 		
 		for (String line:lines) {
 			ScoreRecord f=ScoreRecord.createScoreRecord(line);
+			if (f.source==null) continue;
 			this.getScoreData2(source, f, vec, vecWithCAS);
 			
 		}
@@ -105,11 +107,12 @@ public class GenerateOverallDictionary {
 		ScoreRecord f=new ScoreRecord(null,null,null);
 		
 		String [] vals=line.split("\t");
-		f.hazardName=vals[0];
-		f.score=vals[1];
-		f.category=vals[2];
-		f.hazardCode=vals[3];
-		f.CAS=vals[4];
+		f.source=vals[0];
+		f.hazardName=vals[1];
+		f.score=vals[2];
+		f.category=vals[3];
+		f.hazardCode=vals[4];
+		f.CAS=vals[5];
 		return f;
 	}
 	
@@ -127,12 +130,17 @@ public class GenerateOverallDictionary {
 	            
 	            ScoreRecord f1=convertLineToFlatFileRecord(str1);
 	            ScoreRecord f2=convertLineToFlatFileRecord(str2);
-	            
+
+	            	            
 	            int sComp = f1.hazardName.compareTo(f2.hazardName);
 
 	            if (sComp != 0) {//sort by hazard name ascending
 	               return sComp;
 	            } 
+	            	            
+	            int sComp0 = f1.source.compareTo(f2.source);//sort by source ascending
+	            if (sComp0!=0) return sComp0;
+
 	            
 	            Integer x1 = ScoreRecord.scoreToInt(f1.score);
 	            Integer x2 = ScoreRecord.scoreToInt(f2.score);
@@ -393,7 +401,7 @@ public class GenerateOverallDictionary {
 //			System.out.println(chemical.CAS+"\t"+scorei.hazard_name);
 //		}
 		
-		String line = f.hazardName + "\t" + f.score + "\t" + f.category + "\t" + f.hazardCode;
+		String line = f.source+"\t"+f.hazardName + "\t" + f.score + "\t" + f.category + "\t" + f.hazardCode;
 
 		line = line.replace("_", " ");
 
@@ -535,7 +543,7 @@ public class GenerateOverallDictionary {
 	 * Gets counts per endpoint for each source
 	 */
 	void getEndpointCountsForEachSource() {
-		AADashboard aaDashboard=new AADashboard();
+		AADashboard aaDashboard=new AADashboard(false);
 		
 		System.out.print("source\t");
 		for (int j = 0; j < Chemical.hazard_names.length; j++) {
@@ -565,7 +573,7 @@ public class GenerateOverallDictionary {
 
 		try {
 
-			AADashboard a = new AADashboard();
+			AADashboard a = new AADashboard(false);
 
 			if (printHeader) {
 				
@@ -666,7 +674,7 @@ public class GenerateOverallDictionary {
 
 		try {
 
-			AADashboard a = new AADashboard();
+			AADashboard a = new AADashboard(false);
 
 			if (printHeader) {
 				
@@ -835,7 +843,7 @@ public class GenerateOverallDictionary {
 	public void getUniqueChemicalList(String folder,String flatfilename) {
 
 		try {
-			AADashboard a = new AADashboard();
+			AADashboard a = new AADashboard(false);
 
 			ArrayList<String> casList = new ArrayList<String>();
 

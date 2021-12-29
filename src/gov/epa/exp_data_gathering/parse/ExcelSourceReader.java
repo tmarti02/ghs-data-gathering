@@ -12,10 +12,12 @@ import java.util.Vector;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 
 import com.google.gson.JsonObject;
@@ -27,11 +29,15 @@ import com.google.gson.JsonObject;
  */
 public class ExcelSourceReader {
 	public String sourceName;
-	public String lastUpdated;
+	public static String lastUpdated;
 
 	private String sourceFolderPath;
 	private String fileName;
 	public Sheet sheet;
+	
+	public ExcelSourceReader() {
+		
+	}
 	
 	/**
 	 * Initializes a new reader for the given source from the given filename
@@ -82,6 +88,191 @@ public class ExcelSourceReader {
 	}
 	
 	/**
+	 * Initializes a new reader for the given source from the given filename
+	 * NOTE: Currently can only read a single sheet from a single file
+	 * @param fileName		The file to read records from
+	 * @param sourceName	The data source to assign records to
+	 */
+	public ExcelSourceReader(String fileName, String mainFolderPath, String sourceName,String sheetName) {
+		this.sourceName = sourceName;
+		this.fileName = fileName;
+		
+		sourceFolderPath = mainFolderPath + File.separator + sourceName;
+		
+		String filePath = sourceFolderPath + File.separator + "excel files" + File.separator + fileName;
+		
+		System.out.println(filePath);
+		
+		this.lastUpdated = DownloadWebpageUtilities.getStringCreationDate(filePath); // TODO add lastUpdated as parameter instead?
+		try {
+			FileInputStream fis = new FileInputStream(new File(filePath));
+			Workbook wb = WorkbookFactory.create(fis);
+			sheet = wb.getSheet(sheetName);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	/**
+	 * Initializes a new reader for the given source from the given filename
+	 * NOTE: Currently can only read a single sheet from a single file
+	 * @param fileName		The file to read records from
+	 * @param sourceName	The data source to assign records to
+	 */
+	public void getSheet(String excelFilePath, int sheetNum) {
+		
+		lastUpdated = DownloadWebpageUtilities.getStringCreationDate(excelFilePath); // TODO add lastUpdated as parameter instead?
+		try {
+			FileInputStream fis = new FileInputStream(new File(excelFilePath));
+			Workbook wb = WorkbookFactory.create(fis);
+			sheet=wb.getSheetAt(sheetNum);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	
+	
+//	/**
+//	 * Writes records from a spreadsheet to JSON original records format consistent with field names of an existing Record[SourceName] class
+//	 * @param hmFieldNames	Matches column numbers to output fields of a Record[SourceName] class
+//	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
+//	 */
+//	public Vector<JsonObject> parseRecordsFromExcel(HashMap<Integer,String> hmFieldNames, int chemicalNameIndex) {
+//		Vector<JsonObject> records = new Vector<JsonObject>();
+//		try {
+//			int numRows = sheet.getLastRowNum();
+//			for (int i = 1; i <= numRows; i++) {
+//				Row row = sheet.getRow(i);
+//				if (row==null) { continue; }
+//				JsonObject jo = new JsonObject();
+//				boolean hasAnyFields = false;
+//				for (int k:hmFieldNames.keySet()) {
+//					Cell cell = row.getCell(k);
+//					if (cell==null) { continue; }
+//					cell.setCellType(CELL_TYPE_STRING);
+//					String content = "";
+//					if (k==chemicalNameIndex) {
+//						content = StringEscapeUtils.escapeHtml4(row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
+//					} else {
+//						content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//					}
+////					Hyperlink url  = row.getCell(k).getHyperlink();
+////					if (url!=null) {
+////						System.out.println(hmFieldNames.get(k)+"_url"+"\t"+url.getLabel());
+////						jo.addProperty(hmFieldNames.get(k)+"_url", url.getAddress());
+////					}
+//					
+//					if (content!=null && !content.isBlank()) { hasAnyFields = true; }
+//					jo.addProperty(hmFieldNames.get(k), content);
+//				}
+//				if (hasAnyFields) { records.add(jo); }
+//			}
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//		}
+//		return records;
+//	}
+
+	
+	/**
+	 * Writes records from a spreadsheet to JSON original records format consistent with field names of an existing Record[SourceName] class
+	 * @param hmFieldNames	Matches column numbers to output fields of a Record[SourceName] class
+	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
+	 */
+	public static Vector<JsonObject> parseRecordsFromExcel(Sheet sheet, HashMap<Integer,String> hmFieldNames) {
+		Vector<JsonObject> records = new Vector<JsonObject>();
+		try {
+			int numRows = sheet.getLastRowNum();
+			for (int i = 1; i <= numRows; i++) {
+				Row row = sheet.getRow(i);
+				if (row==null) { continue; }
+				JsonObject jo = new JsonObject();
+				boolean hasAnyFields = false;
+				for (int k:hmFieldNames.keySet()) {
+					Cell cell = row.getCell(k);
+					if (cell==null) { continue; }
+					cell.setCellType(CELL_TYPE_STRING);
+					String content = "";
+
+//					if (k==chemicalNameIndex) {
+//						content = StringEscapeUtils.escapeHtml4(row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
+//					} else {
+//						content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//					}
+					
+					content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+					
+					if (content!=null && !content.isBlank()) { hasAnyFields = true; }
+					jo.addProperty(hmFieldNames.get(k), content);
+				}
+				if (hasAnyFields) { records.add(jo); }
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return records;
+	}
+
+	
+	
+	/**
+	 * Writes records from a spreadsheet to JSON original records format consistent with field names of an existing Record[SourceName] class
+	 * @param hmFieldNames	Matches column numbers to output fields of a Record[SourceName] class
+	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
+	 */
+	public static Vector<JsonObject> parseRecordsFromExcel(Sheet sheet) {
+		Vector<JsonObject> records = new Vector<JsonObject>();
+		try {
+			int numRows = sheet.getLastRowNum();
+			
+			Row row0 = sheet.getRow(0);
+			
+			HashMap<Integer,String> hmFieldNames = new HashMap<Integer,String>();
+			
+			for (int i=0;i<row0.getLastCellNum();i++) {
+				Cell celli=row0.getCell(i);
+				String colName=celli.getStringCellValue();
+				hmFieldNames.put(i,colName);
+				System.out.println(i+"\t"+colName);
+			}
+			
+			
+			for (int i = 1; i <= numRows; i++) {
+				Row row = sheet.getRow(i);
+				if (row==null) { continue; }
+				JsonObject jo = new JsonObject();
+				boolean hasAnyFields = false;
+				for (int k:hmFieldNames.keySet()) {
+					Cell cell = row.getCell(k);
+					if (cell==null) { continue; }
+					cell.setCellType(CELL_TYPE_STRING);
+					String content = "";
+
+//					if (k==chemicalNameIndex) {
+//						content = StringEscapeUtils.escapeHtml4(row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
+//					} else {
+//						content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//					}
+					
+					content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+					
+					if (content!=null && !content.isBlank()) { hasAnyFields = true; }
+					jo.addProperty(hmFieldNames.get(k), content);
+				}
+				if (hasAnyFields) { records.add(jo); }
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return records;
+	}
+	
+	/**
 	 * Writes records from a spreadsheet to JSON original records format consistent with field names of an existing Record[SourceName] class
 	 * @param hmFieldNames	Matches column numbers to output fields of a Record[SourceName] class
 	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
@@ -90,7 +281,7 @@ public class ExcelSourceReader {
 		Vector<JsonObject> records = new Vector<JsonObject>();
 		try {
 			int numRows = sheet.getLastRowNum();
-			for (int i = 1; i < numRows; i++) {
+			for (int i = 1; i <= numRows; i++) {
 				Row row = sheet.getRow(i);
 				if (row==null) { continue; }
 				JsonObject jo = new JsonObject();
@@ -115,7 +306,7 @@ public class ExcelSourceReader {
 		}
 		return records;
 	}
-
+	
 	/**
 	 * Writes records from a spreadsheet to JSON original records format assuming the template created by generateRecordClassTemplate()
 	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
@@ -154,7 +345,7 @@ public class ExcelSourceReader {
 	 * @param offset		The number of blank columns at the beginning of the sheet
 	 * @return				A map from column number to field names
 	 */
-	public HashMap<Integer,String> generateDefaultMap(String[] fieldNames, int offset) {
+	public static HashMap<Integer,String> generateDefaultMap(String[] fieldNames, int offset) {
 		HashMap<Integer,String> hmFieldNames = new HashMap<Integer,String>();
 		for (int i = 0; i < fieldNames.length; i++) {
 			hmFieldNames.put(i + offset, fieldNames[i]);

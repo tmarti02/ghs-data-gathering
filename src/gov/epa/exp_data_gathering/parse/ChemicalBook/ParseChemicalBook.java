@@ -380,7 +380,7 @@ public class ParseChemicalBook extends Parse {
 		propertyValue = propertyValue.toLowerCase();
 		String solventMatcherStr = "";
 		if (sourceName.equals(ExperimentalConstants.strSourceChemicalBook)) { // this is the only thing I changed
-			solventMatcherStr = "(([a-zA-Z0-9\s-]+?)(,| and|\\.|\\z|[ ]?\\(|;))?";
+			solventMatcherStr = "(([a-zA-Z0-9\\s-]+?)(,| and|\\.|\\z|[ ]?\\(|;))?";
 		} 
 		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(in|im)?(so[l]?uble|miscible))( (in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue);
 		while (solubilityMatcher.find()) {

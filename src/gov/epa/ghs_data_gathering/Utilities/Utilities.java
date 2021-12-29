@@ -505,9 +505,6 @@ public class Utilities {
 	 for (int i=0;i<l.size();i++) {
 		 System.out.println(i+"\t"+l.get(i));
 	 }
-	 
-	 
-	 
  }
  
  

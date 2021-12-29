@@ -115,14 +115,18 @@ public class Parse {
 	}
 	
 	/**
-	 * Need to override
+	 * Loads original records from source files and stores as json file in original format
+	 * 
+	 * Needs to be overridden
 	 */
 	protected void createRecords() {
 		System.out.println("Need to override createRecords()!");	
 	}
 	
 	/**
-	 * Need to override
+	 * Loads original records from Json file and converts to ExperimentalRecords
+	 * 
+	 * Need to overridden
 	 * @return
 	 */
 	protected ExperimentalRecords goThroughOriginalRecords() {
@@ -348,7 +352,7 @@ public class Parse {
 	static void parsePhyschem() { 
 		String recordType = "physchem";
 		String[] allSources = {ExperimentalConstants.strSourceADDoPT,
-				ExperimentalConstants.strSourceAqSolDB,
+				// ExperimentalConstants.strSourceAqSolDB,
 				ExperimentalConstants.strSourceBradley,
 				ExperimentalConstants.strSourceChemicalBook,
 				ExperimentalConstants.strSourceChemidplus,
@@ -362,11 +366,14 @@ public class Parse {
 				ExperimentalConstants.strSourceSander,
 				ExperimentalConstants.strSourceEpisuiteISIS,
 				ExperimentalConstants.strSourceICF,
-				ExperimentalConstants.strSource3M};
+				ExperimentalConstants.strSource3M,
+				ExperimentalConstants.strSourceBurkhard,
+				ExperimentalConstants.strSourceAqSolDB
+};
 		
 		String[] reparseSources = {
 				ExperimentalConstants.strSourceICF,
-				ExperimentalConstants.strSource3M
+				ExperimentalConstants.strSource3M,
 			};
 		
 		boolean reparse=true;
@@ -445,9 +452,9 @@ public class Parse {
 	
 	
 	public static void main(String[] args) {
-//		parsePhyschem();
+		parsePhyschem();
 //		parseTox();
-		runParse(ExperimentalConstants.strSourceADDoPT, "physchem");
+//		runParse(ExperimentalConstants.strSourceADDoPT, "physchem");
 	}
 }
 

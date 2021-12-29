@@ -93,7 +93,7 @@ public class ParseHayashi extends Parse {
 		er.property_name=ExperimentalConstants.strSkinIrritationPII;
 		er.property_value_units_final=ExperimentalConstants.str_pii;
 		er.chemical_name=r.Chemical;
-		er.property_value_string=r.Experimental_skin_irritation_score;
+		er.property_value_string=r.Experimental_skin_irritation_score + " " + ExperimentalConstants.str_pii;
 		er.property_value_point_estimate_final = Double.parseDouble(r.Experimental_skin_irritation_score);
 		er.note = "MW =" + r.MW;
 		er.original_source_name="Hayashi M, Nakamura Y, Higashi K, Kato H, Kishida F, Kaneko H. A quantitative structure-Activity relationship study of the skin irritation potential of phenols. Toxicol In Vitro. 1999 Dec;13(6):915-22. doi: 10.1016/s0887-2333(99)00077-6. PMID: 20654567.";

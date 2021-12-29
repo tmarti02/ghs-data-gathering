@@ -12,8 +12,9 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.iterator.IteratingSDFReader;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
+import org.openscience.cdk.tools.AtomicProperties;
 
-import gov.epa.TEST.Descriptors.DescriptorUtilities.AtomicProperties;
+//import gov.epa.TEST.Descriptors.DescriptorUtilities.AtomicProperties;
 import gov.epa.api.ExperimentalConstants;
 
 public class RecordEpisuiteISIS {
@@ -31,6 +32,7 @@ public class RecordEpisuiteISIS {
 	Double BCF;
 	Double KOA;
 	Double Km;
+	Double BioHC;
 	Double Temperature;
 	String DataSet;
 	String Reference;
@@ -158,6 +160,14 @@ public class RecordEpisuiteISIS {
 				
 					}
 				}
+				
+				
+				if (abbrev.contentEquals("LogHalfLife")) {
+					if (m.getProperty(abbrev)!=null) {
+						r.BioHC = Double.parseDouble(m.getProperty(abbrev));
+					}
+
+				}
 
 							
 				r.DataSet=m.getProperty("DataSet");
@@ -192,9 +202,9 @@ public class RecordEpisuiteISIS {
 				else if (a.getSymbol().contentEquals("Ba")) MW+=137.33;		
 				else if (a.getSymbol().contentEquals("U")) MW+=238.029;
 				else if (a.getSymbol().contentEquals("Sr")) MW+=87.62;
-				else MW+=ap.GetMass(a.getSymbol());
-				
-				MW+=a.getImplicitHydrogenCount()*ap.GetMass("H");
+				else MW+=ap.getMass(a.getSymbol());
+								
+				MW+=a.getImplicitHydrogenCount()*ap.getMass("H");
 				
 			}
 		
@@ -268,6 +278,8 @@ public class RecordEpisuiteISIS {
 		Vector<RecordEpisuiteISIS> records8 = getRecords(strFolder+"EPI_BCF_Data_SDF.sdf","LogBCF");
 		Vector<RecordEpisuiteISIS> records9 = getRecords(strFolder+"EPI_KOA_Data_SDF.sdf","LogKOA");
 		Vector<RecordEpisuiteISIS> records10 = getRecords(strFolder+"EPI_KM_Data_SDF.sdf","LogKmHL");
+		Vector<RecordEpisuiteISIS> records11 = getRecords(strFolder+"EPI_BioHC_Data_SDF.sdf","LogHalfLife");
+
 
 		
 		
@@ -287,6 +299,7 @@ public class RecordEpisuiteISIS {
 		records.addAll(records8);
 		records.addAll(records9);
 		records.addAll(records10);
+		records.addAll(records11);
 
 
 

@@ -151,6 +151,12 @@ public class ScoreRecord {
 	public static final String strSourceCERAPP_Exp="CERAPP_Exp";//in vitro evaluation set from CERAPP EHP paper
 	public static final String strSourceCOMPARA_Exp="COMPARA_Exp";//in vitro evaluation set from COMPARA EHP paper
 	public static final String strSourceOPERA_MDH="OPERA_MDH";
+	public static final String strSourceOPERA="OPERA";
+	public static final String strSourceSEEM3="SEEM3";//in vitro evaluation set from CERAPP EHP paper
+	public static final String strSourceAnnex13 = "Annex 13";
+	public static final String strSourceECHAEndocrine="ECHA endocrine disruptor assessment report";
+	public static final String strSourceExposure_MDH="Exposure_MDH";
+
 	
 //	public static final float weightECHA_CLP = 20.0f;
 //	public static final float weightIRIS = 20.0f;
@@ -297,6 +303,7 @@ public class ScoreRecord {
 	
 	public static final String listTypeCERAPP_Exp=typeScreening;
 	public static final String listTypeCOMPARA_Exp=typeScreening;
+	
 	
 	
 //public static final String listTypeECHA_CLP = ""; // typeAuthoritative? // Is this the same as EU-GHS?
@@ -808,6 +815,8 @@ public class ScoreRecord {
 	
 	public String getListType() {
 		if (listType!=null) return listType;
+		
+		if (source==null) return null;
 		return getListType(source);
 	}
 	
@@ -977,8 +986,8 @@ public class ScoreRecord {
 
 	}
 	
-	public static void createFlatFileFromAllSources(String outputPath) {
-		AADashboard a=new AADashboard();
+	public static void createFlatFileFromAllSources(boolean forMDH, String outputPath) {
+		AADashboard a=new AADashboard(forMDH);
 		String d="|";
 		
 		try {
@@ -1082,8 +1091,8 @@ public class ScoreRecord {
 	
 
 	
-	public static void createFlatFileFromAllSourcesSortedByCAS(String outputPath) {
-		AADashboard a=new AADashboard();
+	public static void createFlatFileFromAllSourcesSortedByCAS(boolean forMDH, String outputPath) {
+		AADashboard a=new AADashboard(forMDH);
 		String d="|";
 		
 		try {
@@ -1171,6 +1180,97 @@ public class ScoreRecord {
 			ex.printStackTrace();
 		}
 		
+	}
+	
+	public static void createFlatFileFromSourceSortedByCAS(boolean forMDH, String outputPath,String source) {
+		AADashboard a=new AADashboard(forMDH);
+		String d="|";
+
+		try {
+
+			Hashtable<String,String>htCASName=new Hashtable<>();
+
+			ArrayList<String>overallLines=new ArrayList<>();
+
+
+
+			String filePathFlatChemicalRecords = AADashboard.dataFolder+File.separator+source+File.separator+source +" Chemical Records.txt";
+
+			File file=new File(filePathFlatChemicalRecords);
+
+
+
+			if (!file.exists())  {
+				System.out.println("*** "+source+" text file missing");
+				return;
+			} else {
+
+				Path path = Paths.get(file.getAbsolutePath());
+				BasicFileAttributes attr =
+						Files.readAttributes(path, BasicFileAttributes.class);
+
+				System.out.println(source+"\t"+attr.lastModifiedTime());
+			}
+
+			ArrayList<String>lines=Utilities.readFileToArray(filePathFlatChemicalRecords);
+
+			String header=lines.remove(0);
+
+			LinkedList<String>hlist=Utilities.Parse(header, "|");
+
+			for (String line:lines) {
+
+				line=line.replace("<br><br><br>","<br><br>");
+
+				//					FlatFileRecord f=FlatFileRecord.createFlatFileRecord(line);
+
+				LinkedList<String>list=Utilities.Parse(line, "|");
+
+				if (list.size()!=hlist.size()) {
+					System.out.println("mismatch in num columns:"+line);
+					continue;
+				}
+
+
+				ScoreRecord sr=ScoreRecord.createRecord(hlist, list);
+
+				if (sr.CAS.isEmpty()) {
+					if (sr.name.isEmpty()) {
+						System.out.println("CAS and name =null: "+line);
+						continue;
+					}
+
+					if (htCASName.get(sr.name)==null) {
+						String newCAS="NOCAS"+(htCASName.size()+1);
+						htCASName.put(sr.name,newCAS);
+						sr.CAS=newCAS;
+					} else {
+						sr.CAS=htCASName.get(sr.name);
+					}
+
+				}
+
+
+				overallLines.add(sr.toString("|"));
+			}
+
+
+			Collections.sort(overallLines);
+
+			FileWriter fw=new FileWriter(outputPath);
+			fw.write(ScoreRecord.getHeader(d)+"\r\n");
+
+			for (String Line:overallLines) {
+				fw.write(Line+"\r\n");
+			}
+			fw.flush();
+			fw.close();
+
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
 	}
 			
 	static void deleteExtraFiles() {

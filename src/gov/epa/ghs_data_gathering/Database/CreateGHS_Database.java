@@ -1,6 +1,7 @@
 package gov.epa.ghs_data_gathering.Database;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.lang.reflect.Field;
 
@@ -12,10 +13,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import gov.epa.QSAR.utilities.FileUtilities;
 import gov.epa.api.AADashboard;
 import gov.epa.api.Chemical;
 import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
+import gov.epa.ghs_data_gathering.Parse.Links.RecordLink;
 
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
@@ -193,12 +196,12 @@ public class CreateGHS_Database  {
 	 * @param filepath
 	 * @return
 	 */
-	public static void createDatabase(String textFilePath,String del,String tableName,String [] fieldNames) {
+	public static void createDatabase(String textFilePath,String dbPath, String del,String tableName,String [] fieldNames,String indexName) {
 
 		try {
 			System.out.println("Creating AA dashboard SQlite table");
 
-			Connection conn= MySQL_DB.getConnection(AADashboard.DB_Path_AA_Dashboard_Records);
+			Connection conn= MySQL_DB.getConnection(dbPath);
 			Statement stat = MySQL_DB.getStatement(conn);
 			
 			conn.setAutoCommit(true);
@@ -273,7 +276,9 @@ public class CreateGHS_Database  {
 
 			conn.setAutoCommit(true);
 						
-			String sqlAddIndex="CREATE INDEX idx_CAS ON "+tableName+" (CAS)";
+			
+			String sqlAddIndex="CREATE INDEX "+indexName+" ON "+tableName+" (CAS)";
+			System.out.println(sqlAddIndex);
 			stat.executeUpdate(sqlAddIndex);			
 
 		} catch (Exception ex) {
@@ -642,31 +647,69 @@ public class CreateGHS_Database  {
 //	
 	
 	
-	
-	
-	public static void main(String[] args) {
-
+	static void createOverallDB() {
 		//Create files for all sources:
 //		Parse.recreateFilesAllSources();
 		
+		boolean forMDH=true;
+		
+		String date="2021_12_16";
+		
 		String folder=AADashboard.dataFolder+"\\dictionary\\text output";
-		String filename="flat file 2021-07-20.txt";
-		String textFilePath=folder+"\\"+filename;
-
-//		ScoreRecord.createFlatFileFromAllSources(textFilePath);
+		String textFileName="flat file "+date+".txt";		
+		if (forMDH) textFileName="flat file "+date+" forMDH.txt";
+		
+		String textFilePath=folder+"\\"+textFileName;
 
 		//Create flat file for all data:
-		ScoreRecord.createFlatFileFromAllSourcesSortedByCAS(textFilePath);
+		ScoreRecord.createFlatFileFromAllSourcesSortedByCAS(forMDH, textFilePath);
 		
 		//Get counts for each source:
 //		FlatFileRecord.analyzeRecords(textFilePath,folder+"/counts.txt");
 		
 		String del="|";		
+		
+		String dbFileName="AA dashboard.db";		
+		if (forMDH) dbFileName="AA dashboard MDH.db";
+		
+		String dbPath="databases\\"+dbFileName;
+		
+		File dbFile=new File(dbPath);
+		System.out.println(dbFile.getAbsolutePath()+"\t"+dbFile.exists());
+		
+		CreateGHS_Database.createDatabase(textFilePath,dbPath,del,"HazardRecords",ScoreRecord.allFieldNames,"idx_CAS_Hazard_Records");
+
+		if (forMDH) {
+			textFilePath=AADashboard.dataFolder+File.separator+RecordLink.sourceName+File.separator+RecordLink.sourceName+".txt";
+			CreateGHS_Database.createDatabase(textFilePath,dbPath,del,"Links",RecordLink.fieldNames,"idx_CAS_Links");
+		}
+		
+		File dest=new File("C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\0 java\\TEST_2020_03_18\\databases\\"+dbFileName);
+		FileUtilities.CopyFile(new File(dbPath), dest);
+
+	}
+	
+	static void createSEEM3_DB() {
+
+		String folder=AADashboard.dataFolder+"\\"+ScoreRecord.strSourceSEEM3;
+		String filename="SEEM3 Chemical Records sorted by CAS.txt";
+		String textFilePath=folder+"\\"+filename;
+		ScoreRecord.createFlatFileFromSourceSortedByCAS(false,textFilePath,ScoreRecord.strSourceSEEM3);
+		
+		String del="|";		
 		//Create Sqlite database from flat file:
-		CreateGHS_Database.createDatabase(textFilePath,del,"HazardRecords",ScoreRecord.allFieldNames);
+		String dbPath="databases/SEEM3.db";
+		CreateGHS_Database.createDatabase(textFilePath,dbPath,del,"HazardRecords",ScoreRecord.allFieldNames,"idx_CAS_HazardRecords");
+
+	}
+
+	
+	public static void main(String[] args) {
+
+		
+		createOverallDB();
+//		createSEEM3_DB();
 		
 		
-		String  []fields= {"CAS","Records"};
-//		CreateGHS_Database.createDatabaseWithPrimaryKey(textFilePath,"databases/AA dashboard_w_primary_key.db", del, "HazardRecords", fields);
 	}
 }

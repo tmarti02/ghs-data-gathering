@@ -302,9 +302,13 @@ public class DownloadWebpageUtilities {
 					if (RecordDashboard.getHeader().contains(field) && CellType.forInt(cell.getCellType()) == CellType.STRING) {
 						String data = cell.getStringCellValue();
 						temp.setValue(field,data);
+					} else if (RecordDashboard.getHeader().contains(field) && CellType.forInt(cell.getCellType()) == CellType.NUMERIC) {
+						double data = cell.getNumericCellValue();
+						temp.setValue(field,data+"");
 					}
 				}
 				records.add(temp);
+//				System.out.println(temp.AVERAGE_MASS);
 			}
 			wb.close();
 			fis.close();

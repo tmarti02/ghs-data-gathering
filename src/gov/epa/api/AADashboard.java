@@ -13,7 +13,7 @@ public class AADashboard {
 	//fast if you add index for CAS: "CREATE INDEX idx_CAS ON "+tableName+" (CAS)"
 	
 	
-	private void addSources() {
+	private void addSources(boolean forMDH) {
 		sources.add(ScoreRecord.sourceAustralia);//OK
 		sources.add(ScoreRecord.sourceCanada);//OK
 		sources.add(ScoreRecord.sourceChemIDplus);//OK
@@ -39,18 +39,25 @@ public class AADashboard {
 		sources.add(ScoreRecord.sourceTEDX);
 		sources.add(ScoreRecord.sourceTSCA_Work_Plan);
 		sources.add(ScoreRecord.sourceUMD);
-		
+				
 		sources.add(ScoreRecord.strSourceCERAPP_Exp);
 		sources.add(ScoreRecord.strSourceCOMPARA_Exp);
-		sources.add(ScoreRecord.strSourceOPERA_MDH);
+//		sources.add(ScoreRecord.strSourceOPERA_MDH);//get "OPERA ER AR hazard records.db" instead
 		
+		if (forMDH) {
+			sources.add(ScoreRecord.strSourceExposure_MDH);
+			sources.add(ScoreRecord.strSourceECHAEndocrine);
+			sources.add(ScoreRecord.strSourceAnnex13);
+		} else {
+			sources.add(ScoreRecord.strSourceSEEM3);
+		}
 		
 	}
 
 	// class DataRow {
 	// public 
-	public AADashboard() {
-		if (sources.size()==0) addSources();
+	public AADashboard(boolean forMDH) {
+		if (sources.size()==0) addSources(forMDH);
 	}
 	
 	
