@@ -372,7 +372,7 @@ public class ParseUtilities extends Parse {
 			}
 		}
 
-		if (er.source_name!=ExperimentalConstants.strSourceOFMPub && unitsIndex < propertyValue.indexOf(":")) {
+		if (!er.source_name.equals(ExperimentalConstants.strSourceOFMPub) && unitsIndex < propertyValue.indexOf(":")) {
 			unitsIndex = propertyValue.length();
 		}
 
