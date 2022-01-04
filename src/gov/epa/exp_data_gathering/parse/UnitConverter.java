@@ -96,6 +96,12 @@ public class UnitConverter {
 			convertHenrysLawConstant(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility) && er.property_value_units_original!=null) {
 			convertSolubility(er);
+		} else if (((er.property_name.contains("ShortTermToxicityTo")) 
+				|| er.property_name.contains("fathead_minnow")
+				|| er.property_name.contains("water_flea"))
+				&& er.property_value_units_original!=null) {
+			// Aquatic LC50 measurements are concentrations just like WS
+			convertSolubility(er);
 		} else if (er.property_value_units_original!=null) {
 			convertToxicity(er);
 		}
