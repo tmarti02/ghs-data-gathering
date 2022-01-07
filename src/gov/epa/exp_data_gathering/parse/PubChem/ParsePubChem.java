@@ -346,7 +346,10 @@ public class ParsePubChem extends Parse {
 		propertyValue = propertyValue.replaceAll("(?i)less than", "<");
 		propertyValue = propertyValue.replaceAll("(?i) or equal to ", "=");
 		propertyValue = propertyValue.replaceAll("(?i)about ", "~");
-		if (propertyName==ExperimentalConstants.strDensity) {
+		if (propertyValue.endsWith(":")) {
+			er.keep = false;
+			er.reason = "Bad data or units";
+		} else if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er,propertyValue);
 			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
@@ -365,11 +368,12 @@ public class ParsePubChem extends Parse {
 		} else if (propertyName==ExperimentalConstants.strHenrysLawConstant) {
 			foundNumeric = ParseUtilities.getHenrysLawConstant(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strLogKow || propertyName==ExperimentalConstants.str_pKA) {
+			propertyValue = propertyValue.replaceAll(" @ ", " at ");
 			foundNumeric = ParseUtilities.getLogProperty(er,propertyValue);
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		}
 		
-		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomposes")) {
+		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility) && propertyValue.toLowerCase().contains("decomp")) {
 			er.updateNote(ExperimentalConstants.str_dec);
 		}
 		if (propertyValue.toLowerCase().contains("est") && !propertyValue.toLowerCase().contains("ester") && !propertyValue.toLowerCase().contains("test")) {
@@ -384,6 +388,10 @@ public class ParsePubChem extends Parse {
 			er.reason = "Estimated";
 		}
 		// Warns if there may be a problem with an entry
+		if (propertyValue.contains("salt")) {
+			er.flag = true;
+			er.reason = "Property value given may be for salt form";
+		}
 		if (propertyValue.contains("?")) {
 			er.flag = true;
 			er.reason = "Question mark";

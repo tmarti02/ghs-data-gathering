@@ -167,6 +167,11 @@ public class ExperimentalRecord {
 			}
 		} else if (property_name.contentEquals(ExperimentalConstants.strDensity)) {
 			return true;//omit condition check because 90% of records have no temperature
+		} else if (((property_name.contains("ShortTermToxicityTo")) 
+				|| property_name.contains("fathead_minnow")
+				|| property_name.contains("water_flea"))) {
+			// No physchem conditions to check
+			return true;
 		} else {
 			System.out.println("Need to add condition criteria for "+property_name);
 			
@@ -211,6 +216,15 @@ public class ExperimentalRecord {
 				property_name.toLowerCase().contains("ld50")) {
 			good = isWithinLogTolerance(logTolerance,zeroTolerance);
 			
+			if (!good) {
+				System.out.println("not within log tolerance:"+this);
+			} else {
+//				System.out.println("ok:"+this);
+			}
+		} else if (((property_name.contains("ShortTermToxicityTo")) 
+				|| property_name.contains("fathead_minnow")
+				|| property_name.contains("water_flea"))) {
+			good = isWithinLogTolerance(logTolerance,zeroTolerance);
 			if (!good) {
 				System.out.println("not within log tolerance:"+this);
 			} else {
