@@ -14,9 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class EcotoxDbCreator implements AutoCloseable {
+public class EcotoxDbCreator {
 	
-	private String ecotoxAsciiFolderPath;
 	private Connection conn;
 	
 	private static final int INSERT_BATCH_SIZE = 1000; // Modify as needed for performance
@@ -27,36 +26,53 @@ public class EcotoxDbCreator implements AutoCloseable {
 	    }
 	};
 	
-	public EcotoxDbCreator(String ecotoxAsciiFolderPath) {
-		this.ecotoxAsciiFolderPath = ecotoxAsciiFolderPath;
-		
+	public EcotoxDbCreator() {
 		try {
 			Class.forName("org.sqlite.JDBC");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-
+	}
+	
+	public void create(String ecotoxAsciiFolderPath) {
+		// If there's an old connection hanging around, close it
+		try {
+			if (conn!=null && !conn.isClosed()) {
+				conn.close();
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Open new connection and create database
 		try {
 			File file = new File(ecotoxAsciiFolderPath + ".db");
 			file.createNewFile();
 			
 			String url = "jdbc:sqlite:" + ecotoxAsciiFolderPath + ".db";
 			conn = DriverManager.getConnection(url);
+			
+			List<File> asciiTableFiles = getAsciiTableFiles(ecotoxAsciiFolderPath);
+			for (File asciiTableFile:asciiTableFiles) {
+				createAndPopulateTableFromAsciiTableFile(asciiTableFile);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public void create() {
-		List<File> asciiTableFiles = getAsciiTableFiles();
-		for (File file:asciiTableFiles) {
-			createAndPopulateTableFromAsciiTableFile(file);
+
+		// Close connection
+		try {
+			conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
-	private List<File> getAsciiTableFiles() {
+	private List<File> getAsciiTableFiles(String ecotoxAsciiFolderPath) {
 		File ecotoxAsciiFolder = new File(ecotoxAsciiFolderPath);
 		if (!ecotoxAsciiFolder.exists()) {
 			System.out.println("Could not find ECOTOX ASCII folder at " + ecotoxAsciiFolderPath);
@@ -215,22 +231,10 @@ public class EcotoxDbCreator implements AutoCloseable {
 		}
 	}
 	
-	public void close() {
-		try {
-			if (!conn.isClosed()) {
-				conn.close();
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	public static void main(String[] args) {
 		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_12_15_2021";
-		try (EcotoxDbCreator edbc = new EcotoxDbCreator(ECOTOX_ASCII_FOLDER_PATH)) {
-			edbc.create();
-		}
+		EcotoxDbCreator edbc = new EcotoxDbCreator();
+		edbc.create(ECOTOX_ASCII_FOLDER_PATH);
 	}
 
 }
