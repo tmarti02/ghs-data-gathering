@@ -16,8 +16,6 @@ import java.util.List;
 
 public class EcotoxDbCreator {
 	
-	private Connection conn;
-	
 	private static final int INSERT_BATCH_SIZE = 1000; // Modify as needed for performance
 	private static final FilenameFilter ASCII_TABLE_FILENAME_FILTER = new FilenameFilter() {
 	    @Override
@@ -26,53 +24,41 @@ public class EcotoxDbCreator {
 	    }
 	};
 	
-	public EcotoxDbCreator() {
+	public static void create(String ecotoxAsciiFolderPath) {
 		try {
 			Class.forName("org.sqlite.JDBC");
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public void create(String ecotoxAsciiFolderPath) {
-		// If there's an old connection hanging around, close it
-		try {
-			if (conn!=null && !conn.isClosed()) {
-				conn.close();
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		
+		// Read ASCII table files
+		List<File> asciiTableFiles = getAsciiTableFiles(ecotoxAsciiFolderPath);
+		if (asciiTableFiles==null || asciiTableFiles.isEmpty()) {
+			System.out.println("No tables found");
+			return;
 		}
 		
-		// Open new connection and create database
+		// Create a DB file to write to
+		String ecotoxDbFilePath = ecotoxAsciiFolderPath + ".db";
 		try {
-			File file = new File(ecotoxAsciiFolderPath + ".db");
+			File file = new File(ecotoxDbFilePath);
 			file.createNewFile();
-			
-			String url = "jdbc:sqlite:" + ecotoxAsciiFolderPath + ".db";
-			conn = DriverManager.getConnection(url);
-			
-			List<File> asciiTableFiles = getAsciiTableFiles(ecotoxAsciiFolderPath);
-			for (File asciiTableFile:asciiTableFiles) {
-				createAndPopulateTableFromAsciiTableFile(asciiTableFile);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		// Close connection
-		try {
-			conn.close();
+		
+		// Open new connection and build DB
+		String url = "jdbc:sqlite:" + ecotoxDbFilePath;
+		try (Connection conn = DriverManager.getConnection(url)) {
+			for (File asciiTableFile:asciiTableFiles) {
+				createAndPopulateTableFromAsciiTableFile(asciiTableFile, conn);
+			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	private List<File> getAsciiTableFiles(String ecotoxAsciiFolderPath) {
+	private static List<File> getAsciiTableFiles(String ecotoxAsciiFolderPath) {
 		File ecotoxAsciiFolder = new File(ecotoxAsciiFolderPath);
 		if (!ecotoxAsciiFolder.exists()) {
 			System.out.println("Could not find ECOTOX ASCII folder at " + ecotoxAsciiFolderPath);
@@ -92,7 +78,7 @@ public class EcotoxDbCreator {
 		return asciiTableFiles;
 	}
 	
-	private void createAndPopulateTableFromAsciiTableFile(File asciiTableFile) {
+	private static void createAndPopulateTableFromAsciiTableFile(File asciiTableFile, Connection conn) {
 		try (BufferedReader br = new BufferedReader(new FileReader(asciiTableFile))) {
 			String header = br.readLine();
 			
@@ -105,7 +91,7 @@ public class EcotoxDbCreator {
 			int len = headers.length;
 			
 			System.out.println("Creating table " + tableName + "...");
-			String[] dataTypes = createTable(tableName, headers);
+			String[] dataTypes = createTable(tableName, headers, conn);
 			
 			System.out.println("\tPopulating table " + tableName + "...");
 			try {
@@ -181,8 +167,8 @@ public class EcotoxDbCreator {
 		}
 	}
 	
-	private String[] createTable(String tableName, String[] headers) {
-		doSql("DROP TABLE IF EXISTS " + tableName + ";");
+	private static String[] createTable(String tableName, String[] headers, Connection conn) {
+		doSql("DROP TABLE IF EXISTS " + tableName + ";", conn);
 		int len = headers.length;
 		String[] dataTypes = new String[len];
 		StringBuilder sb = new StringBuilder("CREATE TABLE IF NOT EXISTS " + tableName + " (");
@@ -218,11 +204,11 @@ public class EcotoxDbCreator {
 			}
 		}
 		
-		doSql(sb.toString());
+		doSql(sb.toString(), conn);
 		return dataTypes;
 	}
 	
-	private void doSql(String sql) {
+	private static void doSql(String sql, Connection conn) {
 		try (Statement stat = conn.createStatement()) {
 			stat.executeUpdate(sql);
 		} catch (SQLException e) {
@@ -233,8 +219,7 @@ public class EcotoxDbCreator {
 	
 	public static void main(String[] args) {
 		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_12_15_2021";
-		EcotoxDbCreator edbc = new EcotoxDbCreator();
-		edbc.create(ECOTOX_ASCII_FOLDER_PATH);
+		create(ECOTOX_ASCII_FOLDER_PATH);
 	}
 
 }
