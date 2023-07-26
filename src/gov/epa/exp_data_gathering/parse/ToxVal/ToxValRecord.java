@@ -2,10 +2,17 @@ package gov.epa.exp_data_gathering.parse.ToxVal;
 
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.gson.Gson;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 
 //TEST dataset criteria
@@ -21,7 +28,7 @@ public class ToxValRecord {
 	public String dtxsid;
 	public String casrn;
 	public String name;
-	public Integer toxval_id;
+	public Long toxval_id;
 	public String source;
 	public String subsource;
 	public String toxval_type;
@@ -43,7 +50,7 @@ public class ToxValRecord {
 	public String study_duration_class;
 	public String study_duration_class_original;
 	public Double study_duration_value;
-	public Double study_duration_value_original;
+	public String study_duration_value_original;
 	public String study_duration_units;
 	public String study_duration_units_original;
 	public String human_eco;
@@ -54,8 +61,13 @@ public class ToxValRecord {
 	public String generation;
 	public Integer species_id;
 	public String species_original;
-	public String species_common;
+	
+	public String species_common="";//otherwise it causes problems when doing Collectors.toList()	
+	public String common_name;//toxvalv93 field renamed species_common
+
 	public String species_supercategory;
+	public String ecotox_group;//toxvalv93 field- renamed species_supercategory
+	
 	public String habitat;
 	public String lifestage;
 	public String exposure_route;
@@ -67,7 +79,7 @@ public class ToxValRecord {
 	public String media;
 	public String media_original;
 	public String critical_effect;
-	public String year;
+
 	public Integer quality_id;
 	public Integer priority_id;
 	public Integer source_source_id;
@@ -75,13 +87,23 @@ public class ToxValRecord {
 	public String toxval_uuid;
 	public String toxval_hash;
 	public String datestamp;
+	
+//	public String record_source_id;
+	public String document_name;
 	public String long_ref;
 	public String url;
+	public String title;
+	public String author;
+	public String journal;
+	public String volume;
+	public String year;
+	public String quality;
+
 	
 	private static final transient Class CLASS = ToxValRecord.class;
 	private static final transient Field[] FIELDS = CLASS.getDeclaredFields();
 	
-	private static final transient UnitConverter converter = new UnitConverter("data/density.txt");
+	private static final transient UnitConverter unitConverter = new UnitConverter("data/density.txt");
 	
 	public static ToxValRecord fromResultSet(ResultSet rs) {
 		ToxValRecord rec = new ToxValRecord();
@@ -112,17 +134,158 @@ public class ToxValRecord {
 		return rec;
 	}
 	
-	public ExperimentalRecord toExperimentalRecord() {
+	
+	public static ToxValRecord fromResultSet2(ResultSet rs) {
+		ToxValRecord rec = new ToxValRecord();
+
+		String fieldName = "";
+		
+		ResultSetMetaData rsMetaData;
+		try {
+
+			rsMetaData = rs.getMetaData();
+
+			for(int col = 1; col<=rsMetaData.getColumnCount(); col++) {
+
+				Field field=ToxValRecord.class.getField(rsMetaData.getColumnName(col));
+
+				String typeName = field.getGenericType().getTypeName();
+				fieldName = field.getName();
+
+				if (typeName.equals("java.lang.String")) {
+					String s = rs.getString(fieldName);
+					field.set(rec, s);
+				} else if (typeName.equals("java.lang.Double")) {
+					Double d = rs.getDouble(fieldName);
+					field.set(rec, d);
+				} else if (typeName.equals("java.lang.Long")) {
+					Long l = rs.getLong(fieldName);
+					field.set(rec, l);
+				} else if (typeName.equals("java.lang.Integer")) {
+					Integer i = rs.getInt(fieldName);
+					field.set(rec, i);
+					//} else if (typeName.equals("java.util.Date")) {
+					//	Date d = rs.getDate(fieldName);
+					//	field.set(rec, d);
+				} else {
+					continue;
+				}
+			}
+
+		} catch (Exception ex) {
+			System.out.println(fieldName);
+			ex.printStackTrace();
+		}
+		return rec;
+	}
+	
+	public ExperimentalRecord toExperimentalRecord(String version,double duration_days,String propertyCategory) {
 		ExperimentalRecord rec = new ExperimentalRecord();
 		
 		rec.casrn = casrn.startsWith("NOCAS") ? null : casrn;
 		rec.chemical_name = name;
 		
-		rec.property_name = species_common.replaceAll("\\s+", "_") + "_" + toxval_type;
-		rec.property_value_numeric_qualifier = toxval_numeric_qualifier.equals("=") ? null : toxval_numeric_qualifier;
+		if (species_common.length()>0) {
+			rec.property_name = species_common.replaceAll("\\s+", "_") + "_" + toxval_type;//TODO where did this come from?	
+		} else {
+			int duration_hours=(int)(duration_days*24.0);
+			rec.property_name = duration_hours+" hour "+common_name.toLowerCase() + " " + toxval_type;
+		}
+		
+		rec.property_category=propertyCategory;
+		
+		String tnq=toxval_numeric_qualifier;
+		
+		if (tnq!=null) {
+			if(tnq.equals("=") || tnq.isBlank()) tnq=null;
+			rec.property_value_numeric_qualifier=tnq;
+		} else {
+			rec.property_value_numeric_qualifier=null;	
+		}
+
+		System.out.println(tnq+"\t"+rec.property_value_numeric_qualifier);
+		
+		
 		rec.property_value_point_estimate_original = toxval_numeric;
 		
+		setOriginalUnits(rec);
+
+		addExperimentalParameters(rec);
+		
+		setDataSources(rec,version);
+				
+		rec.dsstox_substance_id = dtxsid.startsWith("NODTXSID") ? null : dtxsid;
+
+		//Convert Units
+		unitConverter.convertRecord(rec);
+		
+		
+		return rec;
+	}
+
+
+	void addExperimentalParameters(ExperimentalRecord er) {
+		//Add experimental parameters:
+		er.experimental_parameters=new Hashtable<>();
+		
+		if (!exposure_route.equals("-") &&  !exposure_route.equals("Not reported")) {
+			er.experimental_parameters.put("Exposure route", exposure_route);
+		}
+		
+		if (!lifestage.equals("-") &&  !lifestage.equals("Not reported")) {
+			er.experimental_parameters.put("Lifestage", lifestage);				
+		}
+
+		
+		if (!quality.equals("-")) {
+			er.experimental_parameters.put("Reliability", quality);
+		}
+		
+		er.experimental_parameters.put("toxval_id", toxval_id+"");
+	}
+	
+	private void setDataSources(ExperimentalRecord rec,String version) {
+		
+		rec.source_name = "ToxVal_"+version;
+
+		
+		if (subsource.equals("-") || subsource.equals("EFSA")) {
+			rec.original_source_name = source;
+//			System.out.println(source+"\t"+subsource);
+		} else {
+			rec.original_source_name = source + ": " + subsource;
+//			System.out.println(rec.original_source_name);
+		}
+		
+		if (rec.original_source_name.contains("ECHA eChemPortal") || 
+				rec.original_source_name.equals("EnviroTox_v2")) {
+
+			//doesnt have literature citation so just store url in the rec
+			rec.url=getString(url);
+
+		} else if (rec.original_source_name.equals("DOD ERED: USACE_ERDC_ERED_database_12_07_2018") || 
+				rec.original_source_name.equals("ECOTOX: EPA ORD") || 
+				rec.original_source_name.equals("EFSA")) {
+			
+			//Create literature source
+			addLiteratureSource(rec);
+			
+//			Gson gson=new Gson();
+//			System.out.println(gson.toJson(rec.literatureSource));
+//			System.out.println(rec.literatureSource.documentName);
+			
+		} else {
+			System.out.println(rec.original_source_name+": need to set whether is literature or public source in in ToxValRecord class");
+		}
+	}
+
+
+	private void setOriginalUnits(ExperimentalRecord rec) {
 		switch (toxval_units) {
+		
+		case "% v/v":
+			rec.property_value_units_original = ExperimentalConstants.str_pctVol;
+			break;
 		case "mg/L":
 			rec.property_value_units_original = ExperimentalConstants.str_mg_L;
 			break;
@@ -132,25 +295,86 @@ public class ToxValRecord {
 		case "mol/L":
 			rec.property_value_units_original = ExperimentalConstants.str_M;
 			break;
+		case "nM/L":
+			rec.property_value_units_original = ExperimentalConstants.str_nM;
+//			nM/L	nmol/L
+			break;
+		case "uM/L":
+			rec.property_value_units_original = ExperimentalConstants.str_uM;
+//			uM/L	umol/L
+			break;
+		case "mM/L":
+			rec.property_value_units_original = ExperimentalConstants.str_mM;
+//			mM/L	mmol/L
+			break;
 		default:
 			rec.property_value_units_original = toxval_units;
+//			System.out.println(toxval_units);
 			break;
 		}
-		
-		rec.source_name = "ToxVal";
-		rec.original_source_name = source + ": " + subsource;
-		rec.reference = long_ref.equals("-") ? null : long_ref;
-		rec.url = url.equals("-") ? null : url;
-		rec.dsstox_substance_id = dtxsid.startsWith("NODTXSID") ? null : dtxsid;
-		
-		converter.convertRecord(rec);
-		
-		return rec;
 	}
+
+
+	private void addLiteratureSource(ExperimentalRecord rec) {
+		rec.literatureSource=new LiteratureSource();
+//			rec.literatureSource.recordSourceId=record_source_id;
+//			rec.literatureSource.documentName=getString(document_name);
+		
+		//Have to fix this one, only one like it:
+		if(long_ref.equals("Hickie BE, LS McCarty, DG Dixon.1995.Environmental Toxicology and Chemistry 14:2187-2197")) {
+			author="Hickie B.E., L.S. McCarty, D.G. Dixon";
+			year="1995";
+			title="Development and testing of a residue-based toxicokinetic model for predicting acute aquatic toxicity from pulse exposures";
+			long_ref="Environmental Toxicology and Chemistry 14:2187-2197";
+		}
+		
+		rec.literatureSource.author=getString(author);
+		rec.literatureSource.url =getString(url); 
+		rec.literatureSource.title = getString(title);
+		rec.literatureSource.journal = getString(journal);
+		rec.literatureSource.volume = getString(volume);
+		rec.literatureSource.year = getString(year);
+		
+		String citation="";
+		
+		if(rec.literatureSource.author!=null && !long_ref.contains(rec.literatureSource.author)) {
+			citation=rec.literatureSource.author+" ";
+		}
+		
+		if(rec.literatureSource.year!=null && !long_ref.contains(rec.literatureSource.year)) {
+			citation+="("+rec.literatureSource.year+"). ";
+		}
+		
+		if(rec.literatureSource.title!=null && !long_ref.contains(rec.literatureSource.title)) {
+			citation+=rec.literatureSource.title+". ";
+		}
+
+		citation+=long_ref;
+				
+		rec.literatureSource.citation=citation;
+		rec.literatureSource.name=citation;//makes it have unique name for the database constraint for literature_sources table
+		
+//		System.out.println(citation);
+		
+	}
+	
+	String getString(String fieldValue) {
+		if(fieldValue==null) return null;		
+		else {
+			fieldValue=fieldValue.trim();
+			if(fieldValue.isEmpty() || fieldValue.equals("-")) return null;
+			else return fieldValue;
+		}
+	}
+	
 	
 	private Double getStudyDurationValueInDays() {
 		Double studyDurationValueInDays = study_duration_value;
 		switch (study_duration_units) {
+		
+		case "days post-hatch":
+		case "Days":
+		case "days":
 		case "day":
 			break;
 		case "week":
@@ -162,9 +386,12 @@ public class ToxValRecord {
 		case "year":
 			studyDurationValueInDays *= 365.0;
 			break;
+		case "hours":
+		case "Hours":
 		case "hour":
 			studyDurationValueInDays /= 24.0;
 			break;
+		case "minutes":
 		case "minute":
 			studyDurationValueInDays /= 1440.0;
 			break;
@@ -190,6 +417,7 @@ public class ToxValRecord {
 		}
 		
 		if (!critical_effect.toLowerCase().contains(criticalEffect.toLowerCase())) {
+//			System.out.println("Bad critical effect:"+critical_effect);
 			return false;
 		}
 		
