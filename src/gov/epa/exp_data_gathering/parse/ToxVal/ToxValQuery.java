@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,7 +71,18 @@ public class ToxValQuery {
 			+ "	tv.media in ('-', 'Fresh water') AND\r\n"
 			+ "	ttd.toxval_type_supercategory in ('Point of Departure', 'Toxicity Value', 'Lethality Effect Level') AND\r\n"
 			+ "	tv.toxval_numeric > 0;";
-
+	
+	
+	//Following will give duplicates because there are multiple entries for each common name in species table:
+	public static final String TOXVAL_FILTERED_QUERY_LOG_BCF ="select casrn,c.name, b.dtxsid, logbcf, units, tissue, calc_method, comments, b.water_conc, exposure_type, exposure_duration, media, temperature, pH, b.species_common, author,title, b.year,b.journal from bcfbaf b\r\n"
+			+ "join species s on s.species_common=b.species_common\r\n"
+			+ "join chemical c on c.dtxsid=b.dtxsid\r\n"
+			+ "where s.species_supercategory like '%fish%' and logbcf is not null and tissue='Whole body'";
+			
+	public static final String TOXVAL_FILTERED_QUERY_LOG_BCF2 ="select casrn,c.name, b.dtxsid, logbcf, units, tissue, calc_method, comments, b.water_conc, exposure_type, exposure_duration, media, temperature, pH, b.species_common, author,title, b.year,b.journal from bcfbaf b\r\n"
+			+ "join chemical c on c.dtxsid=b.dtxsid\r\n"
+			+ "where logbcf is not null and tissue='Whole body' order by b.dtxsid,logbcf";
+			
 		
 	public String doi;
 	public String notes;
@@ -86,9 +98,11 @@ public class ToxValQuery {
 	static final String CRITICAL_EFFECT = "mortality";
 
 	static final String propertyCategoryAcuteAquaticToxicity = "Acute aquatic toxicity";
+	static final String propertyCategoryBioaccumulation = "Bioaccumulation";
+	
 	static String version="v8";
 	
-	private Connection conn;
+	public Connection conn;
 //	private static final Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 	
 	public ToxValQuery() {
@@ -113,6 +127,25 @@ public class ToxValQuery {
 		String host = System.getenv().get("DSSTOX_HOST");
 		String port = System.getenv().get("DSSTOX_PORT");
 		String db = "prod_toxval_v93";
+
+		String url = "jdbc:mysql://" + host + ":" + port + "/" + db;
+		String user = System.getenv().get("DSSTOX_USER");
+		String password = System.getenv().get("DSSTOX_PASS");
+
+		try {
+			
+			Class.forName("com.mysql.jdbc.Driver");
+			conn = DriverManager.getConnection(url, user, password);			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	public void setConnectionToxVal() {
+		
+		String host = System.getenv().get("DSSTOX_HOST");
+		String port = System.getenv().get("DSSTOX_PORT");
+		String db = "prod_toxval";
 
 		String url = "jdbc:mysql://" + host + ":" + port + "/" + db;
 		String user = System.getenv().get("DSSTOX_USER");
@@ -157,6 +190,27 @@ public class ToxValQuery {
 					records.add(ToxValRecord.fromResultSet2(rs));
 				}
 			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return records;
+	}
+	
+	List<ToxValRecord> getRecords(String sql) {
+		List<ToxValRecord> records = new ArrayList<ToxValRecord>();
+
+		try {
+			
+			Statement st = conn.createStatement();			
+			ResultSet rs = st.executeQuery(sql);
+			
+			while (rs.next()) {
+				records.add(ToxValRecord.fromResultSet2(rs));
+			}
+			
+	
+//			System.out.println(sql);
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -210,3 +264,4 @@ public class ToxValQuery {
 	}
 
 }
+

@@ -149,6 +149,7 @@ public class ParseChemidplus extends Parse {
 				er.property_name=er.property_name.trim();
 				
 				er.property_value_string = "Reported: "+tr.ReportedDose+"; Normalized: "+tr.NormalizedDose;
+				er.reference=tr.Source;
 				
 				// boolean parseOK=parseAndConvertUniqueMeasurements(er,tr,MW,uv);
 				ParseUtilities.getToxicity(er,tr);
@@ -163,7 +164,8 @@ public class ParseChemidplus extends Parse {
 				
 				uc.convertRecord(er);
 				
-				recordsExperimental.add(er);			
+				recordsExperimental.add(er);		
+				
 				
 //				System.out.println(recordsExperimental.size());
 
@@ -431,7 +433,8 @@ public class ParseChemidplus extends Parse {
 //	}
 
 	public static void main(String[] args) {
-		ParseChemidplus p = new ParseChemidplus("physchem");
+//		ParseChemidplus p = new ParseChemidplus("physchem");
+		ParseChemidplus p = new ParseChemidplus("tox");
 		p.createFiles();
 	}
 

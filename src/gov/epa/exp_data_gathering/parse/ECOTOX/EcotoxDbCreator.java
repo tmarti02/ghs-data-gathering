@@ -111,7 +111,14 @@ public class EcotoxDbCreator {
 					
 					for (int i = 0; i < len; i++) {
 						String dataType = dataTypes[i];
-						String value = values[i];
+						
+						String value=null;
+						
+						if (i>=values.length) {
+							value="None";
+						} else {
+							value = values[i];	
+						}
 						
 						if (value.equals("None")) {
 							sb.append("NULL");
@@ -218,7 +225,12 @@ public class EcotoxDbCreator {
 	}
 	
 	public static void main(String[] args) {
-		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_12_15_2021";
+//		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_12_15_2021";
+//		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_06_15_2022";
+//		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_03_15_2023";
+		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_06_15_2023";
+		
+		
 		create(ECOTOX_ASCII_FOLDER_PATH);
 	}
 

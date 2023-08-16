@@ -22,6 +22,7 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.exp_data_gathering.parse.DownloadWebpageUtilities;
 import gov.epa.exp_data_gathering.parse.RecordDashboard;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Data;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.IdentifierData;
@@ -382,7 +383,7 @@ public class RecordPubChem {
 	}
 	
 	public static void main(String[] args) {
-//		Vector<RecordDashboard> drs = DownloadWebpageUtilities.getDashboardRecordsFromExcel("Data"+"/PFASSTRUCT.xls");
+		Vector<RecordDashboard> drs = DownloadWebpageUtilities.getDashboardRecordsFromExcel("Data"+"/PFASSTRUCT.xls");
 //		Vector<String> cids = getCIDsFromDashboardRecords(drs,"Data"+"/CIDDICT.csv",1,8164);
 		List<String> cidsList = gov.epa.QSAR.utilities.FileUtilities.readFile("Data\\Experimental\\PubChem\\solubilitycids.txt");
 		Vector<String> cids = new Vector<String>(cidsList);

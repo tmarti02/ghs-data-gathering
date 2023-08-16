@@ -13,7 +13,7 @@ import com.google.gson.GsonBuilder;
 
 public class JSONUtilities {
 
-	static int batchAndWriteJSON(Vector<?> records, String baseFileName) {
+	public static int batchAndWriteJSON(Vector<?> records, String baseFileName) {
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues();
 		Gson gson = builder.create();

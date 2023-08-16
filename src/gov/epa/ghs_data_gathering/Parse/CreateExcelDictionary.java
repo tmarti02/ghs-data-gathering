@@ -15,6 +15,8 @@ import java.util.Vector;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -211,8 +213,8 @@ public class CreateExcelDictionary {
 		sheet.createRow((short) 1);
 
 		CellStyle styleCenter = workbook.createCellStyle();
-		styleCenter.setAlignment(CellStyle.ALIGN_CENTER);
-		styleCenter.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+		styleCenter.setAlignment(HorizontalAlignment.CENTER);
+		styleCenter.setVerticalAlignment(VerticalAlignment.CENTER);
 
 		for (int i = 0; i < this.strScores.length; i++) {
 			XSSFRow row3 = sheet.createRow((short) (i + 2));
@@ -231,11 +233,11 @@ public class CreateExcelDictionary {
 
 		CellStyle styleWrapText = workbook.createCellStyle();
 		styleWrapText.setWrapText(true);
-		styleWrapText.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+		styleWrapText.setVerticalAlignment(VerticalAlignment.CENTER);
 
 		CellStyle styleCenter = workbook.createCellStyle();
-		styleCenter.setAlignment(CellStyle.ALIGN_CENTER);
-		styleCenter.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+		styleCenter.setAlignment(HorizontalAlignment.CENTER);
+		styleCenter.setVerticalAlignment(VerticalAlignment.CENTER);
 
 		CellStyle styleBottomBorder = workbook.createCellStyle();
 		styleBottomBorder.setBorderBottom(BorderStyle.THIN);

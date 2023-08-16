@@ -98,6 +98,18 @@ public class ToxValRecord {
 	public String volume;
 	public String year;
 	public String quality;
+	
+	//From bcfbaf
+	public Double logbcf;
+	public String units;
+	public String tissue;
+	public String calc_method;
+	public String comments;
+	public String water_conc;
+	public String exposure_type;
+	public String exposure_duration;
+	public Double temperature;
+	public Double pH;
 
 	
 	private static final transient Class CLASS = ToxValRecord.class;
@@ -218,6 +230,64 @@ public class ToxValRecord {
 
 		//Convert Units
 		unitConverter.convertRecord(rec);
+		
+		
+		return rec;
+	}
+	
+	public ExperimentalRecord toxvalBCF_to_ExperimentalRecord(String version,String propertyCategory) {
+		ExperimentalRecord rec = new ExperimentalRecord();
+		
+		
+		
+		rec.casrn = casrn.startsWith("NOCAS") ? null : casrn;
+		rec.chemical_name = name;
+		
+		rec.property_name=ExperimentalConstants.strLogBCF_Fish_Whole_Body;
+		rec.property_category=propertyCategory;
+		
+		rec.property_value_point_estimate_original = logbcf;
+		rec.property_value_point_estimate_final=logbcf;
+		rec.property_value_units_original="Log10(L/kg)";
+		rec.property_value_units_final="Log10(L/kg)";
+		
+		rec.note=getString(comments);
+		
+		rec.experimental_parameters=new Hashtable<>();
+//		rec.experimental_parameters.put("tissue",tissue);//already have whole body in property name
+		rec.experimental_parameters.put("species_common",species_common);
+		rec.experimental_parameters.put("water_concentration",water_conc);
+		rec.experimental_parameters.put("media",media);
+//		System.out.println(media);
+		
+		rec.experimental_parameters.put("exposure_type",exposure_type);
+		rec.experimental_parameters.put("exposure_duration",exposure_duration);
+		rec.experimental_parameters.put("Temperature",temperature);
+		
+		if (calc_method.equals("Cb/Cw")) {
+			rec.experimental_parameters.put("method","Steady state");
+		} else if (calc_method.equals("K1/K2")) {
+			rec.experimental_parameters.put("method","Kinetic");
+		}
+
+		
+		rec.temperature_C=temperature;
+				
+		if(pH>0) {
+			rec.experimental_parameters.put("pH",pH);
+			rec.pH=pH+"";
+		}
+		
+		
+		rec.source_name = "ToxVal_"+version;
+		rec.original_source_name = "Arnot, J.A. and Gobas, F.A.P.C. (2006). A Review of Bioconcentration Factor (BCF) and Bioaccumulation Factor (BAF) Assessments for Organic Chemicals in Aquatic Organisms. Environmental Reviews, 14, 257-297";
+
+		addLiteratureSource2(rec);
+				
+		rec.dsstox_substance_id = dtxsid.startsWith("NODTXSID") ? null : dtxsid;
+		
+		//Convert Units
+//		unitConverter.convertRecord(rec);
 		
 		
 		return rec;
@@ -358,6 +428,48 @@ public class ToxValRecord {
 		
 	}
 	
+	private void addLiteratureSource2(ExperimentalRecord rec) {
+		rec.literatureSource=new LiteratureSource();
+//			rec.literatureSource.recordSourceId=record_source_id;
+//			rec.literatureSource.documentName=getString(document_name);
+		
+		
+		rec.literatureSource.author=getString(author);
+		rec.literatureSource.url =getString(url); 
+		rec.literatureSource.title = getString(title);
+		rec.literatureSource.journal = getString(journal);
+		rec.literatureSource.volume = getString(volume);
+		rec.literatureSource.year = getString(year);
+		
+		String citation="";
+		
+		if(rec.literatureSource.author!=null) {
+			citation=rec.literatureSource.author+" ";
+		}
+		
+		if(rec.literatureSource.year!=null) {
+			citation+="("+rec.literatureSource.year+"). ";
+		}
+		
+		if(rec.literatureSource.title!=null) {
+			citation+=rec.literatureSource.title+". ";
+		}
+		
+		if(rec.literatureSource.journal!=null) {
+			citation+=rec.literatureSource.journal+". ";
+		}
+
+		citation=citation.replace("..", ".");
+		
+
+		rec.literatureSource.citation=citation;
+		rec.literatureSource.name=citation;//makes it have unique name for the database constraint for literature_sources table
+		
+//		System.out.println(citation);
+		
+	}
+
+	
 	String getString(String fieldValue) {
 		if(fieldValue==null) return null;		
 		else {
@@ -429,3 +541,4 @@ public class ToxValRecord {
 	}
 
 }
+

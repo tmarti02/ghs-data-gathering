@@ -326,9 +326,11 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		Row recSubtotalRow = recSheet.createRow(0);
 		Row recHeaderRow = recSheet.createRow(1);
 		CellStyle style = wb.createCellStyle();
-		Font font = wb.createFont();
-		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		Font font = wb.createFont();;//Create font
+		font.setBold(true);//Make font bold
 		style.setFont(font);
+		
+		
 		for (int i = 0; i < headers.length; i++) {
 			Cell recCell = recHeaderRow.createCell(i);
 			recCell.setCellValue(headers[i]);

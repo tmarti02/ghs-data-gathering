@@ -88,6 +88,9 @@ private static void getIdentifiers(Document doc, RecordSander rs) {
 }
 	// scrapes the 'Sander - full' page to obtain the links for all chemicals on the site
 private static Vector<String> ObtainWebpages() {
+	
+	//TODO change to https://www.henrys-law.org/henry/
+	
 	String baseSearchLink = "http://satellite.mpic.de/henry/search_identifier.html?csrfmiddlewaretoken=ZaAV0nh7GWRmm5Z5UDshScMxM4OujgEpC2Ywh1iSPfqDh6CCafT9iHkx0lrIIfgc&x=0&y=0&search=";
 	Vector<String> allLinks = new Vector<String>();
 	try {

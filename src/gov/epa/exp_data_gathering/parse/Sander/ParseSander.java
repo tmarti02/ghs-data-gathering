@@ -17,6 +17,7 @@ import gov.epa.api.Chemical;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.Parse;
 import kong.unirest.json.JSONObject;
 
@@ -136,6 +137,12 @@ public class ParseSander extends Parse {
 				
 				er.source_name=ExperimentalConstants.strSourceSander;
 				er.original_source_name = rs.referenceAbbreviated.get(i);
+				
+				LiteratureSource ls=new LiteratureSource();
+				er.literatureSource=ls;
+				ls.citation=rs.referenceFull.get(i);
+				ls.name=ls.citation;
+				
 				//TODO store full citation from reference (it's in the HTML)
 				
 				getnotes(er,rs.type.get(i));

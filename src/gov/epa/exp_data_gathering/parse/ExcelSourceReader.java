@@ -1,17 +1,17 @@
 package gov.epa.exp_data_gathering.parse;
 
-import static org.apache.poi.ss.usermodel.Cell.CELL_TYPE_STRING;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -21,6 +21,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
 
 import com.google.gson.JsonObject;
+
+
 
 /**
  * Class to read data sources provided as a single, column-based Excel spreadsheet
@@ -196,16 +198,36 @@ public class ExcelSourceReader {
 				for (int k:hmFieldNames.keySet()) {
 					Cell cell = row.getCell(k);
 					if (cell==null) { continue; }
-					cell.setCellType(CELL_TYPE_STRING);
+					
 					String content = "";
 
+					try {
+						
+						CellType type = cell.getCellType();
+	                    if (type == CellType.STRING) {
+	                    	content=cell.getStringCellValue();
+	                    } else if (type == CellType.NUMERIC) {
+	                    	content=cell.getNumericCellValue()+"";
+	                    } else if (type == CellType.BOOLEAN) {
+	                    	content=cell.getBooleanCellValue()+"";		                    	
+	                    } else if (type == CellType.BLANK) {
+	                    	content="";
+	                    }
+						
+						
+//						content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+					} catch (Exception ex) {
+						System.out.println(hmFieldNames.get(k)+"\t"+ex.getMessage());
+					}
+					
+					
 //					if (k==chemicalNameIndex) {
 //						content = StringEscapeUtils.escapeHtml4(row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
 //					} else {
 //						content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 //					}
 					
-					content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+//					content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
 					
 					if (content!=null && !content.isBlank()) { hasAnyFields = true; }
 					jo.addProperty(hmFieldNames.get(k), content);
@@ -250,10 +272,28 @@ public class ExcelSourceReader {
 				for (int k:hmFieldNames.keySet()) {
 					Cell cell = row.getCell(k);
 					if (cell==null) { continue; }
-					cell.setCellType(CELL_TYPE_STRING);
+					
+					
 					String content = "";
 
-//					if (k==chemicalNameIndex) {
+					try {
+						
+						CellType type = cell.getCellType();
+	                    if (type == CellType.STRING) {
+	                    	content=cell.getStringCellValue();
+	                    } else if (type == CellType.NUMERIC) {
+	                    	content=cell.getNumericCellValue()+"";
+	                    } else if (type == CellType.BOOLEAN) {
+	                    	content=cell.getBooleanCellValue()+"";		                    	
+	                    } else if (type == CellType.BLANK) {
+	                    	content="";
+	                    }
+//						content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+					} catch (Exception ex) {
+						System.out.println(hmFieldNames.get(k)+"\t"+ex.getMessage());
+					}
+					
+					//					if (k==chemicalNameIndex) {
 //						content = StringEscapeUtils.escapeHtml4(row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
 //					} else {
 //						content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
@@ -272,40 +312,73 @@ public class ExcelSourceReader {
 		return records;
 	}
 	
+	
 	/**
 	 * Writes records from a spreadsheet to JSON original records format consistent with field names of an existing Record[SourceName] class
 	 * @param hmFieldNames	Matches column numbers to output fields of a Record[SourceName] class
 	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
 	 */
-	public Vector<JsonObject> parseRecordsFromExcel(HashMap<Integer,String> hmFieldNames, int chemicalNameIndex) {
+	public Vector<JsonObject> parseRecordsFromExcel(HashMap<Integer,String> hmFieldNames, int chemicalNameIndex,boolean setBlankToNull) {
 		Vector<JsonObject> records = new Vector<JsonObject>();
-		try {
-			int numRows = sheet.getLastRowNum();
-			for (int i = 1; i <= numRows; i++) {
-				Row row = sheet.getRow(i);
-				if (row==null) { continue; }
-				JsonObject jo = new JsonObject();
-				boolean hasAnyFields = false;
-				for (int k:hmFieldNames.keySet()) {
-					Cell cell = row.getCell(k);
-					if (cell==null) { continue; }
-					cell.setCellType(CELL_TYPE_STRING);
-					String content = "";
+
+		int numRows = sheet.getLastRowNum();
+		for (int i = 1; i <= numRows; i++) {
+			Row row = sheet.getRow(i);
+			if (row==null) { continue; }
+			JsonObject jo = new JsonObject();
+			boolean hasAnyFields = false;
+			for (int k:hmFieldNames.keySet()) {
+				Cell cell = row.getCell(k);
+				if (cell==null) { continue; }
+				//					cell.setCellType(CELL_TYPE_STRING);
+
+				String content = "";
+
+				try {
 					if (k==chemicalNameIndex) {
-						content = StringEscapeUtils.escapeHtml4(row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());
-					} else {
-						content = row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue();
+						content = StringEscapeUtils.escapeHtml4(row.getCell(k,MissingCellPolicy.CREATE_NULL_AS_BLANK).getStringCellValue());						
+					} else {													
+						CellType type = cell.getCellType();
+						if (type == CellType.STRING) {
+							content=cell.getStringCellValue();
+						} else if (type == CellType.NUMERIC) {
+							content=cell.getNumericCellValue()+"";
+						} else if (type == CellType.BOOLEAN) {
+							content=cell.getBooleanCellValue()+"";		                    	
+						} else if (type == CellType.BLANK) {
+							content="";
+							if (setBlankToNull)	content=null;
+						}
+
 					}
-					if (content!=null && !content.isBlank()) { hasAnyFields = true; }
-					jo.addProperty(hmFieldNames.get(k), content);
+
+				} catch (Exception ex) {
+					System.out.println("Error parsing for col "+k+"\tfor row "+i);
 				}
-				if (hasAnyFields) { records.add(jo); }
+
+				//					if(content.contains("Cadmium sulphate")) System.out.println("here1: "+content);
+
+
+				if (content!=null && !content.isBlank()) { hasAnyFields = true; }
+				jo.addProperty(hmFieldNames.get(k), content);
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
+			if (hasAnyFields) { records.add(jo); }
 		}
 		return records;
 	}
+	
+		
+	public static String fixSpecialChars(String content) {
+//		if(content.contains("(second CAS# 31119-53-6)")) System.out.println("here1:"+"\t"+fieldName+"\t"+content);
+		if (content==null) return content;
+		content=content.replace("\r"," ").replace("\n"," ");
+		while (content.contains("  ")) {
+			content=content.replace("  ", " ");
+		}
+		return content;
+	}
+	
+
 	
 	/**
 	 * Writes records from a spreadsheet to JSON original records format assuming the template created by generateRecordClassTemplate()
@@ -314,8 +387,15 @@ public class ExcelSourceReader {
 	public Vector<JsonObject> parseRecordsFromExcel(int chemicalNameIndex) {
 		String[] fieldNames = getHeaders();
 		HashMap<Integer,String> hm = generateDefaultMap(fieldNames, 0);
-		return parseRecordsFromExcel(hm, chemicalNameIndex);
+		return parseRecordsFromExcel(hm, chemicalNameIndex,false);
 	}
+	
+	public Vector<JsonObject> parseRecordsFromExcel(int chemicalNameIndex,boolean setBlankToNull) {
+		String[] fieldNames = getHeaders();
+		HashMap<Integer,String> hm = generateDefaultMap(fieldNames, 0);
+		return parseRecordsFromExcel(hm, chemicalNameIndex,setBlankToNull);
+	}
+
 
 	/**
 	 * Gets column headers in appropriate format for field naming (alphanumeric and _ only)
@@ -327,7 +407,10 @@ public class ExcelSourceReader {
 		String[] headers = new String[numHeaders];
 		for (int i = 0; i < numHeaders; i++) {
 			Cell headerCell = headerRow.getCell(i, MissingCellPolicy.CREATE_NULL_AS_BLANK);
-			headerCell.setCellType(CELL_TYPE_STRING);
+			
+//			System.out.println(headerCell.getStringCellValue());
+			
+//			headerCell.setCellType(CELL_TYPE_STRING);
 			String headerContent = headerCell.getStringCellValue().trim().replaceAll("[^\\p{Alnum}]+", "_").replaceAll("^_", "").replaceAll("_$", "");
 			if (headerContent==null || headerContent.equals("_") || headerContent.equals("")) {
 				headers[i] = "field" + i;

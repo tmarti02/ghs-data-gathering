@@ -18,6 +18,7 @@ public class ExperimentalConstants {
 
 	public static final String strLogOH="LogOH";
 	public static final String strLogBCF="LogBCF";
+	public static final String strLogBCF_Fish_Whole_Body="LogBCF_Fish_Whole_Body";
 	public static final String strLogHalfLifeBiodegradation = "LogHalfLife";
 	public static final String strLogKmHL = "LogKmHL";
 	public static final String strLogKOA="LogKOA";
@@ -121,7 +122,8 @@ public class ExperimentalConstants {
 	public static final String strSourceOFMPub="OFMPub";
 	public static final String strSourceSigmaAldrich="Sigma-Aldrich";
 	public static final String strSourceChemicalBook="ChemicalBook";
-	public static final String strSourceSander="Sander";
+//	public static final String strSourceSander="Sander";
+	public static final String strSourceSander="Sander v4.0";
 	public static final String strSourceQSARDB="QSARDB";
 	public static final String strSourceBradley="Bradley";
 	public static final String strSourceADDoPT="ADDoPT";
