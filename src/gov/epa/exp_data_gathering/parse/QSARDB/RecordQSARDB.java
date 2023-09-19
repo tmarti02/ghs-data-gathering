@@ -80,7 +80,9 @@ public class RecordQSARDB {
 					int rows = sheet.getLastRowNum();
 					for (int i = 2; i < rows; i++) {
 						Row row = sheet.getRow(i);
-						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
+						
+//						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
+						
 						RecordQSARDB qr = new RecordQSARDB();
 						qr.reference = getReference;
 						qr.url = getURL;

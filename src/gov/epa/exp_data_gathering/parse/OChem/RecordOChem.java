@@ -103,7 +103,7 @@ public class RecordOChem {
 					int rows = sheet.getLastRowNum();
 					for (int i = 1; i < rows; i++) {
 						Row row = sheet.getRow(i);
-						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
+//						for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 						RecordOChem ocr = new RecordOChem();
 						ocr.smiles = betterGetCellValue(row,smilesIndex);
 						ocr.casrn = betterGetCellValue(row,casrnIndex);

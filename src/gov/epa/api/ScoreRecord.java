@@ -1083,6 +1083,8 @@ public class ScoreRecord {
 
 			} catch (Exception e) {
 				e.printStackTrace();
+				System.out.println("error for line:");
+				System.out.println(line);
 			}
 		}
 		return f;

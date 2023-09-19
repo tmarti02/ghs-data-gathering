@@ -353,7 +353,7 @@ public class RecordCERAPP_Exp {
 //		esr.createClassTemplateFiles();		
 		
 		HashMap<Integer,String> hm = esr.generateDefaultMap(fieldNames, 0);
-		Vector<JsonObject> records = esr.parseRecordsFromExcel(hm, 0);
+		Vector<JsonObject> records = esr.parseRecordsFromExcel(hm, 0,true);
 		return records;
 	}
 	

@@ -299,10 +299,12 @@ public class DownloadWebpageUtilities {
 				for (Cell cell:row) {
 					int col = cell.getColumnIndex();
 					String field = sheet.getRow(0).getCell(col).getStringCellValue();
-					if (RecordDashboard.getHeader().contains(field) && CellType.forInt(cell.getCellType()) == CellType.STRING) {
+					
+					//TODO probably should check if the varlist contains the field name rather than the header tab delimited string
+					if (RecordDashboard.getHeader().contains(field) && cell.getCellType() == CellType.STRING) {
 						String data = cell.getStringCellValue();
 						temp.setValue(field,data);
-					} else if (RecordDashboard.getHeader().contains(field) && CellType.forInt(cell.getCellType()) == CellType.NUMERIC) {
+					} else if (RecordDashboard.getHeader().contains(field) && cell.getCellType() == CellType.NUMERIC) {
 						double data = cell.getNumericCellValue();
 						temp.setValue(field,data+"");
 					}

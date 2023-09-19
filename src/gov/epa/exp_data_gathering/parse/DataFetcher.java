@@ -384,7 +384,7 @@ public class DataFetcher {
 			Workbook wb = WorkbookFactory.create(fis);
 		    Sheet sheet = wb.getSheetAt(0);
 		    for (Row row:sheet) {
-		    	for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
+//		    	for (Cell cell:row) { cell.setCellType(Cell.CELL_TYPE_STRING); }
 		    	String cas = row.getCell(3).getStringCellValue();
 		    	String einecs = row.getCell(2).getStringCellValue();
 		    	String name = row.getCell(1).getStringCellValue();
@@ -408,7 +408,8 @@ public class DataFetcher {
 		String[] headers = {"casrn","einecs","chemical_name"};
 		CellStyle style = wb.createCellStyle();
 		Font font = wb.createFont();
-		font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+		font.setBold(true);
+		
 		style.setFont(font);
 		for (int i = 0; i < headers.length; i++) {
 			Cell recCell = headerRow.createCell(i);

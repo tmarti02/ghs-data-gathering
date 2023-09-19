@@ -367,6 +367,15 @@ public class ExcelSourceReader {
 		return records;
 	}
 	
+	/**
+	 * Writes records from a spreadsheet to JSON original records format consistent with field names of an existing Record[SourceName] class
+	 * @param hmFieldNames	Matches column numbers to output fields of a Record[SourceName] class
+	 * @param chemicalNameIndex		Column index containing chemical names (for special escape character treatment)
+	 */
+	public Vector<JsonObject> parseRecordsFromExcel(HashMap<Integer,String> hmFieldNames, int chemicalNameIndex) {
+		return parseRecordsFromExcel(hmFieldNames, chemicalNameIndex, true);//TODO is this desired default behavior? set blanks to null?
+	}
+	
 		
 	public static String fixSpecialChars(String content) {
 //		if(content.contains("(second CAS# 31119-53-6)")) System.out.println("here1:"+"\t"+fieldName+"\t"+content);

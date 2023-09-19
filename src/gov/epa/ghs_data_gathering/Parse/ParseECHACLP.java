@@ -396,10 +396,10 @@ public class ParseECHACLP extends Parse {
 
 					// getCellTypeEnum shown as deprecated for version 3.15
 					// getCellTypeEnum will be renamed to getCellType starting from version 4.0
-					cell.getCellTypeEnum();
+					cell.getCellType();
 
 					switch (cell.getCellType()) {
-					case Cell.CELL_TYPE_STRING:
+					case STRING:
 						// System.out.print(cell.getStringCellValue());
 
 						// String val=cell.getStringCellValue().trim();
@@ -409,11 +409,11 @@ public class ParseECHACLP extends Parse {
 
 						fw.write(val);
 						break;
-					case Cell.CELL_TYPE_BOOLEAN:
+					case BOOLEAN:
 						// System.out.print(cell.getBooleanCellValue());
 						fw.write(cell.getBooleanCellValue() + "");
 						break;
-					case Cell.CELL_TYPE_NUMERIC:
+					case NUMERIC:
 						fw.write(cell.getNumericCellValue() + "");
 						break;
 					}
