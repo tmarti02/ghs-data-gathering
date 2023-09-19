@@ -19,7 +19,7 @@ import java.util.zip.ZipFile;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -495,7 +495,7 @@ public class ParseAustralia extends Parse {
 				ar.Notes = (tableRows.get(tableIterator + 1).text());
 			} else if (row.contains("Sources")) {
 				//whitelist br tags
-			    Whitelist whitelist = new Whitelist();
+			    Safelist whitelist = new Safelist();
 			    whitelist.addTags("br");
 			    
 			    //parse html while leaving whitelisted br tag
