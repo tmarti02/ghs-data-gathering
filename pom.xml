@@ -13,7 +13,7 @@
 	<properties>
 		<project.build.sourceEncoding>iso-8859-1</project.build.sourceEncoding>
 
-		<!-- Use the latest version whenever possible. -->		
+		<!-- Use the latest version whenever possible. -->
 		<poi.version>5.2.3</poi.version>
 		<log4j.version>2.20.0</log4j.version>
 		<openhtml.version>0.0.1-RC11</openhtml.version>
@@ -125,13 +125,22 @@
 			<artifactId>indigo-inchi</artifactId>
 			<version>${indigo.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.49</version> <!-- must be 5.1.49 for DSSTox per Galen Spikes -->
+			<version>5.1.49</version> <!-- must be 5.1.49 for DSSTox per Galen
+			Spikes -->
 		</dependency>
-		
+
+		<!--
+		https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.10.1</version>
+			<scope>test</scope>
+		</dependency>
 
 
 	</dependencies>
