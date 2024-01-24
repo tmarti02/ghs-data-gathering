@@ -110,7 +110,7 @@ public class ParseOFMPub extends Parse {
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 			break;
 		case "Partition Coefficient":
-			er.property_name = ExperimentalConstants.strLogKow;
+			er.property_name = ExperimentalConstants.strLogKOW;
 			break;
 		}
 		// the property value string gabriel uses for further code
@@ -155,7 +155,7 @@ public class ParseOFMPub extends Parse {
 			if (er.temperature_C==null && remarks.contains("temperature:")) {
 				ParseUtilities.getTemperatureCondition(er,opr.resultRemarks);
 			}
-		} else if (propertyName==ExperimentalConstants.strLogKow) {
+		} else if (propertyName==ExperimentalConstants.strLogKOW) {
 			foundNumeric = ParseUtilities.getLogProperty(er,propertyValue);
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
 			if (er.temperature_C==null && remarks.contains("temperature:")) {

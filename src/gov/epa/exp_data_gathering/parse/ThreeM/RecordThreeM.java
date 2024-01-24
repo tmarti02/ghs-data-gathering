@@ -34,7 +34,7 @@ public class RecordThreeM {
 
 	public static Vector<JsonObject> parseThreeMRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
-		Vector<JsonObject> records = esr.parseRecordsFromExcel(0);
+		Vector<JsonObject> records = esr.parseRecordsFromExcel(0,false);
 		return records;
 	}
 }

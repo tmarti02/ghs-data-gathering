@@ -10,11 +10,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Vector;
 
-import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.io.MDLV2000Writer;
-import org.openscience.cdk.io.iterator.IteratingSDFReader;
-
 import gov.epa.ghs_data_gathering.Utilities.MolFileUtilities;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 

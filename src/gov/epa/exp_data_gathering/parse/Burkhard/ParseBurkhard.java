@@ -20,6 +20,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.Burkhard.RecordBurkhard;
+import gov.epa.exp_data_gathering.parse.ToxVal.ParseToxVal;
 import kong.unirest.json.JSONObject;
 
 public class ParseBurkhard extends Parse {
@@ -86,24 +87,95 @@ public class ParseBurkhard extends Parse {
 			TreeSet<String> citations=new TreeSet<>();
 			
 			while (it.hasNext()) {
-				RecordBurkhard r = it.next();
-				addExperimentalRecords(r, recordsExperimental);							
-				dtxsids.add(r.DTXSID);
-				
+				RecordBurkhard rb = it.next();
+				addNewExperimentalRecordBCF_Kinetic(rb, databaseFolder, recordsExperimental);
+				addNewExperimentalRecordBCF_SS(rb, "LogBCFSteadyState", recordsExperimental);
+				addNewExperimentalRecordBAF(rb, "LogBAF", recordsExperimental);
 			}
-			
+
+			Hashtable<String,ExperimentalRecords>htRecordsBySID=new Hashtable<>();
+
 			for (ExperimentalRecord er:recordsExperimental) {
+				
+				if (!er.property_name.contains("BCF")) {
+					er.keep=false;
+					er.reason="Not BCF";
+//					continue;
+				}
+				
+				if (er.experimental_parameters.get("tissue")==null || 
+						!er.experimental_parameters.get("tissue").equals("whole body")) {
+					er.keep=false;
+					er.reason="Not whole body";
+				}
+				
+//				if (er.experimental_parameters.get("method")==null || 
+//						!er.experimental_parameters.get("method").equals("steady state")) {
+//					er.keep=false;
+//					er.reason="Not steady state";
+//				}
+
+//				if (er.experimental_parameters.get("media")==null || 
+//						!er.experimental_parameters.get("media").equals("freshwater")) {
+//					er.keep=false;
+//					er.reason="Not steady state";
+//				}
+				
+				
+				if(!er.keep) {
+					
+					JsonObject jo=new JsonObject();
+					jo.addProperty("reason", er.reason);
+					jo.addProperty("property_name", er.property_name);
+					jo.addProperty("tissue", er.experimental_parameters.get("tissue")+"");
+					jo.addProperty("method", er.experimental_parameters.get("method")+"");
+					jo.addProperty("media", er.experimental_parameters.get("media")+"");
+					jo.addProperty("exposure_type", er.experimental_parameters.get("exposure_type")+"");
+					
+					System.out.println(gson.toJson(jo));
+					
+					
+					continue;
+				}
+
+				
+				if (!er.keep) continue;
 				citations.add(er.literatureSource.citation);
+				
+				if(htRecordsBySID.get(er.dsstox_substance_id)==null) {
+					ExperimentalRecords records=new ExperimentalRecords();
+					records.add(er);
+					htRecordsBySID.put(er.dsstox_substance_id, records);
+				} else {
+					ExperimentalRecords records=htRecordsBySID.get(er.dsstox_substance_id);
+					records.add(er);
+				}
 			}
 			
+			double avgSD=0;
+			int count=0;
+			int countOverall=0;
 			
-			System.out.println(recordsExperimental.size());
-			System.out.println(dtxsids.size());
-			
-			for (String citation:citations) {
-				System.out.println(citation);
+			for (String dtxsid:htRecordsBySID.keySet()) {
+				ExperimentalRecords records=htRecordsBySID.get(dtxsid);
+				double SD=ParseToxVal.calculateSD(records);
+				avgSD+=SD;
+				count++;
+				countOverall+=records.size();
 			}
-			System.out.println(citations.size());
+			
+			avgSD/=(double)count;			
+			
+			
+			System.out.println("All records\t"+recordsExperimental.size());
+			System.out.println("Kept records\t"+countOverall);
+			System.out.println("Unique SIDs\t"+htRecordsBySID.size());
+			System.out.println("Avg SD\t"+avgSD);
+			
+//			for (String citation:citations) {
+//				System.out.println(citation);
+//			}
+//			System.out.println(citations.size());
 
 			
 		} catch (Exception ex) {
@@ -113,25 +185,14 @@ public class ParseBurkhard extends Parse {
 		return recordsExperimental;
 	}
 
-	private void addExperimentalRecords(RecordBurkhard rb, ExperimentalRecords recordsExperimental) {
-		if (rb.Log_BCF_Steady_State_mean != null && !rb.Log_BCF_Steady_State_mean.isBlank()) {
-			addNewExperimentalRecord(rb, "LogBCFSteadyState", recordsExperimental);
-		}
-		if (rb.Log_BCF_Kinetic_mean != null && !rb.Log_BCF_Kinetic_mean.isBlank()) {
-			addNewExperimentalRecord(rb, "LogBCFKinetic", recordsExperimental);
-		}
-		if (rb.Log_BAF_mean != null && !rb.Log_BAF_mean.isBlank()) {
-//			System.out.println("Here BAF");
-			addNewExperimentalRecord(rb, "LogBAF", recordsExperimental);
-		}
-
-	}
 	
 	boolean isNumeric(String value) {
 
+		if (value==null) return false;
+		
 		String v=value.toLowerCase().trim();
 
-		if(v.equals("-") || v.equals("n.d.") || v.equals("na") || v.equals("--") || v.equals("n/a") || 
+		if(v.isBlank() || v.equals("-") || v.equals("n.d.") || v.equals("na") || v.equals("--") || v.equals("n/a") || 
 				v.equals("nd") || v.equals("?") || v.equals("n.c.") || 
 				v.equals("<lod") || v.equals("nc") || v.equals("n.a.") || v.equals("n.a") || v.equals("na*")) {
 			return false;
@@ -142,82 +203,115 @@ public class ParseBurkhard extends Parse {
 	}
 	
 
-	private void addNewExperimentalRecord(RecordBurkhard rb, String propertyName,
+	private void addNewExperimentalRecordBAF(RecordBurkhard rb, String propertyName,
 			ExperimentalRecords recordsExperimental) {
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-		Date date = new Date();
-		String strDate = formatter.format(date);
-		String dayOnly = strDate.substring(0, strDate.indexOf(" "));
-		ExperimentalRecord er = new ExperimentalRecord();
-
+				
+		
+		if (!isNumeric(rb.Log_BAF_mean) && !isNumeric(rb.Log_BAF_max)) return;
+		
+		ExperimentalRecord er=new ExperimentalRecord();
 		er.experimental_parameters=new Hashtable<>();
 
-//		JSONObject jsonNote = new JSONObject();
-//		jsonNote.put("species", rb.Common_Name);
-//		jsonNote.put("tissue", rb.Tissue);
-//		jsonNote.put("exposure concentrations", rb.Exposure_Concentrations);
-
-		if(rb.Common_Name!=null)
-			er.experimental_parameters.put("species",rb.Common_Name);
 		
-//		er.experimental_parameters.put("tissue",rb.Tissue);
-		
-		if (rb.Exposure_Concentrations!=null && !rb.Exposure_Concentrations.isBlank())
-			er.experimental_parameters.put("exposure concentrations",rb.Exposure_Concentrations);
+		er.property_name = propertyName;
 		
 
-		er.source_name = sourceName;
-		er.chemical_name = rb.Chemical;
-		er.casrn = rb.CASRN;
+//		er.property_value_units_final = rb.Log_BAF_units;
 		
-		if(!er.casrn.contains("-")) er.casrn=null;
+		er.property_value_units_final = "Log10("+rb.Log_BAF_units+")";
 		
-		er.dsstox_substance_id = rb.DTXSID;
+		er.property_value_units_final.replace("(L/kg-ww)", "(L/kg)");
 		
-//		er.reference = rb.Reference;
+//		er.experimental_parameters.put("study quality",rb.Study_Quality_BAF);
+		er.reliability=rb.Study_Quality_BAF;
 		
-		er.literatureSource=new LiteratureSource();
-		er.literatureSource.citation=rb.Reference;
-		er.literatureSource.name=rb.Reference;
-		
-		
-
-		if (propertyName.equals("LogBCFSteadyState")) {
+		try {
 			
-			if (!isNumeric(rb.Log_BCF_Steady_State_mean)) return;
+			String propertyValue = rb.Log_BAF_mean;
 			
-			er.property_name = ExperimentalConstants.strLogBCF_Fish_Whole_Body;
-			er.property_value_units_final = "Log10("+rb.Log_BCF_Steady_State_units+")";
-			er.property_value_units_final.replace("(L/kg-ww)", "(L/kg)");
-			
-//			er.experimental_parameters.put("study quality",rb.Study_Quality_BCF);
-			er.reliability=rb.Study_Quality_BCF;
+			if (rb.Log_BAF_min!=null && rb.Log_BAF_max!=null) {
+				String propertyValue2 = rb.Log_BAF_min + "~" + rb.Log_BAF_max;
 
-			er.experimental_parameters.put("method","Steady state");
-			
-			
-//			jsonNote.put("study quality", rb.Study_Quality_BCF);
-//			er.updateNote(jsonNote.toString());
+				if ((rb.Log_BAF_arithmetic_or_logarithmic!=null)
+						&& rb.Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+					er.property_value_string = propertyValue2 + " (arithmetic)";
 
-			try {
-				String propertyValue = rb.Log_BCF_Steady_State_mean;
-				if (rb.Log_BCF_Steady_State_arithmetic_or_logarithmic!=null && rb.Log_BCF_Steady_State_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
-					er.property_value_point_estimate_final = Math
-							.log10(Double.parseDouble(rb.Log_BCF_Steady_State_mean));
-					er.property_value_string = propertyValue + " (arithmetic)";
-
+					er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BAF_min));
+					er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BAF_max));
 				} else {
-					
-					if (rb.Log_BCF_Steady_State_mean.contains("<") || rb.Log_BCF_Steady_State_mean.contains(">")) {
-						er.property_value_numeric_qualifier=rb.Log_BCF_Steady_State_mean.substring(0,1);
-						rb.Log_BCF_Steady_State_mean=rb.Log_BCF_Steady_State_mean.substring(1,rb.Log_BCF_Steady_State_mean.length()).trim();
-					} 
-					
-					er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Steady_State_mean);
-					er.property_value_string = propertyValue + " (log)";
+					er.property_value_max_final = Double.parseDouble(rb.Log_BAF_min);
+					er.property_value_min_final = Double.parseDouble(rb.Log_BAF_max);
+					er.property_value_string = propertyValue2 + " (log)";
 
 				}
-				if ((rb.Log_BCF_Steady_State_max!=null) && (rb.Log_BCF_Steady_State_min!=null)) {
+
+			} else if (rb.Log_BAF_arithmetic_or_logarithmic!=null
+					&& rb.Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+				er.property_value_string = propertyValue + " (arithmetic)";
+				er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BAF_mean));
+			} else {
+				if (rb.Log_BAF_mean.contains("<") || rb.Log_BAF_mean.contains(">")) {
+					er.property_value_numeric_qualifier=rb.Log_BAF_mean.substring(0,1);
+					rb.Log_BAF_mean=rb.Log_BAF_mean.substring(1,rb.Log_BAF_mean.length());
+				}
+				
+				er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BAF_mean);
+				er.property_value_string = propertyValue + " (log)";
+
+			}
+			
+			
+		} catch (Exception e) {
+			System.out.println("Parse error BAF:\n"+gson.toJson(rb));
+			e.printStackTrace();
+		}
+		
+		if ((rb.Study_Quality_BAF!=null && rb.Study_Quality_BAF.toLowerCase().contains("low")) || (rb.Study_Quality_BCF!=null)) {
+			er.keep = false;
+			er.reason = "untrusted study";
+		}
+		
+		addMetadata(er, rb);
+		recordsExperimental.add(er);
+
+	}
+
+
+	private void addNewExperimentalRecordBCF_SS(RecordBurkhard rb, String propertyName,
+			ExperimentalRecords recordsExperimental) {
+		
+		
+		if (!isNumeric(rb.Log_BCF_Steady_State_mean) && !isNumeric(rb.Log_BCF_Steady_State_max)) return;
+		
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.experimental_parameters=new Hashtable<>();
+
+		
+		er.property_name = ExperimentalConstants.strLogBCF_Fish_Whole_Body;
+		er.property_value_units_final = "Log10("+rb.Log_BCF_Steady_State_units+")";
+		er.property_value_units_final.replace("(L/kg-ww)", "(L/kg)");
+		
+//		er.experimental_parameters.put("study quality",rb.Study_Quality_BCF);
+		er.reliability=rb.Study_Quality_BCF;
+
+		er.experimental_parameters.put("method","steady state");
+		
+		
+//		jsonNote.put("study quality", rb.Study_Quality_BCF);
+//		er.updateNote(jsonNote.toString());
+
+		try {
+			String propertyValue = rb.Log_BCF_Steady_State_mean;
+			
+			
+			if ((rb.Log_BCF_Steady_State_max!=null) && (rb.Log_BCF_Steady_State_min!=null)) {
+				
+				
+				if(rb.Log_BCF_Steady_State_min.contains("<")) {
+					er.keep=false;
+					er.reason="Min value has < symbol";
+				} else {
+
 					String property_value = rb.Log_BCF_Steady_State_min + "~" + rb.Log_BCF_Steady_State_max;
 					if (rb.Log_BCF_Steady_State_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
 						er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BCF_Steady_State_max));
@@ -228,128 +322,127 @@ public class ParseBurkhard extends Parse {
 						er.property_value_min_final = Double.parseDouble(rb.Log_BCF_Steady_State_min);
 						er.property_value_string = property_value + " (log)";
 					}
+
 				}
-			} catch (NumberFormatException e) {
-				System.out.println("rb.Log_BCF_Steady_State_mean="+rb.Log_BCF_Steady_State_mean);
-//				e.printStackTrace();
+				
+			} else if (rb.Log_BCF_Steady_State_arithmetic_or_logarithmic!=null && rb.Log_BCF_Steady_State_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+				er.property_value_point_estimate_final = Math
+						.log10(Double.parseDouble(rb.Log_BCF_Steady_State_mean));
+				er.property_value_string = propertyValue + " (arithmetic)";
+			} else {
+				
+				if (rb.Log_BCF_Steady_State_mean.contains("<") || rb.Log_BCF_Steady_State_mean.contains(">")) {
+					er.property_value_numeric_qualifier=rb.Log_BCF_Steady_State_mean.substring(0,1);
+					rb.Log_BCF_Steady_State_mean=rb.Log_BCF_Steady_State_mean.substring(1,rb.Log_BCF_Steady_State_mean.length()).trim();
+				} 
+				
+				er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Steady_State_mean);
+				er.property_value_string = propertyValue + " (log)";
+
 			}
-		} else if (propertyName.equals("LogBCFKinetic")) {
 			
-			if (!isNumeric(rb.Log_BCF_Kinetic_mean)) return;
-			
-			er.property_name = ExperimentalConstants.strLogBCF_Fish_Whole_Body;
-//			er.property_value_units_final = rb.Log_BCF_Kinetic_units;
-			
-			er.property_value_units_final = "Log10("+rb.Log_BCF_Kinetic_units+")";
-			er.property_value_units_final.replace("(L/kg-ww)", "(L/kg)");
-
-//			er.experimental_parameters.put("study quality",rb.Study_Quality_BCF);
-			er.reliability=rb.Study_Quality_BCF;
-
-			er.experimental_parameters.put("method","Kinetic");
-			
-			try {
-				String property_value = rb.Log_BCF_Kinetic_mean;
-				if (rb.Log_BCF_Kinetic_arithmetic_or_logarithmic!=null && rb.Log_BCF_Kinetic_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
-					er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_mean));
-					er.property_value_string = property_value + " (arithmetic)";
-				} else {
-					
-					if (rb.Log_BCF_Kinetic_mean.contains("<") || rb.Log_BCF_Kinetic_mean.contains(">")) {
-						er.property_value_numeric_qualifier=rb.Log_BCF_Kinetic_mean.substring(0,1);
-						rb.Log_BCF_Kinetic_mean=rb.Log_BCF_Kinetic_mean.substring(1,rb.Log_BCF_Kinetic_mean.length()).trim();
-					} 
-					
-					er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Kinetic_mean);
-					er.property_value_string = property_value + " (log)";
-				}
-				if ((rb.Log_BCF_Kinetic_min!=null) && (rb.Log_BCF_Kinetic_max!=null)) {
-					String propertyValue = rb.Log_BCF_Kinetic_min + "~" + rb.Log_BCF_Kinetic_max;
-					if (rb.Log_BCF_Kinetic_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
-						er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_min));
-						er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_max));
-						er.property_value_string = propertyValue + " (arithmetic)";
-					} else {
-						er.property_value_max_final = Double.parseDouble(rb.Log_BCF_Kinetic_max);
-						er.property_value_min_final = Double.parseDouble(rb.Log_BCF_Kinetic_min);
-						er.property_value_string = propertyValue + " (log)";
-
-					}
-				}
-			} catch (NumberFormatException e) {
-				System.out.println("rb.Log_BCF_Kinetic_mean="+rb.Log_BCF_Kinetic_mean);
-//				e.printStackTrace();
-			}
-
-		} else if (propertyName.equals("LogBAF")) {
-			
-			if (!isNumeric(rb.Log_BAF_mean)) return;
-			er.property_name = propertyName;
+		} catch (Exception e) {
+			System.out.println("Parse error BCF SS:\n"+gson.toJson(rb));
+//			e.printStackTrace();
+		}
+		
+		if (rb.Study_Quality_BCF!=null && rb.Study_Quality_BCF.toLowerCase().contains("low")) {
 			er.keep = false;
-			er.reason = "BAF value";
+			er.reason = "untrusted study";
+		}
+		addMetadata(er, rb);
+		recordsExperimental.add(er);
 
-//			er.property_value_units_final = rb.Log_BAF_units;
+	}
+
+
+	private void addNewExperimentalRecordBCF_Kinetic(RecordBurkhard rb, String propertyName,
+			ExperimentalRecords recordsExperimental) {
+		
+		
+		if (!isNumeric(rb.Log_BCF_Kinetic_mean)  && !isNumeric(rb.Log_BCF_Kinetic_max)) return;
+		
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.experimental_parameters=new Hashtable<>();
+
+		
+		er.property_name = ExperimentalConstants.strLogBCF_Fish_Whole_Body;
+//		er.property_value_units_final = rb.Log_BCF_Kinetic_units;
+		
+		er.property_value_units_final = "Log10("+rb.Log_BCF_Kinetic_units+")";
+		er.property_value_units_final.replace("(L/kg-ww)", "(L/kg)");
+
+//		er.experimental_parameters.put("study quality",rb.Study_Quality_BCF);
+		er.reliability=rb.Study_Quality_BCF;
+
+		er.experimental_parameters.put("method","kinetic");
+		
+		try {
+			String property_value = rb.Log_BCF_Kinetic_mean;
 			
-			er.property_value_units_final = "Log10("+rb.Log_BAF_units+")";
 			
-			er.property_value_units_final.replace("(L/kg-ww)", "(L/kg)");
-			
-//			er.experimental_parameters.put("study quality",rb.Study_Quality_BAF);
-			er.reliability=rb.Study_Quality_BAF;
-			
-			try {
-				
-				String propertyValue = rb.Log_BAF_mean;
-				
-				if (rb.Log_BAF_arithmetic_or_logarithmic!=null
-						&& rb.Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+			if ((rb.Log_BCF_Kinetic_min!=null) && (rb.Log_BCF_Kinetic_max!=null)) {
+				String propertyValue = rb.Log_BCF_Kinetic_min + "~" + rb.Log_BCF_Kinetic_max;
+				if (rb.Log_BCF_Kinetic_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+					er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_min));
+					er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_max));
 					er.property_value_string = propertyValue + " (arithmetic)";
-					er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BAF_mean));
 				} else {
-					
-					if (rb.Log_BAF_mean.contains("<") || rb.Log_BAF_mean.contains(">")) {
-						er.property_value_numeric_qualifier=rb.Log_BAF_mean.substring(0,1);
-						rb.Log_BAF_mean=rb.Log_BAF_mean.substring(1,rb.Log_BAF_mean.length());
-					}
-					
-					er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BAF_mean);
+					er.property_value_max_final = Double.parseDouble(rb.Log_BCF_Kinetic_max);
+					er.property_value_min_final = Double.parseDouble(rb.Log_BCF_Kinetic_min);
 					er.property_value_string = propertyValue + " (log)";
 
 				}
-				if (rb.Log_BAF_min!=null && rb.Log_BAF_max!=null) {
-					String propertyValue2 = rb.Log_BAF_min + "~" + rb.Log_BAF_max;
-
-					if ((rb.Log_BAF_arithmetic_or_logarithmic!=null)
-							&& rb.Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
-						er.property_value_string = propertyValue2 + " (arithmetic)";
-
-						er.property_value_max_final = Math.log10(Double.parseDouble(rb.Log_BAF_min));
-						er.property_value_min_final = Math.log10(Double.parseDouble(rb.Log_BAF_max));
-					} else {
-						er.property_value_max_final = Double.parseDouble(rb.Log_BAF_min);
-						er.property_value_min_final = Double.parseDouble(rb.Log_BAF_max);
-						er.property_value_string = propertyValue2 + " (log)";
-
-					}
-				}
-			} catch (NumberFormatException e) {
-				System.out.println("rb.Log_BAF_mean="+rb.Log_BAF_mean);
-				e.printStackTrace();
+			} else if (rb.Log_BCF_Kinetic_arithmetic_or_logarithmic!=null && rb.Log_BCF_Kinetic_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+				er.property_value_point_estimate_final = Math.log10(Double.parseDouble(rb.Log_BCF_Kinetic_mean));
+				er.property_value_string = property_value + " (arithmetic)";
+			} else {
+				
+				if (rb.Log_BCF_Kinetic_mean.contains("<") || rb.Log_BCF_Kinetic_mean.contains(">")) {
+					er.property_value_numeric_qualifier=rb.Log_BCF_Kinetic_mean.substring(0,1);
+					rb.Log_BCF_Kinetic_mean=rb.Log_BCF_Kinetic_mean.substring(1,rb.Log_BCF_Kinetic_mean.length()).trim();
+				} 
+				
+				er.property_value_point_estimate_final = Double.parseDouble(rb.Log_BCF_Kinetic_mean);
+				er.property_value_string = property_value + " (log)";
 			}
-		} else {
-			System.out.println("null property:"+propertyName);
-			System.out.println(gson.toJson(rb));
-			return;
+			
+		} catch (Exception e) {
+			System.out.println("Parse error BCF Kinetic:\n"+gson.toJson(rb));
+//			e.printStackTrace();
 		}
-
-		// limiting things to whole body BCF based on feedback from Todd Martin 9/1/2019
-		if (!(rb.Tissue.contains("whole body"))) {
+		
+		if (rb.Study_Quality_BCF!=null && rb.Study_Quality_BCF.toLowerCase().contains("low")) {
 			er.keep = false;
-			er.reason = "not whole body";
-		} else if (rb.Tissue.contains("whole body") && !(propertyName.equals("LogBAF"))) {
-			er.keep = true;
+			er.reason = "untrusted study";
 		}
+		
+		addMetadata(er, rb);
+		recordsExperimental.add(er);
+		
+		
+	}
 
+		
+	private void addMetadata(ExperimentalRecord er,RecordBurkhard rb) {
+		
+		er.dsstox_substance_id = rb.DTXSID;
+		er.source_name = sourceName;
+		er.chemical_name = rb.Chemical;
+		er.casrn = rb.CASRN;
+		if(!er.casrn.contains("-")) er.casrn=null;
+
+		if(rb.Common_Name!=null)
+			er.experimental_parameters.put("species",rb.Common_Name);
+		
+		if (rb.Exposure_Concentrations!=null && !rb.Exposure_Concentrations.isBlank())
+			er.experimental_parameters.put("exposure concentrations",rb.Exposure_Concentrations);
+
+		
+		er.literatureSource=new LiteratureSource();
+		er.literatureSource.citation=rb.Reference;
+		er.literatureSource.name=rb.Reference;
+		
 		// limiting our search to fish
 		if (!rb.class_taxonomy.toLowerCase().contains("actinopteri")
 				&& !rb.class_taxonomy.toLowerCase().contains("actinopterygii")
@@ -357,28 +450,19 @@ public class ParseBurkhard extends Parse {
 			er.keep = false;
 			er.reason = "not a fish";
 		}
-
-		// limiting to only high and medium quality studies
-		if ((rb.Study_Quality_BAF!=null && rb.Study_Quality_BAF.toLowerCase().contains("low")) || (rb.Study_Quality_BCF!=null && rb.Study_Quality_BCF.toLowerCase().contains("low"))) {
-			er.keep = false;
-			er.reason = "untrusted study";
-		}
-
-		/*
-		 * if ((rb.Tissue != null && !rb.Tissue.isBlank()) &&
-		 * (rb.Tissue.toLowerCase().contains("plasma"))) { er.keep = false; er.reason =
-		 * "empty tissue or plasma record"; }
-		 */
-
-		if (!(er.property_value_point_estimate_final != null)) {
-			er.keep = false;
-			er.reason = "unable to parse a value";
-		}
 		
-//		System.out.println(er.property_name);
+		rb.Marine_Brackish_Freshwater=rb.Marine_Brackish_Freshwater.toLowerCase();
+		
+		er.experimental_parameters.put("tissue",rb.Tissue);
+		er.experimental_parameters.put("media",rb.Marine_Brackish_Freshwater);
+		er.experimental_parameters.put("exposure_type",rb.Marine_Brackish_Freshwater);
 		
 		
-		recordsExperimental.add(er);
+//		if (!(er.property_value_point_estimate_final != null)) {
+//			er.keep = false;
+//			er.reason = "unable to parse a value";
+//		}
+		
 	}
 
 	public static void main(String[] args) {

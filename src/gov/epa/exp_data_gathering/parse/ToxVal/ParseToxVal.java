@@ -17,6 +17,7 @@ import javax.swing.LookAndFeel;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.JSONUtilities;
@@ -27,15 +28,19 @@ import gov.epa.exp_data_gathering.parse.LiteratureSource;
 
 public class ParseToxVal {
 
-	static String version ="v93";
+	static String versionV93 ="v93";
+	static String versionProd ="prod";
 	
-	void getAcuteAquaticExperimentalRecords(String commonName,double duration,String type,String criticalEffect,String propertyType) {
+	void getAcuteAquaticExperimentalRecords(String toxvalVersion, String commonName,double duration,String type,String criticalEffect,String propertyType) {
 
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting();
 		
 		ToxValQuery tvq=new ToxValQuery();
-		tvq.setConnectionToxValV93();
+		tvq.setConnectionToxVal(toxvalVersion);
+		
+		if (tvq.conn==null) return;
+
 		List<ToxValRecord> toxValRecords = tvq.getRecords(commonName, type,ToxValQuery.TOXVAL_FILTERED_QUERY_BY_SPECIES_AND_TYPE_V93);
 		tvq.close();
 		
@@ -45,43 +50,85 @@ public class ParseToxVal {
 //		System.out.println(gson.toJson(toxValRecords));
 //		if(true) return;
 		
+		Hashtable<String,ExperimentalRecords>htRecordsBySID=new Hashtable<>();
+
+		
 		List<ExperimentalRecord> experimentalRecords=new ArrayList<>();
 		for (ToxValRecord toxValRecord:toxValRecords) {
 			if (!toxValRecord.isAcceptable(duration, criticalEffect, null)) continue;
 //			if (!toxValRecord.toxval_units_original.equals(toxValRecord.toxval_units))
 //				System.out.println(toxValRecord.toxval_units+"\t"+toxValRecord.toxval_units_original);
-			ExperimentalRecord er=toxValRecord.toExperimentalRecord(version, duration,propertyType);
+			ExperimentalRecord er=toxValRecord.toExperimentalRecord(toxvalVersion, duration,propertyType);
 			experimentalRecords.add(er);
+			
+			
+			if(htRecordsBySID.get(er.dsstox_substance_id)==null) {
+				ExperimentalRecords records=new ExperimentalRecords();
+				records.add(er);
+				htRecordsBySID.put(er.dsstox_substance_id, records);
+			} else {
+				ExperimentalRecords records=htRecordsBySID.get(er.dsstox_substance_id);
+				records.add(er);
+			}
+			
 		}
 		
+		double avgSD=0;
+		int count=0;
+		int countOverall=0;
+
+		for (String dtxsid:htRecordsBySID.keySet()) {
+			ExperimentalRecords records=htRecordsBySID.get(dtxsid);
+			double SD=calculateSD(records);//TODO need to determine SD when converted to log values
+			avgSD+=SD;
+			count++;
+			countOverall+=records.size();
+		}
+		
+		avgSD/=(double)count;
+
 		
 //		assignLiteratureSourceNames(experimentalRecords);
 //		System.out.println(gson.toJson(experimentalRecords));		
-//		System.out.println(toxValRecords.size());
-//		System.out.println(experimentalRecords.size());
+
+		System.out.println("toxValRecords.size()="+toxValRecords.size());
+		System.out.println("experimentalRecords.size()="+experimentalRecords.size());
+		System.out.println("Kept records\t"+countOverall);
+		System.out.println("Unique SIDs\t"+htRecordsBySID.size());
+		System.out.println("Avg SD\t"+avgSD);
+
 		//TODO get source_url to store in literature_sources table
 
-		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + "ToxVal_"+version;
+		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + "ToxVal_"+versionV93;
 		String propertyName=experimentalRecords.get(0).property_name;
-		String fileNameJsonExperimentalRecords = "ToxVal_"+version+" "+propertyName+" Experimental Records.json";
+		String fileNameJsonExperimentalRecords = "ToxVal_"+toxvalVersion+" "+propertyName+" Experimental Records.json";
 		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
 		
 	}
 	
-	void getBCFExperimentalRecords() {
+	void getBCFExperimentalRecords(String toxvalVersion) {
+		
+		//TODO- should we limit to standard test species for fish? 
+		// For example see gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_toxval.CreateAquaticToxicityRecords.validAquaticSpeciesToxvalv94() in TEST project
+		
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues().create();
 		
-		version="";
 		ToxValQuery tvq=new ToxValQuery();
-		tvq.setConnectionToxVal();
+		tvq.setConnectionToxVal(toxvalVersion);
+		if (tvq.conn==null) return;
+
 		List<ToxValRecord> toxValRecords = tvq.getRecords(ToxValQuery.TOXVAL_FILTERED_QUERY_LOG_BCF2);
 		
 		//Need to create a dictionary to map all fish by common name:
 		Hashtable<String, String> htSuperCategory = createSupercategoryHashtable(tvq);
 
-		htSuperCategory.put("phytoplankton", "seabug");
-		htSuperCategory.put("baskettail dragonfly", "bug");
+		htSuperCategory.put("phytoplankton", "omit");
+		htSuperCategory.put("common shrimp", "omit");
+		htSuperCategory.put("baskettail dragonfly", "omit");
+		htSuperCategory.put("common bay mussel", "omit");
+		
+		htSuperCategory.put("biwi lake gudgeon, goby or willow shiner", "fish");
 		htSuperCategory.put("willow shiner", "fish");
 		htSuperCategory.put("golden ide", "fish");
 		htSuperCategory.put("gobi", "fish");
@@ -89,11 +136,7 @@ public class ParseToxVal {
 		htSuperCategory.put("shorthead redhorse", "fish");
 		htSuperCategory.put("golden redhorse", "fish");
 		htSuperCategory.put("medaka, high-eyes", "fish");
-		htSuperCategory.put("common bay mussel", "hate");
-		htSuperCategory.put("biwi lake gudgeon, goby or willow shiner", "fish");
-		htSuperCategory.put("common shrimp", "seabug");
-		
-		
+
 		tvq.close();
 		
 		for (int i=0;i<toxValRecords.size();i++) {
@@ -106,10 +149,7 @@ public class ParseToxVal {
 //				System.out.println(t.species_common+"\t"+supercategory);
 				toxValRecords.remove(i--);
 			}
-			
 		}
-		
-		
 //		for (ToxValRecord tr:toxValRecords) {
 //			System.out.println(tr.toxval_id);
 //		}
@@ -118,7 +158,9 @@ public class ParseToxVal {
 		
 		
 //		if(true) return;
-		HashSet<String>dtxsids=new HashSet<>();
+		
+		
+		Hashtable<String,ExperimentalRecords>htRecordsBySID=new Hashtable<>();
 		
 		ExperimentalRecords experimentalRecords=new ExperimentalRecords();
 		
@@ -126,10 +168,67 @@ public class ParseToxVal {
 //			if (!toxValRecord.isAcceptable(duration, criticalEffect, null)) continue;
 //			if (!toxValRecord.toxval_units_original.equals(toxValRecord.toxval_units))
 //				System.out.println(toxValRecord.toxval_units+"\t"+toxValRecord.toxval_units_original);
-			ExperimentalRecord er=toxValRecord.toxvalBCF_to_ExperimentalRecord(version, ToxValQuery.propertyCategoryBioaccumulation);
+			ExperimentalRecord er=toxValRecord.toxvalBCF_to_ExperimentalRecord(toxvalVersion, ToxValQuery.propertyCategoryBioaccumulation);
 			experimentalRecords.add(er);
-			dtxsids.add(er.dsstox_substance_id);
+			
+			if (er.dsstox_substance_id==null || !er.dsstox_substance_id.contains("DTXSID")) continue;
+
+			
+			if (er.dsstox_substance_id==null) {
+				er.keep=false;
+				er.reason="No DTXSID";
+			}
+
+			if (!er.experimental_parameters.get("tissue").equals("Whole body")) {
+				er.keep=false;
+				er.reason="Not whole body";
+			}
+			
+//			if (!er.experimental_parameters.get("media").equals("FW")) {
+//				er.keep=false;
+//				er.reason="Not FW";
+//			}
+
+//			if (!er.experimental_parameters.get("exposure_type").equals("FT")) {
+//				er.keep=false;
+//				er.reason="Not FT";
+//			}
+			
+//			if (er.experimental_parameters.get("method")==null || 
+//					!er.experimental_parameters.get("method").equals("Steady state")) {
+//				er.keep=false;
+//				er.reason="Not Steady state";
+//			} 
+			
+			if(!er.keep) {
+//				System.out.println(er.reason+"\t"+er.experimental_parameters.get("tissue")+"\t"+er.experimental_parameters.get("method")+"\t"+er.experimental_parameters.get("media")+"\t"+er.experimental_parameters.get("exposure_type"));
+				continue;
+			}
+			
+			if(htRecordsBySID.get(er.dsstox_substance_id)==null) {
+				ExperimentalRecords records=new ExperimentalRecords();
+				records.add(er);
+				htRecordsBySID.put(er.dsstox_substance_id, records);
+			} else {
+				ExperimentalRecords records=htRecordsBySID.get(er.dsstox_substance_id);
+				records.add(er);
+			}
 		}
+		
+		
+		double avgSD=0;
+		int count=0;
+		int countOverall=0;
+		
+		for (String dtxsid:htRecordsBySID.keySet()) {
+			ExperimentalRecords records=htRecordsBySID.get(dtxsid);
+			double SD=calculateSD(records);
+			avgSD+=SD;
+			count++;
+			countOverall+=records.size();
+		}
+		
+		avgSD/=(double)count;
 		
 		
 //		System.out.println(gson.toJson(experimentalRecords));		
@@ -137,18 +236,91 @@ public class ParseToxVal {
 //		System.out.println(experimentalRecords.size());
 		//TODO get source_url to store in literature_sources table
 
-		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + "ToxVal_"+version;
+		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + "ToxVal_"+versionV93;
 		String propertyName=experimentalRecords.get(0).property_name;
-		String fileNameJsonExperimentalRecords = "ToxVal_"+version+" "+propertyName+" Experimental Records.json";
+		String fileNameJsonExperimentalRecords = "ToxVal_"+versionV93+" "+propertyName+" Experimental Records.json";
 		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
 		
-		System.out.println(experimentalRecords.size());
-		System.out.println(dtxsids.size());
+		System.out.println("Kept records\t"+countOverall);
+		System.out.println("experimentalRecords.size()="+experimentalRecords.size());
+		System.out.println("Unique SIDs\t"+htRecordsBySID.size());
+		System.out.println("Avg SD\t"+avgSD);
 		
 		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"));
 		
 	}
+	
+	/**
+	 * TODO this needs to make sure all units are correct and for g/L values need SD of log(g/L)
+	 * 
+	 * @param recs
+	 * @return
+	 */
+	public static double calculateSD(ExperimentalRecords recs) {
+		
+		Gson gson=new Gson();
+		
+		int count=0;
+		double avg=0;
+		
+		
+		for (ExperimentalRecord er:recs) {
+			
+//			System.out.println(er.property_value_units_final);
+			
+//			if (!er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) continue;
+			
+			if (er.property_value_point_estimate_final==null) {
+				try {
+					er.property_value_point_estimate_final=(er.property_value_min_final+er.property_value_max_final)/2.0;
+				} catch (Exception ex) {
+					System.out.println(er.toJSON());
+					continue;
+				}
+			}
+			avg+=er.property_value_point_estimate_final;
+			count++;
+			
+		}
+		avg/=(double)count;
+		
+		
+		
+		double SD=0;
+		
+		for (ExperimentalRecord er:recs) {
+			
+			if (!er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) continue;
 
+			if (er.property_value_point_estimate_final!=null) {
+				SD+=Math.pow(er.property_value_point_estimate_final-avg,2);
+				
+//				if(count==40) {
+//					System.out.println("\t"+er.property_value_point_estimate_final);
+//				}
+				
+			} else {
+				System.out.println("Missing final point estimate");
+			}
+		}
+		SD/=(double)count;
+		
+		SD=Math.sqrt(SD);
+		
+//		System.out.println(SD+"\t"+count);
+		
+		
+		return SD;
+		
+	}
+	
+
+	/**
+	 * this works for prod_dsstox- not v93 version since species table is different
+	 * 
+	 * @param tvq
+	 * @return
+	 */
 	private Hashtable<String, String> createSupercategoryHashtable(ToxValQuery tvq) {
 		Hashtable<String,String>ht=new Hashtable<>();
 		
@@ -269,11 +441,13 @@ public class ParseToxVal {
 		
 		ParseToxVal p=new ParseToxVal();
 		// TODO Auto-generated method stub
-//		p.getAcuteAquaticExperimentalRecords("Fathead minnow",ToxValQuery.FATHEAD_MINNOW_DURATION,ToxValQuery.TYPE,ToxValQuery.CRITICAL_EFFECT,ToxValQuery.propertyCategoryAcuteAquaticToxicity);
+		p.getAcuteAquaticExperimentalRecords(versionV93,"Fathead minnow",ToxValQuery.FATHEAD_MINNOW_DURATION,ToxValQuery.TYPE_LC50,ToxValQuery.CRITICAL_EFFECT,ToxValQuery.propertyCategoryAcuteAquaticToxicity);
+//		p.getAcuteAquaticExperimentalRecords(versionProd,"Fathead minnow",ToxValQuery.FATHEAD_MINNOW_DURATION,ToxValQuery.TYPE_LC50,ToxValQuery.CRITICAL_EFFECT,ToxValQuery.propertyCategoryAcuteAquaticToxicity);
+
 		//TODO look at UnitConverter.convertRecord- should we use convertToxicity or convertSolubility??
 		//TODO get journal citation so can store in exp_prop
 		
-		p.getBCFExperimentalRecords();
+//		p.getBCFExperimentalRecords(versionProd);
 		
 	}
 

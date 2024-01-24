@@ -84,7 +84,7 @@ public class RecordEpisuiteOriginal {
 				}
 				
 				r.url = "http://esc.syrres.com/interkow/Download/WSKOWWIN_Datasets.zip";
-				r.Property = ExperimentalConstants.strLogKow;
+				r.Property = ExperimentalConstants.strLogKOW;
 				
 				// TODO get logwsol #'s for the logP records
 				// System.out.println(r.CAS);

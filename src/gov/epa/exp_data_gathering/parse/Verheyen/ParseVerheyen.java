@@ -8,10 +8,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.commons.exec.util.StringUtils;
 
 import com.google.gson.JsonObject;
 
@@ -19,10 +15,6 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
-import gov.epa.exp_data_gathering.parse.ParseUtilities;
-import gov.epa.exp_data_gathering.parse.UnitConverter;
-import gov.epa.exp_data_gathering.parse.ThreeM.ParseThreeM;
-import gov.epa.exp_data_gathering.parse.ThreeM.RecordThreeM;
 
 
 public class ParseVerheyen extends Parse {

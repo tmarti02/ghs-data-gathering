@@ -10,24 +10,31 @@ import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
+
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
 
 public class ParseOPERA extends Parse {
 
+	
+	String userName="tmarti02";
+	
 	public ParseOPERA() {
 		sourceName = "OPERA";
 		this.init();
+//		this.writeFlatFile=true;
 	}
 	@Override
 	protected void createRecords() {
 		
 		System.out.println("enter create records");
-		Vector<RecordOPERA> records = RecordOPERA.parseOperaSdf();
 		
-		System.out.println(records.size());
+		RecordOPERA r=new RecordOPERA();
+		Vector<RecordOPERA> records = r.parseOperaSdfs();
+//		System.out.println(records.size());
 		
 		writeOriginalRecordsToFile(records);
 	}
@@ -37,7 +44,8 @@ public class ParseOPERA extends Parse {
 	 */
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
-ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+
+		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
 			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
@@ -69,7 +77,7 @@ ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		
+//		System.out.println("recordsExperimental.size()="+recordsExperimental.size());
 		return recordsExperimental;
 	}
 	
@@ -86,61 +94,61 @@ ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
 
 		if (ro.property_name.equals(ExperimentalConstants.str_pKA)) {
-			ExperimentalRecord er_a = new ExperimentalRecord();
-			er_a.chemical_name = ro.Substance_Name;
-			er_a.source_name = ExperimentalConstants.strSourceOPERA;
-			er_a.smiles = ro.Original_SMILES;
-			er_a.property_value_string = "pkaa=" + ro.pKa_a + "|"+ "pkab=" + ro.pKa_b;
-			er_a.casrn = ro.Substance_CASRN;
-			er_a.note = "qc_level= " + ro.DSSTox_QC_Level;
 			
-			
-			er_a.dsstox_substance_id = ro.DSSTox_Substance_Id;
-			er_a.date_accessed = dayOnly;
-			er_a.keep = true;
-
 			if(!(ro.pKa_a.equals("NaN"))) {
-				er_a.property_value_point_estimate_final=Double.parseDouble(ro.pKa_a);
-				er_a.property_name = ExperimentalConstants.str_pKAa;
-				// ParseUtilities.getLogProperty(er_a,er_a.property_value_point_estimate_final.toString()); // log quantity
-				uc.convertRecord(er_a);
-				records.add(er_a);
-
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,ExperimentalConstants.str_pKAa);
+				er.property_value_string = ro.pKa_a+"";
+				er.property_value_point_estimate_original=Double.parseDouble(ro.pKa_a);
+				uc.convertRecord(er);
+				records.add(er);
 			}
+
 			if ((!(ro.pKa_b.equals("NaN")))) {
-				ExperimentalRecord er_b = er_a; // makes the second experimental record for bases from the one RecordOPERA record.
-				er_b.keep = true;
-				er_b.property_value_point_estimate_final=Double.parseDouble(ro.pKa_b);
-				er_a.property_name = ExperimentalConstants.str_pKAb;
-				// ParseUtilities.getLogProperty(er_b,er_b.property_value_point_estimate_original.toString()); // log quantity
-				uc.convertRecord(er_b);
-				records.add(er_b);
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,ExperimentalConstants.str_pKAb);
+				er.property_value_string = ro.pKa_b+"";
+				er.property_value_point_estimate_original=Double.parseDouble(ro.pKa_b);
+				uc.convertRecord(er);
+				records.add(er);
 			}
 			
-		}
-		if (!(ro.property_name.equals(ExperimentalConstants.str_pKA))) {
-			ExperimentalRecord er = new ExperimentalRecord();
-			er.chemical_name = ro.preferred_name;
-			er.source_name = ExperimentalConstants.strSourceOPERA;
-			er.keep = true;
-			er.property_name = ro.property_name;
-			er.property_value_point_estimate_original = ro.getPropertyValueOriginal();
-			if (er.property_value_point_estimate_original != null && ro.property_value_units_original != null) {
-				er.property_value_string = er.property_value_point_estimate_original.toString() + " " + ro.property_value_units_original;
-			} else if (er.property_value_point_estimate_original != null) {
-				er.property_value_string = er.property_value_point_estimate_original.toString();
+		} else {
+
+			
+			ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,ro.property_name);
+
+			if(er.property_name.equals(ExperimentalConstants.strORAL_RAT_LD50)) {
+				
+				if(ro.CATMoS_LD50_str.equals("NA")) return;
+				
+				er.property_category="acute oral toxicity";
+				
+				//Use detailed code to get qualifier, min/max/point estimates: 
+				ParseUtilities.getNumericalValue(er, ro.CATMoS_LD50_str, ro.CATMoS_LD50_str.length(), false);
+				er.property_value_string=ro.CATMoS_LD50_str;
+				
+				if(ro.CATMoS_LD50_str.equals("NA")) {
+					er.keep=false;
+					er.reason="Exp. LD50 is NA";
+				}
+			} else {
+				
+				er.property_value_point_estimate_original = ro.property_value_original;
+				if (er.property_value_point_estimate_original != null && ro.property_value_units_original != null) {
+					er.property_value_string = er.property_value_point_estimate_original.toString() + " " + ro.property_value_units_original;
+				} else if (er.property_value_point_estimate_original != null) {
+					er.property_value_string = er.property_value_point_estimate_original.toString();
+				}
 			}
-			if (ro.property_name == ExperimentalConstants.strLogKow) {
+			
+			if(ro.Reference!=null) {
+//				System.out.println(ro.Reference);
+//				er.literatureSource=createLiteratureSource(ro.Reference);
+				er.document_name=ro.Reference;//just store as string to avoid complications in the db
+			}
+			
+			if (ro.property_name == ExperimentalConstants.strLogKOW) {
 				ParseUtilities.getLogProperty(er,er.property_value_string);
 			}
-			er.property_value_units_original = ro.property_value_units_original;
-			er.casrn = ro.CAS;
-			er.smiles=ro.Original_SMILES;
-			er.note = "qc_level= " + ro.qc_level;
-			er.date_accessed = dayOnly;
-
-			er.original_source_name = ro.Reference;
-			er.dsstox_substance_id = ro.DSSTox_Substance_Id;
 			
 //			if (!(ro.dsstox_compound_id == null))
 //			er.dsstox_substance_id = ro.dsstox_compound_id;
@@ -154,6 +162,31 @@ ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 			
 			records.add(er);
 		}
+	}
+	
+	
+	private LiteratureSource createLiteratureSource(String reference) {
+
+		LiteratureSource ls=new LiteratureSource();
+
+		if (reference.contains(";")) {
+			reference=reference.substring(0,reference.indexOf(";"));
+		}
+		
+		if (reference.contains("(")) {
+			ls.setAuthor(reference.substring(0,reference.indexOf("(")).trim());
+			ls.setYear(reference.substring(reference.indexOf("(")+1,reference.indexOf(")")));
+		}
+
+//		ls.setCitation(reference+" (via OPERA)");
+//		ls.setName(reference+" (via OPERA)");
+		
+		ls.setCitation(reference);
+		ls.setName(reference);
+
+
+//		System.out.println(reference+"\t"+ls.getAuthor()+"\t"+ls.getYear());
+		return ls;
 	}
 	
 	private static void finalizePropertyValues(ExperimentalRecord er) {

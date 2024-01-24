@@ -169,7 +169,7 @@ public class ParseEChemPortal extends Parse {
 					er.property_name = ExperimentalConstants.strVaporPressure;
 					ParseUtilities.getVaporPressure(er,propertyValue);
 				} else if (ecpr.section.equals("Partition coefficient")) {
-					er.property_name = ExperimentalConstants.strLogKow;
+					er.property_name = ExperimentalConstants.strLogKOW;
 					ParseUtilities.getLogProperty(er,propertyValue);
 				} else if (ecpr.section.equals("Dissociation constant")) {
 					er.property_name = ExperimentalConstants.str_pKA;

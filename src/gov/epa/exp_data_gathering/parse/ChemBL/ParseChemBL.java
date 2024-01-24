@@ -142,7 +142,7 @@ ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		} else if (cbr.standardType.toLowerCase().equals("logp") && desc.contains("octanol") && (desc.contains("water") || desc.contains("aq"))) {
 			// Most restrictive criteria - description must explicitly say it is the octanol-water coefficient
 			// Many partition coefficient records do not specify the solvents - can we assume it is octanol-water unless it says otherwise?
-			er.property_name = ExperimentalConstants.strLogKow;
+			er.property_name = ExperimentalConstants.strLogKOW;
 			if (cbr.standardRelation!=null && !cbr.standardRelation.isBlank() && !cbr.standardRelation.equals("=")) {
 				er.property_value_numeric_qualifier = cbr.standardRelation;
 			}

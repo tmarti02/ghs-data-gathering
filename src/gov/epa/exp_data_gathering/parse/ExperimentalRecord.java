@@ -18,6 +18,8 @@ public class ExperimentalRecord {
 	//ID fields:
 	public String comboID;//
 	public String casrn;//Chemical abstracts service number (only if provided by the reference)
+	public String dsstox_substance_id; //DSSTox substance identifier
+	public String dsstox_compound_id; //DSSTox substance identifier
 	public String einecs;
 	public String chemical_name;//	Most systematic name (only if provided in the reference)
 	public String synonyms;//	Pipe deliminated synonyms (only if provided in the reference)
@@ -52,10 +54,10 @@ public class ExperimentalRecord {
 	public Hashtable <String,Object> experimental_parameters=null;//TODO do we want to move temp, pres, pH to this hashtable?
 	
 	
-	public String dsstox_substance_id; //DSSTox substance identifier
 	public String note;//	Any additional note
 
 	public String url;
+	public String document_name;
 	public String source_name;//use Experimental constants
 	public String original_source_name;//If specific reference/paper provided
 								//"original_source_name" rather than "source_name_original" to avoid syntactic confusion with "*_original" vs "*_final" fields above
@@ -214,7 +216,7 @@ public class ExperimentalRecord {
 		double zeroTolerance = Math.pow(10.0, -6.0);
 		
 		//Properties which are usually modeled as log of the property value: pKA, logKow, WS, HLC, VP, LC50, LD50
-		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
+		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKOA)) {
 			good = isWithinTolerance(logTolerance);
 		} else if ((property_name.equals(ExperimentalConstants.strMeltingPoint) || property_name.equals(ExperimentalConstants.strBoilingPoint) ||
 				property_name.equals(ExperimentalConstants.strFlashPoint))) {
@@ -268,7 +270,7 @@ public class ExperimentalRecord {
 		double zeroTolerance = Math.pow(10.0, -6.0);
 		
 		//Properties which are usually modeled as log of the property value: pKA, logKow, WS, HLC, VP, LC50, LD50
-		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKow)) {
+		if (property_name.equals(ExperimentalConstants.str_pKA) || property_name.equals(ExperimentalConstants.strLogKOW)) {
 			good = isWithinTolerance(logTolerance);
 		} else if ((property_name.equals(ExperimentalConstants.strMeltingPoint) || property_name.equals(ExperimentalConstants.strBoilingPoint) ||
 				property_name.equals(ExperimentalConstants.strFlashPoint))) {
@@ -296,6 +298,7 @@ public class ExperimentalRecord {
 	public String toJSON() {
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting();// makes it multiline and readable
+		builder.serializeSpecialFloatingPointValues();
 		Gson gson = builder.create();
 		return gson.toJson(this);//all in one line!
 	}
@@ -354,7 +357,7 @@ public class ExperimentalRecord {
 
 				if (val.contains(del)) {
 					val=val.replace(del,"_");
-					System.out.println("***WARNING***"+this.casrn+"\t"+fieldNames[i]+"\t"+val+"\thas delimiter");
+					System.out.println("***WARNING***"+this.casrn+"\t"+val+"\thas delimiter in field "+fieldNames[i]+" del="+del);
 				}
 
 				Line += val;

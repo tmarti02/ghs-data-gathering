@@ -151,7 +151,7 @@ public class ParsePubChem extends Parse {
 			for(Integer key: keys) {
 				String s = pcr.logPHT.get(key);
 				Integer refNum = key;
-				addNewExperimentalRecord2(pcr,ExperimentalConstants.strLogKow,s,recordsExperimental, refNum);
+				addNewExperimentalRecord2(pcr,ExperimentalConstants.strLogKOW,s,recordsExperimental, refNum);
 			}
 		}
 		if (pcr.pKaHT != null) {
@@ -192,7 +192,7 @@ public class ParsePubChem extends Parse {
 			for (String s:pcr.henrysLawConstant) { addNewExperimentalRecord(pcr,ExperimentalConstants.strHenrysLawConstant,s,recordsExperimental); }
         }
         if (!pcr.logP.isEmpty()) {
-			for (String s:pcr.logP) { addNewExperimentalRecord(pcr,ExperimentalConstants.strLogKow,s,recordsExperimental); }
+			for (String s:pcr.logP) { addNewExperimentalRecord(pcr,ExperimentalConstants.strLogKOW,s,recordsExperimental); }
         }
         if (!pcr.pKa.isEmpty()) {
 			for (String s:pcr.pKa) { addNewExperimentalRecord(pcr,ExperimentalConstants.str_pKA,s,recordsExperimental); }
@@ -254,7 +254,7 @@ public class ParsePubChem extends Parse {
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strHenrysLawConstant) {
 			foundNumeric = ParseUtilities.getHenrysLawConstant(er,propertyValue);
-		} else if (propertyName==ExperimentalConstants.strLogKow || propertyName==ExperimentalConstants.str_pKA) {
+		} else if (propertyName==ExperimentalConstants.strLogKOW || propertyName==ExperimentalConstants.str_pKA) {
 			foundNumeric = ParseUtilities.getLogProperty(er,propertyValue);
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		}
@@ -367,7 +367,7 @@ public class ParsePubChem extends Parse {
 			ParseUtilities.getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strHenrysLawConstant) {
 			foundNumeric = ParseUtilities.getHenrysLawConstant(er,propertyValue);
-		} else if (propertyName==ExperimentalConstants.strLogKow || propertyName==ExperimentalConstants.str_pKA) {
+		} else if (propertyName==ExperimentalConstants.strLogKOW || propertyName==ExperimentalConstants.str_pKA) {
 			propertyValue = propertyValue.replaceAll(" @ ", " at ");
 			foundNumeric = ParseUtilities.getLogProperty(er,propertyValue);
 			ParseUtilities.getTemperatureCondition(er,propertyValue);

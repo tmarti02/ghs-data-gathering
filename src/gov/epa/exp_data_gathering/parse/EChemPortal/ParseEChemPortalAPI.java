@@ -155,7 +155,7 @@ public class ParseEChemPortalAPI extends Parse {
 			ParseUtilities.getVaporPressure(er,r.value);
 			break;
 		case APIConstants.partitionCoefficient:
-			er.property_name = ExperimentalConstants.strLogKow;
+			er.property_name = ExperimentalConstants.strLogKOW;
 			ParseUtilities.getLogProperty(er,r.value);
 			if (!r.value.contains("log Pow")) {
 				er.flag = true;

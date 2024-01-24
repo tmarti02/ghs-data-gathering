@@ -139,7 +139,7 @@ public class ParseEpisuiteISIS extends Parse {
 		if (r.KOW != null) {
 			keep=true;
 			er.keep=true;
-			er.property_name = ExperimentalConstants.strLogKow;
+			er.property_name = ExperimentalConstants.strLogKOW;
 			er.property_value_string = String.valueOf(r.KOW);
 			ParseUtilities.getLogProperty(er, er.property_value_string);
 			

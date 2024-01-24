@@ -4,25 +4,44 @@ public class ExperimentalConstants {
 
 	//Add list of property names here:
 	public static final String strWaterSolubility="Water solubility";
-	public static final String str_pKA="pKA";
+
 	public static final String strVaporPressure="Vapor pressure";
 	public static final String strHenrysLawConstant="Henry's law constant";
-	public static final String strLogKow="Octanol water partition coefficient";
+
+//	public static final String strLogKow="Octanol water partition coefficient";//TODO add log() to it?
+//	public static final String strLogKoa="Octanol air partition coefficient";//TODO add log() to it?
+
+	public static final String strLogKOW="LogKow: Octanol-Water";//TODO add log() to it?
+	public static final String strLogKOA="LogKoa: Octanol-Air";//TODO add log() to it?
+	
 	public static final String strDensity="Density";
 	public static final String strMeltingPoint="Melting point";
 	public static final String strBoilingPoint="Boiling point";
 	public static final String strFlashPoint="Flash point";
 	public static final String strAppearance="Appearance";
-	public static final String str_pKAa="pKAa";
-	public static final String str_pKAb="pKAb";
 
+	public static final String str_pKA="pKA";
+	public static final String str_pKAa="Acidic pKa";
+	public static final String str_pKAb="Basic pKa";
+
+	
 	public static final String strLogOH="LogOH";
+	public static final String strOH = "Atmospheric hydroxylation rate";//OPERA
+
 	public static final String strLogBCF="LogBCF";
-	public static final String strLogBCF_Fish_Whole_Body="LogBCF_Fish_Whole_Body";
-	public static final String strLogHalfLifeBiodegradation = "LogHalfLife";
-	public static final String strLogKmHL = "LogKmHL";
-	public static final String strLogKOA="LogKOA";
+	public static final String strBCF = "Bioconcentration factor";
+
 	public static final String strLogKOC = "LogKOC";
+	public static final String strKOC = "Soil Adsorption Coefficient (Koc)";
+	
+	public static final String strLogKmHL = "LogKmHL";
+	public static final String strKmHL = "Fish biotransformation half-life (Km)";//OPERA
+
+
+	public static final String strLogHalfLifeBiodegradation = "LogHalfLife";
+	public static final String strBIODEG_HL_HC = "Biodegradation half-life for hydrocarbons";//OPERA
+
+	public static final String strLogBCF_Fish_Whole_Body="LogBCF_Fish_Whole_Body";
 
 	public static final String strInhalationLC50="inhalation_LC50";
 	public static final String strRatInhalationLC50="rat_inhalation_LC50";
@@ -34,6 +53,14 @@ public class ExperimentalConstants {
 	public static final String strSkinIrritationPII="SkinIrritationPII";
 	public static final String strSkinIrritation="SkinIrritation";
 	public static final String strSkinCorrosion="SkinCorrosion";
+	
+	public static final String strCLINT = "Human hepatic intrinsic clearance";//OPERA
+	public static final String strFUB = "Fraction unbound in human plasma";//OPERA
+	public static final String strCACO2 = "Caco-2 permeability (logPapp)";//OPERA
+	public static final String strRBIODEG = "Ready biodegradability";//OPERA
+	public static final String strORAL_RAT_LD50="Oral rat LD50";//OPERA
+
+
 	
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
@@ -79,12 +106,32 @@ public class ExperimentalConstants {
 	public static final String str_log_mg_L="log10(mg/L)";
 	public static final String str_log_mmHg="log10(mmHg)";
 	public static final String str_log_atm_m3_mol="log10(atm-m3/mol)";
-	public static final String str_dimensionless_H="dimensionless H";
-	public static final String str_dimensionless_H_vol="dimensionless H (volumetric)";
+	public static final String str_dimensionless_H="Dimensionless H";
+	public static final String str_dimensionless_H_vol="Dimensionless H (volumetric)";
+	public static final String str_dimensionless="Dimensionless";
+	public static final String str_binary = "Binary";
+
+	public static final String str_LOG_UNITS = "Log units";
+	
+	public static final String str_DAYS = "days";
+	public static final String str_LOG_DAYS = "log10(days)";
+	
+	public static final String str_COUNT = "Count";
+	public static final String str_POUNDS = "lbs";
+
+	public static final String str_LOG_CM3_MOLECULE_SEC="log10(cm3/molecule-sec)";
+	public static final String str_CM3_MOLECULE_SEC="cm3/molecule-sec";
+	public static final String str_LOG_L_KG = "log10(L/kg)";
+	public static final String str_LOG_UL_MIN_1MM_CELLS="log10(ul/min/10^6 cells)";//for clint
+	public static final String str_UL_MIN_1MM_CELLS="ul/min/10^6 cells";//for clint
+
+
 	public static final String str_mg_kg="mg/kg";
 	public static final String str_g_kg="g/kg";
 	public static final String str_mL_kg="mL/kg";
 	public static final String str_iu_kg="iu/kg";
+	public static final String str_L_KG = "L/kg";
+
 	public static final String str_units_kg="units/kg";
 	public static final String str_mg="mg";
 	public static final String str_mg_kg_H20="mg/kg H2O";
@@ -150,4 +197,6 @@ public class ExperimentalConstants {
 	public static final String strSourceVerheyen="Verheyen";
 	
 	public static final String strSourceCERAPP_Exp="CERAPP_Exp";
+
+	public static final String strInVitroToxicity = "in vitro toxicity";
 }

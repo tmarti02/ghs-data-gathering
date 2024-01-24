@@ -81,7 +81,9 @@ public class ToxValQuery {
 			
 	public static final String TOXVAL_FILTERED_QUERY_LOG_BCF2 ="select casrn,c.name, b.dtxsid, logbcf, units, tissue, calc_method, comments, b.water_conc, exposure_type, exposure_duration, media, temperature, pH, b.species_common, author,title, b.year,b.journal from bcfbaf b\r\n"
 			+ "join chemical c on c.dtxsid=b.dtxsid\r\n"
-			+ "where logbcf is not null and tissue='Whole body' order by b.dtxsid,logbcf";
+			+ "where logbcf is not null\n "
+			+ "order by b.dtxsid,logbcf";
+//			+ "where logbcf is not null and tissue='Whole body' order by b.dtxsid,logbcf";
 			
 		
 	public String doi;
@@ -94,7 +96,7 @@ public class ToxValQuery {
 	private static final String WATER_FLEA_SPECIES = "daphnia magna";
 	private static final Double WATER_FLEA_DURATION = 2.0;
 	
-	static final String TYPE = "LC50";
+	static final String TYPE_LC50 = "LC50";
 	static final String CRITICAL_EFFECT = "mortality";
 
 	static final String propertyCategoryAcuteAquaticToxicity = "Acute aquatic toxicity";
@@ -122,16 +124,20 @@ public class ToxValQuery {
 	
 	
 
-	public void setConnectionToxValV93() {
+	
+
+	private void setConnection(String db) {
 		
 		String host = System.getenv().get("DSSTOX_HOST");
 		String port = System.getenv().get("DSSTOX_PORT");
-		String db = "prod_toxval_v93";
 
 		String url = "jdbc:mysql://" + host + ":" + port + "/" + db;
 		String user = System.getenv().get("DSSTOX_USER");
 		String password = System.getenv().get("DSSTOX_PASS");
 
+		
+		System.out.println("Getting connection to "+host+"\t"+port+"\t"+url);
+		
 		try {
 			
 			Class.forName("com.mysql.jdbc.Driver");
@@ -141,23 +147,16 @@ public class ToxValQuery {
 		}
 	}
 	
-	public void setConnectionToxVal() {
-		
-		String host = System.getenv().get("DSSTOX_HOST");
-		String port = System.getenv().get("DSSTOX_PORT");
-		String db = "prod_toxval";
-
-		String url = "jdbc:mysql://" + host + ":" + port + "/" + db;
-		String user = System.getenv().get("DSSTOX_USER");
-		String password = System.getenv().get("DSSTOX_PASS");
-
-		try {
-			
-			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection(url, user, password);			
-		} catch (Exception ex) {
-			ex.printStackTrace();
+	public void setConnectionToxVal(String version) {
+		if (version.equals(ParseToxVal.versionV93)) {
+			setConnection("prod_toxval_v93");
+		} else if (version.equals(ParseToxVal.versionProd)) {
+			setConnection("prod_toxval");	
+		} else {
+			System.out.println("Invalid toxval version");
+			conn=null;
 		}
+		
 	}
 	
 	List<ToxValRecord> getRecords(String species, String type) {
@@ -239,14 +238,14 @@ public class ToxValQuery {
 	}
 	
 	public static ExperimentalRecords getFatheadMinnowExperimentalRecords(List<String> omitSources) {
-		ExperimentalRecords fatheadMinnowExperimentalRecords = getExperimentalRecords(FATHEAD_MINNOW_SPECIES, TYPE, FATHEAD_MINNOW_DURATION, 
+		ExperimentalRecords fatheadMinnowExperimentalRecords = getExperimentalRecords(FATHEAD_MINNOW_SPECIES, TYPE_LC50, FATHEAD_MINNOW_DURATION, 
 				CRITICAL_EFFECT, omitSources,version,propertyCategoryAcuteAquaticToxicity);
 		
 		return fatheadMinnowExperimentalRecords;
 	}
 	
 	public static ExperimentalRecords getWaterFleaExperimentalRecords(List<String> omitSources) {
-		ExperimentalRecords waterFleaExperimentalRecords = getExperimentalRecords(WATER_FLEA_SPECIES, TYPE, WATER_FLEA_DURATION, 
+		ExperimentalRecords waterFleaExperimentalRecords = getExperimentalRecords(WATER_FLEA_SPECIES, TYPE_LC50, WATER_FLEA_DURATION, 
 				CRITICAL_EFFECT, omitSources,version,propertyCategoryAcuteAquaticToxicity);
 		
 		return waterFleaExperimentalRecords;

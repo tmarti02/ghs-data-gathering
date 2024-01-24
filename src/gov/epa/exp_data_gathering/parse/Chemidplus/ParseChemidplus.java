@@ -210,7 +210,7 @@ public class ParseChemidplus extends Parse {
 				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
 				valid = true;
 			} else if (pr.PhysicalProperty.equals("log P (octanol-water)")) {
-				er.property_name = ExperimentalConstants.strLogKow;
+				er.property_name = ExperimentalConstants.strLogKOW;
 				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
 				valid = true;
 			} else if (pr.PhysicalProperty.equals("Melting Point")) {

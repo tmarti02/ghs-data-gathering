@@ -97,7 +97,7 @@ public class ParseICF extends Parse {
 			er.property_name = ExperimentalConstants.strHenrysLawConstant;
 			break;
 		case "log Kow":
-			er.property_name = ExperimentalConstants.strLogKow;
+			er.property_name = ExperimentalConstants.strLogKOW;
 			break;
 		case "pKA":
 			er.property_name = ExperimentalConstants.str_pKA;

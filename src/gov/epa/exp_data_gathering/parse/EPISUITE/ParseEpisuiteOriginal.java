@@ -112,9 +112,9 @@ public class ParseEpisuiteOriginal extends Parse {
 		records.add(er);
 		}
 		
-		else if (reo.Property.matches(ExperimentalConstants.strLogKow)) {
+		else if (reo.Property.matches(ExperimentalConstants.strLogKOW)) {
 			er.keep=true;
-			er.property_name=ExperimentalConstants.strLogKow;
+			er.property_name=ExperimentalConstants.strLogKOW;
 			er.date_accessed= dayOnly;
 			er.chemical_name=reo.Name;
 			er.property_value_string = reo.LogP;

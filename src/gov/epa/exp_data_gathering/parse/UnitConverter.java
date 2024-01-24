@@ -68,9 +68,12 @@ public class UnitConverter {
 	 * (Also does checksum and fixes leading zeroes in casrn field - convenient place to do it)
 	 */
 	public void convertRecord(ExperimentalRecord er) {
+		
 		er.casrn = ParseUtilities.fixCASLeadingZero(er.casrn);
 		
-		if (er.casrn.equals("-") || er.casrn.isBlank()) er.casrn=null;
+		if(er.casrn!=null) {
+			if (er.casrn.equals("-") || er.casrn.isBlank()) er.casrn=null;
+		}
 		
 		if (er.casrn!=null && !ParseUtilities.isValidCAS(er.casrn) && er.keep) {
 			er.flag = true;
@@ -84,37 +87,64 @@ public class UnitConverter {
 			er.keep = false;
 			er.reason = "Undetermined numeric qualifier";
 		}
+
 		
-		if (er.property_value_units_original!=null && er.property_value_units_original.equals("binary")) {
-			return;
+		if(er.property_value_units_final!=null) {
+			System.out.println("Already converted units for "+er.property_name);
+			return;//already converted it in previous code
 		}
-				
-		if (er.property_name.equals(ExperimentalConstants.str_pKA) || er.property_name.equals(ExperimentalConstants.strLogKow)) {
-			assignFinalFieldsWithoutConverting(er);
+		
+		if (er.property_value_units_original==null) {
+			System.out.println("Missing original units for "+er.property_name+", "+er.casrn+"\t"+er.chemical_name);
+			er.keep=false;
+			er.reason="Original units missing";
+			
+		} else if (er.property_name.equals(ExperimentalConstants.strKmHL) || er.property_name.equals(ExperimentalConstants.strBIODEG_HL_HC)){
+			convertKm(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strKOC) || er.property_name.equals(ExperimentalConstants.strBCF)){
+			convertBCF(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strOH)){
+			convertOH(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strCLINT)){
+			convertCLINT(er);
+
+		} else if (er.property_name.equals(ExperimentalConstants.str_pKA) || // values usually in log units
+				er.property_name.equals(ExperimentalConstants.strLogKOW) || // values usually in log units
+				er.property_name.equals(ExperimentalConstants.strLogKOA) || // values usually in log units
+				er.property_name.equals(ExperimentalConstants.str_pKAa) || // values usually in log units
+				er.property_name.equals(ExperimentalConstants.str_pKAb)) { // values usually in log units
+			convertToLog(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strFUB)) { // values usually in fraction  (dimensionless)
+			convertDimensionless(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strRBIODEG)) {// binary
+			convertBinary(er);
 		} else if ((er.property_name.equals(ExperimentalConstants.strMeltingPoint) || er.property_name.equals(ExperimentalConstants.strBoilingPoint) ||
-				er.property_name.equals(ExperimentalConstants.strFlashPoint)) && er.property_value_units_original!=null) {
+				er.property_name.equals(ExperimentalConstants.strFlashPoint))) {
 			convertTemperature(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strDensity)) {
 			convertDensity(er);
-		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure) && er.property_value_units_original!=null) {
+		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
 			convertPressure(er);
-		} else if (er.property_name.equals(ExperimentalConstants.strHenrysLawConstant) && er.property_value_units_original!=null) {
+		} else if (er.property_name.equals(ExperimentalConstants.strHenrysLawConstant)) {
 			convertHenrysLawConstant(er);
-		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility) && er.property_value_units_original!=null) {
+		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility)) {
 			convertSolubility(er);
-		} else if (er.property_category!=null && er.property_category.toLowerCase().contains("aquatic toxicity") && er.property_value_units_original!=null) {
+		} else if (er.property_category!=null && er.property_category.toLowerCase().contains("aquatic toxicity")) {
 			// Aquatic LC50 measurements are concentrations just like WS
 			convertSolubility(er);//TODO or just use convertToxicity???
-		} else if (er.property_category!=null && er.property_category.toLowerCase().contains("acute oral toxicity") && er.property_value_units_original!=null) {
+		} else if ((er.property_category!=null && er.property_category.toLowerCase().contains("acute oral toxicity"))) {
 			convertOralMammalianToxicity(er);
 		} else {
-			if(debug) System.out.println("Need to handle property in UnitConverter.convertRecord");
+//			if(debug) System.out.println("Need to handle property in UnitConverter.convertRecord");
+			System.out.println("Need to handle property "+er.property_name+" in UnitConverter.convertRecord, original units="+er.property_value_units_original);
 			er.keep=false;
 			er.reason="Property not handled in UnitConverter.convertRecord";
 		}
 		
-		if (er.property_value_units_final!=null && !er.property_value_units_final.isBlank() &&
-				!er.property_value_units_final.equals(ExperimentalConstants.str_C) && !er.property_value_units_final.equals(ExperimentalConstants.str_dimensionless_H)) {
+		if (er.property_value_units_final!=null && !er.property_value_units_final.isBlank() && 
+				!er.property_value_units_final.equals(ExperimentalConstants.str_C) &&
+				!er.property_value_units_final.toLowerCase().contains("log") &&
+				!er.property_value_units_final.equals(ExperimentalConstants.str_dimensionless_H)) {
 			if ((er.property_value_point_estimate_final!=null && er.property_value_point_estimate_final < 0) ||
 					(er.property_value_min_final!=null && er.property_value_min_final < 0) ||
 					(er.property_value_max_final!=null && er.property_value_max_final < 0)) {
@@ -130,6 +160,78 @@ public class UnitConverter {
 
 	}
 	
+	private void convertBCF(ExperimentalRecord er) {
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_L_KG)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_L_KG;
+		} else if(er.property_value_units_original.equals(ExperimentalConstants.str_LOG_L_KG)) {
+			powAndAssignFinalFields(er);
+			er.property_value_units_final = ExperimentalConstants.str_L_KG;
+		}
+	}
+	
+	private void convertOH(ExperimentalRecord er) {
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_CM3_MOLECULE_SEC)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_CM3_MOLECULE_SEC;
+		} else if(er.property_value_units_original.equals(ExperimentalConstants.str_LOG_CM3_MOLECULE_SEC)) {
+			powAndAssignFinalFields(er);
+			er.property_value_units_final = ExperimentalConstants.str_CM3_MOLECULE_SEC;
+		}
+	}
+	
+	private void convertToLog(ExperimentalRecord er) {
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_LOG_UNITS)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
+		} else if(er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless)) {
+			powAndAssignFinalFields(er);
+			er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
+		}
+	}
+
+	private void convertDimensionless(ExperimentalRecord er) {
+		
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_dimensionless;
+		} else {
+			System.out.println("UnitConverter.convertDimensionless: "+er.property_name+" units = "+er.property_value_units_original);
+		}
+	}
+
+
+	private void convertBinary(ExperimentalRecord er) {
+		
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_binary)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_binary;
+		} else {
+			System.out.println("UnitConverter.convertBinary: "+er.property_name+" units = "+er.property_value_units_original);
+		}
+	}
+	
+	private void convertCLINT(ExperimentalRecord er) {
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_UL_MIN_1MM_CELLS)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_UL_MIN_1MM_CELLS;
+		} else if(er.property_value_units_original.equals(ExperimentalConstants.str_LOG_UL_MIN_1MM_CELLS)) {
+			powAndAssignFinalFields(er);
+			er.property_value_units_final = ExperimentalConstants.str_UL_MIN_1MM_CELLS;
+		}
+	}
+	private boolean convertKm(ExperimentalRecord er) {
+		
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_DAYS)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_DAYS;
+		} else if(er.property_value_units_original.equals(ExperimentalConstants.str_LOG_DAYS)) {
+			powAndAssignFinalFields(er);
+			er.property_value_units_final = ExperimentalConstants.str_DAYS;
+		}
+		
+		return !er.flag;
+	}
 	/**
 	 * TODO Gabriel check this- used for echemportal toxicity values...
 	 * 
@@ -437,6 +539,9 @@ public class UnitConverter {
 
 		return !er.flag;
 	}
+	
+	
+	
 	
 	private boolean convertHenrysLawConstant(ExperimentalRecord er) {
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_Pa_m3_mol)) {

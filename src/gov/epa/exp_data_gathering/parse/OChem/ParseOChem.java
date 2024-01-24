@@ -106,7 +106,7 @@ public class ParseOChem extends Parse {
 			er.property_name = ExperimentalConstants.str_pKA;
 			break;
 		case "logpow":
-			er.property_name = ExperimentalConstants.strLogKow;
+			er.property_name = ExperimentalConstants.strLogKOW;
 			break;
 		case "henry's law constant":
 			er.property_name = ExperimentalConstants.strHenrysLawConstant;

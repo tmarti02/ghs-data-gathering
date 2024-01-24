@@ -34,7 +34,7 @@ public class DataRemoveDuplicateExperimentalValues {
             ExperimentalRecords recs=mapRecords.get(key);            
 //            System.out.println(CAS+"\t"+ht.get(CAS).size());
             if (sourceName.equals(ExperimentalConstants.strSourceEChemPortal) || sourceName.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
-            	remove_eChemPortal_DuplicatesForKey(recs, originalSource1, originalSource2);
+            	remove_eChemPortal_DuplicatesForKey(key, recs, originalSource1, originalSource2);
             }
         }
 				 
@@ -179,11 +179,11 @@ public class DataRemoveDuplicateExperimentalValues {
 	 * @param source1
 	 * @param source2
 	 */
-	void remove_eChemPortal_DuplicatesForKey(ExperimentalRecords recs,String source1,String source2) {
+	void remove_eChemPortal_DuplicatesForKey(String key, ExperimentalRecords recs,String source1,String source2) {
 		removeNominalIfHaveAnalytical(recs);
 		removeOriginalSource2IfOriginalHaveSource1(recs, source1, source2);				
 		//now that we removed duplicates from source2, delete remaining property duplicates where source name is the same		
-		removeDuplicatesForSameSource(recs);
+		removeDuplicatesForSameSource(key,recs);
 	}
 	
 	void eChemPortalRemoveAllDuplicates(ExperimentalRecords records) {
@@ -191,7 +191,7 @@ public class DataRemoveDuplicateExperimentalValues {
 		Set<String> setOfKeys = mapRecords.keySet();
 		for(String key : setOfKeys) {			             
             ExperimentalRecords recs=mapRecords.get(key);
-            remove_eChemPortal_DuplicatesForKey(recs, "ECHA REACH", "ECHA CHEM");
+            remove_eChemPortal_DuplicatesForKey(key,recs, "ECHA REACH", "ECHA CHEM");
 		}
 	}
 	
@@ -200,12 +200,25 @@ public class DataRemoveDuplicateExperimentalValues {
 		Set<String> setOfKeys = mapRecords.keySet();
 		for(String key : setOfKeys) {			             
             ExperimentalRecords recs=mapRecords.get(key);
-            removeDuplicatesForSameSource(recs);
+            removeDuplicatesForSameSource(key, recs);
 		}
 	}
 
-	private void removeDuplicatesForSameSource(ExperimentalRecords recs) {
+	private void removeDuplicatesForSameSource(String key,ExperimentalRecords recs) {
+
+		String cas="NOCAS_902561";
+		
+		boolean flagged=false;
+		
+		for (int i=0;i<recs.size();i++) {
+			ExperimentalRecord reci=recs.get(i);	
+
+//			if (reci.casrn!=null && reci.casrn.equals(cas))				
+//				System.out.println("before\t"+i+"\t"+reci.keep+"\t"+reci.reason);
+		}
+		
 		for (int i=0;i<recs.size();i++) {			
+
 			ExperimentalRecord reci=recs.get(i);			
 //			System.out.println(reci.original_source_name+"\t"+source1);
 				
@@ -213,9 +226,9 @@ public class DataRemoveDuplicateExperimentalValues {
 			
 			String tsi=reci.property_value_string+"\t"+reci.original_source_name+"\t"+reci.property_name;
 			
-			for (int j=0;j<recs.size();j++) {
+			for (int j=i+1;j<recs.size();j++) {
 
-				if (i==j) continue;
+//				if (i==j) continue;
 								
 				ExperimentalRecord recj=recs.get(j);
 				
@@ -224,19 +237,35 @@ public class DataRemoveDuplicateExperimentalValues {
 				String tsj=recj.property_value_string+"\t"+recj.original_source_name+"\t"+recj.property_name;
 								
 				if (tsi.contentEquals(tsj)) {
+					
+					flagged=true;
 //					System.out.println("Remove exact match same src:"+recj);
-//					recs.remove(j);
-//					j--;
 					
 					recj.keep=false;
 					recj.reason="Duplicate of experimental value from same source";
+//					System.out.println(key+"\t"+recj.reason+"\t"+tsi+"\t"+tsj);
+					
+//					if (reci.casrn!=null && reci.casrn.equals(cas)) {
+//						System.out.println("\n"+i+"\t"+j);
+//						System.out.println(key);
+//						System.out.println(recj.reason);
+//						System.out.println(tsi);
+//						System.out.println(tsj+"\n");
+//					}
 					
 				} else {
 //					System.out.println("mismatch:"+tsi+"\t"+tsj);
 				}
 			}
-			
 		}
+			
+			
+//		for (int i=0;i<recs.size();i++) {
+//			ExperimentalRecord reci=recs.get(i);	
+//			if (reci.casrn!=null && reci.casrn.equals(cas))	
+//				System.out.println("after\t"+i+"\t"+reci.keep+"\t"+reci.reason);
+//		}
+
 	}
 
 	private void removeOriginalSource2IfOriginalHaveSource1(ExperimentalRecords recs, String originalSource1, String originalSource2) {

@@ -215,7 +215,7 @@ public class ToxValRecord {
 			rec.property_value_numeric_qualifier=null;	
 		}
 
-		System.out.println(tnq+"\t"+rec.property_value_numeric_qualifier);
+//		System.out.println(tnq+"\t"+rec.property_value_numeric_qualifier);
 		
 		
 		rec.property_value_point_estimate_original = toxval_numeric;
@@ -235,10 +235,23 @@ public class ToxValRecord {
 		return rec;
 	}
 	
+	
+	
+	/**
+	 * tissue = whole body (set in sql query)
+	 * 
+	 * 
+	 * method = Steady state vs Kinetic
+	 * exposure_type = S vs FT (static vs flowthrough)
+	 * exposure_duration
+	 * media = FW vs SW vs Humic water vs -
+	 * 
+	 * @param version
+	 * @param propertyCategory
+	 * @return
+	 */
 	public ExperimentalRecord toxvalBCF_to_ExperimentalRecord(String version,String propertyCategory) {
 		ExperimentalRecord rec = new ExperimentalRecord();
-		
-		
 		
 		rec.casrn = casrn.startsWith("NOCAS") ? null : casrn;
 		rec.chemical_name = name;
@@ -263,13 +276,15 @@ public class ToxValRecord {
 		rec.experimental_parameters.put("exposure_type",exposure_type);
 		rec.experimental_parameters.put("exposure_duration",exposure_duration);
 		rec.experimental_parameters.put("Temperature",temperature);
+		rec.experimental_parameters.put("tissue",tissue);
+
+		
 		
 		if (calc_method.equals("Cb/Cw")) {
 			rec.experimental_parameters.put("method","Steady state");
 		} else if (calc_method.equals("K1/K2")) {
 			rec.experimental_parameters.put("method","Kinetic");
 		}
-
 		
 		rec.temperature_C=temperature;
 				
@@ -285,6 +300,7 @@ public class ToxValRecord {
 		addLiteratureSource2(rec);
 				
 		rec.dsstox_substance_id = dtxsid.startsWith("NODTXSID") ? null : dtxsid;
+		
 		
 		//Convert Units
 //		unitConverter.convertRecord(rec);
@@ -422,7 +438,12 @@ public class ToxValRecord {
 		citation+=long_ref;
 				
 		rec.literatureSource.citation=citation;
-		rec.literatureSource.name=citation;//makes it have unique name for the database constraint for literature_sources table
+
+		if(rec.literatureSource.author!=null && rec.literatureSource.year!=null) {
+			rec.literatureSource.name=rec.literatureSource.author+"_"+rec.literatureSource.year;//makes it have unique name for the database constraint for literature_sources table
+		} else {
+			rec.literatureSource.name=citation;
+		}
 		
 //		System.out.println(citation);
 		

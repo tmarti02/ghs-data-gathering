@@ -111,7 +111,7 @@ public class ParseQSARDB extends Parse {
 			er.url = qr.url;
 			er.chemical_name = qr.name;
 			er.casrn = qr.casrn;
-			er.property_name = ExperimentalConstants.strLogKow;
+			er.property_name = ExperimentalConstants.strLogKOW;
 			er.property_value_string = "mLogP: "+qr.mLogP;
 			ParseUtilities.getNumericalValue(er,qr.mLogP,qr.mLogP.length(),false);
 			uc.convertRecord(er);

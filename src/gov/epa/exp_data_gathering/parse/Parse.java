@@ -140,8 +140,12 @@ public class Parse {
 	 * 
 	 */
 	public void createFiles() {
+
+		System.out.println(folderNameExcel);
+
 		if (generateOriginalJSONRecords) {
 			System.out.println("Creating " + sourceName + " json files...");
+
 			if (fileNameSourceExcel!=null) {
 				System.out.println("Parsing "+fileNameSourceExcel);
 			} else if (folderNameWebpages!=null) {
@@ -163,6 +167,16 @@ public class Parse {
 			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
 			d.removeDuplicates(records,sourceName);
 		}
+
+		
+		if (writeExcelExperimentalRecordsFile) {
+			System.out.println("Writing Excel file for chemical records");
+			records.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+		}
+		
+		// GS: Should always generate checking file, not just when Excel files are generated
+		records.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck);
+
 		
 		ExperimentalRecords recordsBad = records.dumpBadRecords();
 
@@ -179,16 +193,6 @@ public class Parse {
 			JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(recordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
 		}
 		
-		ExperimentalRecords merge = new ExperimentalRecords();
-		merge.addAll(records);
-		merge.addAll(recordsBad);
-		if (writeExcelExperimentalRecordsFile) {
-			System.out.println("Writing Excel file for chemical records");
-			merge.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords);
-		}
-		
-		// GS: Should always generate checking file, not just when Excel files are generated
-		merge.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck);
 		
 		System.out.println("done\n");
 	}

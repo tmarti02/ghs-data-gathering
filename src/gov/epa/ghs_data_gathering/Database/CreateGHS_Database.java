@@ -653,7 +653,7 @@ public class CreateGHS_Database  {
 		
 		boolean forMDH=true;
 		
-		String date="2021_12_16";
+		String date="2023_02_07";
 		
 		String folder=AADashboard.dataFolder+"\\dictionary\\text output";
 		String textFileName="flat file "+date+".txt";		

@@ -48,7 +48,7 @@ public class DriverOChem {
 			propertyNumber = 190;
 			desiredUnits = "Log unit";
 			break;
-		case ExperimentalConstants.strLogKow:
+		case ExperimentalConstants.strLogKOW:
 			propertyNumber = 2;
 			desiredUnits = "Log unit";
 			break;
