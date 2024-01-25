@@ -185,7 +185,7 @@ public class UnitConverter {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
 		} else if(er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless)) {
-			powAndAssignFinalFields(er);
+			logAndAssignFinalFields(er);
 			er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
 		}
 	}
@@ -595,4 +595,12 @@ public class UnitConverter {
 	private static void assignFinalFieldsWithoutConverting(ExperimentalRecord er) {
 		convertAndAssignFinalFields(er,1.0);
 	}
+	
+	private static void logAndAssignFinalFields(ExperimentalRecord er) {
+		if (er.property_value_point_estimate_original!=null) 
+			er.property_value_point_estimate_final = Math.log10(er.property_value_point_estimate_original); 
+		if (er.property_value_min_original!=null) er.property_value_min_final = Math.log10(er.property_value_min_original); 
+		if (er.property_value_max_original!=null) er.property_value_max_final = Math.log10(er.property_value_max_original);
+	}
+
 }

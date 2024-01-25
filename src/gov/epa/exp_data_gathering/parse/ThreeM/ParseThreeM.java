@@ -21,7 +21,6 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
-import gov.epa.exp_data_gathering.parse.UnitConverter;
 
 public class ParseThreeM extends Parse {
 
@@ -143,16 +142,6 @@ public class ParseThreeM extends Parse {
 
 		assignPropertyValues(r3m, er);
 
-		// handles the inconsistency with the KOW data:
-		boolean isKow=handleLogKow(r3m, er);
-		
-		// handles the logKOC
-		handleKoc(er);
-
-		// handles the logBCF
-		handleBCF(er);
-		
-		handlepKA(er);
 		
 		// gets conditions in terms of temperature (C), pressure (mmhg), or pH
 		assignExperimentalParameters(r3m, er);
@@ -160,45 +149,21 @@ public class ParseThreeM extends Parse {
 		// gets the units
 		assignUnits(r3m, er);
 		
+
+		
 		if (er.property_name==null) {
 			System.out.println(r3m.property+"\tmissing er property");
 		}
 		
-		
-		// removes the ubiquitous chemical "chemical name redacted"
-		if (r3m.test_substance_name.toLowerCase().contains("chemical name redacted")) {
-			er.keep = false;
-			er.reason = "no way of identifying this";
-		}
-		// flags the compounds that the documents had something suspect about the record
-		if (r3m.CR_Notes != null && r3m.CR_Notes.toLowerCase().contains("flag"))
-			er.flag = true;
 
-		// assessment criteria for not keeping
-		if (r3m.CR_Notes != null && (r3m.CR_Notes.toLowerCase().contains("none")
-				|| r3m.property_value.toLowerCase().contains("not determined") || r3m.Keep.equals("FALSE"))) {
-			er.keep = false;
-			er.reason = "absent data or misleading representation in original spreadsheet";
-		} else if (r3m.CR_Notes != null && r3m.CR_Notes.contains("calculated")) {
-			er.keep = false;
-			er.reason = "not an experimental data point";
-		}
-		// handles pH
-		if (r3m.CR_Notes != null && r3m.CR_Notes.contains("pH 7")) {
-			er.pH = "7";
-		}
-		// handles references
-		if (r3m.comments != null
-				&& (r3m.comments.toLowerCase().contains("reference: ") || r3m.comments.contains("references: "))) {
-			er.reference = r3m.comments;
-//			System.out.println("here\t"+er.reference+"\t"+er.original_source_name);
-		}
+		handleCR_Notes(r3m, er);
+		
 		// handles the pdf identification
 		er.document_name = r3m.Name;
 
 
 		// handles the unit conversions
-		if (er.property_name != null && er.keep == true && !isKow) {
+		if (er.property_name != null && er.keep == true) {
 			uc.convertRecord(er);
 			er.updateNote(r3m.CR_Notes);
 		}
@@ -206,11 +171,15 @@ public class ParseThreeM extends Parse {
 //		if(er.property_name.equals(ExperimentalConstants.strBCF)) {
 //			System.out.println(er.toJSON());
 //		}
-//		
-		if(er.property_name.equals(ExperimentalConstants.strKOC)) {
-			System.out.println(er.toJSON());
-		}
+////		
+//		if(er.property_name.equals(ExperimentalConstants.strKOC)) {
+//			System.out.println(er.toJSON());
+//		}
 		
+//		if(er.property_name.equals(ExperimentalConstants.strLogKOW)) {
+//			System.out.println(r3m.property);
+//			System.out.println(er.toJSON()+"\n");
+//		}
 		
 //		if(er.reference!=null) {
 //			System.out.println(er.toJSON());
@@ -225,42 +194,52 @@ public class ParseThreeM extends Parse {
 
 	}
 
-	private void handleBCF(ExperimentalRecord er) {
-		if (er.property_name != null && er.property_name.equals(ExperimentalConstants.strBCF)) {
-			er.property_value_units_original=ExperimentalConstants.str_L_KG;
-			er.property_value_point_estimate_final = Math.log10(er.property_value_point_estimate_original);
-			er.property_value_units_final=ExperimentalConstants.str_LOG_L_KG;
-		}
-	}
-	
-	private void handlepKA(ExperimentalRecord er) {
-		if (er.property_name != null && er.property_name.equals(ExperimentalConstants.str_pKA)) {
-			er.property_value_units_original=ExperimentalConstants.str_LOG_UNITS;
-			er.property_value_point_estimate_final = er.property_value_point_estimate_original;
-			er.property_value_units_final=ExperimentalConstants.str_LOG_UNITS;
-			
-//			System.out.println("pKA="+er.property_value_point_estimate_original+"\t"+er.casrn);
-			
-		}
-	}
+	private void handleCR_Notes(RecordThreeM r3m, ExperimentalRecord er) {
 
-	private void handleKoc(ExperimentalRecord er) {
-		if (er.property_name != null && er.property_name.equals(ExperimentalConstants.strKOC)) {
+		if (r3m.CR_Notes!=null) {
+		
+			if(r3m.CR_Notes.toLowerCase().contains("hplc interpolation")) 
+				er.updateNote("HPLC interpolation");	
+		
+			if ( r3m.CR_Notes.toLowerCase().contains("flag"))
+				er.flag = true;
 			
-			if (er.property_value_point_estimate_original != null) {
-				er.property_value_point_estimate_final = Math.log10(er.property_value_point_estimate_original);
-				er.property_value_units_original=ExperimentalConstants.str_L_KG;
-				er.property_value_units_final=ExperimentalConstants.str_LOG_L_KG;
-			} else if (er.property_value_min_original != null && er.property_value_max_original != null) {
-				er.property_value_min_final = Math.log10(er.property_value_min_original);
-				er.property_value_max_final = Math.log10(er.property_value_max_original);
-				er.property_value_units_original=ExperimentalConstants.str_L_KG;
-				er.property_value_units_final=ExperimentalConstants.str_LOG_L_KG;
+			if (r3m.CR_Notes.toLowerCase().contains("none") || 
+					r3m.property_value.toLowerCase().contains("not determined") || 
+					r3m.Keep.equals("FALSE")) {
+				er.keep = false;
+				er.reason = "absent data or misleading representation in original spreadsheet";
+			}
+			
+			if (r3m.CR_Notes.contains("calculated")) {				
+				er.keep = false;
+				er.reason = "not an experimental data point";
+			}
+			
+			if (r3m.CR_Notes.contains("pH 7")) {
+				er.pH = "7";
 			}
 		}
+
+		// removes the ubiquitous chemical "chemical name redacted"
+		if (r3m.test_substance_name.toLowerCase().contains("chemical name redacted")) {
+			er.chemical_name=null;
+		}
+		
+		// handles references
+		if (r3m.comments != null
+				&& (r3m.comments.toLowerCase().contains("reference: ") || r3m.comments.contains("references: "))) {
+			er.reference = r3m.comments.substring(r3m.comments.indexOf(":")+1,r3m.comments.length()).trim();
+//			System.out.println("here\t"+er.reference+"\t"+er.original_source_name);
+		}
+
 	}
 
+	
 	private void assignPropertyName(RecordThreeM r3m, ExperimentalRecord er) {
+		
+		
+		
 		if (r3m.property != null && !r3m.property.isBlank()) {
 			if (r3m.property.equals("Vapour pressure")) {
 				er.property_name = ExperimentalConstants.strVaporPressure;
@@ -281,7 +260,14 @@ public class ParseThreeM extends Parse {
 				er.property_name = ExperimentalConstants.strMeltingPoint;
 			} else if (r3m.property.toLowerCase().equals("pka")) {
 				er.property_name = ExperimentalConstants.str_pKA;
-			} else {//Capitalize first letter
+			} else if (r3m.property.toLowerCase().equals("log k_ow")) {
+				er.property_name = ExperimentalConstants.strLogKOW;
+						
+			} else if ((r3m.property.toLowerCase().equals("k_ow"))
+					|| (r3m.property.contains("octanol") && !r3m.property.contains("solubility"))) {
+
+				er.property_name = ExperimentalConstants.strLogKOW;
+			} else {// Capitalize first letter
 				er.property_name = r3m.property.substring(0, 1).toUpperCase() + r3m.property.substring(1).toLowerCase();
 			}
 
@@ -332,6 +318,27 @@ public class ParseThreeM extends Parse {
 				er.property_value_units_original = ExperimentalConstants.str_ug_L;
 			}
 		}
+
+		//Ones with missing units:
+		if (er.property_name != null) {
+			if (er.property_name.equals(ExperimentalConstants.strKOC) || er.property_name.equals(ExperimentalConstants.strBCF)) {
+				er.property_value_units_original=ExperimentalConstants.str_L_KG;
+			} else if (er.property_name.equals(ExperimentalConstants.str_pKA)) {
+				er.property_value_units_original=ExperimentalConstants.str_LOG_UNITS;
+			}
+		}
+
+		if(r3m.property==null || r3m.property.isBlank()) return;
+		
+		String property=r3m.property.toLowerCase();
+		
+		if (property.equals("log k_ow")) {
+			er.property_value_units_original=ExperimentalConstants.str_LOG_UNITS;
+		} else if ((property.equals("k_ow"))
+			|| (property.contains("octanol") && !property.contains("solubility"))) {
+			er.property_value_units_original=ExperimentalConstants.str_dimensionless;
+		}
+
 	}
 
 	private void excludeUnneededProperty(RecordThreeM r3m, ExperimentalRecord er) {
@@ -367,85 +374,6 @@ public class ParseThreeM extends Parse {
 		}
 	}
 
-	private boolean handleLogKow(RecordThreeM r3m, ExperimentalRecord er) {
-		
-		if (r3m.property == null || r3m.property.isBlank()) return false;
-		
-		if (r3m.property.toLowerCase().equals("log k_ow")) {
-			
-			if (r3m.property_value!=null && !r3m.property_value.isBlank()) {
-				er.property_value_point_estimate_final=er.property_value_point_estimate_original;
-				er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
-				er.property_value_units_original = ExperimentalConstants.str_LOG_UNITS;
-			} else if ((!(r3m.property_value_min.trim().isEmpty())) && (!(r3m.property_value_max.trim().isEmpty()))) {
-				er.property_value_min_final = er.property_value_min_original;
-				er.property_value_max_final = er.property_value_max_original;
-				er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
-				er.property_value_units_original = ExperimentalConstants.str_LOG_UNITS;
-			} else if (r3m.property_value_min != null && !(r3m.property_value_min.trim().isEmpty())) {
-				er.property_value_min_final = er.property_value_min_original;
-				er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
-				er.property_value_units_original = ExperimentalConstants.str_LOG_UNITS;
-			} else if (r3m.property_value_max != null && !(r3m.property_value_max.trim().isEmpty())) {
-				er.property_value_max_final = er.property_value_max_original;
-				er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
-				er.property_value_units_original = ExperimentalConstants.str_LOG_UNITS;
-				
-			} else {
-				System.out.println("Need to handle log K_OW, missing property_value");
-			}
-//			System.out.println("originally logKow");
-			er.property_name = ExperimentalConstants.strLogKOW;
-			return true;
-		
-		} else if ((r3m.property.toLowerCase().equals("k_ow"))
-				|| (r3m.property.contains("octanol") && !r3m.property.contains("solubility"))) {
-
-			er.property_name = ExperimentalConstants.strLogKOW;
-			
-//			System.out.println("***"+r3m.property);
-			
-			if ((r3m.property_value != null) && !(r3m.property_value.equals("not determined"))
-					&& !(r3m.property_value.trim().isEmpty())) {
-				er.property_value_point_estimate_final = Math
-						.log10(er.property_value_point_estimate_original);
-				er.property_value_units_original = ExperimentalConstants.str_dimensionless;
-				er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
-			} else if ((!(r3m.property_value_min.trim().isEmpty())) && (!(r3m.property_value_max.trim().isEmpty()))) {
-				er.property_value_min_final = Math.log10(er.property_value_min_original);
-				er.property_value_max_final = Math.log10(er.property_value_max_original);
-				er.property_value_units_original = ExperimentalConstants.str_dimensionless;
-				er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
-			} else if (r3m.property_value_min != null && !(r3m.property_value_min.trim().isEmpty())) {
-				er.property_value_min_final = Math.log10(er.property_value_min_original);
-				er.property_value_units_original = ExperimentalConstants.str_dimensionless;
-				er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
-			} else if (r3m.property_value_max != null && !(r3m.property_value_max.trim().isEmpty())) {
-				er.property_value_max_final = Math.log10(er.property_value_max_original);
-				er.property_value_units_original = ExperimentalConstants.str_dimensionless;
-				er.property_value_units_final = ExperimentalConstants.str_LOG_UNITS;
-
-			} else if (r3m.property_value.equals("not determined")) {
-				er.keep = false;
-				er.reason = "value not determined";
-			}
-			
-//			if (er.keep)
-//				System.out.println(er.casrn+"\t"+er.keep+"\t"+er.property_value_point_estimate_original);
-
-			er.updateNote("originally KOW");
-
-			if (r3m.CR_Notes.toLowerCase().contains("hplc interpolation")) {
-				er.updateNote("HPLC interpolation");
-			}
-//			System.out.println("Originally Kow");
-			
-			return true;
-		} else {
-			return false;
-		}
-
-	}
 
 	private void assignPropertyValues(RecordThreeM r3m, ExperimentalRecord er) {
 		
@@ -478,6 +406,16 @@ public class ParseThreeM extends Parse {
 		if(er.property_value_min_original==null && er.property_value_max_original==null && er.property_value_point_estimate_original==null) {
 			er.keep=false;
 			er.reason="No property value in record";
+		}
+		
+		if (er.property_value_string==null) return;
+		
+		String property=r3m.property.toLowerCase();
+		if (property.equals("log k_ow")) {
+			er.property_value_string = er.property_value_string.replace("Value:", "LogKow:");
+		} else if ((property.equals("k_ow"))
+			|| (property.contains("octanol") && !property.contains("solubility"))) {
+			er.property_value_string = er.property_value_string.replace("Value:", "Kow:");
 		}
 		
 	}
