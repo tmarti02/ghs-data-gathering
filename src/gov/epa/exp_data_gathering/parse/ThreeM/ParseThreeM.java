@@ -2,7 +2,6 @@ package gov.epa.exp_data_gathering.parse.ThreeM;
 
 import java.io.File;
 import java.io.FileReader;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,10 +11,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.openxmlformats.schemas.presentationml.x2006.main.impl.CTHandoutMasterIdListEntryImpl;
-
 import com.google.gson.JsonObject;
-
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
@@ -105,31 +101,22 @@ public class ParseThreeM extends Parse {
 //			System.out.println(r3m.Name+"\tno property");
 			return;
 		} 
-		
-		er.source_name = sourceName;
-		er.chemical_name = r3m.NAME_FINAL;
-		er.casrn = r3m.CASRN;
-		if (r3m.NAME_FINAL != null && r3m.NAME_FINAL.equals(r3m.test_substance_name)) {
-			er.synonyms = r3m.other_test_substance_name;
-		} else if (r3m.NAME_FINAL != null && r3m.NAME_FINAL.equals(r3m.other_test_substance_name)) {
-			er.synonyms = r3m.test_substance_name;
-		}
+
 		er.source_name = sourceName;
 		er.date_accessed = dayOnly;
-		
-//		if (r3m.CASRN.equals("423-82-5")) System.out.println(r3m.property);
 
-		// assigns the property
+		handleCR_Notes(r3m, er);
+		er.document_name = r3m.Name;
+		
+		assignSourceChemical(r3m, er);
 		assignPropertyName(r3m, er);
 		
-		// removes extraneous properties
-		if (r3m.reason_not_extracted != null && !r3m.reason_not_extracted.isBlank()) {
-			er.keep = false;
-			er.reason = "not extracted";
+		if (er.property_name==null) {
+			System.out.println(r3m.property+"\tmissing er property");
 		}
-		
-		
-		excludeUnneededProperty(r3m, er);
+
+		// removes extraneous properties
+		excludeUnneededProperties(r3m, er);
 		
 		if (r3m.property_value_method != null && !r3m.property_value_method.isBlank()) {
 			if(r3m.property_value_method.equals("Data pulled from table in presentation slides")) {
@@ -137,61 +124,47 @@ public class ParseThreeM extends Parse {
 			} else {
 				er.measurement_method = r3m.property_value_method;
 			}
-			
 		}
 
 		assignPropertyValues(r3m, er);
-
-		
-		// gets conditions in terms of temperature (C), pressure (mmhg), or pH
 		assignExperimentalParameters(r3m, er);
-
-		// gets the units
 		assignUnits(r3m, er);
 		
-
-		
-		if (er.property_name==null) {
-			System.out.println(r3m.property+"\tmissing er property");
-		}
-		
-
-		handleCR_Notes(r3m, er);
-		
-		// handles the pdf identification
-		er.document_name = r3m.Name;
-
-
 		// handles the unit conversions
 		if (er.property_name != null && er.keep == true) {
 			uc.convertRecord(er);
 			er.updateNote(r3m.CR_Notes);
 		}
 
-//		if(er.property_name.equals(ExperimentalConstants.strBCF)) {
-//			System.out.println(er.toJSON());
-//		}
-////		
-//		if(er.property_name.equals(ExperimentalConstants.strKOC)) {
-//			System.out.println(er.toJSON());
-//		}
+		if(er.property_name.equals(ExperimentalConstants.strBCF)) {
+			System.out.println(er.toJSON());
+		}
+		if(er.property_name.equals(ExperimentalConstants.strKOC)) {
+			System.out.println(er.toJSON());
+		}
 		
 //		if(er.property_name.equals(ExperimentalConstants.strLogKOW)) {
 //			System.out.println(r3m.property);
 //			System.out.println(er.toJSON()+"\n");
 //		}
 		
-//		if(er.reference!=null) {
-//			System.out.println(er.toJSON());
-//		}
-
 //		if(!er.keep) {
 //			System.out.println(er.toJSON()+"\n"+gson.toJson(r3m));
 //		}
 		
-
 		recordsExperimental.add(er);
+	}
 
+	private void assignSourceChemical(RecordThreeM r3m, ExperimentalRecord er) {
+		
+		er.chemical_name = r3m.NAME_FINAL;
+		er.casrn = r3m.CASRN;
+		
+		if (r3m.NAME_FINAL != null && r3m.NAME_FINAL.equals(r3m.test_substance_name)) {
+			er.synonyms = r3m.other_test_substance_name;
+		} else if (r3m.NAME_FINAL != null && r3m.NAME_FINAL.equals(r3m.other_test_substance_name)) {
+			er.synonyms = r3m.test_substance_name;
+		}
 	}
 
 	private void handleCR_Notes(RecordThreeM r3m, ExperimentalRecord er) {
@@ -232,6 +205,14 @@ public class ParseThreeM extends Parse {
 			er.reference = r3m.comments.substring(r3m.comments.indexOf(":")+1,r3m.comments.length()).trim();
 //			System.out.println("here\t"+er.reference+"\t"+er.original_source_name);
 		}
+		
+
+		
+		if (r3m.reason_not_extracted != null && !r3m.reason_not_extracted.isBlank()) {
+			er.keep = false;
+			er.reason = "not extracted";
+		}
+
 
 	}
 
@@ -341,7 +322,7 @@ public class ParseThreeM extends Parse {
 
 	}
 
-	private void excludeUnneededProperty(RecordThreeM r3m, ExperimentalRecord er) {
+	private void excludeUnneededProperties(RecordThreeM r3m, ExperimentalRecord er) {
 		if (r3m.property != null && (r3m.property.toLowerCase().contains("so2")
 				|| r3m.property.toLowerCase().contains("sof2") || r3m.property.toLowerCase().contains("kraft")
 				|| r3m.property.toLowerCase().contains("hydrolysis") || r3m.property.toLowerCase().contains("acetone")
@@ -379,6 +360,7 @@ public class ParseThreeM extends Parse {
 		
 		r3m.property_value=r3m.property_value.replaceAll(",", "");
 
+		//TODO why didnt christian use ParseUtilities.getNumericalValue?
 		
 		if (r3m.property_value != null && !r3m.property_value.isBlank()
 				&& !(r3m.property_value.equals("not determined") || r3m.property_value.equals("ff 3.7")

@@ -56,7 +56,7 @@ public class ExperimentalConstants {
 	
 	public static final String strCLINT = "Human hepatic intrinsic clearance";//OPERA
 	public static final String strFUB = "Fraction unbound in human plasma";//OPERA
-	public static final String strCACO2 = "Caco-2 permeability (logPapp)";//OPERA
+	public static final String strCACO2 = "Caco-2 permeability (Papp)";//OPERA
 	public static final String strRBIODEG = "Ready biodegradability";//OPERA
 	public static final String strORAL_RAT_LD50="Oral rat LD50";//OPERA
 
@@ -115,6 +115,10 @@ public class ExperimentalConstants {
 	
 	public static final String str_DAYS = "days";
 	public static final String str_LOG_DAYS = "log10(days)";
+	
+	public static final String str_LOG_CM_SEC="log10(cm/sec)";
+	public static final String str_CM_SEC="cm/sec";
+
 	
 	public static final String str_COUNT = "Count";
 	public static final String str_POUNDS = "lbs";
@@ -178,6 +182,7 @@ public class ExperimentalConstants {
 	public static final String strSourceChemBL="ChemBL";
 	public static final String strSourceChemidplus="ChemIDplus";
 	public static final String strSourceOPERA="OPERA";
+	public static final String strSourceOPERA29="OPERA2.9";
 	public static final String strSourceEpisuiteOriginal="EpisuiteOriginal";
 	public static final String strSourceEpisuiteISIS="EpisuiteISIS";
 	public static final String strSourceICF="ICF";
@@ -199,4 +204,25 @@ public class ExperimentalConstants {
 	public static final String strSourceCERAPP_Exp="CERAPP_Exp";
 
 	public static final String strInVitroToxicity = "in vitro toxicity";
+	public static final String strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50 ="96 hour fathead minnow LC50";
+
+
+	public static final String strSourceSampleSource="SampleSource";
+
+	public static final String strAR = "Androgen receptor activity";
+	public static final String strER = "Estrogen receptor activity";
+	
+	public static final String str_ANDROGEN_RECEPTOR_AGONIST = "Androgen receptor agonist";//OPERA
+	public static final String str_ANDROGEN_RECEPTOR_ANTAGONIST = "Androgen receptor antagonist";//OPERA
+	public static final String str_ANDROGEN_RECEPTOR_BINDING = "Androgen receptor binding";//OPERA
+
+	public static final String str_ESTROGEN_RECEPTOR_AGONIST = "Estrogen receptor agonist";//OPERA
+	public static final String str_ESTROGEN_RECEPTOR_ANTAGONIST = "Estrogen receptor antagonist";//OPERA
+	public static final String str_ESTROGEN_RECEPTOR_BINDING = "Estrogen receptor binding";//OPERA
+
+	
+	public static final String strTEXT="Text";
+
+	public static final String strSourceEcotox="ECOTOX";
+
 }

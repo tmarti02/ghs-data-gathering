@@ -158,7 +158,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 
 		for (int i=0;i<size();i++) {
 			ExperimentalRecord record=get(i);
-			record.id_physchem=record.source_name+(i+1);
+			record.id_physchem=record.source_name+"_"+(i+1);
 		}
 	}
 	
@@ -365,7 +365,15 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 						cell.setCellValue(strValue);
 
 					} else if (!(value instanceof Double)) { 
-						String strValue = ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
+
+						String strValue=null;
+						
+						if(headers[i].equals("chemical_name")) {//TODO is this the only one?
+							strValue= ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
+						} else {
+							strValue= StringEscapeUtils.unescapeHtml4(value.toString());
+						}
+						
 						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
 						row.createCell(i).setCellValue(strValue);
 					} else { 
@@ -393,7 +401,10 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		toExcel_File(filePath,ExperimentalRecord.outputFieldNames);
 	}
 	
-	public void createCheckingFile(ExperimentalRecords records,String filePath) {
+	public void createCheckingFile(ExperimentalRecords records,String filePath, int maxRows) {
+	
+		System.out.println("Writing Checking Excel file for chemical records");
+
 		double pct = 0.01;
 		int min = 100;
 		int max = 500;
@@ -425,7 +436,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		for (int j = size - n; j < size; j++) {
 			recordsCheck.add(records.get(j));
 		}
-		recordsCheck.toExcel_File_Split(filePath);
+		recordsCheck.toExcel_File_Split(filePath,maxRows);
 	
 		createLogEntrySheet(filePath); 		
 	}
@@ -484,16 +495,19 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			e.printStackTrace();
 		}
 	}
-	public void toExcel_File_Split(String filePath) {
+	public void toExcel_File_Split(String filePath, int maxRows) {
 		
 		File file=new File(filePath);
 		String fileNameExcelExperimentalRecords=file.getName();
 		String mainFolder=file.getParentFile().getAbsolutePath();
 		
 		
-		if (size() <= 65000) {
-			toExcel_File(filePath);
+		if (size() <= maxRows) {
+			System.out.println("<="+maxRows+" records,"+fileNameExcelExperimentalRecords);
+			this.toExcel_File(filePath);
 		} else {
+			System.out.println(size()+" records, need to do batch");
+			
 			ExperimentalRecords temp = new ExperimentalRecords();
 			Iterator<ExperimentalRecord> it = iterator();
 			int i = 0;
@@ -503,14 +517,16 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 				i++;
 				if (i!=0 && i%65000==0) {
 					batch++;
-					String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + " " + batch + ".xlsx";
+					String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".xlsx")) + " " + batch + ".xlsx";
 					temp.toExcel_File(mainFolder+File.separator+batchFileName);
 					temp.clear();
 				}
 			}
 			batch++;
-			String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".")) + " " + batch + ".xlsx";
+			String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".xlsx")) + " " + batch + ".xlsx";
 			temp.toExcel_File(mainFolder+File.separator+batchFileName);
+			
+			
 		}
 	}
 	

@@ -1,10 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.concurrent.atomic.DoubleAdder;
-import java.util.function.Function;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
@@ -75,6 +72,7 @@ public class UnitConverter {
 			if (er.casrn.equals("-") || er.casrn.isBlank()) er.casrn=null;
 		}
 		
+		
 		if (er.casrn!=null && !ParseUtilities.isValidCAS(er.casrn) && er.keep) {
 			er.flag = true;
 			er.reason = "Invalid CAS";
@@ -105,6 +103,8 @@ public class UnitConverter {
 			convertBCF(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strOH)){
 			convertOH(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strCACO2)){
+			convertCACO2(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strCLINT)){
 			convertCLINT(er);
 
@@ -114,6 +114,15 @@ public class UnitConverter {
 				er.property_name.equals(ExperimentalConstants.str_pKAa) || // values usually in log units
 				er.property_name.equals(ExperimentalConstants.str_pKAb)) { // values usually in log units
 			convertToLog(er);
+
+		} else if (er.property_name.equals(ExperimentalConstants.str_ANDROGEN_RECEPTOR_AGONIST) ||
+				er.property_name.equals(ExperimentalConstants.str_ANDROGEN_RECEPTOR_ANTAGONIST)||
+				er.property_name.equals(ExperimentalConstants.str_ANDROGEN_RECEPTOR_BINDING) ||
+				er.property_name.equals(ExperimentalConstants.str_ESTROGEN_RECEPTOR_AGONIST) ||
+				er.property_name.equals(ExperimentalConstants.str_ESTROGEN_RECEPTOR_ANTAGONIST) ||
+				er.property_name.equals(ExperimentalConstants.str_ESTROGEN_RECEPTOR_BINDING)) { // values usually in fraction  (dimensionless)
+			convertText(er);
+		
 		} else if (er.property_name.equals(ExperimentalConstants.strFUB)) { // values usually in fraction  (dimensionless)
 			convertDimensionless(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strRBIODEG)) {// binary
@@ -129,6 +138,9 @@ public class UnitConverter {
 			convertHenrysLawConstant(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility)) {
 			convertSolubility(er);
+		} else if (er.property_name.equals(ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50)) {
+			convertSolubility(er);
+
 		} else if (er.property_category!=null && er.property_category.toLowerCase().contains("aquatic toxicity")) {
 			// Aquatic LC50 measurements are concentrations just like WS
 			convertSolubility(er);//TODO or just use convertToxicity???
@@ -144,12 +156,13 @@ public class UnitConverter {
 		if (er.property_value_units_final!=null && !er.property_value_units_final.isBlank() && 
 				!er.property_value_units_final.equals(ExperimentalConstants.str_C) &&
 				!er.property_value_units_final.toLowerCase().contains("log") &&
-				!er.property_value_units_final.equals(ExperimentalConstants.str_dimensionless_H)) {
+				!er.property_value_units_final.equals(ExperimentalConstants.str_dimensionless_H)) {//TMM: not sure we need this last if
 			if ((er.property_value_point_estimate_final!=null && er.property_value_point_estimate_final < 0) ||
 					(er.property_value_min_final!=null && er.property_value_min_final < 0) ||
 					(er.property_value_max_final!=null && er.property_value_max_final < 0)) {
 				er.keep = false;
 				er.reason = "Negative value not plausible";
+				System.out.println(er.reason+" for "+er.property_name+" for "+er.chemical_name);
 			}
 		} else if (er.temperature_C!=null && er.temperature_C<0) {
 			er.flag = true;
@@ -160,6 +173,10 @@ public class UnitConverter {
 
 	}
 	
+	private void convertText(ExperimentalRecord er) {
+		er.property_value_units_final=ExperimentalConstants.strTEXT;
+	}
+
 	private void convertBCF(ExperimentalRecord er) {
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_L_KG)) {
 			assignFinalFieldsWithoutConverting(er);
@@ -169,6 +186,17 @@ public class UnitConverter {
 			er.property_value_units_final = ExperimentalConstants.str_L_KG;
 		}
 	}
+	
+	private void convertCACO2(ExperimentalRecord er) {
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_CM_SEC)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_CM_SEC;
+		} else if(er.property_value_units_original.equals(ExperimentalConstants.str_LOG_CM_SEC)) {
+			powAndAssignFinalFields(er);
+			er.property_value_units_final = ExperimentalConstants.str_CM_SEC;
+		}
+	}
+
 	
 	private void convertOH(ExperimentalRecord er) {
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_CM3_MOLECULE_SEC)) {

@@ -470,7 +470,7 @@ public class ECHA_IUCLID_db {
 	 * part of document to a FileData section instead of having 2 member array which is awkward
 	 * 
 	 * @param folder
-	 * @param filename
+	 * @param file_name
 	 * @param htPhrases
 	 * @return
 	 */
@@ -535,7 +535,7 @@ public class ECHA_IUCLID_db {
 	 * part of document to a FileData section instead of having 2 member array which is awkward
 	 * 
 	 * @param folder
-	 * @param filename
+	 * @param file_name
 	 * @param htPhrases
 	 * @return
 	 */

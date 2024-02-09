@@ -4,6 +4,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import gov.epa.api.ExperimentalConstants;
 
 /**
@@ -206,6 +209,7 @@ public class DataRemoveDuplicateExperimentalValues {
 
 	private void removeDuplicatesForSameSource(String key,ExperimentalRecords recs) {
 
+		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 		String cas="NOCAS_902561";
 		
 		boolean flagged=false;
@@ -224,7 +228,7 @@ public class DataRemoveDuplicateExperimentalValues {
 				
 			if(!reci.keep) continue;
 			
-			String tsi=reci.property_value_string+"\t"+reci.original_source_name+"\t"+reci.property_name;
+			String tsi=reci.property_value_string;
 			
 			for (int j=i+1;j<recs.size();j++) {
 
@@ -233,14 +237,38 @@ public class DataRemoveDuplicateExperimentalValues {
 				ExperimentalRecord recj=recs.get(j);
 				
 				if (!recj.keep) continue;
+				if(!reci.property_name.equals(recj.property_name)) continue;
+				if(reci.original_source_name!=null && !reci.original_source_name.equals(recj.original_source_name)) continue;
 				
-				String tsj=recj.property_value_string+"\t"+recj.original_source_name+"\t"+recj.property_name;
-								
-				if (tsi.contentEquals(tsj)) {
+				String tsj=recj.property_value_string;
+				
+				boolean match=false;
+			
+				if(reci.property_value_string.equals(recj.property_value_string)) match=true;
+				
+				if(!match && reci.property_value_point_estimate_final!=null && recj.property_value_point_estimate_final!=null) {
 					
+					double diff=Math.abs(reci.property_value_point_estimate_final-recj.property_value_point_estimate_final);
+					
+					if (reci.property_value_point_estimate_final!=0) {
+						diff/=reci.property_value_point_estimate_final;
+						diff*=100.0;//convert to %
+						
+						if(diff<0.1) {//<0.1% different
+//							System.out.println("<0.1%\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final+"\t"+diff);
+							match=true;
+						}
+					} else {
+						if(diff<1e-6) {
+//							System.out.println("<1e-6\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final);
+							match=true;
+						}
+					}
+				}
+				
+				if (match) {
 					flagged=true;
 //					System.out.println("Remove exact match same src:"+recj);
-					
 					recj.keep=false;
 					recj.reason="Duplicate of experimental value from same source";
 //					System.out.println(key+"\t"+recj.reason+"\t"+tsi+"\t"+tsj);
@@ -252,13 +280,37 @@ public class DataRemoveDuplicateExperimentalValues {
 //						System.out.println(tsi);
 //						System.out.println(tsj+"\n");
 //					}
-					
-				} else {
-//					System.out.println("mismatch:"+tsi+"\t"+tsj);
+
+				} else {// different values
+
+					// Following handles OPERA2.9 which has records from sdf and csv files
+					if (reci.source_name.equals("OPERA2.9")) {
+//							System.out.println("mismatch:"+reci.dsstox_substance_id+"\t"+tsi+"\t"+tsj);
+						
+						if (reci.file_name.contains("csv") && recj.file_name.contains("sdf")) {
+//								System.out.println(gson.toJson(reci));
+//								System.out.println(gson.toJson(recj) + "\n***********\n");
+							recj.keep = false;
+							recj.reason = "SDF record superceded by CSV record";
+						} else if (recj.file_name.contains("csv") && reci.file_name.contains("sdf")) {
+							reci.keep = false;
+							reci.reason = "SDF record superceded by CSV record";
+						} else {
+//							System.out.println(gson.toJson(reci));
+//							System.out.println(gson.toJson(recj) + "\n***********\n");
+
+							reci.flag = true;
+							reci.reason = "Duplicate record with different property value";
+
+							recj.flag = true;
+							recj.reason = "Duplicate record with different property value";
+
+						}
+
+					}
 				}
-			}
-		}
-			
+			}//j loop
+		}//i loop
 			
 //		for (int i=0;i<recs.size();i++) {
 //			ExperimentalRecord reci=recs.get(i);	

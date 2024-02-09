@@ -1,125 +1,427 @@
 package gov.epa.exp_data_gathering.parse.ECOTOX;
 
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.exp_data_gathering.parse.ToxVal.ToxValRecord;
 
 /**
-* @author TMARTI02
-*/
+ * @author TMARTI02
+ */
 public class RecordEcotox {
 
+	public String property_name;
 	
-	void getToxRecords() {
-		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+	public String test_id;
+	public String reference_number;
+	public String test_cas;
+	public String test_grade;
+	public String test_grade_comments;
+	public String test_formulation;
+	public String test_formulation_comments;
+	public String test_radiolabel;
+	public String test_radiolabel_comments;
+	public String test_purity_mean_op;
+	public String test_purity_mean;
+	public String test_purity_min_op;
+	public String test_purity_min;
+	public String test_purity_max_op;
+	public String test_purity_max;
+	public String test_purity_comments;
+	public String test_characteristics;
+	public String species_number;
+	public String organism_habitat;
+	public String organism_source;
+	public String organism_source_comments;
+	public String organism_lifestage;
+	public String organism_lifestage_comments;
+	public String organism_age_mean_op;
+	public String organism_age_mean;
+	public String organism_age_min_op;
+	public String organism_age_min;
+	public String organism_age_max_op;
+	public String organism_age_max;
+	public String organism_age_unit;
+	public String organism_init_wt_mean_op;
+	public String organism_init_wt_mean;
+	public String organism_init_wt_min_op;
+	public String organism_init_wt_min;
+	public String organism_init_wt_max_op;
+	public String organism_init_wt_max;
+	public String organism_init_wt_unit;
+	public String organism_length_mean_op;
+	public String organism_length_mean;
+	public String organism_length_min_op;
+	public String organism_length_min;
+	public String organism_length_max_op;
+	public String organism_length_max;
+	public String organism_length_type;
+	public String organism_length_unit;
+	public String organism_strain;
+	public String organism_characteristics;
+	public String organism_gender;
+	public String experimental_design;
+	public String study_duration_mean_op;
+	public String study_duration_mean;
+	public String study_duration_min_op;
+	public String study_duration_min;
+	public String study_duration_max_op;
+	public String study_duration_max;
+	public String study_duration_unit;
+	public String study_duration_comments;
+	public String exposure_duration_mean_op;
+	public String exposure_duration_mean;
+	public String exposure_duration_min_op;
+	public String exposure_duration_min;
+	public String exposure_duration_max_op;
+	public String exposure_duration_max;
+	public String exposure_duration_unit;
+	public String exposure_duration_comments;
+	public String study_type;
+	public String study_type_comments;
+	public String test_type;
+	public String test_type_comments;
+	public String test_location;
+	public String test_location_comments;
+	public String test_method;
+	public String test_method_comments;
+	public String exposure_type;
+	public String exposure_type_comments;
+	public String control_type;
+	public String control_type_comments;
+	public String media_type;
+	public String media_type_comments;
+	public String num_doses_mean_op;
+	public String num_doses_mean;
+	public String num_doses_min_op;
+	public String num_doses_min;
+	public String num_doses_max_op;
+	public String num_doses_max;
+	public String num_doses_comments;
+	public String other_effect_comments;
+	public String application_freq_mean_op;
+	public String application_freq_mean;
+	public String application_freq_min_op;
+	public String application_freq_min;
+	public String application_freq_max_op;
+	public String application_freq_max;
+	public String application_freq_unit;
+	public String application_freq_comments;
+	public String application_type;
+	public String application_type_comments;
+	public String application_rate;
+	public String application_rate_unit;
+	public String application_date;
+	public String application_date_comments;
+	public String application_season;
+	public String application_season_comments;
+	public String subhabitat;
+	public String subhabitat_description;
+	public String substrate;
+	public String substrate_description;
+	public String water_depth_mean_op;
+	public String water_depth_mean;
+	public String water_depth_min_op;
+	public String water_depth_min;
+	public String water_depth_max_op;
+	public String water_depth_max;
+	public String water_depth_unit;
+	public String water_depth_comments;
+	public String geographic_code;
+	public String geographic_location;
+	public String latitude;
+	public String longitude;
+	public String halflife_mean_op;
+	public String halflife_mean;
+	public String halflife_min_op;
+	public String halflife_min;
+	public String halflife_max_op;
+	public String halflife_max;
+	public String halflife_unit;
+	public String halflife_comments;
+	public String published_date;
+	public String result_id;
+	public String sample_size_mean_op;
+	public String sample_size_mean;
+	public String sample_size_min_op;
+	public String sample_size_min;
+	public String sample_size_max_op;
+	public String sample_size_max;
+	public String sample_size_unit;
+	public String sample_size_comments;
+	public String obs_duration_mean_op;
+	public String obs_duration_mean;
+	public String obs_duration_min_op;
+	public String obs_duration_min;
+	public String obs_duration_max_op;
+	public String obs_duration_max;
+	public String obs_duration_unit;
+	public String obs_duration_comments;
+	public String endpoint;
+	public String endpoint_comments;
+	public String trend;
+	public String effect;
+	public String effect_comments;
+	public String measurement;
+	public String measurement_comments;
+	public String response_site;
+	public String response_site_comments;
+	public String effect_pct_mean_op;
+	public String effect_pct_mean;
+	public String effect_pct_min_op;
+	public String effect_pct_min;
+	public String effect_pct_max_op;
+	public String effect_pct_max;
+	public String effect_pct_comments;
+	public String conc1_type;
+	public String ion1;
+	public String conc1_mean_op;
+	public String conc1_mean;
+	public String conc1_min_op;
+	public String conc1_min;
+	public String conc1_max_op;
+	public String conc1_max;
+	public String conc1_unit;
+	public String conc1_comments;
+	public String conc2_type;
+	public String ion2;
+	public String conc2_mean_op;
+	public String conc2_mean;
+	public String conc2_min_op;
+	public String conc2_min;
+	public String conc2_max_op;
+	public String conc2_max;
+	public String conc2_unit;
+	public String conc2_comments;
+	public String conc3_type;
+	public String ion3;
+	public String conc3_mean_op;
+	public String conc3_mean;
+	public String conc3_min_op;
+	public String conc3_min;
+	public String conc3_max_op;
+	public String conc3_max;
+	public String conc3_unit;
+	public String conc3_comments;
+	public String bcf1_mean_op;
+	public String bcf1_mean;
+	public String bcf1_min_op;
+	public String bcf1_min;
+	public String bcf1_max_op;
+	public String bcf1_max;
+	public String bcf1_unit;
+	public String bcf1_comments;
+	public String bcf2_mean_op;
+	public String bcf2_mean;
+	public String bcf2_min_op;
+	public String bcf2_min;
+	public String bcf2_max_op;
+	public String bcf2_max;
+	public String bcf2_unit;
+	public String bcf2_comments;
+	public String bcf3_mean_op;
+	public String bcf3_mean;
+	public String bcf3_min_op;
+	public String bcf3_min;
+	public String bcf3_max_op;
+	public String bcf3_max;
+	public String bcf3_unit;
+	public String bcf3_comments;
+	public String significance_code;
+	public String significance_type;
+	public String significance_level_mean_op;
+	public String significance_level_mean;
+	public String significance_level_min_op;
+	public String significance_level_min;
+	public String significance_level_max_op;
+	public String significance_level_max;
+	public String significance_comments;
+	public String chem_analysis_method;
+	public String chem_analysis_method_comments;
+	public String endpoint_assigned;
+	public String organism_final_wt_mean_op;
+	public String organism_final_wt_mean;
+	public String organism_final_wt_min_op;
+	public String organism_final_wt_min;
+	public String organism_final_wt_max_op;
+	public String organism_final_wt_max;
+	public String organism_final_wt_unit;
+	public String organism_final_wt_comments;
+	public String intake_rate_mean_op;
+	public String intake_rate_mean;
+	public String intake_rate_min_op;
+	public String intake_rate_min;
+	public String intake_rate_max_op;
+	public String intake_rate_max;
+	public String intake_rate_unit;
+	public String intake_rate_comments;
+	public String lipid_pct_mean_op;
+	public String lipid_pct_mean;
+	public String lipid_pct_min_op;
+	public String lipid_pct_min;
+	public String lipid_pct_max_op;
+	public String lipid_pct_max;
+	public String lipid_pct_comments;
+	public String dry_wet;
+	public String dry_wet_pct_mean_op;
+	public String dry_wet_pct_mean;
+	public String dry_wet_pct_min_op;
+	public String dry_wet_pct_min;
+	public String dry_wet_pct_max_op;
+	public String dry_wet_pct_max;
+	public String dry_wet_pct_comments;
+	public String steady_state;
+	public String additional_comments;
+	public String companion_tag;
+	public String created_date;
+	public String modified_date;
+	public String old_terretox_result_number;
+	public String cas_number;
+	public String chemical_name;
+	public String ecotox_group;
+	public String dtxsid;
+	public String reference_db;
+	public String reference_type;
+	public String author;
+	public String title;
+	public String source;
+
+
+	static void setValue(String fieldName,String fieldValue,RecordEcotox rec) {
 		
-		String sql="select *\n"+ 
-		"from tests t\n"+
-		"join results r on t.test_id=r.test_id\n"+
-		"join chemicals c on c.cas_number=t.test_cas\n"+
-		"join references_ r2 on r2.reference_number=t.reference_number\n"+
-		"where t.species_number=1 and ((r.obs_duration_mean=96 and r.obs_duration_unit='h')  or (r.obs_duration_mean=4 and r.obs_duration_unit='d'));";
-		
+		Field field;
 		try {
-			String databasePath="data\\experimental\\ECOTOX\\ecotox_ascii_06_15_2023.db";
+			field = RecordEcotox.class.getField(fieldName);
+
+			String typeName = field.getGenericType().getTypeName();
+			fieldName = field.getName();
+
+			if (typeName.equals("java.lang.String")) {
+				field.set(rec, fieldValue);
+			} else if (typeName.equals("java.lang.Double")) {
+				field.set(rec, Double.parseDouble(fieldValue));
+			} else if (typeName.equals("java.lang.Long")) {
+				field.set(rec, Long.parseLong(fieldValue));
+			} else if (typeName.equals("java.lang.Integer")) {
+				field.set(rec, Integer.parseInt(fieldValue));
+				// } else if (typeName.equals("java.util.Date")) {
+				// Date d = rs.getDate(fieldName);
+				// field.set(rec, d);
+			} else {
+				System.out.println(typeName+" not handled");
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 			
+		} 
+
+	}
+
+	public static Vector<RecordEcotox> getToxRecords() {
+
+		Vector<RecordEcotox>records=new Vector<>();
+
+		
+		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+		String sql = "select *\n" + "from tests t\n" + "join results r on t.test_id=r.test_id\n"
+				+ "join chemicals c on c.cas_number=t.test_cas\n"
+				+ "join references_ r2 on r2.reference_number=t.reference_number\n"
+				+ "where t.species_number=1 and ((r.obs_duration_mean=96 and r.obs_duration_unit='h')  or (r.obs_duration_mean=4 and r.obs_duration_unit='d'));";
+
+		try {
+			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_06_15_2023.db";
+
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
 			ResultSet rs = stat.executeQuery(sql);
-			
-			JsonArray ja=new JsonArray();
-			
-			List<String>choices=new ArrayList<>();
-			
-			
+
+//			JsonArray ja = new JsonArray();
+
+			int counter=0;
 			
 			while (rs.next()) {
+				
+				counter++;
 //				System.out.println(rs.getString(1));
+//				JsonObject jo = new JsonObject();
+
+				RecordEcotox rec=new RecordEcotox();
 				
-				JsonObject jo=new JsonObject();
-				
-				for(int i=1;i<rs.getMetaData().getColumnCount();i++) {
+				for (int i = 1; i < rs.getMetaData().getColumnCount(); i++) {
 					
-					String columnLabel=rs.getMetaData().getColumnLabel(i);
-					String columnValue=rs.getString(i);
+					String columnLabel = rs.getMetaData().getColumnLabel(i);
+					String columnValue = rs.getString(i);
 					
-					if (rs.getString(i)==null || rs.getString(i).isBlank()) continue;
-					
-					jo.addProperty(columnLabel,columnValue );
-					
+					if (rs.getString(i) == null || rs.getString(i).isBlank())
+						continue;
+
+					setValue(columnLabel, columnValue, rec);
 //					System.out.println(rs.getMetaData().getColumnLabel(i));
 				}
 				
-				if(jo.get("media_type")!=null) {
-					String media_type=jo.get("media_type").getAsString();
-					if(!media_type.contains("FW")) continue;
+				rec.property_name=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
+				
+				
+				if(rec.media_type!=null) {
+					if (!rec.media_type.contains("FW"))
+					continue;
 				}
 				
-				if(jo.get("test_location")!=null) {
-					String test_location=jo.get("test_location").getAsString();
-					if(!test_location.contains("LAB")) continue;
+				if (rec.test_location != null) {
+					if (!rec.test_location.contains("LAB"))
+						continue;
 				}
+
 				
-				
-				String endpoint=null,effect=null,measurement=null;
-				
-				if(jo.get("endpoint")!=null) {
-					endpoint=jo.get("endpoint").getAsString();		
-					if(!endpoint.contains("LC50")) continue;
-				}
-				
-				if(jo.get("effect")!=null) {
-					effect=jo.get("effect").getAsString();
-				}
-				
-				if(jo.get("measurement")!=null) {
-					measurement=jo.get("measurement").getAsString();
-					if(!measurement.contains("MORT") &&  !measurement.contains("SURV")) continue;
+				if (rec.endpoint != null) {
+					if (!rec.endpoint.contains("LC50"))
+						continue;
 				}
 				
 				
-				if(!choices.contains(endpoint+"\t"+effect+"\t"+measurement)) choices.add(endpoint+"\t"+effect+"\t"+measurement);
-				
-//				System.out.println(endpoint+"\t"+effect+"\t"+measurement);
-				
-				
-//				r.endpoint like 'LC50%' and r.effect like '%MOR%' and r.measurement
-				
-				
-//				System.out.println(gson.toJson(jo));
-				
-				
-				ja.add(jo);
-				
+//				if (jo.get("effect") != null) {
+//					effect = jo.get("effect").getAsString();
+//				}
+//
+				if (rec.measurement != null) {
+					if (!rec.measurement.contains("MORT") && !rec.measurement.contains("SURV"))
+						continue;
+				}
+				records.add(rec);
 			}
-			
-			for (String choice:choices) {
-				System.out.println(choice);
-			}
-			
-			System.out.println(ja.size());
-			
-			System.out.println(gson.toJson(ja));
-			
+
+
+			System.out.println(records.size());
+
+//			System.out.println(gson.toJson(records));
+
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			
+
 		}
 		
+		return records;
 
 	}
+
 	
 	
 	public static void main(String[] args) {
-		RecordEcotox r=new RecordEcotox();
+		RecordEcotox r = new RecordEcotox();
 		r.getToxRecords();
 
 	}

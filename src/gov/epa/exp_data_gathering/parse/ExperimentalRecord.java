@@ -57,6 +57,7 @@ public class ExperimentalRecord {
 	public String note;//	Any additional note
 
 	public String url;
+	public String file_name;
 	public String document_name;
 	public String source_name;//use Experimental constants
 	public String original_source_name;//If specific reference/paper provided
@@ -70,7 +71,7 @@ public class ExperimentalRecord {
 	
 	public boolean keep=true;//Does the record contain useful data? keep might be different depending on whether goal is for database or for QSAR data set
 	public boolean flag=false;
-	public String reason;//If keep=false or flag=true, why?
+	public String reason;//If keep=false or flag=true, why? TODO add separate reason_flag and reason_keep?
 	
 	//TODO do we need parent url too? sometimes there are several urls we have to follow along the way to get to the final url
 
@@ -86,6 +87,7 @@ public class ExperimentalRecord {
 			"source_name",
 			"property_name",
 			"property_value_string",
+			"property_value_qualitative",
 			"property_value_numeric_qualifier",
 			"property_value_point_estimate_final",
 			"property_value_min_final",
@@ -94,11 +96,12 @@ public class ExperimentalRecord {
 			"pressure_mmHg",
 			"temperature_C",
 			"pH",
-			"property_value_qualitative",
 			"measurement_method",
 			"note",
 			"flag",
 			"original_source_name",
+			"document_name",
+			"file_name",
 			"reference",
 			"url",
 			"date_accessed"};
@@ -121,10 +124,16 @@ public class ExperimentalRecord {
 		String SMILES=smiles;
 		if (SMILES==null || SMILES.trim().isEmpty()) SMILES="smiles=null";//need placeholder so dont get spurious match in chemreg
 		SMILES=SMILES.trim();
-		
+				
+		String DTXSID=dsstox_substance_id;
+		if(DTXSID==null) DTXSID="dtxsid=null";
+
+		String DTXCID=dsstox_compound_id;
+		if(DTXCID==null) DTXCID="dtxcid=null";
+
 		//TODO omit chemicals where smiles indicates bad element....
 		
-		comboID=CAS+del+EINECS+del+name+del+SMILES;
+		comboID=CAS+del+EINECS+del+name+del+SMILES+del+DTXSID+del+DTXCID;
 		
 	}
 	
@@ -452,6 +461,18 @@ public class ExperimentalRecord {
 	public void updateNote(String str) {
 		note = Objects.isNull(note) ? str : note+"; "+str;
 	}
+	
+	
+	/**
+	 * Quick and dirty clone using gson
+	 * https://www.baeldung.com/java-deep-copy
+	 * 
+	 */
+	public ExperimentalRecord clone() {
+		Gson gson=new Gson();
+		return gson.fromJson(gson.toJson(this), ExperimentalRecord.class);
+	}
+	
 	
 	@Override
 	public boolean equals(Object o) {

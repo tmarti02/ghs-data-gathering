@@ -51,7 +51,7 @@ import gov.epa.exp_data_gathering.parse.Verheyen.ParseVerheyen;
  *
  */
 public class Parse {
-	
+	public int maxExcelRows=65000;
 	public String sourceName;
 	public String jsonFolder;
 	public String databaseFolder;
@@ -171,11 +171,11 @@ public class Parse {
 		
 		if (writeExcelExperimentalRecordsFile) {
 			System.out.println("Writing Excel file for chemical records");
-			records.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords);
+			records.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords,maxExcelRows);
 		}
 		
 		// GS: Should always generate checking file, not just when Excel files are generated
-		records.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck);
+		records.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck,maxExcelRows);
 
 		
 		ExperimentalRecords recordsBad = records.dumpBadRecords();

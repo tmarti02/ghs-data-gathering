@@ -246,7 +246,7 @@ public class ParseToxVal {
 		System.out.println("Unique SIDs\t"+htRecordsBySID.size());
 		System.out.println("Avg SD\t"+avgSD);
 		
-		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"));
+		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
 		
 	}
 	

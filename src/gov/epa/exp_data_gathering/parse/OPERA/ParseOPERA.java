@@ -4,13 +4,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
-
+import gov.epa.api.ScoreRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
@@ -23,19 +26,93 @@ public class ParseOPERA extends Parse {
 	String userName="tmarti02";
 	
 	public ParseOPERA() {
-		sourceName = "OPERA";
+		sourceName = ExperimentalConstants.strSourceOPERA29;
 		this.init();
 //		this.writeFlatFile=true;
 	}
+	
+	class CustomComparator implements Comparator<ExperimentalRecord> {
+	    @Override
+	    public int compare(ExperimentalRecord o1, ExperimentalRecord o2) {
+	        String key1=o1.property_name+"\t"+o1.comboID;
+	        String key2=o2.property_name+"\t"+o2.comboID;
+	    	return key1.compareTo(key2);
+	    }
+	}
+
+	
 	@Override
 	protected void createRecords() {
 		
+		if (!this.generateOriginalJSONRecords) return;
+		
 		System.out.println("enter create records");
 		
-		RecordOPERA r=new RecordOPERA();
-		Vector<RecordOPERA> records = r.parseOperaSdfs();
-//		System.out.println(records.size());
+		Vector<RecordOPERA> records=new Vector<>();
+
+		Vector<RecordOPERA> recordsSDF = RecordOPERA.parseOperaSdfs(sourceName);
+		System.out.println(recordsSDF.size());
+		records.addAll(recordsSDF);
+//		System.out.println(gson.toJson(recordsSDF));
 		
+		Vector<RecordOPERA> recordsCSV = RecordOPERA.parseOperaCSVs(sourceName);
+		System.out.println(recordsCSV.size());
+		records.addAll(recordsCSV);
+
+		Vector<RecordOPERA> recordsCSV2 = RecordOPERA.parseOperaCSVs2(sourceName,true);
+		System.out.println(recordsCSV2.size());
+		records.addAll(recordsCSV2);
+		
+//		Hashtable<String,RecordOPERA>htSDF=new Hashtable<>();
+//		Hashtable<String,RecordOPERA>htCSV=new Hashtable<>();
+//		
+//		for (RecordOPERA ro:recordsCSV) {
+//			if(ro.dsstox_substance_id!=null)			
+//				htCSV.put(ro.dsstox_substance_id, ro);
+//			else {
+////				System.out.println(ro.CAS+"\t"+ro.ChemicalName+"\tNo DTXSID\t"+ro.property_name);
+//			}
+//		}
+		
+//		for (RecordOPERA ro:recordsSDF) {
+//			
+//			if(ro.dsstox_substance_id!=null)			
+//				htSDF.put(ro.dsstox_substance_id, ro);
+//			else {
+////				System.out.println(ro.CAS+"\t"+ro.ChemicalName+"\tNo DTXSID\t"+ro.property_name);
+//			}
+//		}
+		
+//		for (String dtxsid:htCSV.keySet()) {
+//			RecordOPERA roCSV=htCSV.get(dtxsid);
+//					
+//			if(!htSDF.containsKey(dtxsid)) continue; 
+//			RecordOPERA roSDF=htSDF.get(dtxsid);
+//			
+//			double diff= Math.abs(roCSV.property_value_original-roSDF.property_value_original)/roCSV.property_value_original*100;
+//			
+//			if(diff>1)//1%
+//				System.out.println(dtxsid+"\t"+roCSV.property_value_original+"\t"+roSDF.property_value_original+"\t"+diff);
+//		}
+				
+//		for (String dtxsid:htSDF.keySet()) {
+//			RecordOPERA roSDF=htSDF.get(dtxsid);
+//			if(!htCSV.containsKey(dtxsid)) {
+//				System.out.println("Missing "+dtxsid+" in csv");
+//				continue;
+//			}
+//
+//		}
+		
+//		for (String dtxsid:htCSV.keySet()) {
+//			RecordOPERA roCSV=htCSV.get(dtxsid);
+//			if(!htSDF.containsKey(dtxsid)) {
+//				System.out.println("Missing "+dtxsid+" in sdf");
+//				continue;
+//			}
+//
+//		}
+
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -53,6 +130,7 @@ public class ParseOPERA extends Parse {
 			
 			List<RecordOPERA> recordsOPERA = new ArrayList<RecordOPERA>();
 			RecordOPERA[] tempRecords = null;
+			
 			if (howManyOriginalRecordsFiles==1) {
 				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordOPERA[].class);
 				for (int i = 0; i < tempRecords.length; i++) {
@@ -60,14 +138,18 @@ public class ParseOPERA extends Parse {
 				}
 			} else {
 				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
-					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					//Note need to look for indexOf .json and not . since can have . in the sourceName
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".json")) + " " + batch + ".json";
 					File batchFile = new File(batchFileName);
+					System.out.println(batchFileName);
 					tempRecords = gson.fromJson(new FileReader(batchFile), RecordOPERA[].class);
 					for (int i = 0; i < tempRecords.length; i++) {
 						recordsOPERA.add(tempRecords[i]);
 					}
 				}
 			}
+			
+			System.out.println("recordsOPERA.size()="+recordsOPERA.size());
 			
 			Iterator<RecordOPERA> it = recordsOPERA.iterator();
 			while (it.hasNext()) {
@@ -77,7 +159,13 @@ public class ParseOPERA extends Parse {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-//		System.out.println("recordsExperimental.size()="+recordsExperimental.size());
+		System.out.println("recordsExperimental.size()="+recordsExperimental.size());
+		
+		for (ExperimentalRecord er:recordsExperimental) {
+			er.setComboID("\t");
+		}
+		
+		Collections.sort(recordsExperimental,new CustomComparator());
 		return recordsExperimental;
 	}
 	
@@ -95,74 +183,217 @@ public class ParseOPERA extends Parse {
 
 		if (ro.property_name.equals(ExperimentalConstants.str_pKA)) {
 			
-			if(!(ro.pKa_a.equals("NaN"))) {
-				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,ExperimentalConstants.str_pKAa);
-				er.property_value_string = ro.pKa_a+"";
+			if(ro.pKa_a!=null) {
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_pKAa);
+				er.property_value_string = ro.pKa_a+" "+ExperimentalConstants.str_LOG_UNITS;
 				er.property_value_point_estimate_original=Double.parseDouble(ro.pKa_a);
-				uc.convertRecord(er);
-				records.add(er);
+				splitRecords(records, er);
+			}
+			if(ro.pKa_b!=null) {
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_pKAb);
+				er.property_value_string = ro.pKa_b+" "+ExperimentalConstants.str_LOG_UNITS;
+				er.property_value_point_estimate_original=Double.parseDouble(ro.pKa_b);
+				splitRecords(records, er);
+			}
+		} else if(ro.property_name.equals(ExperimentalConstants.strAR)) {
+			
+			if(ro.BD_potency_Exp!=null) {
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_ANDROGEN_RECEPTOR_BINDING);
+				er.property_value_string = ro.BD_potency_Exp;
+				er.property_value_qualitative=er.property_value_string;
+				splitRecords(records, er);
+			}
+			
+			if(ro.AG_Potency_Exp!=null) {
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_ANDROGEN_RECEPTOR_AGONIST);
+				er.property_value_string = ro.AG_Potency_Exp;
+				er.property_value_qualitative=er.property_value_string;
+				splitRecords(records, er);
 			}
 
-			if ((!(ro.pKa_b.equals("NaN")))) {
-				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,ExperimentalConstants.str_pKAb);
-				er.property_value_string = ro.pKa_b+"";
-				er.property_value_point_estimate_original=Double.parseDouble(ro.pKa_b);
-				uc.convertRecord(er);
-				records.add(er);
+			if(ro.AN_potency_Exp!=null) {
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_ANDROGEN_RECEPTOR_ANTAGONIST);
+				er.property_value_string = ro.AN_potency_Exp;
+				er.property_value_qualitative=er.property_value_string;
+				splitRecords(records, er);
 			}
+
+
+		} else if(ro.property_name.equals(ExperimentalConstants.str_ESTROGEN_RECEPTOR_BINDING)) {
+			if(ro.Potency_class_binding!=null) {
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ro.property_name);
+				er.property_value_string = ro.Potency_class_binding;
+				er.property_value_qualitative=er.property_value_string;
+				splitRecords(records, er);
+			}
+		} else if(ro.property_name.equals(ExperimentalConstants.str_ESTROGEN_RECEPTOR_AGONIST)) {
+			if(ro.Potency_class_agonist!=null) {
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ro.property_name);
+				er.property_value_string = ro.Potency_class_agonist;
+				er.property_value_qualitative=er.property_value_string;
+				splitRecords(records, er);
+			}
+		} else if(ro.property_name.equals(ExperimentalConstants.str_ESTROGEN_RECEPTOR_ANTAGONIST)) {
+			if(ro.Potency_class_antagonist!=null) {
+				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ro.property_name);
+				er.property_value_string = ro.Potency_class_antagonist;
+				er.property_value_qualitative=er.property_value_string;
+				splitRecords(records, er);
+			}
+
+//		} else if(ro.property_name.equals(ExperimentalConstants.strER)) {
+//			
+//			if(ro.Potency_class_binding!=null) {
+//				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_ESTROGEN_RECEPTOR_BINDING);
+//				er.property_value_string = ro.Potency_class_binding;
+//				splitRecords(records, er);
+//			}
+//			
+//			if(ro.Potency_class_agonist!=null) {
+//				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_ESTROGEN_RECEPTOR_AGONIST);
+//				er.property_value_string = ro.Potency_class_agonist;
+//				splitRecords(records, er);
+//			}
+//
+//			if(ro.Potency_class_antagonist!=null) {
+//				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_ESTROGEN_RECEPTOR_ANTAGONIST);
+//				er.property_value_string = ro.Potency_class_antagonist;
+//				splitRecords(records, er);
+//			}
+		} else if(ro.property_name.equals(ExperimentalConstants.strORAL_RAT_LD50)) {
+			ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ro.property_name);
+			if(ro.CATMoS_LD50_str==null) return;
+			er.property_category="acute oral toxicity";
+			
+			//Use detailed code to get qualifier, min/max/point estimates: 
+			ParseUtilities.getNumericalValue(er, ro.CATMoS_LD50_str, ro.CATMoS_LD50_str.length(), false);
+			er.property_value_string=ro.CATMoS_LD50_str+" "+ro.property_value_units_original;
+			splitRecords(records, er);
 			
 		} else {
+			ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ro.property_name);
+			er.property_value_point_estimate_original = ro.property_value_original;
+			if (er.property_value_point_estimate_original != null && ro.property_value_units_original != null) {
+				er.property_value_string = er.property_value_point_estimate_original.toString() + " " + ro.property_value_units_original;
+			} else if (er.property_value_point_estimate_original != null) {
+				er.property_value_string = er.property_value_point_estimate_original.toString();
+			}
+			splitRecords(records, er);
+		}			
+			
+	}
+
+	private void splitRecords(ExperimentalRecords records, ExperimentalRecord er) {
+		
+		
+		if (er.dsstox_substance_id!=null) {
+			
+			String [] dtxsids=null;
+			if(er.dsstox_substance_id.contains(",")) dtxsids=er.dsstox_substance_id.split(",");
+			else dtxsids=er.dsstox_substance_id.split("\\|");	
+
+			if(dtxsids.length>1) er.updateNote("originally a mixture");
 
 			
-			ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,ro.property_name);
+//			if(er.dsstox_substance_id.equals("DTXSID8040222")) {
+//				System.out.println("DTXSID8040222\t"+dtxsids.length+"\t"+er.property_name);
+//			}
+			
+			//Need to clone it- otherwise we wont be able to map it to dsstox:
+			for (String dtxsid:dtxsids)	{			
+//					System.out.println(dtxsid);
+				ExperimentalRecord erClone=(ExperimentalRecord) er.clone();
+				erClone.dsstox_substance_id=dtxsid.trim();
+				
+				
+				
+				if(erClone.dsstox_substance_id.contains("?")) {
+//						erClone.dsstox_substance_id=null;
+//						System.out.println("Discarding:\n"+gson.toJson(erClone)+"\n");
+//						System.out.println("Original:\n"+gson.toJson(er)+"\n");
+//						System.out.println("********************************\n\n");
+					continue;//discard since we already have a different record with a DTXSID
+				} else {//void them out since can pull from dtxsid
+					erClone.casrn=null;
+					erClone.chemical_name=null;
+					erClone.smiles=null;
+				}
+				
+//				System.out.println("SID split record");
+//				System.out.println(gson.toJson(erClone)+"\n****************\n");
+				
+				records.add(erClone);
+				uc.convertRecord(erClone);
+//					System.out.println(gson.toJson(erClone));
+			}
 
-			if(er.property_name.equals(ExperimentalConstants.strORAL_RAT_LD50)) {
+		} else if (er.casrn!=null) {
+			
+//			System.out.println(er.casrn+"\t"+er.chemical_name+"\t"+er.smiles);
+
+			String [] casrns=er.casrn.split("\\|");
+			
+			if(casrns.length>1) er.updateNote("originally a mixture");
+
+
+			String [] names=null;
+			if (er.chemical_name!=null) {
+				names=er.chemical_name.split("\\|");	
+			}
+			
+			String [] smiles=null;
+			
+			if(er.smiles!=null) smiles=er.smiles.split("\\|");
+			
+			//Need to clone it- otherwise we wont be able to map it to dsstox:
+			for (int i=0;i<casrns.length;i++)	{			
+//					System.out.println(dtxsid);
 				
-				if(ro.CATMoS_LD50_str.equals("NA")) return;
+				ExperimentalRecord erClone=(ExperimentalRecord) er.clone();
 				
-				er.property_category="acute oral toxicity";
+				erClone.casrn=casrns[i].trim();
 				
-				//Use detailed code to get qualifier, min/max/point estimates: 
-				ParseUtilities.getNumericalValue(er, ro.CATMoS_LD50_str, ro.CATMoS_LD50_str.length(), false);
-				er.property_value_string=ro.CATMoS_LD50_str;
-				
-				if(ro.CATMoS_LD50_str.equals("NA")) {
-					er.keep=false;
-					er.reason="Exp. LD50 is NA";
+				if(names!=null) {					
+					if(names.length>1)
+						erClone.chemical_name=names[i].trim();
+					else if (names.length==1) {
+						erClone.chemical_name=er.chemical_name;
+					}
 				}
-			} else {
 				
-				er.property_value_point_estimate_original = ro.property_value_original;
-				if (er.property_value_point_estimate_original != null && ro.property_value_units_original != null) {
-					er.property_value_string = er.property_value_point_estimate_original.toString() + " " + ro.property_value_units_original;
-				} else if (er.property_value_point_estimate_original != null) {
-					er.property_value_string = er.property_value_point_estimate_original.toString();
+				if(smiles!=null) {					
+					if(smiles.length>1)
+						erClone.smiles=smiles[i].trim();
+					else if (smiles.length==1) {
+						erClone.smiles=er.smiles;
+					}
 				}
+				
+				if(erClone.casrn.contains("?")) {
+//						erClone.casrn=null;
+					continue;//discard since we already have a different record with a CAS
+				}
+				
+//				if(casrns.length>1)
+//					System.out.println(er.property_name+"\t"+erClone.casrn+"\t"+erClone.chemical_name+"\t"+erClone.smiles);
+				
+				records.add(erClone);
+				uc.convertRecord(erClone);
+//				System.out.println("CAS split record");
+//				System.out.println(gson.toJson(erClone)+"\n****************\n");
+//					System.out.println(gson.toJson(erClone));
 			}
+		
+		} else {
 			
-			if(ro.Reference!=null) {
-//				System.out.println(ro.Reference);
-//				er.literatureSource=createLiteratureSource(ro.Reference);
-				er.document_name=ro.Reference;//just store as string to avoid complications in the db
-			}
-			
-			if (ro.property_name == ExperimentalConstants.strLogKOW) {
-				ParseUtilities.getLogProperty(er,er.property_value_string);
-			}
-			
-//			if (!(ro.dsstox_compound_id == null))
-//			er.dsstox_substance_id = ro.dsstox_compound_id;
-			
-			// handles temperature recorded as 24|25 and absent temperatures
-			getTemperatureCondition(er,ro.Temperature);
-			
-			// finalizePropertyValues(er);
-			// er.finalizePropertyValues();
+//			System.out.println("Normal record");
+//			System.out.println(gson.toJson(er)+"\n****************\n");
+
 			uc.convertRecord(er);
-			
-			records.add(er);
+			records.add(er);	
 		}
 	}
+	
 	
 	
 	private LiteratureSource createLiteratureSource(String reference) {
@@ -204,26 +435,19 @@ public class ParseOPERA extends Parse {
 		}
 	}
 	
-	private static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
-		if ((propertyValue != null && propertyValue.length() > 0) && (!propertyValue.contains("|")))
-			er.temperature_C = Double.parseDouble(propertyValue);
-		else if ((propertyValue != null && propertyValue.length() > 0) && propertyValue.contains("|")) {
-			int vertLineIndex = propertyValue.indexOf("|");
-			String temp1 = propertyValue.substring(0,vertLineIndex);
-			String temp2 = propertyValue.substring(vertLineIndex + 1,propertyValue.length());
-			double temp1double = Double.parseDouble(temp1);
-			double temp2double = Double.parseDouble(temp2);
-			er.temperature_C = (temp1double + temp2double)/ 2;
-		}
-	}
 	
 	
-
-
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		ParseOPERA p = new ParseOPERA();
+//		p.generateOriginalJSONRecords = true;
+//		p.howManyOriginalRecordsFiles=2;
+		
 		p.generateOriginalJSONRecords = true;
+		p.howManyOriginalRecordsFiles=3;
+
+		
+		p.maxExcelRows=999999;
 		p.createFiles();
 	}
 

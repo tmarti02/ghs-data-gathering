@@ -1129,10 +1129,15 @@ public class ParseUtilities extends Parse {
 	 * @return			True if checksum holds for each CAS RN in input; false otherwise
 	 */
 	public static boolean isValidCAS(String casInput) {
+		
+		if(casInput.toUpperCase().contains("CHEMBL")) return false;
+		if(casInput.toUpperCase().contains("SRC")) return false;
+		
+		
 		String[] casArray = casInput.split("\\||;|,");
 		boolean valid = true;
 		for (String cas:casArray) {
-			String casTemp = cas.replaceAll("[^0-9]","");
+			String casTemp = cas.replaceAll("[^0-9]","");//do we really want to discard non numbers???
 			int len = casTemp.length();
 			if (len > 10 || len <= 0) { return false; }
 			int check = Character.getNumericValue(casTemp.charAt(len-1));

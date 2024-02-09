@@ -32,14 +32,14 @@ public class JSONUtilities {
 				i++;
 				if (i!=0 && i%100000==0) {
 					batch++;
-					String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".")) + " " + batch + ".json";
+					String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".json")) + " " + batch + ".json";
 					String jsonRecords = gson.toJson(temp);
 					writeJSONLineByLine(jsonRecords,batchFileName);
 					temp.clear();
 				}
 			}
 			batch++;
-			String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".")) + " " + batch + ".json";
+			String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".json")) + " " + batch + ".json";
 			String jsonRecords = gson.toJson(temp);
 			writeJSONLineByLine(jsonRecords,batchFileName);
 		}
