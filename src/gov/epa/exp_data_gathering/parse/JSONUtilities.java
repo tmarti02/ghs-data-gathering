@@ -46,6 +46,40 @@ public class JSONUtilities {
 		
 		return batch;
 	}
+	
+	public static int batchAndWriteJSON(List<?> records, String baseFileName) {
+		GsonBuilder builder = new GsonBuilder();
+		builder.setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues();
+		Gson gson = builder.create();
+		int batch = 0;
+		
+		if (records.size() <= 100000) {
+			String jsonRecords = gson.toJson(records);
+			writeJSONLineByLine(jsonRecords,baseFileName);
+			batch = 1;
+		} else {
+			List<Object> temp = new ArrayList<Object>();
+			Iterator<?> it = records.iterator();
+			int i = 0;
+			while (it.hasNext()) {
+				temp.add(it.next());
+				i++;
+				if (i!=0 && i%100000==0) {
+					batch++;
+					String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".json")) + " " + batch + ".json";
+					String jsonRecords = gson.toJson(temp);
+					writeJSONLineByLine(jsonRecords,batchFileName);
+					temp.clear();
+				}
+			}
+			batch++;
+			String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".json")) + " " + batch + ".json";
+			String jsonRecords = gson.toJson(temp);
+			writeJSONLineByLine(jsonRecords,batchFileName);
+		}
+		
+		return batch;
+	}
 
 	private static void writeJSONLineByLine(String jsonRecords,String filePath) {
 		String[] strRecords = jsonRecords.split("\n");

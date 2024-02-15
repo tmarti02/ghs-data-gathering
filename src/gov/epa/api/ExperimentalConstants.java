@@ -4,6 +4,7 @@ public class ExperimentalConstants {
 
 	//Add list of property names here:
 	public static final String strWaterSolubility="Water solubility";
+	public static final String strDMSOSolubility="DMSO solubility";
 
 	public static final String strVaporPressure="Vapor pressure";
 	public static final String strHenrysLawConstant="Henry's law constant";

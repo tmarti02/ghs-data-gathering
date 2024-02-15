@@ -297,6 +297,7 @@ public class RecordEcotox {
 	public String author;
 	public String title;
 	public String source;
+	public String publication_year;
 
 
 	static void setValue(String fieldName,String fieldValue,RecordEcotox rec) {
@@ -331,9 +332,9 @@ public class RecordEcotox {
 
 	}
 
-	public static Vector<RecordEcotox> getToxRecords() {
+	public static List<RecordEcotox> get_96hr_FHM_LC50_Tox_Records_From_DB() {
 
-		Vector<RecordEcotox>records=new Vector<>();
+		List<RecordEcotox>records=new ArrayList<>();
 
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
@@ -361,9 +362,13 @@ public class RecordEcotox {
 
 				RecordEcotox rec=new RecordEcotox();
 				
-				for (int i = 1; i < rs.getMetaData().getColumnCount(); i++) {
+				for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
 					
 					String columnLabel = rs.getMetaData().getColumnLabel(i);
+
+					if(counter==1)					
+						System.out.println(columnLabel);
+					
 					String columnValue = rs.getString(i);
 					
 					if (rs.getString(i) == null || rs.getString(i).isBlank())
@@ -422,7 +427,7 @@ public class RecordEcotox {
 	
 	public static void main(String[] args) {
 		RecordEcotox r = new RecordEcotox();
-		r.getToxRecords();
+		r.get_96hr_FHM_LC50_Tox_Records_From_DB();
 
 	}
 

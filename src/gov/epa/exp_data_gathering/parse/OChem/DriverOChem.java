@@ -1,6 +1,8 @@
 package gov.epa.exp_data_gathering.parse.OChem;
 
+import java.io.File;
 import java.io.FileWriter;
+import java.time.Duration;
 import java.util.List;
 
 import org.openqa.selenium.By;
@@ -64,10 +66,18 @@ public class DriverOChem {
 			propertyNumber = 46;
 			desiredUnits = "g/L";
 			break;
+		case ExperimentalConstants.strDMSOSolubility:
+			propertyNumber = 531;
+			desiredUnits = null;
+			break;
 		}
 		
 		// Open new driver and connect to the OChem website
-		long defaultWait = 30; // in seconds
+		long defaultWaitTime = 30; // in seconds
+		
+		Duration defaultWait=Duration.ofSeconds(defaultWaitTime);
+		Duration defaultWaitLonger=Duration.ofSeconds(defaultWaitTime*20);
+		
 		System.setProperty("webdriver.chrome.driver", chromeDriverPath);
 		WebDriver driver = new ChromeDriver();
 		driver.get("https://ochem.eu/");
@@ -189,16 +199,19 @@ public class DriverOChem {
 			introducer.click();
 			WebElement comments = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("COMMENTS")));
 			comments.click();
-			WebElement selectUnits = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("unit-"+propertyNumber)));
-			selectUnits.click();
-			selectUnits.sendKeys(desiredUnits+Keys.ENTER);
+			
+			if(desiredUnits!=null) {//TMM added this if statement because there wont be a drop down box to click on for binary endpoints		
+				WebElement selectUnits = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.name("unit-"+propertyNumber)));			
+				selectUnits.click();
+				selectUnits.sendKeys(desiredUnits+Keys.ENTER);
+			}
 			
 			// Go to download page
 			WebElement getXLS = new WebDriverWait(driver,defaultWait).until(ExpectedConditions.elementToBeClickable(By.cssSelector("[format=\"xls\"]")));
 			getXLS.click();
 			
 			// Wait for basket to process and download button to appear
-			WebElement downloadButton = new WebDriverWait(driver,20*defaultWait).until(ExpectedConditions.elementToBeClickable(By.className("fancy-button")));
+			WebElement downloadButton = new WebDriverWait(driver,defaultWaitLonger).until(ExpectedConditions.elementToBeClickable(By.className("fancy-button")));
 			
 			// Add the basket URL to a TXT file
 			String basketURL = downloadButton.getAttribute("href");
@@ -217,7 +230,9 @@ public class DriverOChem {
 	}
 	
 	public static void main(String[] args) {
-		scrapeOChem(ExperimentalConstants.strWaterSolubility,302,0,"C:\\Users\\GSincl01\\Documents\\chromedriver.exe");
+		String filepath="C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\0 java\\0 model_management\\ghs-data-gathering\\driver\\chromedriver.exe";
+		System.out.println(new File(filepath).exists());
+		scrapeOChem(ExperimentalConstants.strDMSOSolubility,1,2,filepath);
 	}
 	
 }
