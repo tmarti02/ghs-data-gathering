@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
@@ -15,6 +16,8 @@ import com.google.gson.JsonObject;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.ToxVal.ToxValRecord;
 
 /**
@@ -299,6 +302,102 @@ public class RecordEcotox {
 	public String source;
 	public String publication_year;
 
+	
+	ExperimentalRecord toExperimentalRecord(int valueNumber) {
+
+		String conc_mean=null;
+		String conc_min=null;
+		String conc_max=null;
+		
+		String conc_mean_op=null;
+		String conc_min_op=null;
+		String conc_max_op=null;
+		String conc_unit=null;
+		
+		if(valueNumber==1) {
+			conc_mean=conc1_mean;
+			conc_min=conc1_min;
+			conc_max=conc1_max;
+			conc_mean_op=conc1_mean_op;
+			conc_min_op=conc1_min_op;
+			conc_max_op=conc1_max_op;
+			conc_unit=conc1_unit;
+		} else if (valueNumber==2) {
+			conc_mean=conc2_mean;
+			conc_min=conc2_min;
+			conc_max=conc2_max;
+			conc_mean_op=conc2_mean_op;
+			conc_min_op=conc2_min_op;
+			conc_max_op=conc2_max_op;
+			conc_unit=conc2_unit;
+		}
+		
+		
+		
+		ExperimentalRecord er=new ExperimentalRecord();
+		
+		er.dsstox_substance_id=dtxsid;
+		
+		String CAS1=cas_number.substring(0,cas_number.length()-3);
+		String CAS2=cas_number.substring(cas_number.length()-3,cas_number.length()-1);
+		String CAS3=cas_number.substring(cas_number.length()-1,cas_number.length());
+		
+		
+		er.casrn=CAS1+"-"+CAS2+"-"+CAS3;
+		
+//		System.out.println(cas_number+"\t"+er.casrn);
+		
+		er.property_name=property_name;
+		er.keep=true;
+		
+		LiteratureSource ls=new LiteratureSource();
+		er.literatureSource=ls;
+		ls.author=author;
+		ls.title=title;
+		ls.year=publication_year;
+		ls.citation=author+" ("+publication_year+"). "+title+"."+source;
+
+		if(conc_mean==null) {
+			er.keep=false;
+			er.reason="No conc1_mean value";
+		} else if(conc_mean_op!=null && !conc_mean_op.equals("~")) {
+			er.keep=false;
+			er.reason="bad conc1_mean_op: "+conc_mean_op;
+		} else if(conc_min_op!=null && !conc_min_op.equals("~")) {
+			er.keep=false;
+			er.reason="bad conc1_min_op:"+conc_min_op;
+		} else if(conc_max_op!=null && !conc_max_op.equals("~")) {
+			er.keep=false;
+			er.reason="bad conc1_max_op:"+conc_max_op;
+		}
+
+
+		if (er.keep) {
+			er.property_value_point_estimate_original=Double.parseDouble(conc_mean);
+			er.property_value_units_original=conc_unit;
+			
+			if(conc_min!=null && conc_max!=null) {
+				double log=Math.log10(Double.parseDouble(conc_max)/Double.parseDouble(conc_min));
+				
+				if(log>1) {
+					er.keep=false;
+					er.reason="Range of min and max is too wide";
+//					System.out.println(min+"\t"+max);
+				}
+			}
+			
+//			System.out.println(r.conc1_max_op+"\t"+r.conc1_min_op+"\t"+r.conc1_mean_op);
+		} 
+		
+		er.experimental_parameters=new Hashtable<>();
+		er.experimental_parameters.put("test_id", test_id);
+		
+		er.property_value_string=er.property_value_point_estimate_original+" "+conc_unit;//TODO
+		
+		return er;
+		
+	}
+	
 
 	static void setValue(String fieldName,String fieldValue,RecordEcotox rec) {
 		
