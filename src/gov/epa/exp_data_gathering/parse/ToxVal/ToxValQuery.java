@@ -68,7 +68,7 @@ public class ToxValQuery {
 			+ "	tv.toxval_type = ? AND \r\n"
 			+ "	rs.quality not like '3%' AND rs.quality not like '4%' AND \r\n"
 //			+ "	tv.toxval_units in ('mg/L', 'g/L', 'mol/L') AND\r\n"
-			+ "	tv.media in ('-', 'Fresh water') AND\r\n"
+			+ "	tv.media in ('-', 'Fresh water') AND\r\n"//only ECOTOX and DOD ERED have this filled in, only 1 salt water record
 			+ "	ttd.toxval_type_supercategory in ('Point of Departure', 'Toxicity Value', 'Lethality Effect Level') AND\r\n"
 			+ "	tv.toxval_numeric > 0;";
 	
@@ -176,8 +176,8 @@ public class ToxValQuery {
 	}
 	
 	
-	List<ToxValRecord> getRecords(String species, String type,String sql) {
 		List<ToxValRecord> records = new ArrayList<ToxValRecord>();
+		List<ToxValRecord> getRecords(String species, String type,String sql) {
 		try (PreparedStatement prep = conn.prepareStatement(sql)) {
 			prep.setString(1, species);
 			prep.setString(2, type);
@@ -229,7 +229,7 @@ public class ToxValQuery {
 		int counter = 1;
 		ExperimentalRecords experimentalRecords = new ExperimentalRecords();
 		for (ExperimentalRecord rec:experimentalRecordsList) {
-			rec.id_physchem = rec.source_name + counter;
+			rec.id_physchem = rec.source_name + " "+counter;
 			experimentalRecords.add(rec);
 			counter++;
 		}

@@ -53,6 +53,7 @@ public class ExperimentalRecord {
 
 	public Hashtable <String,Object> experimental_parameters=null;//TODO do we want to move temp, pres, pH to this hashtable?
 	
+	public Object recordOriginal;
 	
 	public String note;//	Any additional note
 
@@ -72,6 +73,8 @@ public class ExperimentalRecord {
 	public boolean keep=true;//Does the record contain useful data? keep might be different depending on whether goal is for database or for QSAR data set
 	public boolean flag=false;
 	public String reason;//If keep=false or flag=true, why? TODO add separate reason_flag and reason_keep?
+
+	public String dataset;//sometimes we want to keep track of original spitting into T and P
 	
 	//TODO do we need parent url too? sometimes there are several urls we have to follow along the way to get to the final url
 

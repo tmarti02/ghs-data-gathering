@@ -214,6 +214,18 @@ public class ToxValRecord {
 		} else {
 			rec.property_value_numeric_qualifier=null;	
 		}
+		
+		if(rec.property_value_numeric_qualifier!=null) {
+			
+			String q=rec.property_value_numeric_qualifier;
+			
+			if(!q.equals("~")) {
+				rec.keep=false;
+				rec.reason="Bad property_value_numeric_qualifier";
+//				System.out.println(q+"\tBad qualifier");
+			} 
+		}
+		
 
 //		System.out.println(tnq+"\t"+rec.property_value_numeric_qualifier);
 		
@@ -230,6 +242,12 @@ public class ToxValRecord {
 
 		//Convert Units
 		unitConverter.convertRecord(rec);
+		
+		if(rec.property_value_point_estimate_final==null && (rec.property_value_max_final==null || rec.property_value_min_final==null)) {
+			System.out.println(rec.dsstox_substance_id+"\tno point estimate possible");
+			rec.keep=false;
+			rec.reason="Can't generate point estimate";
+		}
 		
 		
 		return rec;

@@ -332,8 +332,6 @@ public class RecordEcotox {
 			conc_unit=conc2_unit;
 		}
 		
-		
-		
 		ExperimentalRecord er=new ExperimentalRecord();
 		
 		er.dsstox_substance_id=dtxsid;
@@ -341,8 +339,7 @@ public class RecordEcotox {
 		String CAS1=cas_number.substring(0,cas_number.length()-3);
 		String CAS2=cas_number.substring(cas_number.length()-3,cas_number.length()-1);
 		String CAS3=cas_number.substring(cas_number.length()-1,cas_number.length());
-		
-		
+				
 		er.casrn=CAS1+"-"+CAS2+"-"+CAS3;
 		
 //		System.out.println(cas_number+"\t"+er.casrn);
@@ -369,12 +366,17 @@ public class RecordEcotox {
 		} else if(conc_max_op!=null && !conc_max_op.equals("~")) {
 			er.keep=false;
 			er.reason="bad conc1_max_op:"+conc_max_op;
+		} else if(conc_unit==null || conc_unit.isBlank()) {
+			er.keep=false;
+			er.reason="Missing original units";
+//			System.out.println("missing units");
 		}
 
 
+		er.property_value_units_original=conc_unit;
+		
 		if (er.keep) {
 			er.property_value_point_estimate_original=Double.parseDouble(conc_mean);
-			er.property_value_units_original=conc_unit;
 			
 			if(conc_min!=null && conc_max!=null) {
 				double log=Math.log10(Double.parseDouble(conc_max)/Double.parseDouble(conc_min));
@@ -393,6 +395,13 @@ public class RecordEcotox {
 		er.experimental_parameters.put("test_id", test_id);
 		
 		er.property_value_string=er.property_value_point_estimate_original+" "+conc_unit;//TODO
+		
+		
+		
+		if(er.dsstox_substance_id.equals("DTXSID0034566")) {
+			System.out.println("Found DTXSID0034566, keep="+er.keep+"\treason="+er.reason+"\t"+er.property_value_units_original+"\t"+valueNumber);
+		}
+		
 		
 		return er;
 		
@@ -437,14 +446,22 @@ public class RecordEcotox {
 
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-
+		
+//		select * from tests t
+//		join results r on t.test_id=r.test_id
+//		join chemicals c on c.cas_number=t.test_cas
+//		join references_ r2 on r2.reference_number=t.reference_number
+//		where t.species_number=1 
+//		and ((r.obs_duration_mean=96 and r.obs_duration_unit='h')  or (r.obs_duration_mean=4 and r.obs_duration_unit='d'))
+		
 		String sql = "select *\n" + "from tests t\n" + "join results r on t.test_id=r.test_id\n"
 				+ "join chemicals c on c.cas_number=t.test_cas\n"
 				+ "join references_ r2 on r2.reference_number=t.reference_number\n"
 				+ "where t.species_number=1 and ((r.obs_duration_mean=96 and r.obs_duration_unit='h')  or (r.obs_duration_mean=4 and r.obs_duration_unit='d'));";
 
 		try {
-			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_06_15_2023.db";
+//			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_06_15_2023.db";
+			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_12_14_2023.db";
 
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
 			ResultSet rs = stat.executeQuery(sql);
@@ -465,8 +482,8 @@ public class RecordEcotox {
 					
 					String columnLabel = rs.getMetaData().getColumnLabel(i);
 
-					if(counter==1)					
-						System.out.println(columnLabel);
+//					if(counter==1)					
+//						System.out.println(columnLabel);
 					
 					String columnValue = rs.getString(i);
 					
@@ -523,6 +540,55 @@ public class RecordEcotox {
 	}
 
 	
+
+	private Double getStudyDurationValueInDays() {
+		Double studyDurationValueInDays = Double.parseDouble(obs_duration_mean);
+
+		switch (obs_duration_unit) {
+		
+		case "d":
+			break;
+		case "wk":
+			studyDurationValueInDays *= 7.0;
+			break;
+		case "mo":
+			studyDurationValueInDays *= 30.0;
+			break;
+		case "yr":
+			studyDurationValueInDays *= 365.0;
+			break;
+		case "h":
+			studyDurationValueInDays /= 24.0;
+			break;
+		case "mi":
+			studyDurationValueInDays /= 1440.0;
+			break;
+		case "-":
+//			System.out.println("No study duration units for ToxVal ID " + toxval_id);
+			studyDurationValueInDays = null;
+			break;
+		default:
+			System.out.println("Unknown study duration units for ToxVal ID " + test_id + ": " + obs_duration_unit);
+			studyDurationValueInDays = null;
+			break;
+		}
+		
+		return studyDurationValueInDays;
+	}
+
+	
+	public boolean isAcceptable(Double durationDays) {
+		Double studyDurationValueInDays = getStudyDurationValueInDays();
+
+		if (studyDurationValueInDays==null
+				|| studyDurationValueInDays < 0.95 * durationDays
+				|| studyDurationValueInDays > 1.05 * durationDays) {
+			return false;
+		}
+		
+		return true;
+	}
+
 	
 	public static void main(String[] args) {
 		RecordEcotox r = new RecordEcotox();

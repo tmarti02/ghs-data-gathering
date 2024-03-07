@@ -422,7 +422,7 @@ public class UnitConverter {
 			} else {
 				double density = htDensity.get(er.casrn);
 				
-				System.out.println(er.casrn+"\tConversion to mg/L using density="+density);
+//				System.out.println(er.casrn+"\tConversion to mg/L using density="+density);
 				
 				convertAndAssignFinalFields(er,density/1000.0);
 				er.property_value_units_final = ExperimentalConstants.str_g_L;
@@ -468,10 +468,24 @@ public class UnitConverter {
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L) || er.property_value_units_original.equals(ExperimentalConstants.str_ug_mL) || er.property_value_units_original.equals("AI mg/L")) {
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L) || er.property_value_units_original.equals(ExperimentalConstants.str_ug_mL) || er.property_value_units_original.equals("AI mg/L")
+				|| er.property_value_units_original.equals(ExperimentalConstants.str_ppm) || er.property_value_units_original.equals("AI ppm")) {
+//			ppm is same as mg/L according to:
+//			https://cfpub.epa.gov/ncer_abstracts/index.cfm/fuseaction/display.files/fileid/14285
 			convertAndAssignFinalFields(er,1.0/1000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppb)) {
+			convertAndAssignFinalFields(er,1.0/1.0e6);
+			//ppb = 1/1000 ppm = 1/1e6 g/L
+			
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+//			er.flag = true;
+//			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+
+		
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_L) || er.property_value_units_original.equals("AI ug/L")) {
+//			System.out.println("Converting ug/L");
 			convertAndAssignFinalFields(er,1.0/1000000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 
@@ -482,16 +496,11 @@ public class UnitConverter {
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_100mL)) {
 			convertAndAssignFinalFields(er,10.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppm) || er.property_value_units_original.equals("AI ppm")) {
-			assignFinalFieldsWithoutConverting(er);
-			er.property_value_units_final = ExperimentalConstants.str_ppm;
-			er.flag = true;
-			er.updateNote("Conversion to g/L not possible (dimensions differ)");
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppb)) {
-			convertAndAssignFinalFields(er,1.0/1000.0);
-			er.property_value_units_final = ExperimentalConstants.str_ppm;
-			er.flag = true;
-			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+//		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppm) || er.property_value_units_original.equals("AI ppm")) {
+//			assignFinalFieldsWithoutConverting(er);
+//			er.property_value_units_final = ExperimentalConstants.str_ppm;
+//			er.flag = true;
+//			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_kg_H20)) {
 			//TMM TODO we just have to assume a density of water
 			convertAndAssignFinalFields(er,1.0/1000.0);
@@ -569,6 +578,11 @@ public class UnitConverter {
 			Double gal_to_L = 3.78541;
 			convertAndAssignFinalFields(er,oz_to_g/gal_to_L);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		
+		} else if (er.property_value_units_original==null) {
+			er.keep=false;
+			er.reason="Original units missing";
+				
 		} else {
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (unknown units)");

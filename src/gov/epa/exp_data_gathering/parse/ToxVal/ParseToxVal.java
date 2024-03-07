@@ -59,8 +59,27 @@ public class ParseToxVal {
 //			if (!toxValRecord.toxval_units_original.equals(toxValRecord.toxval_units))
 //				System.out.println(toxValRecord.toxval_units+"\t"+toxValRecord.toxval_units_original);
 			ExperimentalRecord er=toxValRecord.toExperimentalRecord(toxvalVersion, duration,propertyType);
+
+			if(er.original_source_name.equals("EnviroTox_v2")) continue;//dont use envirotox because sometimes drops the qualifier!
+//			if(!er.original_source_name.equals("ECOTOX: EPA ORD")) continue;//only use ECOTOX			
+//			if(!er.original_source_name.equals("ECOTOX: EPA ORD") && !er.original_source_name.equals("EnviroTox_v2")) continue;//use ECOTOX and envirotox
+//			if(!er.original_source_name.equals("EnviroTox_v2")) continue;//only use envirotox
+//			if(!er.original_source_name.equals("ECHA eChemPortal: ECHA REACH") && !er.original_source_name.equals("ECHA eChemPortal: ECHA CHEM")) continue;
+//			if(!er.original_source_name.equals("ECHA eChemPortal: ECHA REACH")) continue;
+//			if(!er.original_source_name.equals("ECHA eChemPortal: ECHA CHEM")) continue;
+//			if(!er.original_source_name.equals("ECOTOX: EPA ORD") && !er.original_source_name.equals("ECHA eChemPortal: ECHA REACH") && !er.original_source_name.equals("ECHA eChemPortal: ECHA CHEM")) continue;
+//			if(!er.original_source_name.equals("ECOTOX: EPA ORD") && !er.original_source_name.equals("ECHA eChemPortal: ECHA CHEM")) continue;
+//			if(!er.original_source_name.equals("EFSA")) continue;
+//			if(!er.original_source_name.equals("DOD ERED: USACE_ERDC_ERED_database_12_07_2018")) continue;
+
+
 			experimentalRecords.add(er);
 			
+			if (!er.keep) continue;
+			if(!er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) continue;//dont use for stdev calcs
+
+//			System.out.println(er.original_source_name);
+
 			
 			if(htRecordsBySID.get(er.dsstox_substance_id)==null) {
 				ExperimentalRecords records=new ExperimentalRecords();
@@ -71,6 +90,7 @@ public class ParseToxVal {
 				records.add(er);
 			}
 			
+			
 		}
 		
 		double avgSD=0;
@@ -78,8 +98,15 @@ public class ParseToxVal {
 		int countOverall=0;
 
 		for (String dtxsid:htRecordsBySID.keySet()) {
-			ExperimentalRecords records=htRecordsBySID.get(dtxsid);
-			double SD=calculateSD(records);//TODO need to determine SD when converted to log values
+			List<ExperimentalRecord> records=htRecordsBySID.get(dtxsid);
+			
+			System.out.println(dtxsid);
+			
+			for (ExperimentalRecord er:records) {
+				System.out.println("\t"+er.original_source_name+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);
+			}
+			
+			double SD=calculateSD(records);
 			avgSD+=SD;
 			count++;
 			countOverall+=records.size();
@@ -251,12 +278,12 @@ public class ParseToxVal {
 	}
 	
 	/**
-	 * TODO this needs to make sure all units are correct and for g/L values need SD of log(g/L)
+	 * 
 	 * 
 	 * @param recs
 	 * @return
 	 */
-	public static double calculateSD(ExperimentalRecords recs) {
+	public static double calculateSD(List<ExperimentalRecord> recs) {
 		
 		Gson gson=new Gson();
 		
@@ -266,7 +293,8 @@ public class ParseToxVal {
 		
 		for (ExperimentalRecord er:recs) {
 			
-//			System.out.println(er.property_value_units_final);
+			if (!er.property_value_units_final.equals("g/L"))
+				System.out.println(er.property_value_units_final+"\tnot g/L!");
 			
 //			if (!er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) continue;
 			
@@ -274,11 +302,11 @@ public class ParseToxVal {
 				try {
 					er.property_value_point_estimate_final=(er.property_value_min_final+er.property_value_max_final)/2.0;
 				} catch (Exception ex) {
-					System.out.println(er.toJSON());
+					System.out.println(ex.getMessage()+"\n"+er.toJSON());
 					continue;
 				}
 			}
-			avg+=er.property_value_point_estimate_final;
+			avg+=Math.log10(er.property_value_point_estimate_final);
 			count++;
 			
 		}
@@ -293,7 +321,7 @@ public class ParseToxVal {
 			if (!er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) continue;
 
 			if (er.property_value_point_estimate_final!=null) {
-				SD+=Math.pow(er.property_value_point_estimate_final-avg,2);
+				SD+=Math.pow(Math.log10(er.property_value_point_estimate_final)-avg,2);
 				
 //				if(count==40) {
 //					System.out.println("\t"+er.property_value_point_estimate_final);
@@ -307,7 +335,7 @@ public class ParseToxVal {
 		
 		SD=Math.sqrt(SD);
 		
-//		System.out.println(SD+"\t"+count);
+//		System.out.println(SD+"\t"+avg);
 		
 		
 		return SD;
@@ -440,13 +468,9 @@ public class ParseToxVal {
 		
 		
 		ParseToxVal p=new ParseToxVal();
-		// TODO Auto-generated method stub
 		p.getAcuteAquaticExperimentalRecords(versionV93,"Fathead minnow",ToxValQuery.FATHEAD_MINNOW_DURATION,ToxValQuery.TYPE_LC50,ToxValQuery.CRITICAL_EFFECT,ToxValQuery.propertyCategoryAcuteAquaticToxicity);
 //		p.getAcuteAquaticExperimentalRecords(versionProd,"Fathead minnow",ToxValQuery.FATHEAD_MINNOW_DURATION,ToxValQuery.TYPE_LC50,ToxValQuery.CRITICAL_EFFECT,ToxValQuery.propertyCategoryAcuteAquaticToxicity);
 
-		//TODO look at UnitConverter.convertRecord- should we use convertToxicity or convertSolubility??
-		//TODO get journal citation so can store in exp_prop
-		
 //		p.getBCFExperimentalRecords(versionProd);
 		
 	}
