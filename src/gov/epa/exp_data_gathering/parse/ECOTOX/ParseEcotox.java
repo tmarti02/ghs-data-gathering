@@ -54,8 +54,7 @@ public class ParseEcotox {
 				e.printStackTrace();
 			}
 		}
-		
-		
+				
 		ExperimentalRecords experimentalRecords=new ExperimentalRecords();
 
 		Hashtable<String,RecordEcotox>htRecordEcotox=new Hashtable<>();
@@ -64,7 +63,10 @@ public class ParseEcotox {
 						
 		for (RecordEcotox re:recordsOriginal) {
 			
-			if(re.isAcceptable(4.0));//4 days
+			if(!re.isAcceptableDuration(4.0)) {
+//				System.out.println(re.getStudyDurationValueInDays());
+				continue;//4 days
+			}
 			
 //			if(re.dtxsid.equals("DTXSID0034566")) {
 //				System.out.println(gson.toJson(re));
@@ -93,6 +95,7 @@ public class ParseEcotox {
 				
 		//Print the largest bad records:
 		lookAtLargestDeviations(htRecordEcotox, htER);
+//		printRecords(htRecordEcotox, htER);
 		
 		double avgSD=0;
 		int count=0;
@@ -150,6 +153,7 @@ public class ParseEcotox {
 		
 		for (ExperimentalRecord er:experimentalRecords)  {
 			
+			//Only use the ones with g/L in the stats calcs:
 			if(er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) {
 //				System.out.println(er.casrn+"\t"+er.property_value_point_estimate_final);
 				
@@ -212,6 +216,28 @@ public class ParseEcotox {
 			}
 
 		}
+	}
+	
+	private void printRecords(Hashtable<String, RecordEcotox> htRecordEcotox,
+			Hashtable<String, List<ExperimentalRecord>> htER) {
+		
+		double maxVal=0;
+		
+		for(String dtxsid:htER.keySet()) {
+			List<ExperimentalRecord>recs=htER.get(dtxsid);
+			
+			System.out.println(dtxsid);
+			
+			for (ExperimentalRecord er:recs) {
+				System.out.println("\t"+er.property_value_point_estimate_original+"\t"+er.property_value_units_original+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);
+				
+				if(er.property_value_point_estimate_final>maxVal) maxVal=er.property_value_point_estimate_final;
+				
+			}
+			
+		}
+		
+		System.out.println("maxVal="+maxVal+" g/L");
 	}
 
 	

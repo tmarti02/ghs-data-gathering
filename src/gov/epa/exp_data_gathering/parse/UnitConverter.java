@@ -522,10 +522,29 @@ public class UnitConverter {
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pctVol) || er.property_value_units_original.equals("% v/v")) {
-			er.flag = true;
+			
+			//vol % * (1 ml A/ 100 ml water)/vol % * (1000 ml water / L water) * density (g A / ml A)
+//			if (er.casrn==null || htDensity.get(er.casrn) == null) {
+//				er.flag = true;
+//				er.updateNote("Conversion to mg/L not possible (missing density)");
+//				System.out.println(er.casrn+"\tConversion to g/L not possible (missing density)");
+//				assignFinalFieldsWithoutConverting(er);
+//				er.property_value_units_final = er.property_value_units_original;
+//				return false;
+//			} else {
+//				double density = htDensity.get(er.casrn);
+//				convertAndAssignFinalFields(er, 10.0*density);
+//				er.property_value_units_final = ExperimentalConstants.str_g_L;
+//				
+//				System.out.println(er.casrn+"\tConversion from pctVol to g/L using density="+density);
+//				System.out.println(er.dsstox_substance_id+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);				
+//				er.note="Converted using density: "+density+" g/mL";
+//			}
+			
 			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = er.property_value_units_original;
+			
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_100mL)) {
 			convertAndAssignFinalFields(er,1.0/100.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
