@@ -540,7 +540,7 @@ public class UnitConverter {
 //				System.out.println(er.dsstox_substance_id+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);				
 //				er.note="Converted using density: "+density+" g/mL";
 //			}
-			
+			er.flag=true;
 			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = er.property_value_units_original;
