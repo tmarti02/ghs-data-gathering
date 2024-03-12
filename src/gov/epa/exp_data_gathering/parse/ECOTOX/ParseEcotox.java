@@ -3,7 +3,9 @@ package gov.epa.exp_data_gathering.parse.ECOTOX;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
@@ -12,10 +14,13 @@ import gov.epa.exp_data_gathering.parse.JSONUtilities;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.ToxVal.ParseToxVal;
 
+
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
@@ -27,17 +32,19 @@ public class ParseEcotox {
 
 	Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 	UnitConverter uc = new UnitConverter("Data" + File.separator + "density.txt");
-	
-	public void getAcuteAquaticExperimentalRecords() {
 
+	String source=ExperimentalConstants.strSourceEcotox_2023_12_14;
+	String folder="data\\experimental\\"+source+"\\";
+	String filepathWSexpLookup=folder+"WS_query_to_get_median_logWS_g_L.json";
+	String filepathWSpred=folder+"WS pred xgb.json";
+	
+	
+	public void getAcuteAquaticExperimentalRecords(boolean excludeByWS) {
 
 		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
-		
-		String source=ExperimentalConstants.strSourceEcotox;
-		
+		String source=ExperimentalConstants.strSourceEcotox_2023_12_14;
 		List<RecordEcotox>recordsOriginal=null;
-		
-		boolean createOriginalRecords=true;
+		boolean createOriginalRecords=false;
 		
 		if (createOriginalRecords) {
 			recordsOriginal=RecordEcotox.get_96hr_FHM_LC50_Tox_Records_From_DB();
@@ -62,6 +69,7 @@ public class ParseEcotox {
 //		Hashtable<String, Double> htMWfromDTXSID = getMolWeightHashtable();//usi
 						
 		for (RecordEcotox re:recordsOriginal) {
+
 			
 			if(!re.isAcceptableDuration(4.0)) {
 //				System.out.println(re.getStudyDurationValueInDays());
@@ -72,29 +80,20 @@ public class ParseEcotox {
 //				System.out.println(gson.toJson(re));
 //			}
 			
-			addExperimentalRecords(re, experimentalRecords);
+			addExperimentalRecords(re, experimentalRecords,source);
 //			addExperimentalRecords(re, experimentalRecords,htMWfromDTXSID);//only gets you 3 more chemicals- almost all in g/L!
 			htRecordEcotox.put(re.test_id,re);
 		}
-		
-		//Writer experimental records to Json file:
-		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + source;
-		String fileNameJsonExperimentalRecords = "Ecotox_"+propertyName+" Experimental Records.json";
-		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
-		
-		//Write experimental records to excel file:
-//		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
-				
-//		ExperimentalRecord er0=experimentalRecords.get(0);		
-//		String test_id=(String)er0.experimental_parameters.get("test_id");
-//		RecordEcotox re=htRecordEcotox.get(test_id);
-//		System.out.println(gson.toJson(re));
-				
+
+		if(excludeByWS) excludeByWS(experimentalRecords);
+
+		//TODO filter out exposure_type="NR"
+
 		
 		Hashtable<String, List<ExperimentalRecord>> htER = createExpRecordHashtable(experimentalRecords);
-				
+//		compareExposureTypeFactors(experimentalRecords);
 		//Print the largest bad records:
-		lookAtLargestDeviations(htRecordEcotox, htER);
+//		lookAtLargestDeviations(htRecordEcotox, htER);
 //		printRecords(htRecordEcotox, htER);
 		
 		double avgSD=0;
@@ -122,7 +121,71 @@ public class ParseEcotox {
 		System.out.println("Avg SD\t"+avgSD);		
 		
 		
+		//Writer experimental records to Json file:
+		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + source;
+		String fileNameJsonExperimentalRecords = source+"_"+propertyName+" Experimental Records.json";
+		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
+		
+		//Write experimental records to excel file:
+		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
+
+		
 	}
+
+
+
+
+
+	private void compareExposureTypeFactors(ExperimentalRecords experimentalRecords) {
+		Hashtable<String, Double>htER_F=createExpRecordHashtableExposureType(experimentalRecords, "F");
+		Hashtable<String, Double>htER_S=createExpRecordHashtableExposureType(experimentalRecords, "S");
+		Hashtable<String, Double>htER_R=createExpRecordHashtableExposureType(experimentalRecords, "R");
+				
+		compareFactors(htER_F, htER_S,"Flowthrough","Static");
+		compareFactors(htER_F, htER_R,"Flowthrough","Renewal");
+		
+		System.out.println("F\t"+htER_F.size());
+		System.out.println("S\t"+htER_S.size());
+		System.out.println("R\t"+htER_R.size());
+	}
+
+
+
+
+
+	private void compareFactors(Hashtable<String, Double> ht1, Hashtable<String, Double> ht2,String factor1,String factor2) {
+		List<Double>xList=new ArrayList<>();
+		List<Double>yList=new ArrayList<>();
+		
+		for(String dtxsid:ht1.keySet()) {
+			if(!ht2.containsKey(dtxsid)) continue;
+			double valF=ht1.get(dtxsid);
+			double valS=ht2.get(dtxsid);
+			xList.add(valF);
+			yList.add(valS);
+		}
+		double []x=new double[xList.size()];
+		double []y=new double[yList.size()];
+		
+		for(int i=0;i<xList.size();i++) x[i]=xList.get(i);
+		for(int i=0;i<yList.size();i++) y[i]=yList.get(i);
+		
+		String xtitle=factor1+" median logTox_g_L";
+		String ytitle=factor2+" median logTox_g_L";
+//		String title="Test set predictions for the "+methodColumnName+" method";
+		String title=factor1+" vs "+factor2;
+		fraChart.JLabelChart fc = new fraChart.JLabelChart(x,y,title,xtitle,ytitle);
+
+		fc.doDrawLegend=false;
+		fc.doDrawStatsR2=true;
+		fc.doDrawStatsMAE=false;
+		fc.setVisible(true);
+		
+		fc.WriteImageToFile("data\\experimental\\ECOTOX_2023_12_14\\"+title+".png");
+	}
+	
+	
+	
 
 
 	private Hashtable<String, Double> getMolWeightHashtable() {
@@ -145,6 +208,55 @@ public class ParseEcotox {
 		}
 		return htMWfromDTXSID;
 	}
+	
+	/**
+	 * 
+	 * -- WS query to get median logWS_g_L for each DTXSID from WS modeling dataset 
+	 * select dpc.dtxsid, percentile_cont(0.5) WITHIN GROUP (ORDER BY log10(dpc.property_value*dr.mol_weight)) as median_logWS_g_L 
+	 * from qsar_datasets.datasets d
+	 * join qsar_datasets.data_points dp on dp.fk_dataset_id = d.id 
+	 * join qsar_datasets.data_point_contributors dpc on dpc.fk_data_point_id = dp.id
+	 * join exp_prop.property_values pv on dpc.exp_prop_property_values_id=pv.id 
+	 * join qsar_datasets.properties p on d.fk_property_id = p.id 
+	 * join qsar_datasets.datasets_in_cheminformatics_modules did on did.fk_property_id = d.fk_property_id
+	 * join qsar_datasets.units u on u.id =d.fk_unit_id_contributor
+	 * left join qsar_models.dsstox_records dr on dr.dtxsid=dpc.dtxsid 
+	 * where d.id =did.fk_datasets_id and keep=true and p.name='Water solubility' 
+	 * group by dpc.dtxsid;
+	 * 
+	 * @return
+	 */
+	private Hashtable<String, Double> createExpWSHashtable() {
+		Hashtable<String,Double>htWSfromDTXSID=new Hashtable<>();
+
+		Type listType = new TypeToken<ArrayList<JsonObject>>(){}.getType();
+		
+		List<JsonObject> jaMolWeight=null;
+		try {
+			
+			File file=new File(filepathWSexpLookup);
+			
+			if(!file.exists()) {
+				System.out.println("Missing WS lookup file:\t"+filepathWSexpLookup);
+				return null;
+			}
+			
+			jaMolWeight = gson.fromJson(new FileReader(filepathWSexpLookup), listType);
+			
+			for (JsonObject jo:jaMolWeight) {
+				String dtxsid=jo.get("dtxsid").getAsString();
+				Double ws_g_L=Math.pow(10.0,jo.get("median_logws_g_l").getAsDouble());//convert log value back to just g_L
+				htWSfromDTXSID.put(dtxsid,ws_g_L);
+//				System.out.println(dtxsid+"\t"+ws_g_L);
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return htWSfromDTXSID;
+	}
+
 
 
 	private Hashtable<String, List<ExperimentalRecord>> createExpRecordHashtable(
@@ -152,6 +264,8 @@ public class ParseEcotox {
 		Hashtable<String,List<ExperimentalRecord>>htER=new Hashtable<>();
 		
 		for (ExperimentalRecord er:experimentalRecords)  {
+			
+			if(!er.keep) continue;
 			
 			//Only use the ones with g/L in the stats calcs:
 			if(er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) {
@@ -170,6 +284,54 @@ public class ParseEcotox {
 			}
 		}
 		return htER;
+	}
+	
+	private Hashtable<String, Double> createExpRecordHashtableExposureType(
+			ExperimentalRecords experimentalRecords,String exposureType) {
+		
+		Hashtable<String,List<Double>>htER=new Hashtable<>();
+		
+		for (ExperimentalRecord er:experimentalRecords)  {
+			if(!er.keep) continue;
+			if(!er.experimental_parameters.get("exposure_type").equals(exposureType)) continue;
+			
+			//Only use the ones with g/L in the stats calcs:
+			if(er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) {
+//				System.out.println(er.casrn+"\t"+er.property_value_point_estimate_final);
+				
+				if(htER.containsKey(er.dsstox_substance_id) ) {
+					List<Double>recs=htER.get(er.dsstox_substance_id);
+					recs.add(Math.log10(er.property_value_point_estimate_final));	
+				} else {
+					List<Double>recs=new ArrayList<>();
+					recs.add(Math.log10(er.property_value_point_estimate_final));
+					htER.put(er.dsstox_substance_id, recs);
+				}
+			}
+		}
+		Hashtable<String,Double>htER_median_logTox_g_L=new Hashtable<>();
+		
+		for (String dtxsid:htER.keySet()) {
+			List<Double>values=htER.get(dtxsid);
+			Collections.sort(values);
+			htER_median_logTox_g_L.put(dtxsid,getMedianValue(values));
+		}
+		
+		return htER_median_logTox_g_L;
+	}
+
+	
+	double getMedianValue(List<Double>values) {
+		int size=values.size();
+		if (size % 2 == 0) {//even number of records, need to determine average of middle 2 values
+			double v1 = values.get(size / 2 - 1);
+			double v2 = values.get(size / 2);
+			return (v1 +v2) / 2.0;
+		} else if (size==1) {//only 1 record
+			return values.get(0);
+		} else {//odd number of records, use middle one
+			return values.get(size/2);
+		}	
 	}
 
 
@@ -223,13 +385,17 @@ public class ParseEcotox {
 		
 		double maxVal=0;
 		
+		
 		for(String dtxsid:htER.keySet()) {
 			List<ExperimentalRecord>recs=htER.get(dtxsid);
 			
-			System.out.println(dtxsid);
+//			System.out.println(dtxsid);
+//			System.out.println(recs.get(0).casrn);
 			
 			for (ExperimentalRecord er:recs) {
-				System.out.println("\t"+er.property_value_point_estimate_original+"\t"+er.property_value_units_original+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);
+				
+//				System.out.println(er.casrn+"\t"+er.property_value_point_estimate_original+"\t"+er.property_value_units_original+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);
+				System.out.println(er.experimental_parameters.get("test_id")+"\t"+er.dsstox_substance_id+"\t"+er.casrn+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);
 				
 				if(er.property_value_point_estimate_final>maxVal) maxVal=er.property_value_point_estimate_final;
 				
@@ -239,41 +405,87 @@ public class ParseEcotox {
 		
 		System.out.println("maxVal="+maxVal+" g/L");
 	}
-
 	
-	private void addExperimentalRecords(RecordEcotox r, ExperimentalRecords recordsExperimental,Hashtable<String,Double>htMWfromDTXSID) {
+	private void excludeByWS(ExperimentalRecords records) {
 
+		Hashtable<String, Double>htWS=createExpWSHashtable();
 		
-		ExperimentalRecord er1=r.toExperimentalRecord(1);
+//		Hashtable<String, Double>htWS=getHashtableWSpred();
 		
-		if(er1.keep) {
-			uc.convertRecord(er1);
-			fixMolarUnits(r, htMWfromDTXSID, er1);
-			recordsExperimental.add(er1);				
-		}
-		
-		ExperimentalRecord er2=r.toExperimentalRecord(2);
-				
-		if(er2.keep) {
-			uc.convertRecord(er2);
+		int count=0;
+		int countUnmeasured=0;
+		int countMeasured=0;
+		int countNoExpWS=0;
+
+		for(ExperimentalRecord er:records) {
+			Double WS_g_L=null;
 			
-			fixMolarUnits(r, htMWfromDTXSID, er2);
-			recordsExperimental.add(er2);	
+			if(htWS.containsKey(er.dsstox_substance_id)) {
+				WS_g_L=htWS.get(er.dsstox_substance_id);
+				
+				
+				if(er.property_value_point_estimate_final > WS_g_L && er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) {
+					er.keep=false;
+					er.reason="Toxicity exceeds experimental median water solubility";
+									
+					
+					String chem_analysis_method=(String)er.experimental_parameters.get("chem_analysis_method");
+					
+					if(chem_analysis_method.equals("U") || chem_analysis_method.equals("--") || chem_analysis_method.equals("NC") || chem_analysis_method.equals("NR") || chem_analysis_method.equals("X")) countUnmeasured++;
+					if(chem_analysis_method.equals("M") || chem_analysis_method.equals("Z")) countMeasured++;
+					
+//					System.out.println(++count+"\t"+er.property_value_point_estimate_final+"\t"+WS_g_L+"\t"+chem_analysis_method);
+				}
+			} else {
+				countNoExpWS++;
+			}
+
+			//				System.out.println(er.casrn+"\t"+er.property_value_point_estimate_original+"\t"+er.property_value_units_original+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);
+			//				System.out.println(er.experimental_parameters.get("test_id")+"\t"+er.dsstox_substance_id+"\t"+er.casrn+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final+"\t"+WS_g_L);
 		}
 		
-//		if(er1.keep && er2.keep) {
-//			System.out.println(er1.dsstox_substance_id+"\t"+er1.property_value_point_estimate_final+"\t"+er2.property_value_point_estimate_final);
-//		}
-				
-//		er.recordOriginal=r;
-		
+		System.out.println("count where Tox>median exp WS\t"+count);
+		System.out.println("count unmeasured\t"+countUnmeasured);
+		System.out.println("count measured\t"+countMeasured);
+		System.out.println("count no exp WS\t"+countNoExpWS);
+
 	}
+
+
+	
+//	private void addExperimentalRecords(RecordEcotox r, ExperimentalRecords recordsExperimental,Hashtable<String,Double>htMWfromDTXSID,String sourceName) {
+//
+//		
+//		ExperimentalRecord er1=r.toExperimentalRecord(1,sourceName);
+//		
+//		if(er1.keep) {
+//			uc.convertRecord(er1);
+//			fixMolarUnits(r, htMWfromDTXSID, er1);
+//			recordsExperimental.add(er1);				
+//		}
+//		
+//		ExperimentalRecord er2=r.toExperimentalRecord(2,sourceName);
+//				
+//		if(er2.keep) {
+//			uc.convertRecord(er2);
+//			
+//			fixMolarUnits(r, htMWfromDTXSID, er2);
+//			recordsExperimental.add(er2);	
+//		}
+//		
+////		if(er1.keep && er2.keep) {
+////			System.out.println(er1.dsstox_substance_id+"\t"+er1.property_value_point_estimate_final+"\t"+er2.property_value_point_estimate_final);
+////		}
+//				
+////		er.recordOriginal=r;
+//		
+//	}
 	
 
 
-	private void addExperimentalRecords(RecordEcotox r, ExperimentalRecords recordsExperimental) {
+	private void addExperimentalRecords(RecordEcotox r, ExperimentalRecords recordsExperimental,String sourceName ) {
 		
-		ExperimentalRecord er1=r.toExperimentalRecord(1);
+		ExperimentalRecord er1=r.toExperimentalRecord(1,sourceName);
 		
 		if(er1.keep) {
 			uc.convertRecord(er1);
@@ -281,8 +493,9 @@ public class ParseEcotox {
 		} else {
 //			System.out.println(r.test_id+"\t"+er1.dsstox_substance_id+"\t"+er1.reason);
 		}
-		
-		ExperimentalRecord er2=r.toExperimentalRecord(2);
+
+		//Dont keep second tox values? they agree half the time and the other half they are way off!		
+		ExperimentalRecord er2=r.toExperimentalRecord(2,sourceName);
 				
 		if(er2.keep) {
 			uc.convertRecord(er2);
@@ -295,7 +508,6 @@ public class ParseEcotox {
 //			System.out.println(er1.dsstox_substance_id+"\t"+er1.property_value_point_estimate_final+"\t"+er2.property_value_point_estimate_final);
 //		}
 				
-//		er.recordOriginal=r;
 		
 	}
 
@@ -347,7 +559,7 @@ public class ParseEcotox {
 
 
 		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
-		String source=ExperimentalConstants.strSourceEcotox;
+		String source=ExperimentalConstants.strSourceEcotox_2023_12_14;
 		String jsonPath = "data/experimental/"+source+File.separator+source+" "+propertyName+" original records.json";
 
 		try {
@@ -379,18 +591,59 @@ public class ParseEcotox {
 		
 	}
 	
-	
+	void compareExpToPredWs() {
+		Hashtable<String, Double>htWS_exp= createExpWSHashtable();
+		
+		try {
+			Hashtable<String, Double> htPredWS = getHashtableWSpred();
 
+			System.out.println(htWS_exp.size());
+			System.out.println(htPredWS.size());
+			
+			for (String dtxsid:htPredWS.keySet()) {
+				if(!htWS_exp.containsKey(dtxsid))continue;
+					
+				System.out.println(dtxsid+"\t"+htWS_exp.get(dtxsid)+"\t"+htPredWS.get(dtxsid));
+			}
+			
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+
+
+
+
+	private Hashtable<String, Double> getHashtableWSpred()  {
+		Gson gson=new Gson();
+		Hashtable<String, Double> htPredWS;
+		try {
+			htPredWS = gson.fromJson(new FileReader(filepathWSpred), (Hashtable.class));
+			return htPredWS;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	
 	public static void main(String[] args) {
 		ParseEcotox p = new ParseEcotox();
 		p.uc.debug=true;
 		
-		p.getAcuteAquaticExperimentalRecords();
+		p.getAcuteAquaticExperimentalRecords(false);
 //		p.compareEcotoxToToxval();
 		
 //		p.maxExcelRows=999999;
-		
+//		p.compareExpToPredWs();
 
 	}
 
 }
+
+

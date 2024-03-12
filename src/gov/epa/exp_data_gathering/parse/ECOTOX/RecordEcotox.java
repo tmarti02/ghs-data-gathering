@@ -303,7 +303,7 @@ public class RecordEcotox {
 	public String publication_year;
 
 	
-	ExperimentalRecord toExperimentalRecord(int valueNumber) {
+	ExperimentalRecord toExperimentalRecord(int valueNumber,String sourceName) {
 
 		String conc_mean=null;
 		String conc_min=null;
@@ -335,12 +335,15 @@ public class RecordEcotox {
 		ExperimentalRecord er=new ExperimentalRecord();
 		
 		er.dsstox_substance_id=dtxsid;
+		er.source_name=sourceName;
 		
 		String CAS1=cas_number.substring(0,cas_number.length()-3);
 		String CAS2=cas_number.substring(cas_number.length()-3,cas_number.length()-1);
 		String CAS3=cas_number.substring(cas_number.length()-1,cas_number.length());
 				
 		er.casrn=CAS1+"-"+CAS2+"-"+CAS3;
+		
+		er.chemical_name=chemical_name;
 		
 //		System.out.println(cas_number+"\t"+er.casrn);
 		
@@ -349,6 +352,7 @@ public class RecordEcotox {
 		
 		LiteratureSource ls=new LiteratureSource();
 		er.literatureSource=ls;
+		ls.name=author+" ("+publication_year+")";
 		ls.author=author;
 		ls.title=title;
 		ls.year=publication_year;
@@ -392,7 +396,10 @@ public class RecordEcotox {
 		} 
 		
 		er.experimental_parameters=new Hashtable<>();
+		
 		er.experimental_parameters.put("test_id", test_id);
+		er.experimental_parameters.put("exposure_type", exposure_type);
+		er.experimental_parameters.put("chem_analysis_method", chem_analysis_method);
 		
 		er.property_value_string=er.property_value_point_estimate_original+" "+conc_unit;//TODO
 		
@@ -455,11 +462,13 @@ public class RecordEcotox {
 		String sql = "select *\n" + "from tests t\n" + "join results r on t.test_id=r.test_id\n"
 				+ "join chemicals c on c.cas_number=t.test_cas\n"
 				+ "join references_ r2 on r2.reference_number=t.reference_number\n"
+//				+ "left join exposure_type_codes etc on t.exposure_type=etc.code "
+//				+ "left join chemical_analysis_codes cac on r.chem_analysis_method=cac.code "
 				+ "where t.species_number=1;";
 
 		try {
 //			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_06_15_2023.db";
-			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_12_14_2023.db";
+			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
 
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
 			ResultSet rs = stat.executeQuery(sql);
@@ -544,6 +553,11 @@ public class RecordEcotox {
 		if(obs_duration_mean==null) return null;
 		
 		Double studyDurationValueInDays = Double.parseDouble(obs_duration_mean);
+		
+		
+//		if(obs_duration_unit.equals("dph")) {
+//			System.out.println(obs_duration_mean+"\t"+obs_duration_unit);
+//		}
 
 		switch (obs_duration_unit) {
 		
