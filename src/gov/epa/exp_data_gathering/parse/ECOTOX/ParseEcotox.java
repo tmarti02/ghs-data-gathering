@@ -68,11 +68,12 @@ public class ParseEcotox {
 //		Hashtable<String, Double> htMWfromDTXSID = getMolWeightHashtable();//usi
 						
 		for (RecordEcotox re:recordsOriginal) {
-			
+
 			if(!re.isAcceptableDuration(durationDays)) {
 //				System.out.println(re.getStudyDurationValueInDays());
 				continue;//4 days
 			}
+			re.property_name=propertyName;
 			
 //			if(re.dtxsid.equals("DTXSID0034566")) {
 //				System.out.println(gson.toJson(re));
@@ -92,7 +93,7 @@ public class ParseEcotox {
 		
 		Hashtable<String, List<ExperimentalRecord>> htER = createExpRecordHashtable(experimentalRecords);
 //		compareExposureTypeFactors(experimentalRecords);
-		compareConcentrationTypeFactors(experimentalRecords);
+//		compareConcentrationTypeFactors(experimentalRecords);
 		//Print the largest bad records:
 //		lookAtLargestDeviations(htRecordEcotox, htER);
 //		printRecords(htRecordEcotox, htER);

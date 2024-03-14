@@ -505,7 +505,6 @@ public class RecordEcotox {
 //					System.out.println(rs.getMetaData().getColumnLabel(i));
 				}
 				
-				rec.property_name=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
 				rec.setExposureType();
 				rec.setChemicalAnalysisMethod();
 				records.add(rec);
