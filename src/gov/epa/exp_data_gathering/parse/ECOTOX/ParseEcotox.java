@@ -39,20 +39,19 @@ public class ParseEcotox {
 	String filepathWSpred=folder+"WS pred xgb.json";
 	
 	
-	public void getAcuteAquaticExperimentalRecords(boolean excludeByExposureType,boolean includeConc2,		String propertyName,String source,int species_number,double durationDays) {
+	public void getAcuteAquaticExperimentalRecords(boolean excludeByExposureType,boolean includeConc2,String propertyName,String source,int species_number,double durationDays) {
 
 
 		List<RecordEcotox>recordsOriginal=null;
 		boolean createOriginalRecords=true;
-		
-		if (createOriginalRecords) {
-			recordsOriginal=RecordEcotox.get_Acute_Tox_Records_From_DB(species_number);
-			String jsonPath = "data/experimental/"+source+File.separator+source+" "+propertyName+" original records.json";
-			int howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(recordsOriginal,jsonPath);
 
+		String jsonPath = "data/experimental/"+source+File.separator+source+" "+propertyName+" original records.json";
+
+		if (createOriginalRecords) {
+			recordsOriginal=RecordEcotox.get_Acute_Tox_Records_From_DB(species_number,propertyName);
+			int howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(recordsOriginal,jsonPath);
 		} else {
 			try {
-				String jsonPath = "data/experimental/"+source+File.separator+source+" "+propertyName+" original records.json";
 				RecordEcotox[]records2 = gson.fromJson(new FileReader(jsonPath), RecordEcotox[].class);
 				recordsOriginal=Arrays.asList(records2);
 				System.out.println(recordsOriginal.size());
@@ -73,7 +72,6 @@ public class ParseEcotox {
 //				System.out.println(re.getStudyDurationValueInDays());
 				continue;//4 days
 			}
-			re.property_name=propertyName;
 			
 //			if(re.dtxsid.equals("DTXSID0034566")) {
 //				System.out.println(gson.toJson(re));

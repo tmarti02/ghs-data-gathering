@@ -449,7 +449,7 @@ public class RecordEcotox {
 
 	}
 
-	public static List<RecordEcotox> get_Acute_Tox_Records_From_DB(int speciesNumber) {
+	public static List<RecordEcotox> get_Acute_Tox_Records_From_DB(int speciesNumber,String propertyName) {
 
 		List<RecordEcotox>records=new ArrayList<>();
 
@@ -504,7 +504,7 @@ public class RecordEcotox {
 					setValue(columnLabel, columnValue, rec);
 //					System.out.println(rs.getMetaData().getColumnLabel(i));
 				}
-				
+				rec.property_name=propertyName;
 				rec.setExposureType();
 				rec.setChemicalAnalysisMethod();
 				records.add(rec);
