@@ -638,7 +638,7 @@ public class RecordEcotox {
 	
 	public static void main(String[] args) {
 		RecordEcotox r = new RecordEcotox();
-		 List<RecordEcotox>records=r.get_Acute_Tox_Records_From_DB(1);
+		 List<RecordEcotox>records=r.get_Acute_Tox_Records_From_DB(1,ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50);
 
 	}
 
