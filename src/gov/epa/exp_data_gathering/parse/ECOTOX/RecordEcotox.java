@@ -449,7 +449,7 @@ public class RecordEcotox {
 
 	}
 
-	public static List<RecordEcotox> get_96hr_FHM_LC50_Tox_Records_From_DB() {
+	public static List<RecordEcotox> get_Acute_Tox_Records_From_DB(int speciesNumber) {
 
 		List<RecordEcotox>records=new ArrayList<>();
 
@@ -460,12 +460,15 @@ public class RecordEcotox {
 				+ "join chemicals c on c.cas_number=t.test_cas\n"
 				+ "join references_ r2 on r2.reference_number=t.reference_number\n"
 //				+ "left join exposure_type_codes etc on t.exposure_type=etc.code "
-//				+ "left join chemical_analysis_codes cac on r.chem_analysis_method=cac.code "
-				+ "where t.species_number=1 and \r\n"
+//				+ "left join chemical_analysis_codes cac on r.chem_analysis_method=cac.code "								
+				+ "where t.species_number="+speciesNumber+" and \r\n"
 				+ "media_type like '%FW%' and test_location like '%LAB%' and \r\n"
 				+ "endpoint like '%LC50%' and \r\n"
-				+ "measurement like '%MORT%';";
+				+ "measurement like '%MORT%';";//just use MORT to be safe
 //				+ "(measurement like '%MORT%' or measurement like '%SURV%');";
+		
+		//Note filter for duration happens later
+		
 				
 		try {
 //			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_06_15_2023.db";
@@ -648,7 +651,7 @@ public class RecordEcotox {
 	
 	public static void main(String[] args) {
 		RecordEcotox r = new RecordEcotox();
-		r.get_96hr_FHM_LC50_Tox_Records_From_DB();
+		 List<RecordEcotox>records=r.get_Acute_Tox_Records_From_DB(1);
 
 	}
 

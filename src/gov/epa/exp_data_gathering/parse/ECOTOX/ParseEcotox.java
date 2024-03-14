@@ -43,11 +43,13 @@ public class ParseEcotox {
 
 		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
 		String source=ExperimentalConstants.strSourceEcotox_2023_12_14;
+		int species_number=1;
+
 		List<RecordEcotox>recordsOriginal=null;
 		boolean createOriginalRecords=true;
 		
 		if (createOriginalRecords) {
-			recordsOriginal=RecordEcotox.get_96hr_FHM_LC50_Tox_Records_From_DB();
+			recordsOriginal=RecordEcotox.get_Acute_Tox_Records_From_DB(species_number);
 			String jsonPath = "data/experimental/"+source+File.separator+source+" "+propertyName+" original records.json";
 			int howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(recordsOriginal,jsonPath);
 
@@ -69,7 +71,6 @@ public class ParseEcotox {
 //		Hashtable<String, Double> htMWfromDTXSID = getMolWeightHashtable();//usi
 						
 		for (RecordEcotox re:recordsOriginal) {
-
 			
 			if(!re.isAcceptableDuration(4.0)) {
 //				System.out.println(re.getStudyDurationValueInDays());
@@ -717,6 +718,9 @@ public class ParseEcotox {
 		
 		boolean excludeByExposureType=true;
 		boolean includeConc2=false;
+		
+		
+		
 		p.getAcuteAquaticExperimentalRecords(excludeByExposureType,includeConc2);
 		//TODO implement filter to exclude LC50>10 * baseline LC50
 		
