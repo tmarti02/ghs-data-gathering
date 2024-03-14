@@ -598,43 +598,31 @@ public class RecordEcotox {
 		
 		if(obs_duration_mean==null) return null;
 		
-		Double studyDurationValueInDays = Double.parseDouble(obs_duration_mean);
+		Double studyDurationValue = Double.parseDouble(obs_duration_mean);
 		
-		
-//		if(obs_duration_unit.equals("dph")) {
-//			System.out.println(obs_duration_mean+"\t"+obs_duration_unit);
-//		}
-
 		switch (obs_duration_unit) {
 		
 		case "d":
-			break;
+			return studyDurationValue;
 		case "wk":
-			studyDurationValueInDays *= 7.0;
-			break;
+			return studyDurationValue *= 7.0;
 		case "mo":
-			studyDurationValueInDays *= 30.0;
-			break;
+			return studyDurationValue *= 30.0;
 		case "yr":
-			studyDurationValueInDays *= 365.0;
-			break;
+			return studyDurationValue *= 365.0;
 		case "h":
-			studyDurationValueInDays /= 24.0;
-			break;
+			return studyDurationValue /= 24.0;
 		case "mi"://minutes
-			studyDurationValueInDays /= 1440.0;
-			break;
+			return studyDurationValue /= 1440.0;
 		case "-":
 //			System.out.println("No study duration units for ToxVal ID " + toxval_id);
-			studyDurationValueInDays = null;
-			break;
+			return null;
 		default:
 			System.out.println("Unknown study duration units for ToxVal ID " + test_id + ": " + obs_duration_unit);
-			studyDurationValueInDays = null;
-			break;
+			return null;
 		}
 		
-		return studyDurationValueInDays;
+		
 	}
 
 	public boolean isAcceptableDuration(Double durationDays) {

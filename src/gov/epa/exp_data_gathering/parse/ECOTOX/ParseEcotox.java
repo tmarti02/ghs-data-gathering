@@ -39,11 +39,8 @@ public class ParseEcotox {
 	String filepathWSpred=folder+"WS pred xgb.json";
 	
 	
-	public void getAcuteAquaticExperimentalRecords(boolean excludeByExposureType,boolean includeConc2) {
+	public void getAcuteAquaticExperimentalRecords(boolean excludeByExposureType,boolean includeConc2,		String propertyName,String source,int species_number,double durationDays) {
 
-		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
-		String source=ExperimentalConstants.strSourceEcotox_2023_12_14;
-		int species_number=1;
 
 		List<RecordEcotox>recordsOriginal=null;
 		boolean createOriginalRecords=true;
@@ -72,7 +69,7 @@ public class ParseEcotox {
 						
 		for (RecordEcotox re:recordsOriginal) {
 			
-			if(!re.isAcceptableDuration(4.0)) {
+			if(!re.isAcceptableDuration(durationDays)) {
 //				System.out.println(re.getStudyDurationValueInDays());
 				continue;//4 days
 			}
@@ -719,10 +716,11 @@ public class ParseEcotox {
 		boolean excludeByExposureType=true;
 		boolean includeConc2=false;
 		
-		
-		
-		p.getAcuteAquaticExperimentalRecords(excludeByExposureType,includeConc2);
-		//TODO implement filter to exclude LC50>10 * baseline LC50
+		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
+		String source=ExperimentalConstants.strSourceEcotox_2023_12_14;
+		int species_number=1;//species number in Ecotox species table
+		double durationDays=4.0;
+		p.getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, source, species_number,durationDays);
 		
 //		p.compareEcotoxToToxval();
 		
