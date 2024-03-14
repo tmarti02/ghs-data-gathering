@@ -305,6 +305,7 @@ public class RecordEcotox {
 	
 	ExperimentalRecord toExperimentalRecord(int valueNumber,String sourceName) {
 
+		String conc_type=null;
 		String conc_mean=null;
 		String conc_min=null;
 		String conc_max=null;
@@ -315,7 +316,8 @@ public class RecordEcotox {
 		String conc_unit=null;
 		
 		if(valueNumber==1) {
-			conc_mean=conc1_mean;
+			conc_type=conc1_type;
+			conc_mean=conc1_mean;			
 			conc_min=conc1_min;
 			conc_max=conc1_max;
 			conc_mean_op=conc1_mean_op;
@@ -323,6 +325,7 @@ public class RecordEcotox {
 			conc_max_op=conc1_max_op;
 			conc_unit=conc1_unit;
 		} else if (valueNumber==2) {
+			conc_type=conc2_type;
 			conc_mean=conc2_mean;
 			conc_min=conc2_min;
 			conc_max=conc2_max;
@@ -400,6 +403,7 @@ public class RecordEcotox {
 		er.experimental_parameters.put("test_id", test_id);
 		er.experimental_parameters.put("exposure_type", exposure_type);
 		er.experimental_parameters.put("chem_analysis_method", chem_analysis_method);
+		er.experimental_parameters.put("concentration_type", getConcentrationType(conc_type));
 		
 		er.property_value_string=er.property_value_point_estimate_original+" "+conc_unit;//TODO
 		
@@ -452,20 +456,17 @@ public class RecordEcotox {
 		
 		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 		
-//		select * from tests t
-//		join results r on t.test_id=r.test_id
-//		join chemicals c on c.cas_number=t.test_cas
-//		join references_ r2 on r2.reference_number=t.reference_number
-//		where t.species_number=1 
-//		and ((r.obs_duration_mean=96 and r.obs_duration_unit='h')  or (r.obs_duration_mean=4 and r.obs_duration_unit='d'))
-		
 		String sql = "select *\n" + "from tests t\n" + "join results r on t.test_id=r.test_id\n"
 				+ "join chemicals c on c.cas_number=t.test_cas\n"
 				+ "join references_ r2 on r2.reference_number=t.reference_number\n"
 //				+ "left join exposure_type_codes etc on t.exposure_type=etc.code "
 //				+ "left join chemical_analysis_codes cac on r.chem_analysis_method=cac.code "
-				+ "where t.species_number=1;";
-
+				+ "where t.species_number=1 and \r\n"
+				+ "media_type like '%FW%' and test_location like '%LAB%' and \r\n"
+				+ "endpoint like '%LC50%' and \r\n"
+				+ "measurement like '%MORT%';";
+//				+ "(measurement like '%MORT%' or measurement like '%SURV%');";
+				
 		try {
 //			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_06_15_2023.db";
 			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
@@ -502,33 +503,8 @@ public class RecordEcotox {
 				}
 				
 				rec.property_name=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
-				
-				
-				if(rec.media_type!=null) {
-					if (!rec.media_type.contains("FW"))
-					continue;
-				}
-				
-				if (rec.test_location != null) {
-					if (!rec.test_location.contains("LAB"))
-						continue;
-				}
-
-				
-				if (rec.endpoint != null) {
-					if (!rec.endpoint.contains("LC50"))
-						continue;
-				}
-				
-				
-//				if (jo.get("effect") != null) {
-//					effect = jo.get("effect").getAsString();
-//				}
-//
-				if (rec.measurement != null) {
-					if (!rec.measurement.contains("MORT") && !rec.measurement.contains("SURV"))
-						continue;
-				}
+				rec.setExposureType();
+				rec.setChemicalAnalysisMethod();
 				records.add(rec);
 			}
 
@@ -546,6 +522,73 @@ public class RecordEcotox {
 
 	}
 
+	
+	void setExposureType() {
+		
+		if(exposure_type.contains("F")) {
+			exposure_type="Flow-through";
+		} else if(exposure_type.equals("R")) {
+			exposure_type="Renewal";
+		} else if(exposure_type.contains("S")) {
+			exposure_type="Static";
+		} else if(exposure_type.contains("L")) {
+			exposure_type="Leaching";
+		} else if(exposure_type.contains("E")) {
+			exposure_type="Lentic";
+		} else if(exposure_type.contains("O")) {
+			exposure_type="Lotic";
+		} else if(exposure_type.contains("NR")) {
+			exposure_type="Not reported";			
+		} else if(exposure_type.contains("P")) {
+			exposure_type="Pulse";
+		} else {
+			System.out.println("Unknown exposure type:\t"+exposure_type);
+		}
+	}
+	
+	void setChemicalAnalysisMethod() {
+		
+		String cam=chem_analysis_method;
+		
+		if(cam.contains("M")) {
+			chem_analysis_method="Measured";			
+		} else if(cam.contains("Z")) {
+			chem_analysis_method="Chemical analysis reported";
+		} else if(cam.contains("X")) {
+			chem_analysis_method="Unmeasured values (some measured values reported in article)";
+		} else if(cam.equals("U")) {
+			chem_analysis_method="Unmeasured";
+		} else if(cam.contains("NR")) {
+			chem_analysis_method="Not reported";
+		} else if(cam.contains("NC")) {
+			chem_analysis_method="Not coded";
+		} else {
+			System.out.println("Unknown chem_analysis_method:\t"+chem_analysis_method);
+		}
+		
+		
+	}
+	
+	String getConcentrationType(String conc_type) {
+		
+		if(conc_type==null) return "Not available";
+		else if(conc_type.equals("--")) return "Unspecified";
+		else if (conc_type.equals("A")) return "Active ingredient";
+		else if (conc_type.equals("D")) return "Dissolved";
+		else if (conc_type.equals("F")) return "Formulation";
+		else if (conc_type.equals("L")) return "Labile (free metal ion)";
+		else if (conc_type.equals("NA")) return "Not applicable";
+		else if (conc_type.equals("NC")) return "Not coded";
+		else if (conc_type.equals("NR")) return "Not reported";
+		else if (conc_type.equals("T")) return "Total";
+		else if (conc_type.equals("U")) return "Unionized";
+		else {
+			System.out.println("Unknown conc_type:\t"+conc_type);
+			return conc_type;
+		}
+		
+			
+	}
 	
 
 	public Double getStudyDurationValueInDays() {
