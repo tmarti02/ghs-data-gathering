@@ -580,17 +580,34 @@ public class ParseUtilities extends Parse {
 		}
 		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(i[nm])?(s[ou]l?uble|miscible|sol(?!u)))( [\\(]?(in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue1);
 		while (solubilityMatcher.find()) {
-			String qualifier = solubilityMatcher.group(1);
-			String prep = solubilityMatcher.group(6);
-			String solvent = solubilityMatcher.group(9);
-			if (solvent==null || solvent.length()==0 || (solvent.contains("water") && !solvent.contains("alc")) || (
-					solvent.contains("aqueous solution") && !solvent.contains("alkaline"))) {
-				er.property_value_qualitative = qualifier;
-				gotQualitativeSolubility = true;
-			} else {
-				prep = prep==null ? " " : prep;
-				er.updateNote(qualifier + prep + solvent);
-				gotQualitativeSolubility = true;
+
+			try {
+
+				String qualifier = solubilityMatcher.group(1);
+				String prep = solubilityMatcher.group(6);
+				String solvent = solubilityMatcher.group(9);
+				
+				if (solvent == null || solvent.length() == 0 || (solvent.contains("water") && !solvent.contains("alc"))
+						|| (solvent.contains("aqueous solution") && !solvent.contains("alkaline"))) {
+					er.property_value_qualitative = qualifier;
+					gotQualitativeSolubility = true;
+				} else {
+					prep = prep == null ? " " : prep;
+					er.updateNote(qualifier + prep + solvent);
+					gotQualitativeSolubility = true;
+				}
+			
+			} catch (Exception ex) {
+			
+				//TODO TMM 2024-03-22, could handle with regex but this fix works:
+				if(propertyValue.contains("SOL IN ALL PROPORTIONS IN WATER") || 
+						propertyValue.contains("Solubility in water: soluble")||
+						propertyValue.contains("Soluble in water")) {
+					
+					er.property_value_qualitative = propertyValue;
+					gotQualitativeSolubility = true;					
+				}
+				
 			}
 		}
 		
