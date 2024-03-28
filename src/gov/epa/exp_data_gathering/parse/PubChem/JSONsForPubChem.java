@@ -51,12 +51,16 @@ public class JSONsForPubChem {
 	public class Section {
 		@SerializedName("TOCHeading")
 		public String tocHeading;
+
 		@SerializedName("Description")
 		public String description;
+				
 		@SerializedName("Section")
 		public List<Section> section = null;
+		
 		@SerializedName("URL")
 		public String url;
+		
 		@SerializedName("Information")
 		public List<Information> information = null;
 	}
@@ -87,8 +91,17 @@ public class JSONsForPubChem {
 	public class Information {
 		@SerializedName("ReferenceNumber")
 		public String referenceNumber;
+
+		@SerializedName("Description")
+		public String description;
+
+		@SerializedName("Reference")
+		public List<String> reference;
+
+		
 		@SerializedName("Value")
 		public Value value;
+		
 		@SerializedName("Name")
 		public String name;
 	}
