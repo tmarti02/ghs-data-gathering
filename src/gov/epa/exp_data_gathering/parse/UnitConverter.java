@@ -111,6 +111,21 @@ public class UnitConverter {
 			er.keep = false;
 			er.reason = "Original units missing";
 
+		} else if (er.property_category != null) {
+			
+			if (er.property_category.toLowerCase().contains("bioconcentration")) {
+				convertBCF(er);
+			} else	if (er.property_category.toLowerCase().contains("acute oral toxicity") || er.property_category.toLowerCase().contains("acute dermal toxicity")) {
+				convertOralMammalianToxicity(er);			
+			}else if (er.property_category.toLowerCase().contains("acute aquatic toxicity")) {
+				convertSolubility(er);
+			} else if (er.property_category.toLowerCase().contains("acute inhalation toxicity")) {
+				convertInhalationMammalianToxicity(er);
+			} else {
+				System.out.println("UnitConverter: Unknown property category:\t"+er.property_category);
+			}
+			
+		
 		} else if (er.property_name.equals(ExperimentalConstants.strKmHL)
 				|| er.property_name.equals(ExperimentalConstants.strBIODEG_HL_HC)) {
 			convertKm(er);
@@ -159,16 +174,14 @@ public class UnitConverter {
 			convertHenrysLawConstant(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility)) {
 			convertSolubility(er);
+			
+
 		} else if (er.property_name.equals(ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50)
 				|| er.property_name.equals(ExperimentalConstants.strNINETY_SIX_HOUR_BLUEGILL_LC50)) {
+		
+			//TODO use property_category instead to get all the species at once
 			convertSolubility(er);
-
-		} else if (er.property_category != null && er.property_category.toLowerCase().contains("aquatic toxicity")) {
-			// Aquatic LC50 measurements are concentrations just like WS
-			convertSolubility(er);// TODO or just use convertToxicity???
-		} else if ((er.property_category != null
-				&& er.property_category.toLowerCase().contains("acute oral toxicity"))) {
-			convertOralMammalianToxicity(er);
+		
 		} else {
 //			if(debug) System.out.println("Need to handle property in UnitConverter.convertRecord");
 			System.out.println("Need to handle property " + er.property_name
@@ -199,18 +212,253 @@ public class UnitConverter {
 
 	}
 
+	/**
+	 * Need to use ideal gas law to convert ppm to g/L
+	 * 
+	 * @param er
+	 * @return
+	 */
+	private boolean convertInhalationMammalianToxicity(ExperimentalRecord er) {
+				
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_m3)
+				|| er.property_value_units_original.equals("ul/L")) {
+
+			if (er.casrn == null || htDensity.get(er.casrn) == null) {
+				er.flag = true;
+				er.updateNote("Conversion to mg/L not possible (missing density)");
+				System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
+				assignFinalFieldsWithoutConverting(er);
+				er.property_value_units_final = er.property_value_units_original;
+				return false;
+			} else {
+				double density = htDensity.get(er.casrn);
+//				System.out.println(er.casrn+"\tConversion to mg/L using density="+density);
+				convertAndAssignFinalFields(er, density / 1000.0);
+				er.property_value_units_final = ExperimentalConstants.str_g_L;
+				er.updateNote("Converted using density: " + density + " g/mL");
+			}
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_L)) {
+
+			if (er.casrn == null || htDensity.get(er.casrn) == null) {
+				er.flag = true;
+				er.updateNote("Conversion to mg/L not possible (missing density)");
+
+				System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
+
+				assignFinalFieldsWithoutConverting(er);
+				er.property_value_units_final = er.property_value_units_original;
+				return false;
+			} else {
+				double density = htDensity.get(er.casrn);
+
+//					System.out.println(er.casrn+"\tConversion to mg/L using density="+density);
+
+				convertAndAssignFinalFields(er, density);
+				er.property_value_units_final = ExperimentalConstants.str_g_L;
+				er.updateNote("Converted using density: " + density + " g/mL");
+			}
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_L)
+				|| er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL)
+				|| er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_m3)) {
+			// Added by TMM
+			convertAndAssignFinalFields(er, 1.0e-6);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_log_mg_L)) {
+			powConvertAndAssignFinalFields(er, 1.0 / 1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_M)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_M;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_log_M)) {
+			powAndAssignFinalFields(er);
+			er.property_value_units_final = ExperimentalConstants.str_M;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mM)) {
+			convertAndAssignFinalFields(er, 1.0 / 1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_M;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_uM)
+				|| er.property_value_units_original.equals("umol/L")) {
+			convertAndAssignFinalFields(er, 1.0 / 1000000.0);
+			er.property_value_units_final = ExperimentalConstants.str_M;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_nM)) {
+			convertAndAssignFinalFields(er, 1.0 / 1000000000.0);
+			er.property_value_units_final = ExperimentalConstants.str_M;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+		
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppm)
+				|| er.property_value_units_original.equals("AI ppm")) {
+			er.property_value_units_final = ExperimentalConstants.str_ppm;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+//			https://www.ccohs.ca/oshanswers/chemicals/convert.html
+			//Need MW: value in mg/m3 = MW g/mol  * tox ppm / 24.45
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppb)) {
+			convertAndAssignFinalFields(er, 1.0e-3);
+			er.property_value_units_final = ExperimentalConstants.str_ppm;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppt)) {
+			convertAndAssignFinalFields(er, 1.0e-6);
+			er.property_value_units_final = ExperimentalConstants.str_ppm;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)
+				|| er.property_value_units_original.equals(ExperimentalConstants.str_ug_mL)
+				|| er.property_value_units_original.equals("AI mg/L")) {
+			convertAndAssignFinalFields(er, 1.0 / 1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_L)
+				|| er.property_value_units_original.equals("AI ug/L")) {
+//			System.out.println("Converting ug/L");
+			convertAndAssignFinalFields(er, 1.0 / 1000000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ng_L)
+				|| er.property_value_units_original.equals("AI ng/L")) {
+			convertAndAssignFinalFields(er, 1.0 / 1e9);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_100mL)) {
+			convertAndAssignFinalFields(er, 10.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_kg_H20)) {
+			// TMM TODO we just have to assume a density of water
+			convertAndAssignFinalFields(er, 1.0 / 1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_kg_H20;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pct)) {
+			// TMM: Gabriel had the following but I dont think we can trust this conversion:
+//			convertAndAssignFinalFields(er,10.0);
+//			er.property_value_units_final = ExperimentalConstants.str_g_L;
+			// TMM: dont convert
+			er.property_value_units_final = ExperimentalConstants.str_pct;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pctWt)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_pctWt;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pctVol)
+				|| er.property_value_units_original.equals("% v/v")) {
+
+			// vol % * (1 ml A/ 100 ml water)/vol % * (1000 ml water / L water) * density (g
+			// A / ml A)
+//			if (er.casrn==null || htDensity.get(er.casrn) == null) {
+//				er.flag = true;
+//				er.updateNote("Conversion to mg/L not possible (missing density)");
+//				System.out.println(er.casrn+"\tConversion to g/L not possible (missing density)");
+//				assignFinalFieldsWithoutConverting(er);
+//				er.property_value_units_final = er.property_value_units_original;
+//				return false;
+//			} else {
+//				double density = htDensity.get(er.casrn);
+//				convertAndAssignFinalFields(er, 10.0*density);
+//				er.property_value_units_final = ExperimentalConstants.str_g_L;
+//				
+//				System.out.println(er.casrn+"\tConversion from pctVol to g/L using density="+density);
+//				System.out.println(er.dsstox_substance_id+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);				
+//				er.note="Converted using density: "+density+" g/mL";
+//			}
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (dimensions differ)");
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = er.property_value_units_original;
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_100mL)) {
+			convertAndAssignFinalFields(er, 1.0 / 100.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_10mL)) {
+			convertAndAssignFinalFields(er, 1.0 / 10.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_10mL)) {
+			convertAndAssignFinalFields(er, 100.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_100mL)) {
+			convertAndAssignFinalFields(er, 10.0 / 1000000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_mL)
+				|| er.property_value_units_original.equals(ExperimentalConstants.str_g_cm3)) {
+			convertAndAssignFinalFields(er, 1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+			// under construction - CR
+
+		} else if (er.property_value_units_original == null) {
+			er.keep = false;
+			er.reason = "Original units missing";
+
+		} else {
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (unknown units)");
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = er.property_value_units_original;
+			if (debug)
+				System.out.println(
+						"Unrecognized units for " + er.property_name + ": " + er.property_value_units_original);
+		}
+
+		return !er.flag;
+	}
+
 	private void convertText(ExperimentalRecord er) {
 		er.property_value_units_final = ExperimentalConstants.str_binary;
 	}
 
 	private void convertBCF(ExperimentalRecord er) {
+		
+//		System.out.println("enter convert bcf");
+		
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_L_KG)) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_L_KG;
+		
+//		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_L_g)) {
+			//TODO TMM: Some of these L_g values are way off if we convert them- perhaps a typo?
+//			er.property_value_units_final = ExperimentalConstants.str_L_KG;
+//			convertAndAssignFinalFields(er, 1.0e3);
+//		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_L_mg)) {
+//			er.property_value_units_final = ExperimentalConstants.str_L_KG;
+//			convertAndAssignFinalFields(er, 1.0e6);
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_LOG_L_KG)) {
 			powAndAssignFinalFields(er);
 			er.property_value_units_final = ExperimentalConstants.str_L_KG;
+
+		} else if(er.property_value_units_original.equals("RA") ||
+				er.property_value_units_original.equals("--") ||
+				er.property_value_units_original.equals("NA")||
+				er.property_value_units_original.equals("NR")) {
+			
+			er.property_value_units_final = er.property_value_units_original;
+			er.keep = false;
+			er.reason="Uncertain units";			
+			assignFinalFieldsWithoutConverting(er);
+		
+		} else {			
+			er.property_value_units_final = er.property_value_units_original;
+			er.keep = false;
+			er.reason="Units can't be reliably converted yet";			
+			assignFinalFieldsWithoutConverting(er);
+//			System.out.println("convertBCF: Need to handle "+er.property_value_units_original);	
 		}
+		
+		
+		
 	}
 
 	private void convertCACO2(ExperimentalRecord er) {

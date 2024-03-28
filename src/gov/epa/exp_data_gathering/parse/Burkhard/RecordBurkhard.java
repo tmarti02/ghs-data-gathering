@@ -1,29 +1,28 @@
 package gov.epa.exp_data_gathering.parse.Burkhard;
 
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.util.Hashtable;
 import java.util.Vector;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
-import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.ss.usermodel.Row.MissingCellPolicy;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.LiteratureSource;
+import gov.epa.exp_data_gathering.parse.UnitConverter;
+
 
 
 public class RecordBurkhard {
+	
+	transient Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+	static transient UnitConverter uc = new UnitConverter("Data" + File.separator + "density.txt");
+
+	
 	public String Chemical;
 	public String CASRN;
 	public String Abbreviation;
@@ -163,4 +162,284 @@ public class RecordBurkhard {
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(0,true); // TODO Chemical name index guessed from header. Is this accurate?
 		return records;
 	}
+	
+	
+	boolean isNumeric(String value) {
+
+		if (value==null) return false;
+		
+		String v=value.toLowerCase().trim();
+
+		if(v.isBlank() || v.equals("-") || v.equals("n.d.") || v.equals("na") || v.equals("--") || v.equals("n/a") || 
+				v.equals("nd") || v.equals("?") || v.equals("n.c.") || 
+				v.equals("<lod") || v.equals("nc") || v.equals("n.a.") || v.equals("n.a") || v.equals("na*")) {
+			return false;
+		} else {
+			return true;
+		}
+
+	}
+	
+	
+	private ExperimentalRecord toExperimentalRecordBAF(String propertyName) {
+				
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.experimental_parameters=new Hashtable<>();
+
+		
+		if (!isNumeric(Log_BAF_mean) && !isNumeric(Log_BAF_max)) {
+			er.keep=false;
+			er.reason="Missing BAF value";
+		}
+		
+		er.property_name = propertyName;
+		
+
+//		er.property_value_units_original = Log_BAF_units;
+		
+		er.property_value_units_original = "Log10("+Log_BAF_units+")";
+		
+		er.property_value_units_original.replace("(L/kg-ww)", "(L/kg)");
+		
+//		er.experimental_parameters.put("study quality",Study_Quality_BAF);
+		er.reliability=Study_Quality_BAF;
+		
+		try {
+			
+			String propertyValue = Log_BAF_mean;
+			
+			if (Log_BAF_min!=null && Log_BAF_max!=null) {
+				String propertyValue2 = Log_BAF_min + "~" + Log_BAF_max;
+
+				if ((Log_BAF_arithmetic_or_logarithmic!=null)
+						&& Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+					er.property_value_string = propertyValue2 + " (arithmetic)";
+
+					er.property_value_max_original = Math.log10(Double.parseDouble(Log_BAF_min));
+					er.property_value_min_original = Math.log10(Double.parseDouble(Log_BAF_max));
+				} else {
+					er.property_value_max_original = Double.parseDouble(Log_BAF_min);
+					er.property_value_min_original = Double.parseDouble(Log_BAF_max);
+					er.property_value_string = propertyValue2 + " (log)";
+
+				}
+
+			} else if (Log_BAF_arithmetic_or_logarithmic!=null
+					&& Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+				er.property_value_string = propertyValue + " (arithmetic)";
+				er.property_value_point_estimate_original = Math.log10(Double.parseDouble(Log_BAF_mean));
+			} else {
+				if (Log_BAF_mean.contains("<") || Log_BAF_mean.contains(">")) {
+					er.property_value_numeric_qualifier=Log_BAF_mean.substring(0,1);
+					Log_BAF_mean=Log_BAF_mean.substring(1,Log_BAF_mean.length());
+				}
+				
+				er.property_value_point_estimate_original = Double.parseDouble(Log_BAF_mean);
+				er.property_value_string = propertyValue + " (log)";
+
+			}
+			
+			
+		} catch (Exception e) {
+			System.out.println("Parse error BAF:\n"+gson.toJson(this));
+			e.printStackTrace();
+		}
+		
+		if ((Study_Quality_BAF!=null && Study_Quality_BAF.toLowerCase().contains("low")) || (Study_Quality_BCF!=null)) {
+			er.keep = false;
+			er.reason = "untrusted study";
+		}
+		
+		addMetadata(er);
+		
+		uc.convertRecord(er);
+		
+		return er;
+
+	}
+
+	
+	
+	ExperimentalRecord toExperimentalRecordBCF_Kinetic(String propertyName,boolean limitToWholeOrganism,boolean limitToFish) {
+
+		String method="kinetic";
+		String Log_BCF_units=Log_BCF_Kinetic_units;
+		String Log_BCF_arithmetic_or_logarithmic=Log_BCF_Kinetic_arithmetic_or_logarithmic;
+		String Log_BCF_min=Log_BCF_Kinetic_min;
+		String Log_BCF_max=Log_BCF_Kinetic_max;
+		String Log_BCF_mean=Log_BCF_Kinetic_mean;
+						
+		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, Log_BCF_units,
+				Log_BCF_arithmetic_or_logarithmic, Log_BCF_min, Log_BCF_max, Log_BCF_mean);
+		
+		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+		return er;
+	}
+
+
+	private ExperimentalRecord toExperimentalRecordBCF(String propertyName, String method, String Log_BCF_units,
+			String Log_BCF_arithmetic_or_logarithmic, String Log_BCF_min, String Log_BCF_max, String Log_BCF_mean) {
+		
+		if (!isNumeric(Log_BCF_mean) && !isNumeric(Log_BCF_max)) {
+			return null;
+		}
+
+		
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.experimental_parameters=new Hashtable<>();
+		er.reliability=Study_Quality_BCF;
+		er.experimental_parameters.put("Measurement method",method);
+		er.property_name = propertyName;
+		
+		if(Log_BCF_units.contains("kg-ww")) {
+			Log_BCF_units=Log_BCF_units.replace("kg-ww", "kg");
+			er.updateNote("value based on wet weight");
+		}		
+		
+		if (Log_BCF_arithmetic_or_logarithmic!=null && Log_BCF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+			er.property_value_units_original = Log_BCF_units;
+		} else {
+			er.property_value_units_original = Log_BCF_units;
+			er.property_value_units_original="log10("+er.property_value_units_original+")";
+		}
+				
+//		er.experimental_parameters.put("study quality",Study_Quality_BCF);
+		
+		try {
+			String property_value = Log_BCF_mean;
+			
+			
+			if(Log_BCF_min!=null && Log_BCF_min.contains("<")) {
+				System.out.println("min value has <");
+				return null;
+			}
+			
+			if ((Log_BCF_min!=null) && (Log_BCF_max!=null)) {
+				property_value = Log_BCF_min + "~" + Log_BCF_max;
+				er.property_value_max_original = Double.parseDouble(Log_BCF_max);
+				er.property_value_min_original = Double.parseDouble(Log_BCF_min);
+			}
+				
+			if (Log_BCF_mean != null) {
+				if (Log_BCF_mean.contains("<") || Log_BCF_mean.contains(">")) {
+					er.property_value_numeric_qualifier = Log_BCF_mean.substring(0, 1);
+					Log_BCF_mean = Log_BCF_mean.substring(1, Log_BCF_mean.length()).trim();
+					er.property_value_point_estimate_original = Double.parseDouble(Log_BCF_mean);
+				} else {
+					er.property_value_point_estimate_original = Double.parseDouble(Log_BCF_mean);
+				}
+			}
+		
+			er.property_value_string = property_value + " "+er.property_value_units_original;				
+
+		} catch (Exception e) {
+			System.out.println("Parse error BCF:\n"+gson.toJson(this));
+			e.printStackTrace();
+		}
+		
+		if (Study_Quality_BCF!=null && Study_Quality_BCF.toLowerCase().contains("low")) {
+			er.keep = false;
+			er.reason = "untrusted study";
+		}
+		er.property_category="bioconcentration";
+		addMetadata(er);
+		
+		uc.convertRecord(er);
+		return er;
+	}
+	
+	ExperimentalRecord toExperimentalRecordBCF_SS(String propertyName,boolean limitToWholeOrganism,boolean limitToFish) {
+		
+		String method="steady state";
+		String Log_BCF_units=Log_BCF_Steady_State_units;
+		String Log_BCF_arithmetic_or_logarithmic=Log_BCF_Steady_State_arithmetic_or_logarithmic;
+		String Log_BCF_min=Log_BCF_Steady_State_min;
+		String Log_BCF_max=Log_BCF_Steady_State_max;
+		String Log_BCF_mean=Log_BCF_Steady_State_mean;
+						
+		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, Log_BCF_units,
+				Log_BCF_arithmetic_or_logarithmic, Log_BCF_min, Log_BCF_max, Log_BCF_mean);		
+		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+		return er;
+	}
+	
+	
+	private void filterRecord(ExperimentalRecord er,boolean limitToWholeOrganism,boolean limitToFish) {
+
+		if (limitToWholeOrganism) {
+			if (Tissue == null
+					|| !Tissue.equals("whole body")) {
+				er.keep = false;
+				er.reason = "Not whole body";
+			}
+		}
+
+		if (limitToFish) {
+			if (!class_taxonomy.toLowerCase().contains("actinopteri")
+					&& !class_taxonomy.toLowerCase().contains("actinopterygii")
+					&& !class_taxonomy.toLowerCase().contains("teleostei")) {
+				er.keep = false;
+				er.reason = "not a fish";
+			}
+		}
+
+		if (Location == null
+				|| !Location.equals("laboratory")) {
+			er.keep = false;
+			er.reason = "Test location not in laboratory";
+		}
+
+		// if (er.experimental_parameters.get("method") == null
+		// || !er.experimental_parameters.get("method").equals("steady state")) {
+		// er.keep = false;
+		// er.reason = "Not steady state";
+		// }
+		// if (er.experimental_parameters.get("media") == null
+		// || !er.experimental_parameters.get("media").equals("freshwater")) {
+		// er.keep = false;
+		// er.reason = "Not steady state";
+		// }
+		// if(!er.keep) {
+		// JsonObject jo=new JsonObject();
+		// jo.addProperty("reason", er.reason);
+		// jo.addProperty("property_name", er.property_name);
+		// jo.addProperty("tissue", er.experimental_parameters.get("tissue")+"");
+		// jo.addProperty("method", er.experimental_parameters.get("method")+"");
+		// jo.addProperty("media", er.experimental_parameters.get("media")+"");
+		// jo.addProperty("exposure_type",
+		// er.experimental_parameters.get("exposure_type")+"");
+		// System.out.println(gson.toJson(jo));
+		// }
+
+
+	}
+	
+
+	private void addMetadata(ExperimentalRecord er) {
+		
+		er.dsstox_substance_id = DTXSID;
+		er.source_name = sourceName;
+		er.chemical_name = Chemical;
+		er.casrn = CASRN;
+		if(!er.casrn.contains("-")) er.casrn=null;
+
+		er.literatureSource=new LiteratureSource();
+		er.literatureSource.citation=Reference;
+//		er.literatureSource.name=Reference;
+		er.reference=Reference;
+		
+		Marine_Brackish_Freshwater=Marine_Brackish_Freshwater.toLowerCase();
+
+		if (Exposure_Concentrations!=null && !Exposure_Concentrations.isBlank())
+			er.experimental_parameters.put("Exposure concentration",Exposure_Concentrations);
+		er.experimental_parameters.put("Response site",Tissue);
+		er.experimental_parameters.put("Media type",Marine_Brackish_Freshwater);
+		er.experimental_parameters.put("Test location",Location);
+		er.experimental_parameters.put("Species latin",species_taxonomy);
+		er.experimental_parameters.put("Species common",Common_Name);
+//		er.experimental_parameters.put("Class taxonomy",class_taxonomy);
+		
+		
+	}
+
 }

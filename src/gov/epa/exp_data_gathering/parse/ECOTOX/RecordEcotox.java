@@ -1,5 +1,6 @@
 package gov.epa.exp_data_gathering.parse.ECOTOX;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -18,12 +19,15 @@ import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
+import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.ToxVal.ToxValRecord;
 
 /**
  * @author TMARTI02
  */
 public class RecordEcotox {
+	
+	public static String sourceName=ExperimentalConstants.strSourceEcotox_2023_12_14;
 
 	public String property_name;
 	
@@ -301,9 +305,18 @@ public class RecordEcotox {
 	public String title;
 	public String source;
 	public String publication_year;
+	
+	public String latin_name;
+	public String common_name;
+	
+	
+	transient Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
 	
-	ExperimentalRecord toExperimentalRecord(int valueNumber,String sourceName) {
+	static transient UnitConverter uc = new UnitConverter("Data" + File.separator + "density.txt");
+
+	
+	ExperimentalRecord toExperimentalRecordAcuteFishTox(int valueNumber) {
 
 		String conc_type=null;
 		String conc_mean=null;
@@ -334,6 +347,9 @@ public class RecordEcotox {
 			conc_max_op=conc2_max_op;
 			conc_unit=conc2_unit;
 		}
+
+		if(conc_unit.equals("ml/L")) conc_unit="mL/L";
+		
 		
 		ExperimentalRecord er=new ExperimentalRecord();
 		
@@ -410,7 +426,9 @@ public class RecordEcotox {
 //		if(er.dsstox_substance_id.equals("DTXSID0034566")) {
 //			System.out.println("Found DTXSID0034566, keep="+er.keep+"\treason="+er.reason+"\t"+er.property_value_units_original+"\t"+valueNumber);
 //		}
-		
+		if(er.keep) {
+			uc.convertRecord(er);
+		}
 		
 		return er;
 		
@@ -449,13 +467,83 @@ public class RecordEcotox {
 
 	}
 
+	public static List<RecordEcotox> get_BCF_Records_From_DB(String propertyName) {
+		List<RecordEcotox>records=new ArrayList<>();
+		
+		
+		String sql="select  t.test_id, dtxsid, cas_number, chemical_name, bcf1_mean ,bcf1_unit,\r\n"
+				+ " media_type, test_location, exposure_type,chem_analysis_method, s.common_name, s.latin_name,s.ecotox_group, rsc.description as 'response_site',\r\n"
+				+ " author, publication_year, title,source from tests t\r\n"
+				+ "	join results r on t.test_id=r.test_id\r\n"
+				+ "	join chemicals c on c.cas_number=t.test_cas\r\n"
+				+ "	left join references_ r2 on r2.reference_number=t.reference_number\r\n"
+				+ "	left join species s on t.species_number=s.species_number\r\n"
+				+ "	left join response_site_codes rsc on rsc.code=r.response_site\r\n"
+				+ "	where bcf1_mean is not null and (bcf1_mean_op ='~' or bcf1_mean_op='')\r\n"
+//				+ " and media_type like '%FW%' and test_location like '%LAB%'"				
+				+ "	order by cas_number";
+		
+		
+		try {
+			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
+
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = stat.executeQuery(sql);
+
+//			JsonArray ja = new JsonArray();
+
+			Hashtable<String,String>htExposureType=getExposureTypeLookup(databasePath);
+			Hashtable<String,String>htMediaType=getMediaTypeLookup(databasePath);
+			
+			int counter=0;
+			
+			while (rs.next()) {
+				
+				counter++;
+//				System.out.println(rs.getString(1));
+//				JsonObject jo = new JsonObject();
+
+				RecordEcotox rec=new RecordEcotox();
+				
+				for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+					
+					String columnLabel = rs.getMetaData().getColumnLabel(i);
+
+//					if(counter==1)					
+//						System.out.println(columnLabel);
+					
+					String columnValue = rs.getString(i);
+					
+					if (rs.getString(i) == null || rs.getString(i).isBlank())
+						continue;
+
+					setValue(columnLabel, columnValue, rec);
+//					System.out.println(rs.getMetaData().getColumnLabel(i));
+				}
+				
+				records.add(rec);
+				rec.property_name=propertyName;
+				
+				rec.setExposureType(htExposureType);
+				rec.setChemicalAnalysisMethod();
+				rec.setMediaType(htMediaType);
+
+			}
+			
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+
+		}
+		
+		return records;
+	}
+	
+	
 	public static List<RecordEcotox> get_Acute_Tox_Records_From_DB(int speciesNumber,String propertyName) {
 
 		List<RecordEcotox>records=new ArrayList<>();
 
-		
-		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-		
 		String sql = "select *\n" + "from tests t\n" + "join results r on t.test_id=r.test_id\n"
 				+ "join chemicals c on c.cas_number=t.test_cas\n"
 				+ "join references_ r2 on r2.reference_number=t.reference_number\n"
@@ -469,7 +557,7 @@ public class RecordEcotox {
 		
 		//Note filter for duration happens later
 		
-				
+				System.out.println(sql);
 		try {
 //			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_06_15_2023.db";
 			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
@@ -479,6 +567,8 @@ public class RecordEcotox {
 
 //			JsonArray ja = new JsonArray();
 
+			Hashtable<String,String>htExposureType=getExposureTypeLookup(databasePath);
+			
 			int counter=0;
 			
 			while (rs.next()) {
@@ -505,7 +595,7 @@ public class RecordEcotox {
 //					System.out.println(rs.getMetaData().getColumnLabel(i));
 				}
 				rec.property_name=propertyName;
-				rec.setExposureType();
+				rec.setExposureType(htExposureType);
 				rec.setChemicalAnalysisMethod();
 				records.add(rec);
 			}
@@ -525,32 +615,87 @@ public class RecordEcotox {
 	}
 
 	
-	void setExposureType() {
-		
-		if(exposure_type.contains("F")) {
-			exposure_type="Flow-through";
-		} else if(exposure_type.equals("R")) {
-			exposure_type="Renewal";
-		} else if(exposure_type.contains("S")) {
-			exposure_type="Static";
-		} else if(exposure_type.contains("L")) {
-			exposure_type="Leaching";
-		} else if(exposure_type.contains("E")) {
-			exposure_type="Lentic";
-		} else if(exposure_type.contains("O")) {
-			exposure_type="Lotic";
-		} else if(exposure_type.contains("NR")) {
-			exposure_type="Not reported";			
-		} else if(exposure_type.contains("P")) {
-			exposure_type="Pulse";
-		} else {
-			System.out.println("Unknown exposure type:\t"+exposure_type);
+	public static Hashtable<String,String> getExposureTypeLookup(String databasePath) {
+
+		Hashtable<String,String>htDesc=new Hashtable<>();
+		String sql = "select code,description from exposure_type_codes;";
+		try {
+
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = stat.executeQuery(sql);
+			while (rs.next()) {
+				String code= rs.getString(1);
+				String description= rs.getString(2);
+				htDesc.put(code, description);
+			}
+			
+			htDesc.put("U", "Not reported");
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
+		return htDesc;
+	}
+	
+	public static Hashtable<String,String> getMediaTypeLookup(String databasePath) {
+
+		Hashtable<String,String>htDesc=new Hashtable<>();
+		String sql = "select code,description from media_type_codes;";
+		try {
+
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = stat.executeQuery(sql);
+			while (rs.next()) {
+				String code= rs.getString(1);
+				String description= rs.getString(2);
+				htDesc.put(code, description);
+			}
+			
+			htDesc.put("U", "Not reported");
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return htDesc;
+	}
+	
+	void setExposureType(Hashtable<String,String>htDesc) {
+		
+//		if(exposure_type.contains("F")) {
+//			exposure_type="Flow-through";
+//		} else if(exposure_type.equals("R")) {
+//			exposure_type="Renewal";
+//		} else if(exposure_type.contains("S")) {
+//			exposure_type="Static";
+//		} else if(exposure_type.contains("L")) {
+//			exposure_type="Leaching";
+//		} else if(exposure_type.contains("E")) {
+//			exposure_type="Lentic";
+//		} else if(exposure_type.contains("O")) {
+//			exposure_type="Lotic";
+//		} else if(exposure_type.contains("NR")) {
+//			exposure_type="Not reported";			
+//		} else if(exposure_type.contains("P")) {
+//			exposure_type="Pulse";
+//		} else {
+//			System.out.println("Unknown exposure type:\t"+exposure_type);
+//		}
+		
+		String code=exposure_type.replace("/","");
+		
+		if(htDesc.containsKey(code)) {
+			exposure_type=htDesc.get(code);
+		} else {
+			System.out.println("Unknown exposure_type: "+code);
+			
+		}
+		
 	}
 	
 	void setChemicalAnalysisMethod() {
+		//TODO use hashtable like in exposure type
 		
-		String cam=chem_analysis_method;
+		String cam=chem_analysis_method.replace("/", "");
 		
 		if(cam.contains("M")) {
 			chem_analysis_method="Measured";			
@@ -569,6 +714,15 @@ public class RecordEcotox {
 		}
 		
 		
+	}
+	
+	void setMediaType(Hashtable<String, String> htMediaType) {
+		String code=media_type.replace("/", "");
+		if(htMediaType.containsKey(code)) {
+			media_type=htMediaType.get(code);
+		} else {
+			System.out.println("Unknown media_type: "+code);
+		}
 	}
 	
 	String getConcentrationType(String conc_type) {
@@ -639,7 +793,112 @@ public class RecordEcotox {
 	public static void main(String[] args) {
 		RecordEcotox r = new RecordEcotox();
 		 List<RecordEcotox>records=r.get_Acute_Tox_Records_From_DB(1,ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50);
-
 	}
+
+
+	public ExperimentalRecord toExperimentalRecordBCF(boolean limitToFish, boolean limitToWholeBody, boolean limitToStandardTestSpecies) {
+		
+
+		ExperimentalRecord er=new ExperimentalRecord();
+		
+		
+		er.property_name=property_name;
+
+//		System.out.println(er.property_name);
+		
+		er.dsstox_substance_id=dtxsid;
+		er.source_name=sourceName;
+		
+		String CAS1=cas_number.substring(0,cas_number.length()-3);
+		String CAS2=cas_number.substring(cas_number.length()-3,cas_number.length()-1);
+		String CAS3=cas_number.substring(cas_number.length()-1,cas_number.length());
+				
+		er.casrn=CAS1+"-"+CAS2+"-"+CAS3;
+		
+		er.chemical_name=chemical_name;
+		
+//		System.out.println(cas_number+"\t"+er.casrn);
+		
+		er.keep=true;
+		
+		LiteratureSource ls=new LiteratureSource();
+		er.literatureSource=ls;
+		ls.name=author+" ("+publication_year+")";
+		ls.author=author;
+		ls.title=title;
+		ls.year=publication_year;
+		ls.citation=author+" ("+publication_year+"). "+title+"."+source;
+		er.reference=ls.citation;
+
+		er.property_value_units_original=bcf1_unit.replace("ml/mg", "L/g").replace("ml/g", "L/kg");
+		er.property_category="bioconcentration";
+		
+		er.property_value_point_estimate_original=Double.parseDouble(bcf1_mean);
+			
+		if(bcf1_min!=null && bcf1_max!=null) {
+			double log=Math.log10(Double.parseDouble(bcf1_max)/Double.parseDouble(bcf1_min));
+				
+			if(log>1) {
+				er.keep=false;
+				er.reason="Range of min and max is too wide";
+			}
+		}
+		
+		if(bcf1_min_op!=null && !bcf1_min_op.equals("~")) {
+			er.keep=false;
+			er.reason="bad bcf1_min_op:"+bcf1_min_op;
+		} else if(bcf1_max_op!=null && !bcf1_max_op.equals("~")) {
+			er.keep=false;
+			er.reason="bad conc1_max_op:"+bcf1_max_op;
+		}
+
+		if(!er.keep)
+			System.out.println(er.reason);
+
+		
+		
+		if(limitToFish && ecotox_group!=null && !ecotox_group.toLowerCase().contains("fish")) {
+			er.keep=false;
+			er.reason="Not a fish species";
+		}
+		
+		if(limitToStandardTestSpecies && ecotox_group!=null && !ecotox_group.toLowerCase().contains("standard")) {
+			er.keep=false;
+			er.reason="Not a standard test species";
+		}
+
+		
+		if(limitToWholeBody && response_site!=null && !response_site.toLowerCase().equals("whole organism")) {
+			er.keep=false;
+			er.reason="Not whole body";
+		}
+			
+//			System.out.println(r.conc1_max_op+"\t"+r.conc1_min_op+"\t"+r.conc1_mean_op);
+		er.experimental_parameters=new Hashtable<>();
+		er.experimental_parameters.put("test_id", test_id);
+		er.experimental_parameters.put("Species latin", latin_name);
+		er.experimental_parameters.put("Species common", common_name);
+		
+		er.experimental_parameters.put("Media type", media_type);
+		er.experimental_parameters.put("Test location", test_location);
+		er.experimental_parameters.put("exposure_type", exposure_type);
+
+		if(response_site==null) {
+//			System.out.println(gson.toJson(this));
+		} else {
+			er.experimental_parameters.put("Response site", response_site);
+		}
+		
+		
+		er.property_value_string=er.property_value_point_estimate_original+" "+bcf1_unit;//TODO
+
+		
+		uc.convertRecord(er);
+		
+		return er;
+	}
+
+
+	
 
 }

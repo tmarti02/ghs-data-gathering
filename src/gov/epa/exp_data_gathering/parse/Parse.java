@@ -79,11 +79,12 @@ public class Parse {
 	public boolean writeFlatFile=false;//all data converted to final format stored as flat text file
 	public boolean writeJsonExperimentalRecordsFile=true;//all data converted to final format stored as Json file
 	public boolean writeExcelExperimentalRecordsFile=true;//all data converted to final format stored as xlsx file
-	
+	public boolean writeCheckingExcelFile=true;
+
 	protected Gson gson=null;
 	protected UnitConverter uc=null;
 	
-	protected int howManyOriginalRecordsFiles=1;
+	protected int howManyOriginalRecordsFiles=1;//TODO add code to calculate this later from list of files
 
 	/**
 	 * init method for parse class that specifies folder locations of the files to be found or written to.
@@ -174,8 +175,10 @@ public class Parse {
 			records.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords,maxExcelRows);
 		}
 		
-		// GS: Should always generate checking file, not just when Excel files are generated
-		records.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck,maxExcelRows);
+		if (writeCheckingExcelFile) {
+			records.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck,maxExcelRows);
+		}
+		
 
 		
 		ExperimentalRecords recordsBad = records.dumpBadRecords();
@@ -338,9 +341,9 @@ public class Parse {
 		case ExperimentalConstants.strSourceVerheyen:
 			p = new ParseVerheyen();
 			break;
-		case ExperimentalConstants.strSourceBurkhard:
-			p = new ParseBurkhard();
-			break;
+//		case ExperimentalConstants.strSourceBurkhard:
+//			p = new ParseBurkhard();
+//			break;
 		default:
 			System.out.println("Need to add parse case for "+sourceName);
 			return;
