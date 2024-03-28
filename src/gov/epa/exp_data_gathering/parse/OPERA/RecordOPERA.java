@@ -340,7 +340,7 @@ public class RecordOPERA {
 			case ExperimentalConstants.str_ESTROGEN_RECEPTOR_AGONIST:
 			case ExperimentalConstants.str_ESTROGEN_RECEPTOR_ANTAGONIST:
 			case ExperimentalConstants.str_ESTROGEN_RECEPTOR_BINDING:
-				return ExperimentalConstants.strTEXT;
+				return ExperimentalConstants.str_binary;
 
 
 			default:
@@ -505,13 +505,13 @@ public class RecordOPERA {
 		ht.put(ExperimentalConstants.str_pKA, "pKa_QR.sdf");
 		ht.put(ExperimentalConstants.strRBIODEG,"RBiodeg_QR.sdf");
 		ht.put(ExperimentalConstants.strORAL_RAT_LD50,"CATMoS_QR50k.sdf");
-//		
-//		//These 2 look superseded by the csv:
+		
+//		//These 2 look superseded by the csv: but code will use latest value from csv
 		ht.put(ExperimentalConstants.strCLINT,"Clint_QR.sdf");
 		ht.put(ExperimentalConstants.strFUB,"FU_QR.sdf");
 		
 		ht.put(ExperimentalConstants.strAR, "CoMPARA_QR.sdf");
-//		ht.put(ExperimentalConstants.strER, "CERAPP_QR.sdf");//doesnt have SIDs and need to set suspicious to inactive
+////		ht.put(ExperimentalConstants.strER, "CERAPP_QR.sdf");//Just use csvs provided by Kamel; doesnt have SIDs and need to set suspicious to inactive
 
 		//TODO add RT? (omit according to Tony)
 //		ht.put(ExperimentalConstants.strInVitroToxicity,"CERAPP_QR.sdf");
@@ -530,12 +530,13 @@ public class RecordOPERA {
 
 		TreeMap<String,String>ht=new TreeMap<>();
 
-		ht.put(ExperimentalConstants.strHenrysLawConstant, "HL_2.9_update.csv");
-		ht.put(ExperimentalConstants.strWaterSolubility, "WS_2.9_update.csv");
-		ht.put(ExperimentalConstants.strVaporPressure, "VP_2.9_update.csv");
-		ht.put(ExperimentalConstants.strMeltingPoint, "MP_2.9_update.csv");
-		ht.put(ExperimentalConstants.strLogKOW, "LogP_2.9_update.csv");
-		ht.put(ExperimentalConstants.strBoilingPoint, "BP_2.9_update.csv");
+		//Following came from our sources so dont need in our db:
+//		ht.put(ExperimentalConstants.strHenrysLawConstant, "HL_2.9_update.csv");
+//		ht.put(ExperimentalConstants.strWaterSolubility, "WS_2.9_update.csv");
+//		ht.put(ExperimentalConstants.strVaporPressure, "VP_2.9_update.csv");
+//		ht.put(ExperimentalConstants.strMeltingPoint, "MP_2.9_update.csv");
+//		ht.put(ExperimentalConstants.strLogKOW, "LogP_2.9_update.csv");
+//		ht.put(ExperimentalConstants.strBoilingPoint, "BP_2.9_update.csv");
 		
 		ht.put(ExperimentalConstants.strCACO2,"Caco2_QR.csv");//no matching sdf
 		ht.put(ExperimentalConstants.strFUB,"FU_QR.csv");//supercedes sdf?

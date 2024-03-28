@@ -201,6 +201,8 @@ public class ParseOPERA extends Parse {
 				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_ANDROGEN_RECEPTOR_BINDING);
 				er.property_value_string = ro.BD_potency_Exp;
 				er.property_value_qualitative=er.property_value_string;
+				er.property_value_point_estimate_original=getPotencyNumeric(er.property_value_string);
+
 				splitRecords(records, er);
 			}
 			
@@ -208,6 +210,8 @@ public class ParseOPERA extends Parse {
 				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_ANDROGEN_RECEPTOR_AGONIST);
 				er.property_value_string = ro.AG_Potency_Exp;
 				er.property_value_qualitative=er.property_value_string;
+				er.property_value_point_estimate_original=getPotencyNumeric(er.property_value_string);
+
 				splitRecords(records, er);
 			}
 
@@ -215,6 +219,8 @@ public class ParseOPERA extends Parse {
 				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ExperimentalConstants.str_ANDROGEN_RECEPTOR_ANTAGONIST);
 				er.property_value_string = ro.AN_potency_Exp;
 				er.property_value_qualitative=er.property_value_string;
+				er.property_value_point_estimate_original=getPotencyNumeric(er.property_value_string);
+
 				splitRecords(records, er);
 			}
 
@@ -224,6 +230,7 @@ public class ParseOPERA extends Parse {
 				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ro.property_name);
 				er.property_value_string = ro.Potency_class_binding;
 				er.property_value_qualitative=er.property_value_string;
+				er.property_value_point_estimate_original=getPotencyNumeric(er.property_value_string);
 				splitRecords(records, er);
 			}
 		} else if(ro.property_name.equals(ExperimentalConstants.str_ESTROGEN_RECEPTOR_AGONIST)) {
@@ -231,6 +238,8 @@ public class ParseOPERA extends Parse {
 				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ro.property_name);
 				er.property_value_string = ro.Potency_class_agonist;
 				er.property_value_qualitative=er.property_value_string;
+				er.property_value_point_estimate_original=getPotencyNumeric(er.property_value_string);
+
 				splitRecords(records, er);
 			}
 		} else if(ro.property_name.equals(ExperimentalConstants.str_ESTROGEN_RECEPTOR_ANTAGONIST)) {
@@ -238,6 +247,7 @@ public class ParseOPERA extends Parse {
 				ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ro.property_name);
 				er.property_value_string = ro.Potency_class_antagonist;
 				er.property_value_qualitative=er.property_value_string;
+				er.property_value_point_estimate_original=getPotencyNumeric(er.property_value_string);
 				splitRecords(records, er);
 			}
 
@@ -282,6 +292,22 @@ public class ParseOPERA extends Parse {
 		}			
 			
 	}
+	
+	
+	Double getPotencyNumeric(String potencyClass) {
+		
+		if(potencyClass.equals("Inactive")) return 0.0;
+		if(potencyClass.equals("Active(very weak)")) return 0.25;
+		if(potencyClass.equals("Active(weak)")) return 0.5;
+		if(potencyClass.equals("Active(medium)")) return 0.75;
+		if(potencyClass.equals("Active(strong)")) return 1.0;
+		if(potencyClass.equals("Active(NA)")) return 0.625;
+		
+		System.out.println("Cant account for "+potencyClass);
+		return null;
+		
+	}
+	
 
 	private void splitRecords(ExperimentalRecords records, ExperimentalRecord er) {
 		
