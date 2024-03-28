@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +27,8 @@ import gov.epa.exp_data_gathering.parse.UnitConverter;
 //Compounds can only contain the following element symbols: C, H, O, N, F, Cl, Br, I, S, P, Si, As--handled by QSAR dataset creation code
 //Compounds must represent a single pure component...--handled by QSAR dataset creation code
 public class ToxValRecord {
+	
+	public Long bcfbaf_id;
 	public String dtxsid;
 	public String casrn;
 	public String name;
@@ -63,10 +67,12 @@ public class ToxValRecord {
 	public String species_original;
 	
 	public String species_common="";//otherwise it causes problems when doing Collectors.toList()	
-	public String common_name;//toxvalv93 field renamed species_common
-
+	public String species_latin="";//otherwise it causes problems when doing Collectors.toList()
 	public String species_supercategory;
+
+	public String common_name;//toxvalv93 field renamed species_common
 	public String ecotox_group;//toxvalv93 field- renamed species_supercategory
+
 	
 	public String habitat;
 	public String lifestage;
@@ -159,26 +165,26 @@ public class ToxValRecord {
 
 			for(int col = 1; col<=rsMetaData.getColumnCount(); col++) {
 
-				Field field=ToxValRecord.class.getField(rsMetaData.getColumnName(col));
+				Field field=ToxValRecord.class.getField(rsMetaData.getColumnLabel(col));
 
 				String typeName = field.getGenericType().getTypeName();
 				fieldName = field.getName();
 
+				String s = rs.getString(fieldName);
+				
+				if(s==null) continue;
+				
 				if (typeName.equals("java.lang.String")) {
-					String s = rs.getString(fieldName);
-					field.set(rec, s);
+					if(!s.isBlank())
+						field.set(rec, s);
 				} else if (typeName.equals("java.lang.Double")) {
-					Double d = rs.getDouble(fieldName);
-					field.set(rec, d);
+					field.set(rec, Double.parseDouble(s));	
 				} else if (typeName.equals("java.lang.Long")) {
-					Long l = rs.getLong(fieldName);
-					field.set(rec, l);
+					field.set(rec, Long.parseLong(s));	
+
 				} else if (typeName.equals("java.lang.Integer")) {
-					Integer i = rs.getInt(fieldName);
-					field.set(rec, i);
-					//} else if (typeName.equals("java.util.Date")) {
-					//	Date d = rs.getDate(fieldName);
-					//	field.set(rec, d);
+					field.set(rec, Integer.parseInt(s));	
+				
 				} else {
 					continue;
 				}
@@ -268,63 +274,79 @@ public class ToxValRecord {
 	 * @param propertyCategory
 	 * @return
 	 */
-	public ExperimentalRecord toxvalBCF_to_ExperimentalRecord(String version,String propertyCategory) {
-		ExperimentalRecord rec = new ExperimentalRecord();
+	public ExperimentalRecord toxvalBCF_to_ExperimentalRecord(String version,String propertyName, String propertyCategory) {
+		ExperimentalRecord er = new ExperimentalRecord();
 		
-		rec.casrn = casrn.startsWith("NOCAS") ? null : casrn;
-		rec.chemical_name = name;
+		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+		Date date = new Date();
+		String strDate = formatter.format(date);
+		String dayOnly = strDate.substring(0, strDate.indexOf(" "));
+		er.date_accessed=dayOnly;
 		
-		rec.property_name=ExperimentalConstants.strLogBCF_Fish_Whole_Body;
-		rec.property_category=propertyCategory;
+		er.casrn = casrn.startsWith("NOCAS") ? null : casrn;
+		er.chemical_name = name;
 		
-		rec.property_value_point_estimate_original = logbcf;
-		rec.property_value_point_estimate_final=logbcf;
-		rec.property_value_units_original="Log10(L/kg)";
-		rec.property_value_units_final="Log10(L/kg)";
+		er.property_name=propertyName;
+		er.property_category=propertyCategory;
 		
-		rec.note=getString(comments);
+		er.property_value_string=logbcf+" log10("+units+")";		
+		er.property_value_point_estimate_original = logbcf;
+		er.property_value_units_original="log10("+units+")";		
 		
-		rec.experimental_parameters=new Hashtable<>();
+		er.note=getString(comments);
+		
+		er.experimental_parameters=new Hashtable<>();
 //		rec.experimental_parameters.put("tissue",tissue);//already have whole body in property name
-		rec.experimental_parameters.put("species_common",species_common);
-		rec.experimental_parameters.put("water_concentration",water_conc);
-		rec.experimental_parameters.put("media",media);
+		er.experimental_parameters.put("Species common",species_common);
+		er.experimental_parameters.put("Species latin",species_latin);
+		
+		if(tissue!=null)
+			er.experimental_parameters.put("Response site",tissue);
+
+//		rec.experimental_parameters.put("water_concentration",water_conc);
+//		rec.experimental_parameters.put("media",media);
 //		System.out.println(media);
+//		rec.experimental_parameters.put("exposure_type",exposure_type);
+//		rec.experimental_parameters.put("exposure_duration",exposure_duration);		
+//		if(temperature!=null) rec.experimental_parameters.put("Temperature",temperature);
 		
-		rec.experimental_parameters.put("exposure_type",exposure_type);
-		rec.experimental_parameters.put("exposure_duration",exposure_duration);
-		rec.experimental_parameters.put("Temperature",temperature);
-		rec.experimental_parameters.put("tissue",tissue);
-
-		
-		
-		if (calc_method.equals("Cb/Cw")) {
-			rec.experimental_parameters.put("method","Steady state");
-		} else if (calc_method.equals("K1/K2")) {
-			rec.experimental_parameters.put("method","Kinetic");
+		if(calc_method!=null) {
+			if (calc_method.equals("Cb/Cw")) {
+				er.experimental_parameters.put("method","Steady state");
+			} else if (calc_method.equals("K1/K2")) {
+				er.experimental_parameters.put("method","Kinetic");
+			} else if (calc_method.contains("BIO")){
+				er.experimental_parameters.put("method",calc_method);
+				er.keep=false;
+				er.reason="Can't assess method validity";
+			} else {
+				er.experimental_parameters.put("method",calc_method);
+			}
+			
+		}
+		er.temperature_C=temperature;
+				
+		if(pH!=null && pH>0) {
+//			rec.experimental_parameters.put("pH",pH);
+			er.pH=pH+"";
 		}
 		
-		rec.temperature_C=temperature;
+		er.source_name = "ToxVal_"+version;		
+		er.original_source_name = "Arnot, J.A. and Gobas, F.A.P.C. (2006). A Review of Bioconcentration Factor (BCF) and Bioaccumulation Factor (BAF) Assessments for Organic Chemicals in Aquatic Organisms. Environmental Reviews, 14, 257-297";
+		addLiteratureSource2(er);
 				
-		if(pH>0) {
-			rec.experimental_parameters.put("pH",pH);
-			rec.pH=pH+"";
-		}
+		er.dsstox_substance_id = dtxsid.startsWith("NODTXSID") ? null : dtxsid;
 		
-		
-		rec.source_name = "ToxVal_"+version;
-		rec.original_source_name = "Arnot, J.A. and Gobas, F.A.P.C. (2006). A Review of Bioconcentration Factor (BCF) and Bioaccumulation Factor (BAF) Assessments for Organic Chemicals in Aquatic Organisms. Environmental Reviews, 14, 257-297";
-
-		addLiteratureSource2(rec);
-				
-		rec.dsstox_substance_id = dtxsid.startsWith("NODTXSID") ? null : dtxsid;
+		er.property_category="bioconcentration";
 		
 		
 		//Convert Units
-//		unitConverter.convertRecord(rec);
+		unitConverter.convertRecord(er);
 		
+//		System.out.println(er.property_value_units_original+"\t"+er.property_value_units_final);
+
 		
-		return rec;
+		return er;
 	}
 
 
@@ -499,11 +521,10 @@ public class ToxValRecord {
 		}
 
 		citation=citation.replace("..", ".");
-		
 
 		rec.literatureSource.citation=citation;
-		rec.literatureSource.name=citation;//makes it have unique name for the database constraint for literature_sources table
-		
+		rec.literatureSource.name=author+" ("+rec.literatureSource.year+")";//makes it have unique name for the database constraint for literature_sources table
+		rec.reference=citation;
 //		System.out.println(citation);
 		
 	}
