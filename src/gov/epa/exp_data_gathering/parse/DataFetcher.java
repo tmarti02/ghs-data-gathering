@@ -178,11 +178,14 @@ public class DataFetcher {
 	
 	private void addExperimentalRecordsToDatabase(ExperimentalRecords records) {
 		String[] fieldNames = null;
+		
+		String[] outputFieldNames =ExperimentalRecord.outputFieldNames.toArray(new String[ExperimentalRecord.outputFieldNames.size()]);
+
 		if (Arrays.asList(sources).contains(ExperimentalConstants.strSourceEChemPortalAPI) && recordType.toLowerCase().contains("tox")) {
 			String[] fr_id = {"fr_id"};
-			fieldNames = ArrayUtils.addAll(fr_id, ExperimentalRecord.outputFieldNames);
+			fieldNames = ArrayUtils.addAll(fr_id, outputFieldNames);
 		} else {
-			fieldNames = ExperimentalRecord.outputFieldNames;
+			fieldNames = outputFieldNames;
 		}
 		String tableName = ExperimentalRecords.tableName;
 		System.out.println("Creating ExperimentalRecords table using dbpath="+databasePath+" with fields:\n"+String.join("\n",fieldNames));

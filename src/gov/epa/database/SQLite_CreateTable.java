@@ -259,7 +259,7 @@ public class SQLite_CreateTable {
 			conn.setAutoCommit(true);
 			
 			if (startFresh) {
-				System.out.println("Creating "+tableName+" table");
+				System.out.println("Creating "+tableName+" table for "+databaseFilePath);
 				Statement stat1 = SQLite_Utilities.getStatement(conn);
 				stat1.executeUpdate("drop table if exists "+tableName+";");
 				stat1.close();

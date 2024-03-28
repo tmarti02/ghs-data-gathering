@@ -1,8 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.lang.reflect.Field;
-import java.util.Hashtable;
-import java.util.Objects;
+import java.util.*;
 import org.apache.commons.text.StringEscapeUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -61,9 +60,9 @@ public class ExperimentalRecord {
 	public String file_name;
 	public String document_name;
 	public String source_name;//use Experimental constants
-	public String original_source_name;//If specific reference/paper provided
-								//"original_source_name" rather than "source_name_original" to avoid syntactic confusion with "*_original" vs "*_final" fields above
-	
+	public String original_source_name;//If specific reference/paper provided.  "original_source_name" rather than "source_name_original" to avoid syntactic confusion with "*_original" vs "*_final" fields above
+	public PublicSource publicSourceOriginal;//if have additional info like url or description
+
 	public LiteratureSource literatureSource;
 		
 	public String reference; // traceable reference for a given record
@@ -75,11 +74,13 @@ public class ExperimentalRecord {
 	public String reason;//If keep=false or flag=true, why? TODO add separate reason_flag and reason_keep?
 
 	public String dataset;//sometimes we want to keep track of original spitting into T and P
+
 	
 	//TODO do we need parent url too? sometimes there are several urls we have to follow along the way to get to the final url
 
-	public final static String [] outputFieldNames= {"id_physchem",
-			"keep",
+	//Converting to ArrayList allows you to add to it later...
+	public final static List<String> outputFieldNames= new ArrayList<String>(Arrays.asList("id_physchem",
+			"keep",			
 			"reason",
 			"casrn",
 			"dsstox_substance_id",
@@ -107,7 +108,8 @@ public class ExperimentalRecord {
 			"file_name",
 			"reference",
 			"url",
-			"date_accessed"};
+			"date_accessed"));
+		
 	
 	public void setComboID(String del) {
 		String CAS=casrn;
@@ -316,15 +318,15 @@ public class ExperimentalRecord {
 	}
 
 	//convert to string by reflection:
-	public String toString(String del,String [] fieldNames) {
+	public String toString(String del,List<String> fieldNames) {
 
 		String Line = "";
 		
-		for (int i = 0; i < fieldNames.length; i++) {
+		for (int i = 0; i < fieldNames.size(); i++) {
 			try {
 
 
-				Field myField = this.getClass().getDeclaredField(fieldNames[i]);
+				Field myField = this.getClass().getDeclaredField(fieldNames.get(i));
 
 				String val=null;
 
@@ -369,11 +371,11 @@ public class ExperimentalRecord {
 
 				if (val.contains(del)) {
 					val=val.replace(del,"_");
-					System.out.println("***WARNING***"+this.casrn+"\t"+val+"\thas delimiter in field "+fieldNames[i]+" del="+del);
+					System.out.println("***WARNING***"+this.casrn+"\t"+val+"\thas delimiter in field "+fieldNames.get(i)+" del="+del);
 				}
 
 				Line += val;
-				if (i < fieldNames.length - 1) {
+				if (i < fieldNames.size() - 1) {
 					Line += del;
 				}
 
@@ -462,7 +464,8 @@ public class ExperimentalRecord {
 	 * @return		The updated ExperimentalRecord object
 	 */
 	public void updateNote(String str) {
-		note = Objects.isNull(note) ? str : note+"; "+str;
+		if(str!=null)
+			note = Objects.isNull(note) ? str : note+"; "+str;
 	}
 	
 	
@@ -561,3 +564,4 @@ public class ExperimentalRecord {
 //		return values;
 //	}
 }
+

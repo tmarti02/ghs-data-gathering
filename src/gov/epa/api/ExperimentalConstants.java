@@ -20,6 +20,7 @@ public class ExperimentalConstants {
 	public static final String strBoilingPoint="Boiling point";
 	public static final String strFlashPoint="Flash point";
 	public static final String strAppearance="Appearance";
+	public static final String strOdor="Odor";
 
 	public static final String str_pKA="pKA";
 	public static final String str_pKAa="Acidic pKa";
@@ -31,7 +32,12 @@ public class ExperimentalConstants {
 
 	public static final String strLogBCF="LogBCF";
 	public static final String strBCF = "Bioconcentration factor";
+	public static final String strFishBCF = "Fish bioconcentration factor";
+	public static final String strFishBCFWholeBody = "Whole body fish bioconcentration factor";
+	public static final String strStandardFishBCF = "Standard test species fish bioconcentration factor";
+//	public static final String strLogBCF_Fish_Whole_Body="LogBCF_Fish_Whole_Body";
 
+	
 	public static final String strLogKOC = "LogKOC";
 	public static final String strKOC = "Soil Adsorption Coefficient (Koc)";
 	
@@ -42,11 +48,7 @@ public class ExperimentalConstants {
 	public static final String strLogHalfLifeBiodegradation = "LogHalfLife";
 	public static final String strBIODEG_HL_HC = "Biodegradation half-life for hydrocarbons";//OPERA
 
-	public static final String strLogBCF_Fish_Whole_Body="LogBCF_Fish_Whole_Body";
 
-	public static final String strInhalationLC50="inhalation_LC50";
-	public static final String strRatInhalationLC50="rat_inhalation_LC50";
-	public static final String strRatOralLD50="rat_oral_LD50";
 	
 	public static final String strSkinSensitizationLLNA="SkinSensitizationLLNA";
 	public static final String strEyeIrritation="EyeIrritation";
@@ -59,8 +61,11 @@ public class ExperimentalConstants {
 	public static final String strFUB = "Fraction unbound in human plasma";//OPERA
 	public static final String strCACO2 = "Caco-2 permeability (Papp)";//OPERA
 	public static final String strRBIODEG = "Ready biodegradability";//OPERA
-	public static final String strORAL_RAT_LD50="Oral rat LD50";//OPERA
 
+	public static final String strORAL_RAT_LD50="Oral rat LD50";//OPERA
+	public static final String strRatOralLD50="rat_oral_LD50";
+	public static final String strInhalationLC50="inhalation_LC50";
+	public static final String strRatInhalationLC50="rat_inhalation_LC50";
 
 	
 	//Add list of well defined property units here:
@@ -68,6 +73,7 @@ public class ExperimentalConstants {
 	public static final String str_mg_m3="mg/m^3";
 	public static final String str_g_m3="g/m^3";
 	public static final String str_mL_m3="mL/m^3";
+	public static final String str_mL_L="mL/L";
 	public static final String str_mg_mL="mg/mL";
 	public static final String str_g_L="g/L";
 	public static final String str_ug_L="ug/L";
@@ -88,6 +94,7 @@ public class ExperimentalConstants {
 	public static final String str_pct="%";
 	public static final String str_ppm="ppm";
 	public static final String str_ppb="ppb";
+	public static final String str_ppt = "ppt";
 	public static final String str_atm_m3_mol="atm-m3/mol";
 	public static final String str_mol_m3_atm = "mol/m3-Pa";
 	public static final String str_Pa_m3_mol="Pa-m3/mol";
@@ -137,6 +144,10 @@ public class ExperimentalConstants {
 	public static final String str_mL_kg="mL/kg";
 	public static final String str_iu_kg="iu/kg";
 	public static final String str_L_KG = "L/kg";
+	public static final String str_L_g = "L/g";
+	public static final String str_L_mg = "L/mg";
+//	public static final String str_mL_mg = "mL/mg";
+//	public static final String str_ml_g="ml/g";
 
 	public static final String str_units_kg="units/kg";
 	public static final String str_mg="mg";
@@ -175,8 +186,8 @@ public class ExperimentalConstants {
 	public static final String strSourceOFMPub="OFMPub";
 	public static final String strSourceSigmaAldrich="Sigma-Aldrich";
 	public static final String strSourceChemicalBook="ChemicalBook";
-//	public static final String strSourceSander="Sander";
-	public static final String strSourceSander="Sander v4.0";
+	public static final String strSourceSander="Sander";
+//	public static final String strSourceSander="Sander v4.0";
 	public static final String strSourceQSARDB="QSARDB";
 	public static final String strSourceBradley="Bradley";
 	public static final String strSourceADDoPT="ADDoPT";
@@ -207,7 +218,7 @@ public class ExperimentalConstants {
 
 	public static final String strInVitroToxicity = "in vitro toxicity";
 	public static final String strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50 ="96 hour fathead minnow LC50";
-
+	public static final String strNINETY_SIX_HOUR_BLUEGILL_LC50 = "96 hour bluegill LC50";
 
 	public static final String strSourceSampleSource="SampleSource";
 
@@ -227,6 +238,13 @@ public class ExperimentalConstants {
 
 //	public static final String strSourceEcotox="ECOTOX";
 	public static final String strSourceEcotox_2023_12_14="ECOTOX_2023_12_14";
+	public static final String sourceNITE_OPPT = "NITE_OPPT";
+
+	public static final String strAutoIgnitionTemperature="Autoignition temperature";
+	public static final String strRefractiveIndex="Refractive index";
+	public static final String strVaporDensity="Vapor density";
+	public static final String strViscosity="Viscosity";
+	public static final String strSurfaceTension = "Surface tension";
 	
 
 }

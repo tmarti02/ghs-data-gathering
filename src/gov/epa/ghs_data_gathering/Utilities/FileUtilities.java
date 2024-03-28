@@ -322,6 +322,31 @@ public class FileUtilities {
 			return null;
 		}
 	}
+	
+	public static String getText_UTF8_Line(String url) {
+		//		   TODO move to a utility class    
+
+		try {
+
+			URL website = new URL(url);
+			URLConnection connection = website.openConnection();
+
+			
+		    BufferedReader input = new BufferedReader(
+		            new InputStreamReader(connection.getInputStream(), "UTF-8")); 
+		    
+		    String line=input.readLine();
+		    
+		    input.close();
+			
+			
+			return line;
+
+		} catch (Exception ex) {
+			return null;
+		}
+	}
+
 
 
 

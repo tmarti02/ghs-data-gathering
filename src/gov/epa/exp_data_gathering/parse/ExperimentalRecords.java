@@ -13,12 +13,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.Vector;
+import java.util.*;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.poi.ss.usermodel.Hyperlink;
@@ -143,9 +138,187 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return json;
 	}
 	
+	public Hashtable<String, List<ExperimentalRecord>> createExpRecordHashtableBySID(String desiredUnits) {
+		
+		Hashtable<String,List<ExperimentalRecord>>htER=new Hashtable<>();
+		
+		for (ExperimentalRecord er:this)  {
+			
+			if(!er.keep) continue;
+			
+			//Only use the ones with g/L in the stats calcs:
+			if(er.property_value_units_final.equals(desiredUnits)) {
+//				System.out.println(er.casrn+"\t"+er.property_value_point_estimate_final);
+				
+				if(er.dsstox_substance_id==null) continue;
+				
+				if(htER.containsKey(er.dsstox_substance_id) ) {
+					List<ExperimentalRecord>recs=htER.get(er.dsstox_substance_id);
+					recs.add(er);	
+					
+				} else {
+					List<ExperimentalRecord>recs=new ArrayList<>();
+					recs.add(er);
+					htER.put(er.dsstox_substance_id, recs);
+				}
+				
+			}
+		}
+		return htER;
+	}
+	
+
+	/**
+	 * 
+	 * 
+	 * @param recs
+	 * @return
+	 */
+	public static Double calculateSD(List<ExperimentalRecord> recs,boolean convertToLog) {
+		
+		Gson gson=new Gson();
+		
+		int count=0;
+		double avg=0;
+		
+		
+		for (ExperimentalRecord er:recs) {
+			
+			Double value=er.property_value_point_estimate_final;
+
+			if (value==null) {
+				if (er.property_value_min_final!=null && er.property_value_max_final!=null) {
+					value=(er.property_value_min_final+er.property_value_max_final)/2.0;	
+				} else {
+					continue;
+				}
+			}
+			
+			if(convertToLog) {
+				if(value==0) continue;
+				avg+=Math.log10(value);
+			} else {
+				avg+=value;
+			}
+//			if (!er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) continue;
+			count++;
+		}
+		
+		if(count==0) return null;
+		
+		avg/=(double)count;
+		
+//		System.out.println(count+"\t"+avg);
+		
+		
+		double SD=0;
+		
+		for (ExperimentalRecord er:recs) {
+			
+			if (er.property_value_point_estimate_final==null) continue;
+			
+			if(convertToLog) {
+				if(er.property_value_point_estimate_final==0) continue;
+				SD+=Math.pow(Math.log10(er.property_value_point_estimate_final)-avg,2);
+			} else {
+				SD+=Math.pow(er.property_value_point_estimate_final-avg,2);
+			}
+		}
+		SD/=(double)count;
+		
+		SD=Math.sqrt(SD);
+//		System.out.println(count+"\t"+SD+"\t"+avg);
+		
+		
+		
+		return SD;
+		
+	}
+	
+	public static void calculateStdDev(Hashtable<String, List<ExperimentalRecord>> htER, boolean convertToLog) {
+		double avgSD=0;
+		int count=0;
+		int countOverall=0;
+
+		for (String dtxsid:htER.keySet()) {
+			List<ExperimentalRecord> records=htER.get(dtxsid);
+			Double SD=ExperimentalRecords.calculateSD(records,convertToLog);//TODO need to determine SD when converted to log values
+			
+			if(SD==null) continue;
+			
+//			System.out.println(count+"\t"+SD);
+			
+			avgSD+=SD;
+			count++;
+			countOverall+=records.size();
+		}
+		
+		
+		avgSD/=(double)count;
+		System.out.println("Avg SD\t"+avgSD);
+		System.out.println("Unique SIDs\t"+htER.size());
+		System.out.println("Kept records with correct units\t"+countOverall);
+	}
+	
+	public static Hashtable<String,Double> calculateMedian(Hashtable<String, List<ExperimentalRecord>> htER, boolean convertToLog) {
+		Hashtable<String,Double> htMedian=new Hashtable<>();
+		for (String dtxsid:htER.keySet()) {
+			
+			if(dtxsid==null || dtxsid.equals("-")) continue;
+			
+			Double median=ExperimentalRecords.calculateMedian(htER.get(dtxsid),convertToLog);//TODO need to determine SD when converted to log values			
+			if(median==null) continue;
+
+//			System.out.println(dtxsid+"\t"+median);
+			
+			htMedian.put(dtxsid, median);
+		}
+		return htMedian;
+	}
 	
 
 	
+	private static Double calculateMedian(List<ExperimentalRecord> records, boolean convertToLog) {
+
+		List<Double>values=new ArrayList<>();
+		
+		for(ExperimentalRecord er:records) {
+			
+			Double value=er.property_value_point_estimate_final;
+
+			if (value==null) {
+				if (er.property_value_min_final!=null && er.property_value_max_final!=null) {
+					value=(er.property_value_min_final+er.property_value_max_final)/2.0;	
+				} else {
+					continue;
+				}
+			}
+			
+			if(convertToLog) {
+				if(value==0) continue;
+				values.add(Math.log10(value));
+			} else {
+				values.add(value);
+			}
+		}
+		
+		Collections.sort(values);
+		
+		int n=values.size();
+		
+		if(n==0) return null;
+		
+		if(n%2==1){			
+			int index=((n+1)/2)-1;
+//			System.out.println(n+"\todd:\t"+index);
+			return values.get(index);			
+		} else	{			
+//			System.out.println(n+"\teven:\t"+(n/2-1)+"\t"+(n/2));
+			return (values.get(n/2-1)+values.get(n/2))/2.0;
+		}
+		
+	}
+
 	public ExperimentalRecord getRecord(String CAS) {
 		
 		for (ExperimentalRecord record:this) {
@@ -188,11 +361,11 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	public static String getHeader(String del) {
 		// TODO Auto-generated method stub
 
-		String [] fieldNames=ExperimentalRecord.outputFieldNames;
+		List<String> fieldNames=ExperimentalRecord.outputFieldNames;
 		String Line = "";
-		for (int i = 0; i < fieldNames.length; i++) {
-			Line += fieldNames[i];
-			if (i < fieldNames.length - 1) {
+		for (int i = 0; i < fieldNames.size(); i++) {
+			Line += fieldNames.get(i);
+			if (i < fieldNames.size() - 1) {
 				Line += del;
 			}
 			
@@ -290,17 +463,17 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	 * @param filePath
 	 * @param fieldNames
 	 */
-	public void toExcel_File(String filePath,String [] fieldNames) {
+	public void toExcel_File(String filePath,List<String> fieldNames) {
 
-		String[] headers = fieldNames;
+		
 
 		int size = this.size();
 		Workbook wb = new XSSFWorkbook();
 		
 		CellStyle styleURL=createStyleURL(wb);
 		
-		writeSheet(headers, "Records",true,wb,styleURL);
-		writeSheet(headers, "Records_Bad",false,wb,styleURL);
+		writeSheet(fieldNames, "Records",true,wb,styleURL);
+		writeSheet(fieldNames, "Records_Bad",false,wb,styleURL);
 		
 		try (OutputStream fos = new FileOutputStream(filePath)) {
 			wb.write(fos);
@@ -321,7 +494,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return hlink_style;
 	}
 
-	private void writeSheet(String[] headers, String sheetName, boolean keep, Workbook wb, CellStyle styleURL) {
+	private void writeSheet(List<String> headers, String sheetName, boolean keep, Workbook wb, CellStyle styleURL) {
 		Sheet recSheet = wb.createSheet(sheetName);
 		Row recSubtotalRow = recSheet.createRow(0);
 		Row recHeaderRow = recSheet.createRow(1);
@@ -331,29 +504,43 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		style.setFont(font);
 		
 		
-		for (int i = 0; i < headers.length; i++) {
+		for (int i = 0; i < headers.size(); i++) {
 			Cell recCell = recHeaderRow.createCell(i);
-			recCell.setCellValue(headers[i]);
+			recCell.setCellValue(headers.get(i));
 			recCell.setCellStyle(style);
 		}
 		int recCurrentRow = 2;
 		for (ExperimentalRecord er:this) {
 			if (!er.keep==keep) continue;
 			
-			Class erClass = er.getClass();
+			Class erClass = er.getClass();			
+			Class htClass = er.experimental_parameters.getClass();
+			
 			Object value = null;
 			try {
 				Row row = recSheet.createRow(recCurrentRow);
 				recCurrentRow++;
 				 
-				for (int i = 0; i < headers.length; i++) {
+				for (int i = 0; i < headers.size(); i++) {
 					
-					Field field = erClass.getDeclaredField(headers[i]);
-					value = field.get(er);
+					if(headers.get(i).contains("exp_param_")) {
+						String fieldName=headers.get(i).substring(headers.get(i).indexOf("exp_param_")+"exp_param_".length(),headers.get(i).length());
+						value = er.experimental_parameters.get(fieldName);
+//					} else if(headers.get(i).equals("lit_source_citation")) {
+//						if(er.literatureSource!=null) {
+//							value = er.literatureSource.citation;
+//						} else {
+//							continue;
+//						}
+//
+					} else {
+						Field field = erClass.getDeclaredField(headers.get(i));
+						value = field.get(er);
+					}
 					
 					if (value==null) continue;
 					
-					if (headers[i].contentEquals("url")) {
+					if (headers.get(i).contentEquals("url")) {
 						String strValue = (String) value;
 						Cell cell = row.createCell(i);     						
 						Hyperlink href = wb.getCreationHelper().createHyperlink(HyperlinkType.URL);
@@ -368,7 +555,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 
 						String strValue=null;
 						
-						if(headers[i].equals("chemical_name")) {//TODO is this the only one?
+						if(headers.get(i).equals("chemical_name")) {//TODO is this the only one?
 							strValue= ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
 						} else {
 							strValue= StringEscapeUtils.unescapeHtml4(value.toString());
@@ -386,11 +573,11 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			}
 		}
 		
-		String lastCol = CellReference.convertNumToColString(headers.length);
+		String lastCol = CellReference.convertNumToColString(headers.size()-1);
 		recSheet.setAutoFilter(CellRangeAddress.valueOf("A2:"+lastCol+recCurrentRow));
 		recSheet.createFreezePane(0, 2);
 		
-		for (int i = 0; i < headers.length; i++) {
+		for (int i = 0; i < headers.size(); i++) {
 			String col = CellReference.convertNumToColString(i);
 			String recSubtotal = "SUBTOTAL(3,"+col+"$3:"+col+"$"+(recCurrentRow+1)+")";
 			recSubtotalRow.createCell(i).setCellFormula(recSubtotal);
@@ -400,6 +587,33 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	public void toExcel_File(String filePath) {
 		toExcel_File(filePath,ExperimentalRecord.outputFieldNames);
 	}
+	
+	public void toExcel_FileDetailed(String filePath) {
+		
+		List<String>fieldNames=ExperimentalRecord.outputFieldNames;
+
+		List<String>params=new ArrayList<>();
+
+		//Figure out list of experimental parameters
+		for (ExperimentalRecord er:this) {
+			if(er.experimental_parameters!=null) {			
+				for (String key:er.experimental_parameters.keySet()) {
+					if(!params.contains(key)) params.add(key);
+				}
+			}
+		}
+		Collections.sort(params);
+		
+		for (String param:params) {
+			fieldNames.add("exp_param_"+param);
+//			System.out.println(fieldNames.get(fieldNames.size()-1));
+		}
+		
+//		fieldNames.add("lit_source_citation");
+		
+		toExcel_File(filePath,fieldNames);
+	}
+
 	
 	public void createCheckingFile(ExperimentalRecords records,String filePath, int maxRows) {
 	

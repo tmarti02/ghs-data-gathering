@@ -851,6 +851,14 @@ public class ParseUtilities extends Parse {
 
 	// Applicable for LogKow and pKa
 	public static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {
+		
+		//TMM TODO fix cases with pH since it retrieves the pH instead of the property value:
+//		log Kow = -2.82 @ pH 7   ==> 7
+//		log Kow: -0.89 (pH 4); -1.85 (pH 7); -1.89 (pH 9)  ==> 9
+
+		// Following one works, but doesnt get the value at pH7:
+//		log Kow = 0.74 at pH 5 and -1.34 at pH 7  ==> 0.74 
+
 		int unitsIndex = -1;
 		if (propertyValue.contains("at")) {
 			unitsIndex = propertyValue.indexOf("at");

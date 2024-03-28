@@ -412,6 +412,7 @@ public class ExcelSourceReader {
 
 				if (content != null && !content.isBlank()) {
 					hasAnyFields = true;
+					content=content.trim();
 				}
 				jo.addProperty(hmFieldNames.get(k), content);
 			}

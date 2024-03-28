@@ -131,6 +131,9 @@ public class DownloadWebpageUtilities {
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		
 		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
+		
+		System.out.println(databasePath+"\t"+tableName);
+		
 		Random rand = new Random();
 		
 		try {
@@ -157,7 +160,7 @@ public class DownloadWebpageUtilities {
 							rec.content=table.outerHtml();
 							rec.addRecordToDatabase(tableName, conn);
 							counter++;
-							if (counter % 100==0) {
+							if (counter % 10==0) {
 								long batchTime = System.currentTimeMillis();
 								System.out.println("Downloaded "+counter+" pages in "+(batchTime-totalStartTime)/1000+" seconds");
 							}

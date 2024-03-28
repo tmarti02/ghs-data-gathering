@@ -98,7 +98,7 @@ public class JSONUtilities {
 				s=ParseUtilities.fixChars(s);
 				bwAppend.write(s+"\n");
 			}
-			
+			bwAppend.flush();
 			bwAppend.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
