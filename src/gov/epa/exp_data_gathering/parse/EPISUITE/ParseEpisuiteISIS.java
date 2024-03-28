@@ -26,7 +26,7 @@ public class ParseEpisuiteISIS extends Parse {
 	
 	@Override
 	protected void createRecords() {
-		Vector<RecordEpisuiteISIS> records = RecordEpisuiteISIS.recordWaterFragmentData();
+		Vector<RecordEpisuiteISIS> records = RecordEpisuiteISIS.getRecordsFromSDFs();
 		writeOriginalRecordsToFile(records);
 	}
 	
@@ -75,19 +75,19 @@ public class ParseEpisuiteISIS extends Parse {
 		Date date = new Date();  
 		String strDate=formatter.format(date);
 		String dayOnly = strDate.substring(0,strDate.indexOf(" "));
-		
+
 		ExperimentalRecord er = new ExperimentalRecord();
-		
+
 		boolean keep=false;
 		er.date_accessed = dayOnly;
 		er.temperature_C = r.Temperature;
 		er.casrn=ParseUtilities.fixCASLeadingZero(r.CAS);		
 		er.chemical_name = r.Name;
 		er.smiles=r.Smiles;
-		
-		
-		
-		
+
+
+
+
 		if (r.HL != null) {
 			keep = true;
 			er.keep=true;
@@ -96,11 +96,11 @@ public class ParseEpisuiteISIS extends Parse {
 			er.property_value_string = String.valueOf(r.HL) + " " + ExperimentalConstants.str_atm_m3_mol;
 			er.property_value_point_estimate_original = r.HL;
 			er.property_value_point_estimate_final = r.HL;
-			
+
 			uc.convertRecord(er);
 
 		}
-		
+
 		if (r.MP != null) {
 			keep=true;
 			er.keep=true;
@@ -108,11 +108,11 @@ public class ParseEpisuiteISIS extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_C;
 			er.property_value_string = String.valueOf(r.MP) + " " + ExperimentalConstants.str_C;
 			er.property_value_point_estimate_original = r.MP;
-			
+
 			uc.convertRecord(er);
 
 		}
-		
+
 		if (r.BP != null) {
 			keep=true;
 			er.keep=true;
@@ -120,7 +120,7 @@ public class ParseEpisuiteISIS extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_C;
 			er.property_value_string = String.valueOf(r.BP) + " " + ExperimentalConstants.str_C;
 			er.property_value_point_estimate_original = r.BP;
-			
+
 			uc.convertRecord(er);
 
 		}
@@ -132,7 +132,7 @@ public class ParseEpisuiteISIS extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_mmHg;
 			er.property_value_string = String.valueOf(r.VP) + " " + ExperimentalConstants.str_mmHg;
 			er.property_value_point_estimate_original = r.VP;
-			
+
 			uc.convertRecord(er);
 		}
 
@@ -142,7 +142,7 @@ public class ParseEpisuiteISIS extends Parse {
 			er.property_name = ExperimentalConstants.strLogKOW;
 			er.property_value_string = String.valueOf(r.KOW);
 			ParseUtilities.getLogProperty(er, er.property_value_string);
-			
+
 			// references having pH values included
 			if (r.Reference.toLowerCase().contains("ph")) {
 				String regex = "(.*)(\\;)?pH:(\\s)*(^\\d*\\.\\d+|\\d+\\.\\d*$)";
@@ -168,7 +168,7 @@ public class ParseEpisuiteISIS extends Parse {
 			ParseUtilities.getLogProperty(er, er.property_value_string);
 			uc.convertRecord(er);
 		}
-		
+
 		if (r.KOA != null) {
 			keep=true;
 			er.keep=true;
@@ -177,7 +177,7 @@ public class ParseEpisuiteISIS extends Parse {
 			ParseUtilities.getLogProperty(er, er.property_value_string);
 			uc.convertRecord(er);
 		}
-		
+
 		if (r.Km != null) {
 			keep=true;
 			er.keep=true;
@@ -188,7 +188,7 @@ public class ParseEpisuiteISIS extends Parse {
 
 		}
 
-		
+
 		if (r.BioHC != null) {
 			keep = true;
 			er.keep=true;
@@ -199,6 +199,25 @@ public class ParseEpisuiteISIS extends Parse {
 
 		}
 
+		if (r.RBIODEG != null) {
+			keep = true;
+			er.keep=true;
+			er.property_name = ExperimentalConstants.strRBIODEG;
+			
+			er.property_value_string = String.valueOf(r.RBIODEG)+" "+ExperimentalConstants.str_binary;
+			
+			er.property_value_units_original=ExperimentalConstants.str_binary;
+			er.property_value_units_final=ExperimentalConstants.str_binary;
+			
+			er.property_value_point_estimate_original=r.RBIODEG;
+			er.property_value_point_estimate_final=r.RBIODEG;
+			
+			er.dataset=r.Dataset;
+			
+//			ParseUtilities.getLogProperty(er, er.property_value_string);
+			uc.convertRecord(er);
+
+		}
 
 
 		if (r.WS_LogMolar != null || r.WS_LogMolarCalc != null) {
@@ -206,26 +225,26 @@ public class ParseEpisuiteISIS extends Parse {
 			keep = true;
 			er.keep=true;
 			if (r.WS_LogMolar==null) {
-			er.flag=true;
-			er.note="logMolar value is null";
-			System.out.println(er.casrn+"\t"+er.note);
-		} else if (r.WS_LogMolarCalc==null) {
-			er.flag=true;
-			er.note="logMolarCalc value is null";
-			System.out.println(er.casrn+"\t"+er.note);
-		} else {
-//			System.out.println(er.casrn+"\t"+r.WS_LogMolar+"\t"+r.WS_LogMolarCalc+"\t"+Math.abs(r.WS_LogMolar-r.WS_LogMolarCalc));
-			
-			if (Math.abs(r.WS_LogMolar-r.WS_LogMolarCalc)>0.5) {
-				er.keep=false;
-				er.reason="logM value doesnt match value calculated from mg/L value";
-				System.out.println(er.casrn+"\t"+r.WS_LogMolar+"\t"+r.WS_LogMolarCalc);
-			} else if (Math.abs(r.WS_LogMolar-r.WS_LogMolarCalc)>0.1) {
-				er.flag=true;				
-				er.note="logM value ("+r.WS_LogMolar+") doesnt match value calculated from mg/L value ("+r.WS_LogMolarCalc+")";
+				er.flag=true;
+				er.note="logMolar value is null";
+				System.out.println(er.casrn+"\t"+er.note);
+			} else if (r.WS_LogMolarCalc==null) {
+				er.flag=true;
+				er.note="logMolarCalc value is null";
+				System.out.println(er.casrn+"\t"+er.note);
+			} else {
+				//			System.out.println(er.casrn+"\t"+r.WS_LogMolar+"\t"+r.WS_LogMolarCalc+"\t"+Math.abs(r.WS_LogMolar-r.WS_LogMolarCalc));
+
+				if (Math.abs(r.WS_LogMolar-r.WS_LogMolarCalc)>0.5) {
+					er.keep=false;
+					er.reason="logM value doesnt match value calculated from mg/L value";
+					System.out.println(er.casrn+"\t"+r.WS_LogMolar+"\t"+r.WS_LogMolarCalc);
+				} else if (Math.abs(r.WS_LogMolar-r.WS_LogMolarCalc)>0.1) {
+					er.flag=true;				
+					er.note="logM value ("+r.WS_LogMolar+") doesnt match value calculated from mg/L value ("+r.WS_LogMolarCalc+")";
+				}
 			}
-		}
-			
+
 			er.property_value_string=r.WS_mg_L+" mg/L";
 			er.property_value_point_estimate_original = r.WS_mg_L;
 			er.property_value_units_original = ExperimentalConstants.str_mg_L;
@@ -233,87 +252,23 @@ public class ParseEpisuiteISIS extends Parse {
 			uc.convertRecord(er);
 
 		}
-		
-		
+
+
 		er.source_name = ExperimentalConstants.strSourceEpisuiteISIS;
 		er.reference=r.Reference;
 		er.url="http://esc.syrres.com/interkow/EpiSuiteData_ISIS_SDF.htm";
-				
+
+
+//		er.keep = false;
+//		er.reason = "Episuite duplicate";
 		
-		er.keep = false;
-		er.reason = "Episuite duplicate";
 		if (keep==true) {
-		records.add(er);
+			records.add(er);
 		}
 	}
 
 		
-		/*
-		
-		if (abbrev.equals("MP") && r.MP != null) {
-			er.keep=true;
-			er.reason = "";
-			er.property_name = ExperimentalConstants.strMeltingPoint;
-			er.property_value_units_original = ExperimentalConstants.str_C;
-			er.property_value_string = String.valueOf(r.MP);
-			er.property_value_point_estimate_original = r.MP;
-			
-			uc.convertRecord(er);
 
-		}
-
-		if (abbrev.equals("BP") && r.BP != null) {
-			er.keep=true;
-			er.reason = "";
-			er.property_name = ExperimentalConstants.strBoilingPoint;
-			er.property_value_units_original = ExperimentalConstants.str_C;
-			er.property_value_string = String.valueOf(r.BP);
-			er.property_value_point_estimate_original = r.BP;
-			
-			uc.convertRecord(er);
-
-		}
-
-		
-		
-		/*
-
-		/*
-		
-
-		
-		
-		er.property_value_string=r.WS_mg_L+" mg/L";
-		er.property_value_point_estimate_original = r.WS_mg_L;
-		er.property_value_units_original = ExperimentalConstants.str_mg_L;
-		
-		
-		}
-		
-		
-
-		if (r.Smiles==null || r.Smiles.isEmpty()) {
-			er.keep=false;
-			er.reason="smiles missing";
-		}
-
-*/
-		
-//		er.property_value_string=r.WS_LogMolar+" "+ExperimentalConstants.str_log_M;
-//		er.property_value_point_estimate_original = r.WS_LogMolar;
-//		er.property_value_units_original = ExperimentalConstants.str_log_M;
-				
-		
-		/*
-		er.source_name = ExperimentalConstants.strSourceEpisuiteISIS;
-		er.original_source_name=r.Reference;
-		er.url="http://esc.syrres.com/interkow/EpiSuiteData_ISIS_SDF.htm";
-				
-		if (er.keep=true) {
-		records.add(er);
-		}
-	}
-	*/
 	
 	public static void main(String[] args) {
 		ParseEpisuiteISIS p = new ParseEpisuiteISIS();

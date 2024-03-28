@@ -33,10 +33,15 @@ public class RecordEpisuiteISIS {
 	Double KOA;
 	Double Km;
 	Double BioHC;
+	Double RBIODEG;
+	String Dataset;
+	
 	Double Temperature;
 	String DataSet;
 	String Reference;
 	Double WS_LogMolarCalc;
+	
+	
 	
 	static final String sourceName=ExperimentalConstants.strSourceEpisuiteISIS;
 
@@ -168,6 +173,20 @@ public class RecordEpisuiteISIS {
 					}
 
 				}
+				
+				if(abbrev.contentEquals("RBIODEG")) {
+					if (m.getProperty("Biowin56_Obs")!=null) {
+						r.RBIODEG=Double.parseDouble(m.getProperty("Biowin56_Obs"));
+					} else {
+						continue;
+					}
+					
+					if (m.getProperty("Biowin56_DataSet")!=null) {
+						r.Dataset=m.getProperty("Biowin56_DataSet");
+					}
+					
+					
+				}
 
 							
 				r.DataSet=m.getProperty("DataSet");
@@ -238,77 +257,66 @@ public class RecordEpisuiteISIS {
 	//TODO add rest of properties from SDFs
 	
 	
-	public static Vector<RecordEpisuiteISIS> recordWaterFragmentData() {
+	public static Vector<RecordEpisuiteISIS> getRecordsFromSDFs() {
 		Vector<RecordEpisuiteISIS> records = new Vector<>();
 
 		
 		String strFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName+File.separator+"EPI_SDF_Data"+File.separator;
 		
-		Vector<RecordEpisuiteISIS> records1 = getRecords(strFolder+"EPI_WaterFrag_Data_SDF.sdf","WS");
-		Vector<RecordEpisuiteISIS> records2 = getRecords(strFolder+"EPI_Wskowwin_Data_SDF.sdf","WS");
+//		Vector<RecordEpisuiteISIS> records1 = getRecords(strFolder+"EPI_WaterFrag_Data_SDF.sdf","WS");
+//		Vector<RecordEpisuiteISIS> records2 = getRecords(strFolder+"EPI_Wskowwin_Data_SDF.sdf","WS");
+//		records.addAll(records1);
+//		
+//		// Only add new records from second file:
+//		for (RecordEpisuiteISIS rec2:records2) {
+//			boolean haveRec=false;
+//			for (RecordEpisuiteISIS rec1:records1) {
+//				if (rec1.CAS.contentEquals(rec2.CAS)) {
+////					System.out.println(rec2.CAS+"\t"+rec1.CAS);
+//					haveRec=true;
+//					break;
+//				}
+//			}
+//			if (!haveRec) {
+////				System.out.println(rec2.CAS);
+//				records.add(rec2);
+//			}
+//		}
+//		System.out.println(ReflectionToStringBuilder.toString(records1.get(0)));
+//		System.out.println(ReflectionToStringBuilder.toString(records2.get(0)));
 
+//		records.addAll(getRecords(strFolder+"EPI_Henry_Data_SDF.sdf","HL"));
+//		records.addAll(getRecords(strFolder+"EPI_VP_Data_SDF.sdf","VP"));
+//		records.addAll(getRecords(strFolder+"EPI_Melt_Pt_Data_SDF.sdf","MP"));
+//		records.addAll(getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP"));
+//		records.addAll(getRecords(strFolder+"EPI_Kowwin_Data_SDF.sdf","Kow"));
+//		records.addAll(getRecords(strFolder+"EPI_BCF_Data_SDF.sdf","LogBCF"));
+//		records.addAll(getRecords(strFolder+"EPI_KOA_Data_SDF.sdf","LogKOA"));
+//		records.addAll(getRecords(strFolder+"EPI_KM_Data_SDF.sdf","LogKmHL"));
+//		records.addAll(getRecords(strFolder+"EPI_BioHC_Data_SDF.sdf","LogHalfLife"));
+		records.addAll(getRecords(strFolder+"EPI_Biowin_Data_SDF.sdf","RBIODEG"));
 		
-		records.addAll(records1);
-		
-		// Only add new records from second file:
-		for (RecordEpisuiteISIS rec2:records2) {
-			boolean haveRec=false;
-			for (RecordEpisuiteISIS rec1:records1) {
-				if (rec1.CAS.contentEquals(rec2.CAS)) {
-//					System.out.println(rec2.CAS+"\t"+rec1.CAS);
-					haveRec=true;
-					break;
-				}
-			}
-			if (!haveRec) {
-//				System.out.println(rec2.CAS);
-				records.add(rec2);
-			}
-		}
-		System.out.println(ReflectionToStringBuilder.toString(records1.get(0)));
-		System.out.println(ReflectionToStringBuilder.toString(records2.get(0)));
-
-		
-		
-		Vector<RecordEpisuiteISIS> records3 = getRecords(strFolder+"EPI_Henry_Data_SDF.sdf","HL");
-		Vector<RecordEpisuiteISIS> records4 = getRecords(strFolder+"EPI_VP_Data_SDF.sdf","VP");
-		Vector<RecordEpisuiteISIS> records5 = getRecords(strFolder+"EPI_Melt_Pt_Data_SDF.sdf","MP");
-		Vector<RecordEpisuiteISIS> records6 = getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP");
-		Vector<RecordEpisuiteISIS> records7 = getRecords(strFolder+"EPI_Kowwin_Data_SDF.sdf","Kow");
-		Vector<RecordEpisuiteISIS> records8 = getRecords(strFolder+"EPI_BCF_Data_SDF.sdf","LogBCF");
-		Vector<RecordEpisuiteISIS> records9 = getRecords(strFolder+"EPI_KOA_Data_SDF.sdf","LogKOA");
-		Vector<RecordEpisuiteISIS> records10 = getRecords(strFolder+"EPI_KM_Data_SDF.sdf","LogKmHL");
-		Vector<RecordEpisuiteISIS> records11 = getRecords(strFolder+"EPI_BioHC_Data_SDF.sdf","LogHalfLife");
-
-
-		
-		
-	//	Vector<RecordEpisuiteISIS> records9 = getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP");
-		//Vector<RecordEpisuiteISIS> records10 = getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP");
-		//Vector<RecordEpisuiteISIS> records11 = getRecords(strFolder+"EPI_Boil_Pt_Data_SDF.sdf","BP");
-		
-		
-		
-		
-		
-		records.addAll(records3);
-		records.addAll(records4);
-		records.addAll(records5);
-		records.addAll(records6);
-		records.addAll(records7);
-		records.addAll(records8);
-		records.addAll(records9);
-		records.addAll(records10);
-		records.addAll(records11);
-
-
 
 		return(records);
 	}
 
 	
 	public static void main (String[] args) {
-		Vector<RecordEpisuiteISIS> records = recordWaterFragmentData();
+//		Vector<RecordEpisuiteISIS> records = recordWaterFragmentData();
+
+		String strFolder = "Data"+File.separator+"Experimental"+ File.separator + sourceName+File.separator+"EPI_SDF_Data"+File.separator;
+
+		Vector<RecordEpisuiteISIS> records = getRecords(strFolder+"EPI_Biowin_Data_SDF.sdf","RBIODEG");
+//		System.out.println(records.size());
+		
+		for (RecordEpisuiteISIS r:records) {
+			
+			while (r.CAS.substring(0,1).equals("0")) r.CAS=r.CAS.substring(1,r.CAS.length());
+			
+			System.out.println(r.CAS+"\t"+r.RBIODEG);
+		}
+		
+		
 	}
 }
 
