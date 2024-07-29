@@ -206,6 +206,9 @@ public class DataRemoveDuplicateExperimentalValues {
             removeDuplicatesForSameSource(key, recs);
 		}
 	}
+	
+	
+	
 
 	private void removeDuplicatesForSameSource(String key,ExperimentalRecords recs) {
 
@@ -237,8 +240,17 @@ public class DataRemoveDuplicateExperimentalValues {
 				ExperimentalRecord recj=recs.get(j);
 				
 				if (!recj.keep) continue;
+				
 				if(!reci.property_name.equals(recj.property_name)) continue;
-				if(reci.original_source_name!=null && !reci.original_source_name.equals(recj.original_source_name)) continue;
+				
+				if(!reci.getOriginalSourceNames().equals(recj.getOriginalSourceNames())) {
+//					System.out.println(gson.toJson(reci));
+//					System.out.println(gson.toJson(recj));
+//					System.out.println("*********************************");
+					continue;
+				}
+				
+//				if(reci.original_source_name!=null && !reci.original_source_name.equals(recj.original_source_name)) continue;
 				
 				String tsj=recj.property_value_string;
 				
@@ -249,12 +261,14 @@ public class DataRemoveDuplicateExperimentalValues {
 				if(!match && reci.property_value_point_estimate_final!=null && recj.property_value_point_estimate_final!=null) {
 					
 					double diff=Math.abs(reci.property_value_point_estimate_final-recj.property_value_point_estimate_final);
+
+					//TODO need to check if at same temperature or pressure
 					
 					if (reci.property_value_point_estimate_final!=0) {
-						diff/=reci.property_value_point_estimate_final;
+						diff/=Math.abs(reci.property_value_point_estimate_final);
 						diff*=100.0;//convert to %
 						
-						if(diff<0.1) {//<0.1% different
+						if(diff<0.01) {//<0.1% different
 //							System.out.println("<0.1%\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final+"\t"+diff);
 							match=true;
 						}
@@ -271,6 +285,9 @@ public class DataRemoveDuplicateExperimentalValues {
 //					System.out.println("Remove exact match same src:"+recj);
 					recj.keep=false;
 					recj.reason="Duplicate of experimental value from same source";
+					
+					System.out.println("Duplicate\t"+recj.property_name+"\t"+recj.property_value_point_estimate_final+"\t"+reci.property_value_point_estimate_final+"\t"+recj.comboID+"\t"+recj.getOriginalSourceNames());
+					
 //					System.out.println(key+"\t"+recj.reason+"\t"+tsi+"\t"+tsj);
 					
 //					if (reci.casrn!=null && reci.casrn.equals(cas)) {

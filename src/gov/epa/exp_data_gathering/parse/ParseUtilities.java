@@ -42,8 +42,8 @@ public class ParseUtilities extends Parse {
 				}
 			}
 		} catch (Exception ex) {
-			System.out.println(propertyValue);
-			ex.printStackTrace();
+//			System.out.println(propertyValue);
+//			ex.printStackTrace();
 		}
 
 		if (!foundNumeric) {
@@ -63,7 +63,7 @@ public class ParseUtilities extends Parse {
 					er.property_value_numeric_qualifier = "~";
 				}
 			} catch (Exception ex) {
-				ex.printStackTrace();
+//				ex.printStackTrace();
 			}
 		}
 
@@ -109,7 +109,7 @@ public class ParseUtilities extends Parse {
 						er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
 					}
 				}
-			} catch (NumberFormatException ex) {
+			} catch (Exception ex) {
 				// NumberFormatException means no numerical value was found; leave foundNumeric = false and do nothing else
 			}
 		}
@@ -668,6 +668,11 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_hpa;
 			unitsIndex = propertyValue.toLowerCase().indexOf("hpa");
 			badUnits = false;
+		} else if (propertyValue.toLowerCase().contains("mpa")) {
+			er.property_value_units_original = ExperimentalConstants.str_mpa;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mpa");
+			badUnits = false;
+
 		} else if (propertyValue.toLowerCase().contains("pa")) {
 			er.property_value_units_original = ExperimentalConstants.str_pa;
 			unitsIndex = propertyValue.toLowerCase().indexOf("pa");
@@ -704,12 +709,48 @@ public class ParseUtilities extends Parse {
 	public static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
-		if (propertyValue.toLowerCase().contains("atm-m3/mole") || propertyValue.toLowerCase().contains("atm m³/mol") ||
-				propertyValue.toLowerCase().contains("atm m^3/mol")) {
+
+		String[] valsATM_M3_MOL = {"amt-cu m/mol", "atm cu m/ mole", "atm-cu m", "atm-cu m /mole", "atm-cu-m/mol", 
+				 "atm-m cu/mol", "atm-m3/mol", "atm m³/mol", "atm-cu m/mol", "atm cu m/mol",
+				 "atm cu-m/mol",  "atm cu-m\\mol", "atm m^3/mol",
+				 "atn-cu m/mol","cu m-atm/mol","cu m atm/mol",
+		 };
+		
+		String unitsATM_M3_MOL=null;
+
+		boolean isATM_M3_MOL=false;
+		for(String val:valsATM_M3_MOL) {
+			if(propertyValue.toLowerCase().contains(val)) {
+				isATM_M3_MOL=true;
+				unitsATM_M3_MOL=val;
+				break;
+			}
+		}
+		
+		String[] valsPA_M3_MOL= {"pa m³/mol","pa m^3/mol","Pa-cu m/mol","Pa-cu m/mol"};
+		
+		boolean isPA_M3_MOL=false;
+		for(String val:valsPA_M3_MOL) {
+			if(propertyValue.toLowerCase().contains(val)) {
+				isPA_M3_MOL=true;
+				break;
+			}
+		}
+
+//		atm-cu cm/mol
+//		MPa-cu m/mol 
+//		Pa-L/mol
+		
+//		Pa/cu m mole : ill defined
+//		atm-cu/mole : ill defined
+//		kPa/mol : wrong units
+		
+		
+		if (isATM_M3_MOL) {
 			er.property_value_units_original = ExperimentalConstants.str_atm_m3_mol;
-			unitsIndex = propertyValue.toLowerCase().indexOf("atm");
+			unitsIndex = propertyValue.toLowerCase().indexOf(unitsATM_M3_MOL);
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("pa m³/mol") || propertyValue.toLowerCase().contains("pa m^3/mol")) {
+		} else if (isPA_M3_MOL) {
 			er.property_value_units_original = ExperimentalConstants.str_Pa_m3_mol;
 			unitsIndex = propertyValue.toLowerCase().indexOf("pa");
 			badUnits = false;
@@ -909,6 +950,50 @@ public class ParseUtilities extends Parse {
 			}
 		}
 	}
+	
+	
+	/**
+	 * Sets the pH condition for an ExperimentalRecord object, if present
+	 * @param er			The ExperimentalRecord object to be updated
+	 * @param propertyValue	The string to be read
+	 * @return				The pH
+	 */
+	public static void get_pH_Condition(ExperimentalRecord er, String propertyValue) {
+		
+		if(!propertyValue.contains("pH")) return;
+		
+//		System.out.println(propertyValue);
+		int pHindex = propertyValue.indexOf("pH");
+		
+		// If temperature units were found, looks for the last number that precedes them
+		if (pHindex > 0) {
+			try {
+				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(pHindex,propertyValue.length()));
+				String tempStr = "";
+				
+				int counter=0;
+
+				while (m.find()) {
+					counter++;
+					tempStr = m.group();
+					if (tempStr.length()!=0) break;//use first one
+				}
+				
+				if (tempStr.length()!=0) {
+					// Converts to C as needed
+					er.pH = tempStr;
+					
+//					if(!propertyValue.contains("The mean of the results")) {
+//						System.out.println(propertyValue+"\t"+er.property_value_point_estimate_original+"\t"+er.pH);	
+//					}
+				}
+				
+				
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
 
 	/**
 	 * Sets the pressure condition for an ExperimentalRecord object, if present
@@ -932,7 +1017,15 @@ public class ParseUtilities extends Parse {
 			pressureIndex = propertyValue.indexOf("hpa");
 			conversionFactor = UnitConverter.hPa_to_mmHg;
 		} else if (propertyValue.contains("pa")) {
+
+			int epaIndex=propertyValue.indexOf("epa");
 			pressureIndex = propertyValue.indexOf("pa");
+			
+			if(epaIndex==pressureIndex-1) {
+				pressureIndex=-1;
+//				System.out.println(propertyValue+"\tfound EPA when looking for pressure condition");
+			}
+			
 			conversionFactor = UnitConverter.Pa_to_mmHg;
 		} else if (propertyValue.contains("mbar")) {
 			pressureIndex = propertyValue.indexOf("mb");
@@ -960,13 +1053,20 @@ public class ParseUtilities extends Parse {
 					}
 				}
 				if (!foundNumeric) {
-					double[] range = extractAltFormatRangeFromString(propertyValue,pressureIndex);
-					if (range!=null) {
-						String min = formatDouble(range[0]*conversionFactor);
-						String max = formatDouble(range[1]*conversionFactor);
-						er.pressure_mmHg = min+"-"+max;
-						foundNumeric = true;
+					try {
+
+						double[] range = extractAltFormatRangeFromString(propertyValue,pressureIndex);
+						if (range!=null) {
+							String min = formatDouble(range[0]*conversionFactor);
+							String max = formatDouble(range[1]*conversionFactor);
+							er.pressure_mmHg = min+"-"+max;
+							foundNumeric = true;
+						}
+
+					} catch (Exception ex) {
+						ex.printStackTrace();
 					}
+					
 				}
 				if (!foundNumeric) {
 					try {
@@ -1046,7 +1146,7 @@ public class ParseUtilities extends Parse {
 		}
 	}
 
-	public static double[] extractAltFormatRangeFromString(String str,int end) throws IllegalStateException {
+	public static double[] extractAltFormatRangeFromString(String str,int end) throws Exception {
 		Matcher anyRangeMatcher = Pattern.compile(">[=]?[ ]?([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?<[=]?[ ]?([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 		if (anyRangeMatcher.find()) {
 			String strMin = anyRangeMatcher.group(1).replace(" ","");
@@ -1154,10 +1254,18 @@ public class ParseUtilities extends Parse {
 	 * @return			True if checksum holds for each CAS RN in input; false otherwise
 	 */
 	public static boolean isValidCAS(String casInput) {
-		
+		long t1=System.currentTimeMillis();
 		if(casInput.toUpperCase().contains("CHEMBL")) return false;
 		if(casInput.toUpperCase().contains("SRC")) return false;
-		
+			
+		String regex = "[0-9\\-]+"; //only has numbers and dashes
+		Pattern p = Pattern.compile(regex); 
+        Matcher m = p.matcher(casInput);
+        
+        if(!m.matches()) return false;
+        
+        if(casInput.substring(0,1).equals("-")) return false;
+
 		
 		String[] casArray = casInput.split("\\||;|,");
 		boolean valid = true;
@@ -1179,6 +1287,9 @@ public class ParseUtilities extends Parse {
 //				System.out.println("Valid CAS with bad format: "+cas);
 //			}
 		}
+		long t2=System.currentTimeMillis();
+//		System.out.println((t2-t1)+" millisecs to check cas");
+		
 		return valid;
 	}
 

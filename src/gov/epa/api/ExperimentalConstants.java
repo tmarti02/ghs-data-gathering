@@ -59,13 +59,16 @@ public class ExperimentalConstants {
 	
 	public static final String strCLINT = "Human hepatic intrinsic clearance";//OPERA
 	public static final String strFUB = "Fraction unbound in human plasma";//OPERA
+	public static final String strTTR_ANSA = "Binding to TTR (replacement of ANSA)";//OPERA
 	public static final String strCACO2 = "Caco-2 permeability (Papp)";//OPERA
 	public static final String strRBIODEG = "Ready biodegradability";//OPERA
 
 	public static final String strORAL_RAT_LD50="Oral rat LD50";//OPERA
 	public static final String strRatOralLD50="rat_oral_LD50";
 	public static final String strInhalationLC50="inhalation_LC50";
-	public static final String strRatInhalationLC50="rat_inhalation_LC50";
+	
+	public static final String strFOUR_HOUR_INHALATION_RAT_LC50="4 hour Inhalation rat LC50";
+	
 
 	
 	//Add list of well defined property units here:
@@ -102,6 +105,7 @@ public class ExperimentalConstants {
 	public static final String str_atm="atm";
 	public static final String str_kpa="kPa";
 	public static final String str_hpa="hPa";
+	public static final String str_mpa="mPa";
 	public static final String str_pa="Pa";
 	public static final String str_mbar="mbar";
 	public static final String str_bar="bar";
@@ -112,7 +116,9 @@ public class ExperimentalConstants {
 	public static final String str_nM="nM";
 	public static final String str_uM="uM";
 	public static final String str_log_M="log10(M)";
+	public static final String str_neg_log_M = "-log10(M)";
 	public static final String str_log_mg_L="log10(mg/L)";
+	public static final String str_log_ppm="log10(ppm)";
 	public static final String str_log_mmHg="log10(mmHg)";
 	public static final String str_log_atm_m3_mol="log10(atm-m3/mol)";
 	public static final String str_dimensionless_H="Dimensionless H";
@@ -183,6 +189,8 @@ public class ExperimentalConstants {
 	public static final String strSourceEChemPortal="eChemPortal";
 	public static final String strSourceEChemPortalAPI="eChemPortalAPI";
 	public static final String strSourceOChem="OChem";
+	public static final String strSourceOChem_2024_04_03="OChem_2024_04_03";
+	
 	public static final String strSourceOFMPub="OFMPub";
 	public static final String strSourceSigmaAldrich="Sigma-Aldrich";
 	public static final String strSourceChemicalBook="ChemicalBook";

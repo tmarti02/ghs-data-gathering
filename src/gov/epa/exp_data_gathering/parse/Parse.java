@@ -163,6 +163,7 @@ public class Parse {
 		System.out.println("Going through original records...");
 		ExperimentalRecords records=goThroughOriginalRecords();
 		records.addSourceBasedIDNumbers();
+
 		
 		if (removeDuplicates) {
 			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
@@ -174,15 +175,12 @@ public class Parse {
 			System.out.println("Writing Excel file for chemical records");
 			records.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords,maxExcelRows);
 		}
-		
 		if (writeCheckingExcelFile) {
 			records.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck,maxExcelRows);
 		}
 		
-
-		
 		ExperimentalRecords recordsBad = records.dumpBadRecords();
-
+		
 		if (writeFlatFile) {
 			System.out.println("Writing flat file for chemical records");
 			records.toFlatFile(mainFolder+File.separator+fileNameFlatExperimentalRecords,"|");
@@ -207,6 +205,9 @@ public class Parse {
 	protected void writeOriginalRecordsToFile(Vector<?> records) {
 		try {
 			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
+			
+//			System.out.println(records.size());
+			
 			howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(records,jsonPath);
 		} catch (Exception ex) {
 			ex.printStackTrace();

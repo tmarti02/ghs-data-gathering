@@ -7,6 +7,7 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 public class UnitConverter {
+
 	Hashtable<String, Double> htDensity = new Hashtable<String, Double>(); // density look up table, densities in g/ml
 
 	public static final double airDensitySTP = 1.2041 / 1000.0;
@@ -14,10 +15,12 @@ public class UnitConverter {
 	public static final double atm_to_mmHg = 760.0;
 	public static final double psi_to_mmHg = 51.7149;
 	public static final double hPa_to_mmHg = 0.750061;
+	public static final double mPa_to_mmHg = 7.50062e-6;//millipascals not mega
 	public static final double Pa_to_mmHg = 0.00750062;
 	public static final double bar_to_mmHg = 750.062;
 	public static final double atm_to_Pa = 101325.0;
 	public static final double Pa_to_atm = 1.0 / 101325.0;
+	public static final double megaPa_to_mmHg=kPa_to_mmHg*1000.0;
 
 	public boolean debug = false;
 
@@ -156,7 +159,7 @@ public class UnitConverter {
 																									// (dimensionless)
 			convertBinary(er);
 
-		} else if (er.property_name.equals(ExperimentalConstants.strFUB)) { // values usually in fraction
+		} else if (er.property_name.equals(ExperimentalConstants.strFUB) || er.property_name.equals(ExperimentalConstants.strTTR_ANSA)) { // values usually in fraction
 																			// (dimensionless)
 			convertDimensionless(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strRBIODEG)) {// binary
@@ -193,6 +196,7 @@ public class UnitConverter {
 		if (er.property_value_units_final != null && !er.property_value_units_final.isBlank()
 				&& !er.property_value_units_final.equals(ExperimentalConstants.str_C)
 				&& !er.property_value_units_final.toLowerCase().contains("log")
+				&& !er.property_value_units_final.equals(ExperimentalConstants.str_dimensionless) //for TTR_Binding
 				&& !er.property_value_units_final.equals(ExperimentalConstants.str_dimensionless_H)) {// TMM: not sure
 																										// we need this
 																										// last if
@@ -648,6 +652,9 @@ public class UnitConverter {
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_mbar)) {
 			convertAndAssignFinalFields(er, hPa_to_mmHg);
 			er.property_value_units_final = ExperimentalConstants.str_mmHg;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mpa)) {
+			convertAndAssignFinalFields(er, mPa_to_mmHg);
+			er.property_value_units_final = ExperimentalConstants.str_mmHg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pa)) {
 			convertAndAssignFinalFields(er, Pa_to_mmHg);
 			er.property_value_units_final = ExperimentalConstants.str_mmHg;
@@ -762,6 +769,13 @@ public class UnitConverter {
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_neg_log_M)) {
+			negPowAndAssignFinalFields(er);
+			er.property_value_units_final = ExperimentalConstants.str_M;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+//			System.out.println(er.casrn+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);
+
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mM)) {
 			convertAndAssignFinalFields(er, 1.0 / 1000.0);
 			er.property_value_units_final = ExperimentalConstants.str_M;
@@ -996,7 +1010,25 @@ public class UnitConverter {
 			er.property_value_max_final = Math.pow(10.0, er.property_value_max_original) * conversionFactor;
 		}
 	}
+	
+	private static void negPowConvertAndAssignFinalFields(ExperimentalRecord er, double conversionFactor) {
+		if (er.property_value_point_estimate_original != null) {
+			er.property_value_point_estimate_final = Math.pow(10.0, -er.property_value_point_estimate_original)
+					* conversionFactor;
+		}
+		if (er.property_value_min_original != null) {
+			er.property_value_min_final = Math.pow(10.0, -er.property_value_min_original) * conversionFactor;
+		}
+		if (er.property_value_max_original != null) {
+			er.property_value_max_final = Math.pow(10.0, -er.property_value_max_original) * conversionFactor;
+		}
+	}
 
+	private static void negPowAndAssignFinalFields(ExperimentalRecord er) {
+		negPowConvertAndAssignFinalFields(er, 1.0);
+	}
+
+	
 	private static void powAndAssignFinalFields(ExperimentalRecord er) {
 		powConvertAndAssignFinalFields(er, 1.0);
 	}

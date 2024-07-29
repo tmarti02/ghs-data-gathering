@@ -50,7 +50,7 @@ public class ExperimentalRecord {
 	public String measurement_method;//	The experimental method used to measure the property
 	public String reliability;
 
-	public Hashtable <String,Object> experimental_parameters=null;//TODO do we want to move temp, pres, pH to this hashtable?
+	public Hashtable <String,Object> experimental_parameters=new Hashtable <String,Object>();//TODO do we want to move temp, pres, pH to this hashtable?
 	
 	public Object recordOriginal;
 	
@@ -142,6 +142,24 @@ public class ExperimentalRecord {
 		
 	}
 	
+	
+	String getOriginalSourceNames() {
+		
+		String srcs="";
+		
+		if(publicSourceOriginal!=null) srcs+=publicSourceOriginal.name;
+		else if (original_source_name!=null)srcs+=original_source_name;
+		else srcs+="null";
+		
+		srcs+="\t";
+		
+		if(literatureSource!=null) srcs+=literatureSource.name;
+		else if (reference!=null) srcs+=reference;
+		else srcs+="null";
+		
+		return srcs;
+	}
+	
 	public void assignValue(String fieldName,String fieldValue) {
 		
 		if (fieldValue.isEmpty()) return;
@@ -182,7 +200,7 @@ public class ExperimentalRecord {
 	}
 
 	public boolean isValidConditions() {
-		if (property_name.equals(ExperimentalConstants.strRatInhalationLC50)) return true;
+		if (property_name.equals(ExperimentalConstants.strFOUR_HOUR_INHALATION_RAT_LC50)) return true;
 				
 		if (property_name.contentEquals(ExperimentalConstants.strWaterSolubility) || property_name.contentEquals(ExperimentalConstants.strHenrysLawConstant) || property_name.contentEquals(ExperimentalConstants.strVaporPressure)) {			
 			if (temperature_C==null) return true;			

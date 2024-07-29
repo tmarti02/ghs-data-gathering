@@ -472,7 +472,8 @@ public class RecordEcotox {
 		
 		
 		String sql="select  t.test_id, dtxsid, cas_number, chemical_name, bcf1_mean ,bcf1_unit,\r\n"
-				+ " media_type, test_location, exposure_type,chem_analysis_method, s.common_name, s.latin_name,s.ecotox_group, rsc.description as 'response_site',\r\n"
+				+ " conc1_mean_op, conc1_mean, conc1_unit, conc1_min, conc1_max, conc1_min_op, conc1_max_op,"
+				+ "media_type, test_location, exposure_type,chem_analysis_method, s.common_name, s.latin_name,s.ecotox_group, rsc.description as 'response_site',\r\n"
 				+ " author, publication_year, title,source from tests t\r\n"
 				+ "	join results r on t.test_id=r.test_id\r\n"
 				+ "	join chemicals c on c.cas_number=t.test_cas\r\n"
@@ -483,6 +484,16 @@ public class RecordEcotox {
 //				+ " and media_type like '%FW%' and test_location like '%LAB%'"				
 				+ "	order by cas_number";
 		
+//		String sql="select * from tests t\r\n"
+//				+ "	join results r on t.test_id=r.test_id\r\n"
+//				+ "	join chemicals c on c.cas_number=t.test_cas\r\n"
+//				+ "	left join references_ r2 on r2.reference_number=t.reference_number\r\n"
+//				+ "	left join species s on t.species_number=s.species_number\r\n"
+//				+ "	left join response_site_codes rsc on rsc.code=r.response_site\r\n"
+//				+ "	where bcf1_mean is not null and (bcf1_mean_op ='~' or bcf1_mean_op='')\r\n"
+////				+ " and media_type like '%FW%' and test_location like '%LAB%'"				
+//				+ "	order by cas_number";
+
 		
 		try {
 			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
@@ -494,6 +505,7 @@ public class RecordEcotox {
 
 			Hashtable<String,String>htExposureType=getExposureTypeLookup(databasePath);
 			Hashtable<String,String>htMediaType=getMediaTypeLookup(databasePath);
+			Hashtable<String,String>htTestLocation=getLocationTypeLookup(databasePath);
 			
 			int counter=0;
 			
@@ -527,6 +539,7 @@ public class RecordEcotox {
 				rec.setExposureType(htExposureType);
 				rec.setChemicalAnalysisMethod();
 				rec.setMediaType(htMediaType);
+				rec.setTestLocation(htTestLocation);
 
 			}
 			
@@ -659,6 +672,27 @@ public class RecordEcotox {
 		return htDesc;
 	}
 	
+	public static Hashtable<String,String> getLocationTypeLookup(String databasePath) {
+
+		Hashtable<String,String>htDesc=new Hashtable<>();
+		String sql = "select code,description from test_location_codes;";
+		try {
+
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = stat.executeQuery(sql);
+			while (rs.next()) {
+				String code= rs.getString(1);
+				String description= rs.getString(2);
+				htDesc.put(code, description);
+			}
+			
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return htDesc;
+	}
+	
 	void setExposureType(Hashtable<String,String>htDesc) {
 		
 //		if(exposure_type.contains("F")) {
@@ -685,6 +719,20 @@ public class RecordEcotox {
 		
 		if(htDesc.containsKey(code)) {
 			exposure_type=htDesc.get(code);
+		} else {
+			System.out.println("Unknown exposure_type: "+code);
+			
+		}
+		
+	}
+	
+	
+	void setTestLocation(Hashtable<String,String>htDesc) {
+		
+		String code=test_location.replace("/","");
+		
+		if(htDesc.containsKey(code)) {
+			test_location=htDesc.get(code);
 		} else {
 			System.out.println("Unknown exposure_type: "+code);
 			
@@ -889,10 +937,31 @@ public class RecordEcotox {
 			er.experimental_parameters.put("Response site", response_site);
 		}
 		
+		String wc=null;
 		
+		if(conc1_mean!=null) {
+			String conc1=conc1_mean+" "+conc1_unit;
+			if(conc1_mean_op!=null) conc1=conc1_mean_op+" "+conc1;
+			wc=conc1;
+//			System.out.println(wc);
+		} else if(conc1_min!=null && conc1_max!=null) {
+			wc=conc1_min_op+" "+conc1_min+" to "+conc1_max_op+conc1_max+" "+conc1_unit; 
+			wc=wc.replace("null", "").trim();
+//			System.out.println(wc);
+		} else if(conc1_max!=null) {
+//			System.out.println(conc1_mean+"\t"+conc1_min+"\t"+conc1_max);
+			wc="> "+conc1_max+" "+conc1_unit; 
+//			System.out.println(wc);
+		} else {
+//			System.out.println("no water conc");
+		}
+		
+		if(wc!=null) {
+			er.experimental_parameters.put("Exposure concentration",wc);
+//			System.out.println(wc);
+		}
+//		System.out.println(wc);
 		er.property_value_string=er.property_value_point_estimate_original+" "+bcf1_unit;//TODO
-
-		
 		uc.convertRecord(er);
 		
 		return er;

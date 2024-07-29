@@ -747,14 +747,28 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 
 	public ExperimentalRecords dumpBadRecords() {
 		ExperimentalRecords recordsBad = new ExperimentalRecords();
-		Iterator<ExperimentalRecord> it = this.iterator();
-		while (it.hasNext() ) {
-			ExperimentalRecord temp = it.next();
-			if (!temp.keep) {
-				recordsBad.add(temp);
-				it.remove();
+
+		//this accidentally messes up the order of the records- because OChem water solubility record shows up in first exported json file and it should have been towards the end.
+		//		Iterator<ExperimentalRecord> it = this.iterator();
+//		while (it.hasNext() ) {
+//			ExperimentalRecord temp = it.next();
+//			if (!temp.keep) {
+//				recordsBad.add(temp);
+//				it.remove();
+//				
+//			}
+//		}
+
+		//TMM: 6/10/24: Following is less slick, but works as expected:
+		for (int i=0;i<this.size();i++) {
+			ExperimentalRecord er = this.get(i);
+			if (!er.keep) {
+				recordsBad.add(er);
+				this.remove(i--);
 			}
 		}
+
+		
 		return recordsBad;
 	}
 
@@ -860,7 +874,27 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return records;
 	}
 	
-	
+	public void getRecordsByProperty() {
+		TreeMap <String,ExperimentalRecords>map=new TreeMap<String,ExperimentalRecords>();
+
+		for (ExperimentalRecord er:this) {
+			if(!er.keep) continue;
+			if(map.get(er.property_name)==null) {
+				ExperimentalRecords recs=new ExperimentalRecords();
+				recs.add(er);
+				map.put(er.property_name, recs);
+			} else {
+				ExperimentalRecords recs=map.get(er.property_name);
+				recs.add(er);
+			}
+		}
+		System.out.println("\nKept records:");
+		for(String property:map.keySet()) {
+			System.out.println(property+"\t"+map.get(property).size());
+		}
+		System.out.println("");
+	}
+
 	public static ExperimentalRecords getExperimentalRecordsFromDB(String property, String expRecordsDBPath, boolean useKeep) {
 
 		ExperimentalRecords records = new ExperimentalRecords();
