@@ -108,7 +108,6 @@ public class ParseEcotox {
 		
 		//Write experimental records to excel file:
 		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
-
 		
 	}
 
@@ -551,6 +550,11 @@ public class ParseEcotox {
 
 	}
 	
+	/**
+	 * Omits if exposure_type is unknown
+	 * 
+	 * @param records
+	 */
 	private void excludeByExposureType(ExperimentalRecords records) {
 
 		int count=0;
@@ -763,14 +767,30 @@ public class ParseEcotox {
 
 		RecordEcotox.uc.debug=true;
 		
-//		boolean excludeByExposureType=true;
-//		boolean includeConc2=false;
+		boolean excludeByExposureType=false;
+		boolean includeConc2=false;
+		
 //		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
 //		int species_number=1;//species number in Ecotox species table
 //		double durationDays=4.0;
-//		p.getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
+		
+		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_BLUEGILL_LC50;
+		int species_number=2;//species number in Ecotox species table
+		double durationDays=4.0;
+		
 
-		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF,false);
+//		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_RAINBOW_TROUT_LC50;
+//		int species_number=4;//species number in Ecotox species table
+//		double durationDays=4.0;
+
+//		String propertyName=ExperimentalConstants.strFORTY_EIGHT_HR_DAPHNIA_MAGNA_LC50;
+//		int species_number=5;//species number in Ecotox species table
+//		double durationDays=2.0;
+
+		
+		p.getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
+
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF,false);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCF);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);

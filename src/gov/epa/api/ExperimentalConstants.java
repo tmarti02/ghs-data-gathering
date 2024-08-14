@@ -227,6 +227,9 @@ public class ExperimentalConstants {
 	public static final String strInVitroToxicity = "in vitro toxicity";
 	public static final String strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50 ="96 hour fathead minnow LC50";
 	public static final String strNINETY_SIX_HOUR_BLUEGILL_LC50 = "96 hour bluegill LC50";
+	public static final String strNINETY_SIX_HOUR_RAINBOW_TROUT_LC50= "96 hour rainbow trout LC50";
+//	public static final String strFORTY_EIGHT_HOUR_WATER_FLEA_LC50= "48 hour water flea LC50";
+	public static final String strFORTY_EIGHT_HR_DAPHNIA_MAGNA_LC50 ="48 hour Daphnia magna LC50";
 
 	public static final String strSourceSampleSource="SampleSource";
 
