@@ -74,6 +74,8 @@ public class ExperimentalConstants {
 	//Add list of well defined property units here:
 	public static final String str_mg_L="mg/L";
 	public static final String str_mg_m3="mg/m^3";
+	public static final String str_mg_dm3 = "mg/dm3";	
+	
 	public static final String str_g_m3="g/m^3";
 	public static final String str_mL_m3="mL/m^3";
 	public static final String str_mL_L="mL/L";
@@ -113,6 +115,8 @@ public class ExperimentalConstants {
 	public static final String str_psi="psi";
 	public static final String str_M="M";
 	public static final String str_mM="mM";
+	public static final String str_mmol_L = "mmol/L";
+	public static final String str_mol_L = "mol/L";
 	public static final String str_nM="nM";
 	public static final String str_uM="uM";
 	public static final String str_log_M="log10(M)";
@@ -226,10 +230,13 @@ public class ExperimentalConstants {
 
 	public static final String strInVitroToxicity = "in vitro toxicity";
 	public static final String strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50 ="96 hour fathead minnow LC50";
+	public static final String strNINETY_SIX_HOUR_SCUD_LC50 ="96 hour scud LC50";
 	public static final String strNINETY_SIX_HOUR_BLUEGILL_LC50 = "96 hour bluegill LC50";
+
 	public static final String strNINETY_SIX_HOUR_RAINBOW_TROUT_LC50= "96 hour rainbow trout LC50";
 //	public static final String strFORTY_EIGHT_HOUR_WATER_FLEA_LC50= "48 hour water flea LC50";
 	public static final String strFORTY_EIGHT_HR_DAPHNIA_MAGNA_LC50 ="48 hour Daphnia magna LC50";
+
 
 	public static final String strSourceSampleSource="SampleSource";
 
@@ -256,6 +263,8 @@ public class ExperimentalConstants {
 	public static final String strVaporDensity="Vapor density";
 	public static final String strViscosity="Viscosity";
 	public static final String strSurfaceTension = "Surface tension";
+	
+	public static final String strAcuteAquaticToxicity = "Acute aquatic toxicity";
 	
 
 }

@@ -48,6 +48,9 @@ public class ParseEcotox {
 
 		if (createOriginalRecords) {
 			recordsOriginal=RecordEcotox.get_Acute_Tox_Records_From_DB(species_number,propertyName);
+			
+			System.out.println(recordsOriginal.size());
+			
 			int howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(recordsOriginal,jsonPath);
 		} else {
 			try {
@@ -762,34 +765,22 @@ public class ParseEcotox {
 	}
 	
 	
+	
+	
+	
 	public static void main(String[] args) {
 		ParseEcotox p = new ParseEcotox();
 
 		RecordEcotox.uc.debug=true;
 		
-		boolean excludeByExposureType=false;
-		boolean includeConc2=false;
+		p.getDaphniaMagnaData();
+//		p.getRainbowTroutData();
+//		p.getScudData();
+//		p.getFatheadMinnowData();		
 		
-//		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
-//		int species_number=1;//species number in Ecotox species table
-//		double durationDays=4.0;
 		
-		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_BLUEGILL_LC50;
-		int species_number=2;//species number in Ecotox species table
-		double durationDays=4.0;
 		
-
-//		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_RAINBOW_TROUT_LC50;
-//		int species_number=4;//species number in Ecotox species table
-//		double durationDays=4.0;
-
-//		String propertyName=ExperimentalConstants.strFORTY_EIGHT_HR_DAPHNIA_MAGNA_LC50;
-//		int species_number=5;//species number in Ecotox species table
-//		double durationDays=2.0;
-
-		
-		p.getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
-
+//		/************************************************************************
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF,false);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCF);
@@ -808,6 +799,44 @@ public class ParseEcotox {
 
 	}
 
+	private  void getFatheadMinnowData() {
+		boolean excludeByExposureType=true;
+		boolean includeConc2=false;
+		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
+		int species_number=1;//species number in Ecotox species table
+		double durationDays=4.0;
+		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
+	}
+
+	private  void getScudData() {
+		boolean excludeByExposureType=true;
+		boolean includeConc2=false;
+		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_SCUD_LC50;
+		int species_number=6;//species number in Ecotox species table
+		double durationDays=4.0;
+		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
+	}
+
+	private  void getRainbowTroutData() {
+		boolean excludeByExposureType=true;
+		boolean includeConc2=false;
+		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_RAINBOW_TROUT_LC50;
+		int species_number=4;//species number in Ecotox species table
+		double durationDays=4.0;
+
+		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
+	}
+	private  void getDaphniaMagnaData() {
+		boolean excludeByExposureType=true;
+		boolean includeConc2=false;
+		String propertyName=ExperimentalConstants.strFORTY_EIGHT_HR_DAPHNIA_MAGNA_LC50;
+		int species_number=5;//species number in Ecotox species table
+		double durationDays=2.0;
+
+
+		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
+	}
+	
 }
 
 

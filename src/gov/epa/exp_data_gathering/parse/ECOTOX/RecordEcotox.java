@@ -348,9 +348,10 @@ public class RecordEcotox {
 			conc_unit=conc2_unit;
 		}
 
+
 		if(conc_unit.equals("ml/L")) conc_unit="mL/L";
-		
-		
+		if(conc_unit.equals("ug/ml")) conc_unit="mg/L";
+					
 		ExperimentalRecord er=new ExperimentalRecord();
 		
 		er.dsstox_substance_id=dtxsid;
@@ -426,6 +427,9 @@ public class RecordEcotox {
 //		if(er.dsstox_substance_id.equals("DTXSID0034566")) {
 //			System.out.println("Found DTXSID0034566, keep="+er.keep+"\treason="+er.reason+"\t"+er.property_value_units_original+"\t"+valueNumber);
 //		}
+
+		er.property_category=ExperimentalConstants.strAcuteAquaticToxicity;
+		
 		if(er.keep) {
 			uc.convertRecord(er);
 		}
