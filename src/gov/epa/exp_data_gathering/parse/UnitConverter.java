@@ -22,6 +22,11 @@ public class UnitConverter {
 	public static final double Pa_to_atm = 1.0 / 101325.0;
 	public static final double megaPa_to_mmHg=kPa_to_mmHg*1000.0;
 
+	public static final double N_m_to_dyn_cm=1000.0;
+	public static final double N_cm_to_dyn_cm=100000.0;
+	public static final double mN_cm_to_dyn_cm=100.0;
+	
+	
 	public boolean debug = false;
 
 	public static double F_to_C(double F) {
@@ -92,8 +97,10 @@ public class UnitConverter {
 		}
 
 		if (er.casrn != null && !ParseUtilities.isValidCAS(er.casrn) && er.keep) {
-			er.flag = true;
-			er.reason = "Invalid CAS";
+			er.flag = true;			
+//			er.reason = "Invalid CAS";
+			er.updateNote("Invalid CAS");
+			
 		} else if (er.casrn != null && er.casrn.toLowerCase().contains("mixture")) {
 			er.keep = false;
 			er.reason = "Mixture";
@@ -109,11 +116,15 @@ public class UnitConverter {
 			return;// already converted it in previous code
 		}
 
-		if (er.property_value_units_original == null) {
+		if (er.property_value_units_original == null && !er.property_name.equals(ExperimentalConstants.strDensity) && !er.property_name.equals(ExperimentalConstants.strVaporDensity)) {
 //			System.out.println(
 //					"Missing original units for " + er.property_name + ", " + er.casrn + "\t" + er.chemical_name);
 			er.keep = false;
-			er.reason = "Original units missing";
+			
+			if(er.reason==null) {//dont override reason
+				er.reason = "Original units missing";				
+			}
+
 
 		} else if (er.property_category != null) {
 			
@@ -178,7 +189,12 @@ public class UnitConverter {
 			convertHenrysLawConstant(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility)) {
 			convertSolubility(er);
-			
+
+		} else if (er.property_name.equals(ExperimentalConstants.strViscosity)) {
+			convertViscosity(er);
+
+		} else if (er.property_name.equals(ExperimentalConstants.strSurfaceTension)) {
+			convertSurfaceTension(er);
 
 		} else if (er.property_name.equals(ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50)
 				|| er.property_name.equals(ExperimentalConstants.strNINETY_SIX_HOUR_BLUEGILL_LC50)
@@ -205,13 +221,27 @@ public class UnitConverter {
 			if ((er.property_value_point_estimate_final != null && er.property_value_point_estimate_final < 0)
 					|| (er.property_value_min_final != null && er.property_value_min_final < 0)
 					|| (er.property_value_max_final != null && er.property_value_max_final < 0)) {
-				er.keep = false;
-				er.reason = "Negative value not plausible";
-				System.out.println(er.reason + " for " + er.property_name + " for " + er.chemical_name);
+				
+				if (er.keep) {
+					er.keep = false;
+					er.reason = "Negative value not plausible";
+//					System.out.println(er.reason + " for " + er.property_name + " for " + er.chemical_name+":");
+//					System.out.println(er.property_value_string+"\n");
+				}
 			}
-		} else if (er.temperature_C != null && er.temperature_C < 0) {
-			er.flag = true;
-			er.reason = "Negative temperature may be artifact of bad range parsing";
+		} else if (er.temperature_C != null && er.temperature_C < 0 ) {
+
+			if(er.keep) {
+				er.flag=true;
+				er.reason = "Negative temperature may be artifact of bad range parsing";				
+//				System.out.println("Keep, neg temp: "+er.property_value_string);
+				
+			} else {
+				er.updateNote("Negative temperature may be artifact of bad range parsing");
+//				System.out.println("Dont keep, neg temp: "+er.reason+"\t"+er.property_value_string);
+
+			}
+
 		}
 
 //		System.out.println(rec.property_value_units_original+"\t"+rec.property_value_units_final);
@@ -609,34 +639,132 @@ public class UnitConverter {
 	}
 
 	private void convertDensity(ExperimentalRecord er) {
-		if (er.property_value_units_original != null
-				&& (er.property_value_units_original.equals(ExperimentalConstants.str_g_cm3)
-						|| er.property_value_units_original.equals(ExperimentalConstants.str_g_mL)
-						|| er.property_value_units_original.equals(ExperimentalConstants.str_kg_dm3))) {
-			assignFinalFieldsWithoutConverting(er);
-			er.property_value_units_final = ExperimentalConstants.str_g_cm3;
-		} else if (er.property_value_units_original == null && er.note != null
-				&& (er.note.contains(ExperimentalConstants.str_relative_density))) {
-			assignFinalFieldsWithoutConverting(er);
-			er.property_value_units_final = ExperimentalConstants.str_g_cm3;
-		} else if (er.property_value_units_original != null
-				&& (er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)
-						|| er.property_value_units_original.equals(ExperimentalConstants.str_g_L))) {
-			convertAndAssignFinalFields(er, 1.0 / 1000.0);
-			er.property_value_units_final = ExperimentalConstants.str_g_cm3;
-		} else if (er.property_value_units_original == null && er.note != null
-				&& (er.note.contains(ExperimentalConstants.str_relative_gas_density)
-						|| er.note.contains(ExperimentalConstants.str_relative_mixture_density))) {
-			convertAndAssignFinalFields(er, airDensitySTP);
-			er.property_value_units_final = ExperimentalConstants.str_g_cm3;
-		} else if (er.property_value_point_estimate_original != null || er.property_value_min_original != null) {
-			er.flag = true;
-			er.updateNote("Conversion to g/cm3 not possible (unknown units)");
-			assignFinalFieldsWithoutConverting(er);
-			er.property_value_units_final = er.property_value_units_original;
-			if (debug)
-				System.out.println("Unrecognized units for " + er.property_name + ": " + er.property_value_string);
+
+		
+		if (er.property_value_units_original != null && !er.property_value_units_original.equals(ExperimentalConstants.str_dimensionless)) {
+			
+			if (er.property_value_units_original.equals(ExperimentalConstants.str_g_cm3)
+					|| er.property_value_units_original.equals(ExperimentalConstants.str_kg_L)
+					|| er.property_value_units_original.equals(ExperimentalConstants.str_g_mL)
+					|| er.property_value_units_original.equals(ExperimentalConstants.str_kg_dm3)) {
+				
+				assignFinalFieldsWithoutConverting(er);
+				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+			} else if (er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)
+					|| er.property_value_units_original.equals(ExperimentalConstants.str_g_L)) {
+				convertAndAssignFinalFields(er, 1.0 / 1000.0);
+				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+
+			} else if (er.property_value_units_original.equals(ExperimentalConstants.str_lb_ft3)) {
+				convertAndAssignFinalFields(er, 0.0160185);
+				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+			} else if (er.property_value_units_original.equals(ExperimentalConstants.str_lb_gal)) {
+				convertAndAssignFinalFields(er, 0.119826);
+				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+			}
+
+		} else {
+			
+			if (er.note != null && er.note.contains(ExperimentalConstants.str_relative_density)) {
+				
+//				System.out.println("assigning:"+er.property_value_string);
+				
+				assignFinalFieldsWithoutConverting(er);
+				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+//				System.out.println("relative density: "+er.property_value_string+"\t"+er.property_value_point_estimate_final);
+
+			} else if (er.note != null && (er.note.contains(ExperimentalConstants.str_relative_gas_density)
+					|| er.note.contains(ExperimentalConstants.str_relative_mixture_density))) {
+				
+				convertAndAssignFinalFields(er, airDensitySTP);
+				
+//				if(er.property_value_point_estimate_final==null) {
+//					System.out.println("couldnt assign vapor/gas:"+er.property_value_string+"\t"+er.property_value_point_estimate_original);;					
+//				}
+				
+				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+//				System.out.println("relative gas/mixture density: "+er.property_value_string+"\t"+er.property_value_point_estimate_final);
+
+			} else {
+				if (er.property_value_point_estimate_original != null || er.property_value_min_original != null) {
+					er.flag = true;
+					er.updateNote("Conversion to g/cm3 not possible (missing units)");
+					assignFinalFieldsWithoutConverting(er);
+					er.property_value_units_final = er.property_value_units_original;
+					
+//					System.out.println("no units: "+er.property_value_string+"\t"+er.property_value_point_estimate_final);
+
+
+					if (debug)
+						System.out.println("missing units for " + er.property_name + ": " + er.property_value_string);
+
+				}
+			}
 		}
+	}
+	
+	private void convertSurfaceTension(ExperimentalRecord er) {
+		if (er.property_value_units_original != null
+				&& (er.property_value_units_original.equals(ExperimentalConstants.str_dyn_cm) || er.property_value_units_original.equals(ExperimentalConstants.str_mN_m))) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_dyn_cm;
+
+		} else if (er.property_value_units_original != null
+					&& (er.property_value_units_original.equals(ExperimentalConstants.str_N_m))) {
+
+			convertAndAssignFinalFields(er, N_m_to_dyn_cm);
+			er.property_value_units_final = ExperimentalConstants.str_dyn_cm;
+//			System.out.println("ST converted: "+er.property_value_point_estimate_final+"\t"+ er.property_value_units_final);					
+
+		} else if (er.property_value_units_original != null
+				&& (er.property_value_units_original.equals(ExperimentalConstants.str_N_cm))) {
+
+			convertAndAssignFinalFields(er, N_cm_to_dyn_cm);
+			er.property_value_units_final = ExperimentalConstants.str_dyn_cm;
+//			System.out.println("ST converted: "+er.property_value_point_estimate_final+"\t"+ er.property_value_units_final);					
+
+		} else {
+			System.out.println("Unrecognized units for " + er.property_name + ": " + er.property_value_string);
+			
+		}
+	}
+	
+	private void convertViscosity(ExperimentalRecord er) {
+
+		if (er.property_value_units_original.equals(ExperimentalConstants.str_cP)) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_cP;
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_P)) {
+			convertAndAssignFinalFields(er, 100.0);
+			er.property_value_units_final = ExperimentalConstants.str_cP;
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_Pa_sec)) {
+			convertAndAssignFinalFields(er, 1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_cP;
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_cSt)) {
+
+			if (er.casrn == null || htDensity.get(er.casrn) == null) {
+				er.flag = true;
+				er.updateNote("Conversion to cP not possible (missing density)");
+//				System.out.println(er.casrn + "\tConversion to cP not possible (missing density)");
+				assignFinalFieldsWithoutConverting(er);
+				er.property_value_units_final = er.property_value_units_original;
+				
+			} else {
+				double density = htDensity.get(er.casrn);
+				//			System.out.println(er.casrn+"\tConversion to mg/L using density="+density);
+				convertAndAssignFinalFields(er, density);
+				er.property_value_units_final = ExperimentalConstants.str_cP;
+				er.updateNote("Converted using density: " + density + " g/mL");
+			}
+		
+		} else {
+			System.out.println("Need to handle "+er.property_value_units_original+" for " + er.property_name + ": " + er.property_value_string);
+		} 
+		
+		
 	}
 
 	private void convertPressure(ExperimentalRecord er) {
@@ -854,6 +982,7 @@ public class UnitConverter {
 //			convertAndAssignFinalFields(er,10.0);
 //			er.property_value_units_final = ExperimentalConstants.str_g_L;
 			// TMM: dont convert
+			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_pct;
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (dimensions differ)");

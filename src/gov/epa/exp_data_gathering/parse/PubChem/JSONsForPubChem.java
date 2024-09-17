@@ -114,6 +114,16 @@ public class JSONsForPubChem {
 	public class StringWithMarkup {
 		@SerializedName("String")
 		public String string;
+		
+		public List<Markup> Markup;
+	}
+	
+	public class Markup  {
+		int Start;
+        int Length;
+        String URL;
+        String Type;
+        String Extra;
 	}
 	
 }

@@ -1,27 +1,57 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.text.StringEscapeUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.Chemidplus.RecordChemidplus.ToxicityRecord;
 
 public class ParseUtilities extends Parse {
 
+	public static Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues().create();		
+
 	public static boolean getNumericalValue(ExperimentalRecord er, String propertyValue, int unitsIndex, boolean badUnits) {
+
+//		System.out.println("here1\t"+unitsIndex+"\t"+propertyValue);
+		
 		Pattern tempPattern = Pattern.compile("[0-9.]+ ?\\u00B0 ?[CcFfKk]");
-		if (badUnits) { unitsIndex = propertyValue.length(); }
+		
+
+		if (badUnits) unitsIndex = propertyValue.length(); 
+		
 		if (propertyValue.contains("Â±")) { unitsIndex = Math.min(propertyValue.indexOf("Â±"),unitsIndex); }
-		if (!er.property_name.equals(ExperimentalConstants.strMeltingPoint) && !er.property_name.equals(ExperimentalConstants.strBoilingPoint) &&
-				!er.property_name.equals(ExperimentalConstants.strFlashPoint) && unitsIndex==propertyValue.length()) {
+		
+		if (!er.property_name.equals(ExperimentalConstants.strMeltingPoint)
+				&& !er.property_name.equals(ExperimentalConstants.strBoilingPoint)
+				&& !er.property_name.equals(ExperimentalConstants.strFlashPoint)
+//				&& !er.property_name.equals(ExperimentalConstants.strDensity)
+//				&& !er.property_name.equals(ExperimentalConstants.strVaporDensity)
+				&& unitsIndex == propertyValue.length()) {
 			Matcher tempMatcher = tempPattern.matcher(propertyValue);
 			if (tempMatcher.find()) {
+//				if(tempMatcher.start()!=unitsIndex) {
+//					System.out.println(unitsIndex+"\t"+tempMatcher.start()+"\t"+propertyValue);
+//				}
 				unitsIndex = tempMatcher.start();
 			}
-		}
+		}	
+		
+		//TODO this difficulty is when the temperature appears before or after the property value- hard to know...
+
+//		if (er.property_name.equals(ExperimentalConstants.strDensity) || er.property_name.equals(ExperimentalConstants.strVaporDensity)) {
+//			if(propertyValue.contains(":")) unitsIndex = propertyValue.length();
+//		}
+			
+		
 		boolean foundNumeric = false;
 		try {
 			Matcher sciMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?(e|x[ ]?10\\^?|\\*?10\\^)[ ]?[\\(]?([-|\\+]?[ ]?[0-9]+)[\\)]?").matcher(propertyValue.toLowerCase().substring(0,unitsIndex));
@@ -34,18 +64,28 @@ public class ParseUtilities extends Parse {
 				if (!badUnits) {
 					foundNumeric = true;
 					er.property_value_point_estimate_original = mantissa*Math.pow(10, magnitude);
+					
+//					System.out.println(propertyValue+"\t"+er.property_value_point_estimate_original);
+					
 					if (propertyValue.indexOf(strMantissa) > 0) {
 						String checkSymbol = StringEscapeUtils.unescapeHtml4(propertyValue.replaceAll("\\s",""));
 						propertyValueIndex = checkSymbol.indexOf(strMantissa);
 						er.property_value_numeric_qualifier = getNumericQualifier(checkSymbol,propertyValueIndex);
 					}
 				}
+			} else {
+//				System.out.println("Not sci not:"+propertyValue);
 			}
+			
+			
 		} catch (Exception ex) {
 //			System.out.println(propertyValue);
 //			ex.printStackTrace();
 		}
+		
 
+//		System.out.println("here3\t"+unitsIndex+"\t"+propertyValue);
+		
 		if (!foundNumeric) {
 			try {
 				double[] range = extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
@@ -82,8 +122,10 @@ public class ParseUtilities extends Parse {
 				ex.printStackTrace();
 			}
 		}
-
+		
 		if (!foundNumeric) {
+			
+			
 			try {
 				double propertyValueAsDouble = extractDoubleFromString(propertyValue,unitsIndex);
 				propertyValue = StringEscapeUtils.unescapeHtml4(propertyValue);
@@ -101,6 +143,7 @@ public class ParseUtilities extends Parse {
 				} else {
 					propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
 				}
+				
 				if (!badUnits) {
 					er.property_value_point_estimate_original = propertyValueAsDouble;
 					foundNumeric = true;
@@ -113,6 +156,13 @@ public class ParseUtilities extends Parse {
 				// NumberFormatException means no numerical value was found; leave foundNumeric = false and do nothing else
 			}
 		}
+		
+
+//		if(er.property_value_units_original!=null && er.property_value_units_original.equals("%")) {
+//			System.out.println(unitsIndex+"\t"+propertyValue);			
+//			System.out.println(gson.toJson(er));
+//		}
+
 		
 		return foundNumeric;
 	}
@@ -138,52 +188,179 @@ public class ParseUtilities extends Parse {
 		return symbol;
 	}
 
-	public static boolean getDensity(ExperimentalRecord er, String propertyValue) {
+	public static boolean getDensity(ExperimentalRecord er, String propertyValue,String propertyValueNonSplit) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
-		if (propertyValue.toLowerCase().contains("g/cm") || propertyValue.toLowerCase().contains("g/cu cm") || propertyValue.toLowerCase().contains("gm/cu cm")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/ml") || propertyValue.toLowerCase().contains("gm/ml")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("kg/m")) {
-			er.property_value_units_original = ExperimentalConstants.str_kg_m3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("kg/m");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/l")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/l");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("kg/dm3")) {
-			er.property_value_units_original = ExperimentalConstants.str_kg_dm3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("kg/dm3");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("relative")) {
+		propertyValue = propertyValue.replace("lbs/gal","lb/gal");
+		
+		propertyValue=propertyValue.replace("Specific gravity = ","").replace("Specific gravity: ","").replace("Specific gravity ","").replace("Bulk density = ","").replace("Specific Gravity = ", "");
+		propertyValue=propertyValue.replace("Density = ","").replace("BULK DENSITY ","");
+//		propertyValue=propertyValue.replace("Relative density (water = 1): ","");
+				
+		propertyValue=propertyValue.replace("> ", ">");
+		propertyValue=propertyValue.replace("< ", "<");
+		
+//		System.out.println(propertyValue);
+		
+//		propertyValue = propertyValue.replace(" lb at "," lb/gal at ");
+		
+		String PVLC=propertyValue.toLowerCase(); 
+		String pvlc2=propertyValueNonSplit.toLowerCase();
+		
+		if(PVLC.contains("will float") || PVLC.contains("will sink") || PVLC.contains("will rise")) {
+			er.keep=false;
+			er.reason=PVLC;
+			return false;
+		}
+		
+
+		List<String> badProps = Arrays.asList("properties","corros", "odor", "react", "volume",
+				"absorption", "particle", "range", "vp", "tension", "buffering", "charge density", "optical",
+				"porosity", "atomic density", "1 mg/l=", "1 mg/l =", "1 ppm=", "equivalent", "percent", "correction",
+				"conversion", "coefficient", "critical", "radius", "resistivity", "ionization", "heat capacity",
+				"conductivity", "mobility", "dispersion", "bp", "logp", "vapor pressure", "magnetic", "viscosity",
+				"loss", "equiv", "osmolality", "collision", "liquifies", "explosion", "stability", "storage", "% in",
+				"detonation", "friction", "energy", "heat", "enthalpy", "abundance", "dielectric", "activation");
+
+		for (String badProp:badProps) {
+			if(PVLC.contains(badProp)) {
+				er.keep=false;
+				er.reason="Incorrect property";
+//				er.updateNote("propertyValue="+propertyValue);
+//				System.out.println("Not density:\t"+badProp+"\t"+propertyValue);
+				return false;
+			}
+		}
+
+		//TODO convert volumes to density?
+//		if(PVLC.contains("pow")) {
+//			System.out.println("pow:"+PVLC);
+//		}
+
+		
+
+		
+		if ((PVLC.contains("relative") || PVLC.replace(" ","").contains("air=1") || PVLC.contains("than air")) && !PVLC.contains("(liq") && !PVLC.contains("liquid")) {//fix the relative one
+			
+//			if(!PVLC.contains("relative") && !PVLC.replace(" ","").contains("air=1") && !PVLC.contains("than air") && !PVLC.contains("saturated air") && !PVLC.contains("gas")) {
+//				System.out.println("Mismatch, propertyValue:"+PVLC+"\npropertyValueNonSplit:"+pvlc2+"\n");
+//			}
+						
+			er.property_value_units_original=null;
+			
 			if (er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
-				int relativeIndex = propertyValue.toLowerCase().indexOf("relative");
-				int densityIndex = propertyValue.toLowerCase().indexOf("density");
+				int relativeIndex = PVLC.indexOf("relative");
+				int densityIndex = PVLC.indexOf("density");
 				if (densityIndex>=0 && densityIndex<relativeIndex) {
 					unitsIndex = densityIndex;
 				} else {
 					unitsIndex = relativeIndex;
 				}
+
+			} else if(PVLC.contains("(ntp")){
+				unitsIndex = PVLC.indexOf("(ntp");
+			} else if((PVLC.contains("relative density of the vapour/air-mixture") || PVLC.contains("relative vapor density")) && PVLC.contains(":")) {
+				unitsIndex = propertyValue.length();			
+			} else if (PVLC.contains("(air")) {
+				unitsIndex=PVLC.indexOf("(air");
 			} else {
 				unitsIndex = propertyValue.length();
 			}
+			
+//			vapor/gas:2.48 (Air = 1)
+			
 			badUnits = false;
-			if (propertyValue.toLowerCase().contains("mixture")) {
+			er.property_value_units_original=ExperimentalConstants.str_dimensionless;
+
+
+
+			if (PVLC.contains("mixture") || (PVLC.contains("sat") && PVLC.contains("air"))) {
+				
 				er.updateNote(ExperimentalConstants.str_relative_mixture_density);
-			} else if (propertyValue.toLowerCase().contains("gas") || propertyValue.toLowerCase().contains("air")) {
+				er.keep=false;
+				er.reason="vapour/air-mixture";
+				er.property_name=ExperimentalConstants.strVaporDensity;
+//				System.out.println("here1 vapour/air-mixture\t"+propertyValueNonSplit);
+				
+			} else if (PVLC.contains("gas") || PVLC.contains("vapor") || PVLC.contains("vapour") || PVLC.contains("air")) {
 				er.updateNote(ExperimentalConstants.str_relative_gas_density);
+				er.property_name=ExperimentalConstants.strVaporDensity;
+//				System.out.println("here2 gas or air\t"+propertyValue);
 			} else {
-				er.updateNote(ExperimentalConstants.str_relative_density);
+//				System.out.println("here3\t"+propertyValueNonSplit+"\t"+propertyValue);
+//				System.out.println("here3\t"+propertyValue);
+				er.updateNote(ExperimentalConstants.str_relative_density);//liquid
 			}
-		} else {
+
+		} else if (PVLC.contains("g/cm") || PVLC.contains("g/cu cm") || PVLC.contains("gm/cu cm") || PVLC.contains("gm/cc")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
+			unitsIndex = PVLC.indexOf("g");
+			badUnits = false;
+
+		} else if (PVLC.contains("mg/ml")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
+			unitsIndex = PVLC.indexOf("mg/ml");
+			badUnits = false;
+			
+		} else if (PVLC.contains("wt/gal") && PVLC.contains("lb")) {
+			er.property_value_units_original = ExperimentalConstants.str_lb_gal;
+			unitsIndex = PVLC.indexOf("lb");
+			badUnits = false;
+		
+		} else if (PVLC.contains("g/ml") || PVLC.contains("gm/ml")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_mL;
+			unitsIndex = PVLC.indexOf("g");
+			badUnits = false;
+		} else if (PVLC.contains("kg/cu m")) {
+			er.property_value_units_original = ExperimentalConstants.str_kg_m3;
+			unitsIndex = PVLC.indexOf("kg/cu m");
+			badUnits = false;
+		
+		} else if (PVLC.contains("kg/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_kg_L;
+			unitsIndex = PVLC.indexOf("kg/l");
+			badUnits = false;
+			
+		} else if (PVLC.contains("kg/m")) {
+			er.property_value_units_original = ExperimentalConstants.str_kg_m3;
+			unitsIndex = PVLC.indexOf("kg/m");
+			badUnits = false;
+		} else if (PVLC.contains("g/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_L;
+			unitsIndex = PVLC.indexOf("g/l");
+			badUnits = false;
+		
+		} else if (PVLC.contains("lb/cu f")) {
+			er.property_value_units_original = ExperimentalConstants.str_lb_ft3;
+			unitsIndex = PVLC.indexOf("lb/cu f");
+			badUnits = false;
+
+		} else if (PVLC.contains("lb/cubic f")) {
+			er.property_value_units_original = ExperimentalConstants.str_lb_ft3;
+			unitsIndex = PVLC.indexOf("lb/cubic f");
+			badUnits = false;
+			
+			
+		} else if (PVLC.contains("lb/gal")) {
+			er.property_value_units_original = ExperimentalConstants.str_lb_gal;
+			unitsIndex = PVLC.indexOf("lb/gal");
+			badUnits = false;
+
+			
+		} else if (PVLC.contains("lbs/cu ft")) {
+			er.property_value_units_original = ExperimentalConstants.str_lb_ft3;
+			unitsIndex = PVLC.indexOf("lbs/cu ft");
+			badUnits = false;
+			 
+		} else if (PVLC.contains("kg/dm3")) {
+			er.property_value_units_original = ExperimentalConstants.str_kg_dm3;
+			unitsIndex = PVLC.indexOf("kg/dm3");
+			badUnits = false;
+			
+		
+		} else {
+
 			if (er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
 				unitsIndex = propertyValue.length();
 			} else if (propertyValue.contains(":")) {
@@ -193,9 +370,202 @@ public class ParseUtilities extends Parse {
 			} else {
 				unitsIndex = propertyValue.length();
 			}
+			
 			badUnits = false;
+			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
 			er.updateNote(ExperimentalConstants.str_g_cm3+" assumed");
+//			System.out.println(propertyValue+": "+er.note);
 		}
+		
+
+		if (!PVLC.contains("relative") && !PVLC.replace(" ","").contains("air=1")) {
+
+			if(er.keep && er.property_name.equals(ExperimentalConstants.strDensity)) {
+				//				System.out.println(propertyValueNonSplit);
+
+				if((PVLC.contains("sat") && PVLC.contains("air"))) {
+					er.keep=false;
+					er.reason="vapour/air-mixture";
+					er.property_name=ExperimentalConstants.strVaporDensity;
+					er.updateNote(ExperimentalConstants.str_relative_mixture_density);
+
+					//					System.out.println("sat air\t"+propertyValueNonSplit);				
+
+				} else if(PVLC.contains("air")) {
+					//					er.keep=false;
+					//					er.reason="vapour/air-mixture";
+					er.property_name=ExperimentalConstants.strVaporDensity;
+					//					System.out.println("air\t"+propertyValueNonSplit);
+					//					er.updateNote(ExperimentalConstants.str_relative_gas_density);
+					//					Air= 1
+				} else if (PVLC.contains("gas") || PVLC.contains("vapor") || PVLC.contains("vapour")) {
+					er.updateNote("vapor density");
+					er.property_name=ExperimentalConstants.strVaporDensity;
+					//					System.out.println("gas/vapor\t"+propertyValueNonSplit);				
+				}
+			}
+		}
+		
+
+		
+		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		
+//		if(propertyValue.contains("(NTP, 1992) - Heavier than air")) {
+//			System.out.println("NTP3\t"+unitsIndex+"\t"+propertyValue+"\t"+foundNumeric+"\t"+er.property_value_point_estimate_original);
+//		}
+
+		
+//		if(propertyValue.equals("(77 °F): 1.42")) {
+//			System.out.println("Found (77 °F): 1.42\t"+unitsIndex+"\t"+foundNumeric+"\n"+gson.toJson(er));
+//		}
+
+		
+		if(PVLC.contains("soln") || PVLC.contains("solution")) {
+			er.keep=false;
+			er.reason="Solution";
+			return foundNumeric;
+		}
+
+		if(er.property_value_point_estimate_original!=null && er.property_value_point_estimate_original==0) {
+			er.keep=false;
+			er.reason="Density of zero not possible";
+			return foundNumeric;
+		}
+		
+		
+//		if(er.keep && er.property_name.equals("Density") && er.property_value_point_estimate_original!=null && er.property_value_point_estimate_original==1) {
+//			System.out.println("original=1\t"+propertyValue);
+//		}
+		
+		return foundNumeric;
+	}
+	
+	
+	public static boolean getSurfaceTension(ExperimentalRecord er, String propertyValue) {
+		boolean badUnits = true;
+		int unitsIndex = -1;
+
+		propertyValue=propertyValue.replace("(1.0 mN/m = 1.0 dyn/cm)", "");
+		
+		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
+		
+		String pvLC=propertyValue.toLowerCase();
+		
+//		cu m/s ???
+				
+		if(pvLC.contains("dyn/cm") || pvLC.contains("dyne/cm") || pvLC.contains("dynes/cm") || pvLC.contains("dyns/cm") || pvLC.contains("dyne cm")) {
+			er.property_value_units_original = ExperimentalConstants.str_dyn_cm;
+			unitsIndex = pvLC.indexOf("dyn");
+			badUnits = false;
+//			System.out.println(pvLC+"\t"+unitsIndex);
+		
+		} else if(pvLC.contains("mn/m") || pvLC.contains("mnm")) {
+			er.property_value_units_original = ExperimentalConstants.str_mN_m;
+			unitsIndex = pvLC.indexOf("mn");
+			badUnits = false;
+
+		} else if(pvLC.contains("millinewton/m")) {
+			er.property_value_units_original = ExperimentalConstants.str_mN_m;
+			unitsIndex = pvLC.indexOf("millinewton/m");
+			badUnits = false;
+
+			
+		} else if(pvLC.contains("mn/cm")) {
+			er.property_value_units_original = ExperimentalConstants.str_mN_cm;
+			unitsIndex = pvLC.indexOf("mn/cm");
+			badUnits = false;
+
+		} else if(pvLC.contains("n/cm")) {
+			er.property_value_units_original = ExperimentalConstants.str_N_cm;
+			unitsIndex = pvLC.indexOf("n/cm");
+			badUnits = false;
+
+		} else if(pvLC.contains("newtons/m")) {
+			er.property_value_units_original = ExperimentalConstants.str_N_m;
+			unitsIndex = pvLC.indexOf("newtons/m");
+			badUnits = false;
+		} else if(pvLC.contains("n.m")) {
+			er.property_value_units_original = ExperimentalConstants.str_N_m;
+			unitsIndex = pvLC.indexOf("n.m");
+			badUnits = false;
+		} else if(pvLC.contains("n/m")) {
+			er.property_value_units_original = ExperimentalConstants.str_N_m;
+			unitsIndex = pvLC.indexOf("n/m");
+			badUnits = false;
+		
+		} else  {
+//			System.out.println("ST="+propertyValue);
+		}
+		
+
+		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		return foundNumeric;
+	}
+	
+	/**
+	 * See https://www.engineeringtoolbox.com/viscosity-converter-d_413.html
+	 * 
+	 * @param er
+	 * @param propertyValue
+	 * @return
+	 */
+	public static boolean getViscosity(ExperimentalRecord er, String propertyValue) {
+		
+		boolean badUnits = true;
+		int unitsIndex = -1;
+
+		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");//convert EU number notation
+		
+		List<String> cpUnits = Arrays.asList("centapoise", "centipoise", "CENTIPOISE", "CENTIPOISES", "centipose",
+				"mPa.sec", "mPa-sec", "mPa s", "mPa-s","mP-s", "mPa.s", "mPa*s", "mPaXs", "millipascal second", "mPas",
+				"m Pa.S", "mPa.S", "mN/sec/sq m", "mN.s/sq m","mN/s/m", "mN.s.m-2", "millipascal-sec", "mPa S", "CP", "Cp", "cp");
+		for(String cpUnit:cpUnits) {
+			propertyValue=propertyValue.replace(cpUnit, ExperimentalConstants.str_cP);			
+		}
+		
+		List<String> pUnits = Arrays.asList("poise","POISE","Poise","poises");		
+		for(String pUnit:pUnits) {
+			propertyValue=propertyValue.replace(pUnit, ExperimentalConstants.str_P);			
+		}
+
+		
+		List<String> Pa_secUnits = Arrays.asList("Pa.s","Pa-s","Pa-sec","Pa sec","Pa-secec","Pa-sec","Pa*s","pascal-sec");		
+		for(String Pa_secUnit:Pa_secUnits) {
+			propertyValue=propertyValue.replace(Pa_secUnit, ExperimentalConstants.str_Pa_sec);			
+		}
+		
+		//kinematic viscosity:
+		List<String> cStUnits = Arrays.asList("centistokes","Centistokes","CENTISTOKE","cS", 
+				"mm^2/s","sq mm/s","sq mm.s","sq m/sec");		
+		for(String cStUnit:cStUnits) {
+			propertyValue=propertyValue.replace(cStUnit, ExperimentalConstants.str_cSt);			
+		}
+
+
+		if(propertyValue.contains(ExperimentalConstants.str_cP)) {
+			er.property_value_units_original=ExperimentalConstants.str_cP;
+			unitsIndex = propertyValue.indexOf(ExperimentalConstants.str_cP);
+			badUnits=false;
+
+		} else if(propertyValue.contains(ExperimentalConstants.str_P)) {
+			er.property_value_units_original=ExperimentalConstants.str_P;
+			unitsIndex = propertyValue.indexOf(ExperimentalConstants.str_P);
+			badUnits=false;
+			
+		} else if(propertyValue.contains(ExperimentalConstants.str_Pa_sec)) {
+			er.property_value_units_original=ExperimentalConstants.str_Pa_sec;
+			unitsIndex = propertyValue.indexOf(ExperimentalConstants.str_Pa_sec);
+			badUnits=false;			
+		} else if(propertyValue.contains(ExperimentalConstants.str_cSt)) {
+			er.property_value_units_original=ExperimentalConstants.str_cSt;
+			unitsIndex = propertyValue.indexOf(ExperimentalConstants.str_cSt);
+			badUnits=false;			
+		
+		} else  {
+//			System.out.println("V="+propertyValue);
+		}
+		
+	
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
 	}
@@ -203,14 +573,57 @@ public class ParseUtilities extends Parse {
 	// Applicable for melting point, boiling point, and flash point
 	public static boolean getTemperatureProperty(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
-		int unitsIndex = -1;
-		String units = getTemperatureUnits(propertyValue);
-		if (units.length()!=0) {
-			er.property_value_units_original = units;
-			unitsIndex = propertyValue.indexOf(units);
-			badUnits = false;
+		
+		
+		String PVLC=propertyValue.toLowerCase();
+		List<String> badProps = new ArrayList<String>(Arrays.asList("properties","corros", "odor", "react", "volume",
+				"absorption", "particle", "vp", "tension", "buffering", "charge density", "optical",
+				"porosity", "atomic density", "1 mg/l=", "1 mg/l =", "1 ppm=", "equivalent", "percent", "correction",
+				"conversion", "coefficient", "critical", "radius", "resistivity", "ionization", "heat capacity",
+				"conductivity", "mobility", "dispersion", "logp", "vapor pressure", "magnetic", "viscosity",
+				"loss", "equiv", "osmolality", "collision", "liquifies", "explosion", "stability", "storage", "% in",
+				"detonation", "friction", "energy", "heat of", "enthalpy", "abundance", "dielectric", "activation"));
+		//"range"
+		
+		if(!er.property_name.equals(ExperimentalConstants.strBoilingPoint)) badProps.add("bp");
+		
+		for (String badProp:badProps) {
+			if(PVLC.contains(badProp)) {
+				er.keep=false;
+				er.reason="Incorrect property";
+//				er.updateNote("parsed propertyValue: "+propertyValue);
+								
+//				if(er.property_name.equals(ExperimentalConstants.strBoilingPoint))				
+//					System.out.println("Incorrect property: "+badProp+"\t"+er.property_name+"\t"+propertyValue);
+
+//				if(er.property_name.equals(ExperimentalConstants.strFlashPoint))				
+//					System.out.println("Incorrect property: "+badProp+"\t"+er.property_name+"\t"+propertyValue);
+				
+				return false;
+			}
 		}
-		boolean foundNumeric = getNumericalValue(er,propertyValue, unitsIndex,badUnits);
+
+		
+			
+		TempUnitResult tempUnitResult = getTemperatureUnits(propertyValue);
+		
+		if(tempUnitResult==null) {
+//			if(er.property_name.equals(ExperimentalConstants.strFlashPoint))			
+//				System.out.println("cant get temp units for:"+propertyValue);
+			
+			return false;			
+		} else {
+			if(tempUnitResult.unitsIndex!=-1) {
+				badUnits = false;
+				er.property_value_units_original=tempUnitResult.units;
+			}
+		}
+				
+//		if(er.property_name.equals(ExperimentalConstants.strFlashPoint))
+//			System.out.println(er.property_value_units_original+"\t"+tempUnitResult.unitsIndex+"\t"+propertyValue);
+
+		
+		boolean foundNumeric = getNumericalValue(er,propertyValue, tempUnitResult.unitsIndex,badUnits);
 		return foundNumeric;
 	}
 	
@@ -221,18 +634,31 @@ public class ParseUtilities extends Parse {
 	}
 	
 	private static String adjustPropertyValue(ExperimentalRecord er,String propertyValue) {
+		
+//		String propertyValueOriginal=propertyValue;
+		
 		propertyValue = propertyValue.replaceAll("([0-9]+%-)?[0-9]+% (m?ethanol|alcohol|EtOH|alc)", "$2"); // Alcohol percentages confuse the parser, so snip them out
 		propertyValue = propertyValue.replaceAll("[0-9]+% (M?ETHANOL|ALCOHOL)", "$1"); // Some PubChem records in all caps
 		propertyValue = propertyValue.replaceAll("[0-9.]+ ?(M|N) (NaOH|HCl)", "$1 $2"); // Acid/base molarities confuse the parser, so snip them out
 		propertyValue = propertyValue.replaceAll(" [Pp][Ee][Rr] ","/"); // Correct usage of "per" in some PubChem records
 		
-		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","etoh","hexane","meoh",
-				"dichloromethane","dcm","toluene","glyc","oils","organic solvent","dmf","et2o","etoac","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
-				"acid","oxide","pyri","carbon tetrachloride","pet","anol","ch3oh","c2h5oh","ch2cl2","chcl3","alkali","dsmo","dma","buffer","ammonia water","pgmea",
+		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","hexane","meoh",
+				"dichloromethane","dcm","toluene","glyc","oils","organic solvent","dmf","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
+				"acid","oxide","pyri","carbon tetrachloride","pet","anol","ch3oh","ch2cl2","chcl3","alkali","dsmo","dma","buffer","ammonia water","pgmea",
 				"water-ethanol solution","cs2","ethylene dichloride","mineral oil","hydrochloric","sodium carbonate","nh4oh","kh2po4","ethanol:buffered water",
-				"ethanol: water","ethanol:water","tfa"};
+				"c2h5oh","et2o","etoac","etoh","ethanol: water","ethanol:water","ethanol",
+				"tfa"};
+
+//		if(propertyValue.equals("Soluble (in ethanol)")) {
+//			System.out.println("Found1: Soluble (in ethanol)");
+//		}
+		
+//		List<String>solvents=Arrays.asList("chloro","ethyl","ethan","alcohol","prop");
+
+		
 		boolean foundWater = false;
 		String[] waterSynonyms = {"water (distilled)","water","h2o","aqueous solution"};
+		
 		for (String solvent:badSolvents) {
 			if (!propertyValue.toLowerCase().contains(solvent)) { continue; }
 			if (solvent.equals("alc") && propertyValue.toLowerCase().contains("calc")) { continue; } // For obvious reasons
@@ -334,28 +760,78 @@ public class ParseUtilities extends Parse {
 				}
 			}
 		}
+		
 		return propertyValue;
 	}
+	
+	
+
+	
 
 	public static boolean getWaterSolubility(ExperimentalRecord er,String propertyValue,String sourceName) {
 		if (propertyValue==null) { return false; }
 		
 		// Don't waste time looking for a numerical entry if there are no numbers in the string!
 		if (!containsNumber(propertyValue)) { return false; }
-		if (propertyValue.toLowerCase().contains("parts")) { return false; } // No way to interpret mass vs. volume vs. molar for "parts" ratio records
-		if (propertyValue.toLowerCase().contains("water (6:3:1)")) { return false; } // Weird entry with a water mixture
 		
+		String PVLC=propertyValue.toLowerCase();
+		
+		if (PVLC.contains("parts")) { return false; } // No way to interpret mass vs. volume vs. molar for "parts" ratio records
+		if (PVLC.contains("water (6:3:1)")) { return false; } // Weird entry with a water mixture
+
+		
+		//TODO: Water solubility has very specific units- do we need following?		
+		List<String> badProps = new ArrayList<String>(Arrays.asList("properties","corros", "odor", "volume",
+				"absorption", "particle", "vp", "bp", "tension", "buffering", "charge density", "optical",
+				"porosity", "atomic density", "1 mg/l=", "1 mg/l =", "1 ppm=", "equivalent", "percent", "correction",
+				"conversion", "coefficient", "critical", "radius", "resistivity", "ionization", "heat capacity",
+				"conductivity", "mobility", "dispersion", "logp", "vapor pressure", "magnetic", "viscosity",
+				"loss", "equiv", "osmolality", "collision", "liquifies", "explosion", "stability", "storage", 
+				"detonation", "friction", "energy", "heat of", "enthalpy", "abundance", "dielectric", "activation"));
+		
+		for (String badProp:badProps) {
+			if(PVLC.contains(badProp)) {
+				er.keep=false;
+				er.reason="Incorrect property";
+				er.updateNote("parsed propertyValue: "+propertyValue);
+//				System.out.println("Incorrect property: "+badProp+"\t"+er.property_name+"\t"+propertyValue);
+				return false;
+			}
+		}
+
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1\\.$2");
 		propertyValue = propertyValue.replaceAll("([Hh])20", "$12O"); // Yes, "H20" instead of "H2O" has actually caused problems for the parser...
-		propertyValue = correctDegreeSymbols(propertyValue);
+//		propertyValue = correctDegreeSymbols(propertyValue);
 		
-		if (er.source_name.equals(ExperimentalConstants.strSourcePubChem) || 
+		propertyValue = propertyValue.replace("mcg/mL","ug/mL").replace("mcg/ml", "ug/mL");//otherwise omits the micro
+
+		//Fix following otherwise it will cause WS=1000:
+		if(propertyValue.contains("Solubility in water, g/100ml at ") && propertyValue.contains(":")) {
+			
+			String val1=propertyValue.substring(propertyValue.indexOf(":")+1, propertyValue.length()).trim();
+			String val2=propertyValue.substring(propertyValue.indexOf(" at")+1, propertyValue.indexOf(":")).trim();
+			if(val1.contains("(")) {
+				val1=val1.replace(" ("," g/100ml (");
+			} else {
+				val1=val1+" g/100ml";
+			}
+			propertyValue=val1+" "+val2;
+//			System.out.println(propertyValue);
+		}
+		
+		
+		if (er.source_name.contains(ExperimentalConstants.strSourcePubChem) || 
 				er.source_name.equals(ExperimentalConstants.strSourceLookChem) ||
 				er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI) ||
 				er.source_name.equals(ExperimentalConstants.strSourceChemicalBook)) {
 			if (getTextSolubility(er,propertyValue)) { return true; }
-			if (getSimpleNumericSolubility(er,propertyValue)) { return true; }
+			
+			if (getSimpleNumericSolubility(er,propertyValue)) { 
+//				System.out.println("here1"+gson.toJson(er));
+				return true; 
+			}
+			
 			String adjustedPropertyValue = adjustPropertyValue(er,propertyValue);
 			if (adjustedPropertyValue==null) {
 				return false;
@@ -366,7 +842,11 @@ public class ParseUtilities extends Parse {
 		
 		boolean badUnits = true;
 		int unitsIndex = getSolubilityUnits(er,propertyValue);
-		if (unitsIndex > -1) { badUnits = false; }
+		
+		if (unitsIndex > -1) badUnits = false; 
+		
+		
+		
 		
 		if (badUnits && propertyValue.length() < er.property_value_string.length()) {
 			int candidateIndex = getSolubilityUnits(er,er.property_value_string);
@@ -379,10 +859,12 @@ public class ParseUtilities extends Parse {
 		if (!er.source_name.equals(ExperimentalConstants.strSourceOFMPub) && unitsIndex < propertyValue.indexOf(":")) {
 			unitsIndex = propertyValue.length();
 		}
+		
+
 
 		boolean foundNumeric = false;
 		if (er.keep) {
-			if (er.source_name.equals(ExperimentalConstants.strSourcePubChem) && propertyValue.toLowerCase().contains("ph")) {
+			if (er.source_name.contains(ExperimentalConstants.strSourcePubChem) && propertyValue.toLowerCase().contains("ph")) {
 				Matcher pHMatcher = Pattern.compile("([0-9.]+) \\(ph [0-9.]+\\)").matcher(propertyValue.toLowerCase());
 				if (pHMatcher.find()) {
 					er.property_value_point_estimate_original = Double.parseDouble(pHMatcher.group(1));
@@ -393,113 +875,123 @@ public class ParseUtilities extends Parse {
 				foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 			}
 		}
+		
+//		if(er.property_value_units_original!=null && er.property_value_units_original.equals("%") && er.property_value_point_estimate_original==null && er.property_value_min_original==null && er.keep) {
+//			System.out.println(gson.toJson(er));
+//		}
+		
+		//TODO why do ones with % units fail to parse a numeric value
+		
+//		if(er.property_value_units_original!=null && er.property_value_units_original.equals("%")) {
+//			System.out.println(unitsIndex+"\t"+propertyValue+"\t"+foundNumeric);
+//		}
+
 		return foundNumeric;
 	}
 	
 	private static int getSolubilityUnits(ExperimentalRecord er, String propertyValue) {
 		int unitsIndex = -1;
-		if (propertyValue.toLowerCase().contains("mg/ml")) {
+
+		String pvLC = propertyValue.toLowerCase();
+
+		if (pvLC.contains("mg/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-		} else if (propertyValue.toLowerCase().contains("mg/l") || propertyValue.toLowerCase().contains("mg l-1") || propertyValue.toLowerCase().contains("mgl-1") ||
-				propertyValue.toLowerCase().contains("mg / l") ||
-				(propertyValue.toLowerCase().contains("mg/1") && !propertyValue.toLowerCase().contains("mg/10"))) {
+			unitsIndex = pvLC.indexOf("mg/");
+		} else if (pvLC.contains("mg/l") || pvLC.contains("mg l-1") || pvLC.contains("mgl-1") || pvLC.contains("mg / l")
+				|| (pvLC.contains("mg/1") && !pvLC.contains("mg/10"))) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg");
-		} else if (propertyValue.toLowerCase().contains("ug/ml") || propertyValue.toLowerCase().contains("\u00B5g/ml")) {
+			unitsIndex = pvLC.indexOf("mg");
+		} else if (pvLC.contains("ug/ml") || pvLC.contains("\u00B5g/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("\u00B5g/") : propertyValue.toLowerCase().indexOf("ug/");
-		} else if (propertyValue.toLowerCase().contains("ug/l") || propertyValue.toLowerCase().contains("\u00B5g/l")) {
+			unitsIndex = pvLC.indexOf("ug/") == -1 ? pvLC.indexOf("\u00B5g/") : pvLC.indexOf("ug/");
+		} else if (pvLC.contains("ug/l") || pvLC.contains("\u00B5g/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/") == -1 ? propertyValue.toLowerCase().indexOf("\u00B5g/") : propertyValue.toLowerCase().indexOf("ug/");
-		} else if (propertyValue.toLowerCase().contains("g/ml")) {
+			unitsIndex = pvLC.indexOf("ug/") == -1 ? pvLC.indexOf("\u00B5g/") : pvLC.indexOf("ug/");
+		} else if (pvLC.contains("g/ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
-		} else if (propertyValue.toLowerCase().contains("g/cm")) {
+			unitsIndex = pvLC.indexOf("g/");
+		} else if (pvLC.contains("g/cm")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_cm3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
-		} else if (propertyValue.toLowerCase().contains("g/l")) {
+			unitsIndex = pvLC.indexOf("g/");
+		} else if (pvLC.contains("ng/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_ng_L;
+			unitsIndex = pvLC.indexOf("ng/");
+		} else if (pvLC.contains("g/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
-		} else if (propertyValue.toLowerCase().contains("kg/m")) {
+			unitsIndex = pvLC.indexOf("g/");
+		} else if (pvLC.contains("kg/m")) {
 			er.property_value_units_original = ExperimentalConstants.str_kg_m3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("kg/");
-		} else if (propertyValue.toLowerCase().contains("kg/kg")) {
+			unitsIndex = pvLC.indexOf("kg/");
+		} else if (pvLC.contains("kg/kg")) {
 			er.property_value_units_original = ExperimentalConstants.str_kg_kg_H20;
-			unitsIndex = propertyValue.toLowerCase().indexOf("kg/");
-		} else if (propertyValue.toLowerCase().contains("g/kg")) {
+			unitsIndex = pvLC.indexOf("kg/");
+		} else if (pvLC.contains("g/kg")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_kg_H20;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
-		} else if (propertyValue.toLowerCase().contains("mg/100ml") || propertyValue.toLowerCase().contains("mg/100 ml")) {
+			unitsIndex = pvLC.indexOf("g/");
+		} else if (pvLC.contains("mg/100ml") || pvLC.contains("mg/100 ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_100mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-		} else if (propertyValue.toLowerCase().contains("mg/10ml") || propertyValue.toLowerCase().contains("mg/10 ml")
-				|| propertyValue.toLowerCase().contains("mg/dl")) {
+			unitsIndex = pvLC.indexOf("mg/");
+		} else if (pvLC.contains("mg/10ml") || pvLC.contains("mg/10 ml") || pvLC.contains("mg/dl")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_10mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-		} else if (propertyValue.toLowerCase().contains("ug/100ml") || propertyValue.toLowerCase().contains("ug/100 ml")) {
+			unitsIndex = pvLC.indexOf("mg/");
+		} else if (pvLC.contains("ug/100ml") || pvLC.contains("ug/100 ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_ug_100mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug/");
-		} else if (propertyValue.toLowerCase().contains("g/100ml") || propertyValue.toLowerCase().contains("g / 100ml")
-				 || propertyValue.toLowerCase().contains("g/ 100 ml") || propertyValue.toLowerCase().contains("g / 100 ml")
-				 || propertyValue.toLowerCase().contains("g / 100 cc") || propertyValue.toLowerCase().contains("g/100 ml")
-				 || propertyValue.toLowerCase().contains("g/100 cc")) {
+			unitsIndex = pvLC.indexOf("ug/");
+		} else if (pvLC.contains("g/100ml") || pvLC.contains("g / 100ml") || pvLC.contains("g/ 100 ml")
+				|| pvLC.contains("g / 100 ml") || pvLC.contains("g/100 cu cm") || pvLC.contains("g / 100 cc")
+				|| pvLC.contains("g/100 ml") || pvLC.contains("g/100 cc")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_100mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("/");
-		} else if (propertyValue.toLowerCase().contains("mg/100g") || propertyValue.toLowerCase().contains("mg / 100g")
-				 || propertyValue.toLowerCase().contains("mg/ 100 g") || propertyValue.toLowerCase().contains("mg / 100 g")
-				 || propertyValue.toLowerCase().contains("mg/100 g")) {
+			unitsIndex = pvLC.indexOf("/");
+		} else if (pvLC.contains("mg/100g") || pvLC.contains("mg / 100g") || pvLC.contains("mg/ 100 g")
+				|| pvLC.contains("mg / 100 g") || pvLC.contains("mg/100 g")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_100g;
-			unitsIndex = propertyValue.toLowerCase().indexOf("/");
-		} else if (propertyValue.toLowerCase().contains("g/100g") || propertyValue.toLowerCase().contains("g / 100g")
-				 || propertyValue.toLowerCase().contains("g/ 100 g") || propertyValue.toLowerCase().contains("g / 100 g")
-				 || propertyValue.toLowerCase().contains("g/100 g")) {
+			unitsIndex = pvLC.indexOf("/");
+		} else if (pvLC.contains("g/100g") || pvLC.contains("g / 100g") || pvLC.contains("g/ 100 g")
+				|| pvLC.contains("g / 100 g") || pvLC.contains("g/100 g")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_100g;
-			unitsIndex = propertyValue.toLowerCase().indexOf("/");
-		} else if (propertyValue.toLowerCase().contains("g/10ml")  || propertyValue.toLowerCase().contains("g/10 ml")) {
+			unitsIndex = pvLC.indexOf("/");
+		} else if (pvLC.contains("g/10ml") || pvLC.contains("g/10 ml")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_10mL;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
-		} else if (propertyValue.toLowerCase().contains("% w/w") || propertyValue.toLowerCase().contains("wt%") || propertyValue.toLowerCase().contains("wt percent")
-				 || propertyValue.toLowerCase().contains("% wt") || propertyValue.toLowerCase().contains("% (w/w)") ||
-				 propertyValue.toLowerCase().contains("weight %") || propertyValue.toLowerCase().contains("wt %") ||
-				 propertyValue.toLowerCase().contains("% by wt") ||
-				 (propertyValue.toLowerCase().contains("%") && propertyValue.toLowerCase().contains("wt"))) {
+			unitsIndex = pvLC.indexOf("g/");
+		} else if (pvLC.contains("% w/w") || pvLC.contains("wt%") || pvLC.contains("wt percent")
+				|| pvLC.contains("% wt") || pvLC.contains("% (w/w)") || pvLC.contains("weight %")
+				|| pvLC.contains("wt %") || pvLC.contains("% by wt") || (pvLC.contains("%") && pvLC.contains("wt"))) {
 			er.property_value_units_original = ExperimentalConstants.str_pctWt;
-			unitsIndex = Math.max(propertyValue.indexOf("%"),propertyValue.indexOf("percent"));
-		} else if (propertyValue.toLowerCase().contains("vol%")) {
+			unitsIndex = Math.max(propertyValue.indexOf("%"), propertyValue.indexOf("percent"));
+		} else if (pvLC.contains("vol%")) {
 			er.property_value_units_original = ExperimentalConstants.str_pctVol;
 			unitsIndex = propertyValue.indexOf("vol");
-		} else if (propertyValue.toLowerCase().contains("%")) {
+		} else if (pvLC.contains("%")) {
 			er.property_value_units_original = ExperimentalConstants.str_pct;
 			unitsIndex = propertyValue.indexOf("%");
-		} else if (propertyValue.toLowerCase().contains("ppm")) {
+		} else if (pvLC.contains("ppm")) {
 			er.property_value_units_original = ExperimentalConstants.str_ppm;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
-		} else if (propertyValue.toLowerCase().contains("ppb")) {
+			unitsIndex = pvLC.indexOf("ppm");
+		} else if (pvLC.contains("ppb")) {
 			er.property_value_units_original = ExperimentalConstants.str_ppb;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ppb");
-		} else if (propertyValue.toLowerCase().contains("mmol/l")) {
+			unitsIndex = pvLC.indexOf("ppb");
+		} else if (pvLC.contains("mmol/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_mM;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mmol");
-		} else if (checkMolarUnits(ExperimentalConstants.str_mM,propertyValue) > -1) {
+			unitsIndex = pvLC.indexOf("mmol");
+		} else if (checkMolarUnits(ExperimentalConstants.str_mM, propertyValue) > -1) {
 			er.property_value_units_original = ExperimentalConstants.str_mM;
-			unitsIndex = checkMolarUnits(ExperimentalConstants.str_mM,propertyValue);
-		} else if (checkMolarUnits(ExperimentalConstants.str_uM,propertyValue) > -1) {
+			unitsIndex = checkMolarUnits(ExperimentalConstants.str_mM, propertyValue);
+		} else if (checkMolarUnits(ExperimentalConstants.str_uM, propertyValue) > -1) {
 			er.property_value_units_original = ExperimentalConstants.str_uM;
-			unitsIndex = checkMolarUnits(ExperimentalConstants.str_uM,propertyValue);
-		} else if (propertyValue.toLowerCase().contains("mol/l") || propertyValue.toLowerCase().contains("mols/l")) {
+			unitsIndex = checkMolarUnits(ExperimentalConstants.str_uM, propertyValue);
+		} else if (pvLC.contains("mol/l") || pvLC.contains("mols/l")) {
 			er.property_value_units_original = ExperimentalConstants.str_M;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mol");
-		} else if (checkMolarUnits(ExperimentalConstants.str_M,propertyValue) > -1) {
+			unitsIndex = pvLC.indexOf("mol");
+		} else if (checkMolarUnits(ExperimentalConstants.str_M, propertyValue) > -1) {
 			er.property_value_units_original = ExperimentalConstants.str_M;
-			unitsIndex = checkMolarUnits(ExperimentalConstants.str_M,propertyValue);
-		} else if (propertyValue.toLowerCase().contains("oz/gallon")) {
+			unitsIndex = checkMolarUnits(ExperimentalConstants.str_M, propertyValue);
+		} else if (pvLC.contains("oz/gallon")) {
 			er.property_value_units_original = ExperimentalConstants.str_oz_gal;
-			unitsIndex = propertyValue.toLowerCase().indexOf("oz/");
-		} else if (er.source_name==ExperimentalConstants.strSourceEChemPortalAPI) {
+			unitsIndex = pvLC.indexOf("oz/");
+		} else if (er.source_name == ExperimentalConstants.strSourceEChemPortalAPI) {
 			unitsIndex = ExtraEChemPortalRecords(propertyValue, er, unitsIndex);
 		}
-		
+
 		return unitsIndex;
 	}
 	
@@ -571,14 +1063,15 @@ public class ParseUtilities extends Parse {
 	
 	public static void getQualitativeSolubility(ExperimentalRecord er, String propertyValue,String sourceName) {
 		boolean gotQualitativeSolubility = false;
-		String propertyValue1 = propertyValue.toLowerCase();
+		String pvLC = propertyValue.toLowerCase().replace("(ntp, 1992)", "").replace("(niosh, 2023)","").replace("(nfpa, 2010)","").replace("Solubility in water:","").trim();
+		
 		String solventMatcherStr = "";
 		if (sourceName.equals(ExperimentalConstants.strSourceLookChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\\s-%]+?)(,| and|\\.|\\z|[ ]?\\(|;))?";
-		} else if (sourceName.equals(ExperimentalConstants.strSourcePubChem)) {
+		} else if (sourceName.contains(ExperimentalConstants.strSourcePubChem)) {
 			solventMatcherStr = "(([a-zA-Z0-9\\s,-]+?)(\\.|\\z| at| and only|\\(|;|[0-9]))?";
 		}
-		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(i[nm])?(s[ou]l?uble|miscible|sol(?!u)))( [\\(]?(in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(propertyValue1);
+		Matcher solubilityMatcher = Pattern.compile("(([a-zA-Z]+y[ ]?)?([a-zA-Z]+y[ ]?)?(i[nm])?(s[ou]l?uble|miscible|sol(?!u)))( [\\(]?(in|with) )?[[ ]?\\.{3}]*"+solventMatcherStr).matcher(pvLC);
 		while (solubilityMatcher.find()) {
 
 			try {
@@ -613,29 +1106,31 @@ public class ParseUtilities extends Parse {
 		
 		if (er.note!=null) { er.note = er.note.replaceAll("[;.,];", ";"); } // Regex leaves double punctuation sometimes
 
-		if (propertyValue1.contains("reacts") || propertyValue1.contains("reaction")) {
-			er.property_value_qualitative = "reaction";
+		if (pvLC.contains("reacts") || pvLC.contains("reaction")) {
+			er.property_value_qualitative = "reacts";
 			gotQualitativeSolubility = true;
 		}
 
-		if (propertyValue1.contains("hydrolysis") || propertyValue1.contains("hydrolyse") || propertyValue1.contains("hydrolyze")) {
+		if (pvLC.contains("hydrolysis") || pvLC.contains("hydrolyse") || pvLC.contains("hydrolyze")) {
 			er.property_value_qualitative = "hydrolysis";
 			gotQualitativeSolubility = true;
 		}
 
-		if (propertyValue1.contains("decompos")) {
+		if (pvLC.contains("decompos")) {
 			er.property_value_qualitative = "decomposes";
 			gotQualitativeSolubility = true;
 		}
 
-		if (propertyValue1.contains("autoignition")) {
+		if (pvLC.contains("autoignition")) {
 			er.property_value_qualitative = "autoignition";
 			gotQualitativeSolubility = true;
 		}
+		
+		
 
 		String[] qualifiers = {"none","very poor","poor","low","negligible","slight","significant","complete"};
 		for (String qual:qualifiers) {
-			if ((propertyValue1.startsWith(qual) || (propertyValue1.contains("solubility in water") && propertyValue1.contains(qual))) &&
+			if ((pvLC.startsWith(qual) || (pvLC.contains("solubility in water") && pvLC.contains(qual))) &&
 					(er.property_value_qualitative==null || er.property_value_qualitative.isBlank())) {
 				er.property_value_qualitative = qual;
 				gotQualitativeSolubility = true;
@@ -646,12 +1141,102 @@ public class ParseUtilities extends Parse {
 			er.keep = true;
 			er.reason = null;
 		}
+		
+//		List<String>bads=Arrays.asList("soluble (in ethanol)","miscible (in ethanol)",
+//				"slightly soluble in proylene glycol","sparingly soluble (in ethanol)","slightly sol in ethanol",
+//				"slightly soluble in chloroform",
+//				"SLIGHTLY SOL IN ETHER".toLowerCase());
+//		
+//		for(String bad:bads) {
+//			if(pvLC.equals(bad)) {
+//				er.property_value_qualitative=null;
+//			}
+//		}
+		
+		List<String>waters=Arrays.asList("water","h2o","aqueous solution");
+		
+		boolean haveWater=false;
+		
+		for(String water:waters) {
+			if(pvLC.contains(water)) {
+				haveWater=true;
+				break;
+			}
+		}
+				
+		//If match these exact strings we are ok		
+		List<String> goods = Arrays.asList("sparingly soluble", "very soluble", "soluble", "slightly", "insoluble",
+				"slight", "miscible", "insoluble", "insoluble.", "freely soluble",
+				"low solubility", "quite soluble", "insoluble (mesylate form)", "slightly soluble in cold",
+				"soluble (tartrate form)", "practically insoluble.", "insoluble.",
+				"very slightly","very slightly soluble", "practically insoluble", "very poor solubility", "relatively insoluble",
+				"slightly solubility", "completely miscible", "moderately soluble", "sparingly soluble",
+				"partially soluble", "slightly soluble", "almost insoluble", "slighty soluble", "readily soluble",
+				"partly miscible", "poorly soluble", "partly soluble", "highly soluble", "not soluble.", "not soluble",
+				"non-soluble", "negligible", "immiscible", "complete", "poor", "low","good","very good","moderate");
+
+				
+		if(er.property_value_qualitative!=null && !haveWater && !goods.contains(pvLC)) {
+//			System.out.println(er.property_value_qualitative+"\t"+pvLC);
+			er.property_value_qualitative=null;//not water and not a good one
+		}
+		
+		if(er.property_value_qualitative==null) {
+			if(pvLC.contains("react")) {
+				er.property_value_qualitative="reacts";
+			}
+		}
+		
+		if(er.property_value_qualitative!=null) {
+			if (er.property_value_qualitative.contains("sol") && !er.property_value_qualitative.contains("soluble")) {
+				er.property_value_qualitative=er.property_value_qualitative.replace("sol","soluble");
+			}
+			
+			if(er.property_value_qualitative.equals("reaction")) 
+				er.property_value_qualitative="reacts";
+		}
+		
+		
+//		if(gotQualitativeSolubility && er.property_value_qualitative!=null && !propertyValue.contains("water")) {
+//			System.out.println(er.property_value_qualitative+"\t"+propertyValue);
+//		}
 	}
 
-	public static boolean getVaporPressure(ExperimentalRecord er,String propertyValue) {
+	public static boolean getVaporPressure(ExperimentalRecord er,String propertyValue,String propertyValueNonSplit) {
+		
+		if (propertyValue.toLowerCase().contains(ExperimentalConstants.str_negl)) {
+			er.property_value_qualitative = ExperimentalConstants.str_negl;
+		} else if (propertyValue.toLowerCase().contains("very low")) {
+			er.property_value_qualitative = "very low";
+		} else if (propertyValue.toLowerCase().contains("extremely low")) {
+			er.property_value_qualitative = "extremely low";
+		} else if (propertyValue.toLowerCase().contains("low")) {
+			er.property_value_qualitative = "low";
+		}
+		
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9]{3})", "$1$2");
+		
+		if(propertyValue.contains("Vapor pressure, Pa at ")) {
+			String propVal=propertyValue.substring(propertyValue.indexOf(":")+1, propertyValue.length()).trim();
+			String temp=propertyValue.substring(propertyValue.indexOf("at"), propertyValue.indexOf(":")).trim();
+			propertyValue=propVal+" Pa "+temp;
+//			System.out.println(propertyValueNonSplit+"\t"+propertyValue);
+//			Vapor pressure, Pa at 60 °C: 0.013	
+		} else if(propertyValue.contains("Vapor pressure, kPa at ")) {
+			String propVal=propertyValue.substring(propertyValue.indexOf(":")+1, propertyValue.length()).trim();
+			String temp=propertyValue.substring(propertyValue.indexOf("at"), propertyValue.indexOf(":")).trim();
+			propertyValue=propVal+" kPa "+temp;
+//			System.out.println(propertyValueNonSplit+"\t"+propertyValue);
+		} else if (propertyValue.substring(0,1).equals("(") && propertyValue.contains(":")) {
+			String propVal=propertyValue.substring(propertyValue.indexOf(":")+1, propertyValue.length()).trim();
+			String temp=propertyValue.substring(0,propertyValue.indexOf(":")).trim();
+			propertyValue=propVal+" "+temp;
+//			System.out.println(propertyValue);
+		}
+				
+		
 		if (propertyValue.toLowerCase().contains("kpa")) {
 			er.property_value_units_original = ExperimentalConstants.str_kpa;
 			unitsIndex = propertyValue.toLowerCase().indexOf("kpa");
@@ -693,16 +1278,14 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_psi;
 			unitsIndex = propertyValue.toLowerCase().indexOf("psi");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains(ExperimentalConstants.str_negl)) {
-			er.property_value_qualitative = ExperimentalConstants.str_negl;
 		}
-
+		
 		if (er.source_name!=ExperimentalConstants.strSourceOFMPub && propertyValue.contains(":")) {
 			unitsIndex = propertyValue.length();
 		}
 		
-
 		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		
 		return foundNumeric;
 	}
 
@@ -893,16 +1476,49 @@ public class ParseUtilities extends Parse {
 	// Applicable for LogKow and pKa
 	public static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {
 		
-		//TMM TODO fix cases with pH since it retrieves the pH instead of the property value:
-//		log Kow = -2.82 @ pH 7   ==> 7
-//		log Kow: -0.89 (pH 4); -1.85 (pH 7); -1.89 (pH 9)  ==> 9
+		propertyValue=propertyValue.replace(", measured OECD Method 107", "");
+		propertyValue=propertyValue.replace(" (OECD Method 107)","");
+		propertyValue=propertyValue.replace(" (unstated pH)","");
+		propertyValue=propertyValue.replace(", unstated pH","");
+		propertyValue=propertyValue.replace(", distilled water","");
 
-		// Following one works, but doesnt get the value at pH7:
-//		log Kow = 0.74 at pH 5 and -1.34 at pH 7  ==> 0.74 
+		if(propertyValue.equals("log Kow = 3.20 /Kow = 1.6X10+3/")) {
+			propertyValue="log Kow = 3.20";
+		} else if(propertyValue.equals("Kow = 2.3X10+8 (log Kow 8.36)")) {
+			propertyValue="log Kow = 8.36";
+		} else if(propertyValue.equals("Kow = <10")) {
+			propertyValue="LogKow<1";
+		} else if(propertyValue.equals("Kow = 0.13 (pH 7.0) /log Kow = -0.88/")) {
+			propertyValue="log Kow = -0.88 (pH 7.0)";
+		} else if(propertyValue.equals("Kow = 1600 at 24 °C (log Kow = 3.20)")) {
+			propertyValue="log Kow = 3.20 at 24 °C";
+		} else if(propertyValue.equals("log Kow = 1.85 (mixture of 70% cis- and 30% trans-2-Butene)")) {
+			propertyValue="log Kow = 1.85";
+		} else if(propertyValue.equals("Kow = 3.2X10-2 at 25 °C.")) {
+			propertyValue="log Kow = -1.49 at 25°C";
+		} else if(propertyValue.equals("Kow = 4900")) {
+			propertyValue="log Kow = 3.69";
+		} else if (propertyValue.length()==4 && propertyValue.contains(",")) {
+			propertyValue=propertyValue.replace(",", ".");
+		} else if (propertyValue.equals("log Kow = -3.68 (octanol/water); logP = -1.98 (butanol/water), at pH 7")) {
+			propertyValue="log Kow = -3.68 at pH 7";
+		} else if (propertyValue.indexOf("Kow=")==0) {
+			System.out.println("need to handle propertyValue="+propertyValue);
+		}
+		
+		
+		//fix cases with pH since it retrieves the pH instead of the property value:
+//		log Kow = -2.82 @ pH 7   Need to set unitsIndex to location of @
+//		log Kow: -0.89 (pH 4); -1.85 (pH 7); -1.89 (pH 9)  Need to split by ; into separate records
+//		log Kow = 0.74 at pH 5 and -1.34 at pH 7  ==> 0.74   Need to split by and 
 
 		int unitsIndex = -1;
 		if (propertyValue.contains("at")) {
 			unitsIndex = propertyValue.indexOf("at");
+		} else if (propertyValue.contains("(pH")) {
+			unitsIndex = propertyValue.indexOf("(pH");
+		} else if (propertyValue.contains("@")) {
+			unitsIndex = propertyValue.indexOf("@");
 		} else {
 			unitsIndex = propertyValue.length();
 		}
@@ -918,22 +1534,39 @@ public class ParseUtilities extends Parse {
 	 * @return				The temperature condition in C
 	 */
 	public static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
-		propertyValue = correctDegreeSymbols(propertyValue);
-		String units = getTemperatureUnits(propertyValue);
-		int tempIndex = propertyValue.indexOf(units);
-		if (tempIndex==propertyValue.toLowerCase().indexOf("cc")) {
-			tempIndex = propertyValue.indexOf(units,tempIndex+2);
+		
+//		System.out.println("here1 propertyValue="+propertyValue);
+		
+		TempUnitResult tempUnitResult=getTemperatureUnits(propertyValue);
+		
+		if(tempUnitResult==null) {
+//			if(er.property_name.equals(ExperimentalConstants.strVaporPressure))			
+//				System.out.println("cant get temp units for:"+propertyValue);
+//			System.out.println("Cant find temp units for "+propertyValue);
+			return;
 		}
+		
+		
+//		int tempIndex = propertyValue.indexOf(units);
+//		if (tempIndex==propertyValue.toLowerCase().indexOf("cc")) {
+//			tempIndex = propertyValue.indexOf(units,tempIndex+2);
+//		}
+		
+//		if (propertyValue.toLowerCase().indexOf("cc")>-1) {
+//			System.out.println("Have cc in:"+propertyValue);
+//		}
+		
+		
 		// If temperature units were found, looks for the last number that precedes them
-		if (tempIndex > 0) {
+		if (tempUnitResult.unitsIndex > 0) {
 			try {
-				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,tempIndex));
+				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,tempUnitResult.unitsIndex));
 				String tempStr = "";
 				while (m.find()) { tempStr = m.group(); }
 				if (tempStr.length()!=0) {
 					// Converts to C as needed
 					double temp = Double.parseDouble(tempStr);
-					switch (units) {
+					switch ( tempUnitResult.units) {
 					case ExperimentalConstants.str_C:
 						er.temperature_C = temp;
 						break;
@@ -1002,6 +1635,11 @@ public class ParseUtilities extends Parse {
 	 * @return				The pressure condition in kPa
 	 */
 	public static void getPressureCondition(ExperimentalRecord er,String propertyValue,String sourceName) {
+
+		if(er.property_name.equals(ExperimentalConstants.strFlashPoint) || er.property_name.equals(ExperimentalConstants.strAutoIgnitionTemperature)) {
+			return;
+		}
+
 		propertyValue = propertyValue.toLowerCase();
 		int pressureIndex = -1;
 		double conversionFactor = 1.0;
@@ -1095,6 +1733,8 @@ public class ParseUtilities extends Parse {
 				er.pressure_mmHg = "~"+er.pressure_mmHg;
 			}
 		}
+		
+		
 	}
 
 	public static String formatDouble(double d) {
@@ -1183,41 +1823,132 @@ public class ParseUtilities extends Parse {
 	public static double extractDoubleFromString(String str,int end) throws NumberFormatException {
 		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
 		String strDouble = "";
-		while (numberMatcher.find()) { 
-			strDouble = numberMatcher.group();
+		
+		while (numberMatcher.find()) { 			
+			strDouble = numberMatcher.group();		
 		}
+		
+		if(strDouble.isBlank()) {
+			if(str.contains("Relative density of the vapour/air-mixture")) {//for some reason this doesnt get handled by regex above
+				strDouble=str.substring(str.indexOf(":")+1,str.length()).trim();
+//				System.out.println(str+"\t"+strDouble);
+			}
+		}
+		
 		return Double.parseDouble(strDouble.replace(" ",""));
 	}
 
+	static class TempUnitResult {
+		int unitsIndex=1;
+		String units;
+	}
+	
 	/**
-	 * If the property value string contains temperature units, returns the units in standardized format
-	 * @param propertyValue1	The string to be read
-	 * @return				A standardized temperature unit string from ExperimentalConstants
+	 * Gets temp units and index
+	 * 
+	 * @param propertyValue	The string to be read
+	 * @return temp units and index as object
 	 */
-	public static String getTemperatureUnits(String propertyValue) {
-		String propertyValue1=propertyValue.replaceAll("[ Â]","");
-		propertyValue1 = correctDegreeSymbols(propertyValue1);
-		String units = "";
-		if (propertyValue1.contains("\u00B0C") || propertyValue1.contains("oC") || propertyValue1.contains("deg.C") || propertyValue1.contains("degC")
-				|| (propertyValue1.indexOf("C") > 0 && Character.isDigit(propertyValue1.charAt(propertyValue1.indexOf("C")-1))
-						&& !propertyValue1.contains("CC"))) {
-			units = ExperimentalConstants.str_C;
-		} else if (propertyValue1.contains("\u00B0F") || propertyValue1.contains("oF")
-				|| (propertyValue1.indexOf("F") > 0 && Character.isDigit(propertyValue1.charAt(propertyValue1.indexOf("F")-1)))) {
-			units = ExperimentalConstants.str_F;
-		} else if ((propertyValue1.indexOf("K") > 0 && Character.isDigit(propertyValue1.charAt(propertyValue1.indexOf("K")-1)))) {
-			units = ExperimentalConstants.str_K;
-		} 
-		return units;
+	public static TempUnitResult getTemperatureUnits(String propertyValue) {
+
+		String pv1=propertyValue;
+		
+		TempUnitResult result=new TempUnitResult();
+		
+		propertyValue=propertyValue.replace("Â","");
+		
+//		System.out.println("here2 propertyValue="+propertyValue);
+
+		propertyValue = correctDegreeSymbols(propertyValue);
+		
+		if(!propertyValue.equals(pv1)) {
+//			System.out.println("changed:"+pv1+"\t"+propertyValue);
+		}
+		
+//		System.out.println("here3 propertyValue="+propertyValue);
+
+		
+//		if(propertyValue.equals("-27 dec C (closed cup)")) {
+//			System.out.println("***propertyValue1="+propertyValue1);
+//		}
+		
+		
+		List <String>listC=Arrays.asList("\u00B0C","oC","deg.C","degC","C degrees","degrees C","C deg","degree C","deg. C","dec C","°C","°C");
+		List <String>listF=Arrays.asList("\u00B0F","oF","degrees F","F deg","° F","degree F","deg. F","°F","°F");
+		List <String>listK=Arrays.asList("K");
+
+		
+		for(String strC:listC) {
+			if(propertyValue.contains(strC)) {
+				result.units = ExperimentalConstants.str_C;
+				result.unitsIndex=propertyValue.indexOf(strC);
+				return result;
+			}
+		}
+		
+		for(String strF:listF) {
+			if(propertyValue.contains(strF)) {
+				result.units = ExperimentalConstants.str_F;
+				result.unitsIndex=propertyValue.indexOf(strF);
+				return result;
+			}
+		}
+		
+		for(String strK:listK) {
+			if(propertyValue.contains(strK)) {
+				result.units = ExperimentalConstants.str_K;
+				result.unitsIndex=propertyValue.indexOf(strK);
+				return result;
+			}
+		}
+		
+		//If cant find longer strings, use single character;
+		if (propertyValue.indexOf("C") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1))) {
+			result.units = ExperimentalConstants.str_C;
+			result.unitsIndex=propertyValue.indexOf("C");
+//			System.out.println("C by itself:"+propertyValue1);
+			return result;
+		}
+				
+		if (propertyValue.indexOf("F") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("F")-1))) {
+			result.units = ExperimentalConstants.str_F;
+			result.unitsIndex=propertyValue.indexOf("F");
+//			System.out.println("F by itself:"+propertyValue1);
+			return result;
+		}
+		
+		if (propertyValue.indexOf("K") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("K")-1))) {
+			result.units = ExperimentalConstants.str_K;
+			result.unitsIndex=propertyValue.indexOf("K");
+//			System.out.println("K by itself:"+propertyValue1);
+			return result;
+		}
+
+//		System.out.println("No temp units match:"+propertyValue);
+		
+		return null;
 	}
 	
 	public static String correctDegreeSymbols(String s) {
 		StringBuilder sb = new StringBuilder(s);
-		replaceAll(sb,"[\u00BA\u1D52\u02DA\u309C\u18DE\u2070\u2218\u29B5\u1BC8\u26AC]","\u00B0");
-		replaceAll(sb,"\u2103","\u00B0C");
-		replaceAll(sb,"\u2109","\u00B0F");
-		String s_new = sb.toString();
-		s_new = s_new.replaceAll("&deg;","\u00B0"); // This replacement doesn't behave with StringBuilder due to automatic escaping of ()
+		
+		List<String>symbols=Arrays.asList("\u00BA","\u1D52","\u02DA","\u309C","\u18DE","\u2070",
+				"\u2218","\u29B5","\u1BC8","u26AC");//TODO TMM are these correct? Seems like a lot of symbols
+			
+		String s_new=s;
+		
+		for (String symbol:symbols) {
+			s_new=s_new.replace(symbol, "\u00B0");
+		}
+		
+		s_new=s_new.replace("\u2103","\u00B0C");
+		s_new=s_new.replace("\u2109","\u00B0F");
+				
+//		replaceAll(sb,"[]","\u00B0");
+		
+		s_new = s_new.replace("&deg;","\u00B0"); 
+		
+		
 		return s_new;
 	}
 	

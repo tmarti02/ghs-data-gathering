@@ -16,13 +16,17 @@ public class ExperimentalConstants {
 	public static final String strLogKOA="LogKoa: Octanol-Air";//TODO add log() to it?
 	
 	public static final String strDensity="Density";
+	public static final String strVaporDensity="Vapor density";
+	public static final String strLiquidDensity="Liquid density";
+
+	
 	public static final String strMeltingPoint="Melting point";
 	public static final String strBoilingPoint="Boiling point";
 	public static final String strFlashPoint="Flash point";
 	public static final String strAppearance="Appearance";
 	public static final String strOdor="Odor";
 
-	public static final String str_pKA="pKA";
+	public static final String str_pKA="pKa";
 	public static final String str_pKAa="Acidic pKa";
 	public static final String str_pKAb="Basic pKa";
 
@@ -83,6 +87,11 @@ public class ExperimentalConstants {
 	public static final String str_g_L="g/L";
 	public static final String str_ug_L="ug/L";
 	public static final String str_ng_L="ng/L";
+	
+	
+	public static final String str_lb_ft3="lb/ft^3";
+	public static final String str_lb_gal="lb/gal";
+	
 	public static final String str_ug_mL="ug/mL";
 	public static final String str_g_100mL="g/100mL";
 	public static final String str_mg_100mL="mg/100mL";
@@ -90,6 +99,7 @@ public class ExperimentalConstants {
 	public static final String str_g_cm3="g/cm3";
 	public static final String str_kg_m3="kg/m3";
 	public static final String str_g_mL="g/mL";
+	public static final String str_kg_L="kg/L";
 	public static final String str_kg_dm3="kg/dm3";
 	public static final String str_C="C";
 	public static final String str_F="F";
@@ -176,6 +186,18 @@ public class ExperimentalConstants {
 	public static final String str_oz_gal = "oz/gal";
 	public static final String str_pii="PII";
 	
+	public static final String str_dyn_cm="dyn/cm";
+	public static final String str_mN_m="mN/m";
+	public static final String str_mN_cm="mN/cm";
+	public static final String str_N_cm="N/cm";
+	public static final String str_N_m="N/m";
+	
+	public static final String str_cP="cP";
+	public static final String str_P="Poise";//use longer name to avoid errors with Pa-sec type units
+	public static final String str_Pa_sec="Pa-sec";
+	public static final String str_cSt="cSt";
+	
+	
 	//Other:
 	public static final String str_dec="decomposes";
 	public static final String str_lit="literature";
@@ -260,11 +282,12 @@ public class ExperimentalConstants {
 
 	public static final String strAutoIgnitionTemperature="Autoignition temperature";
 	public static final String strRefractiveIndex="Refractive index";
-	public static final String strVaporDensity="Vapor density";
 	public static final String strViscosity="Viscosity";
 	public static final String strSurfaceTension = "Surface tension";
 	
 	public static final String strAcuteAquaticToxicity = "Acute aquatic toxicity";
+	
+	
 	
 
 }

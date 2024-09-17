@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -80,6 +81,7 @@ public class Parse {
 	public boolean writeJsonExperimentalRecordsFile=true;//all data converted to final format stored as Json file
 	public boolean writeExcelExperimentalRecordsFile=true;//all data converted to final format stored as xlsx file
 	public boolean writeCheckingExcelFile=true;
+	public boolean writeExcelFileByProperty=false;
 
 	protected Gson gson=null;
 	protected UnitConverter uc=null;
@@ -172,8 +174,15 @@ public class Parse {
 
 		
 		if (writeExcelExperimentalRecordsFile) {
-			System.out.println("Writing Excel file for chemical records");
-			records.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords,maxExcelRows);
+
+			System.out.println("Writing Excel file(s) for chemical records");
+
+			if(writeExcelFileByProperty) {
+				writeExcelRecordsByProperty(records);
+			} else {
+				records.toExcel_File_Split(mainFolder+File.separator+fileNameExcelExperimentalRecords,maxExcelRows);
+			}
+			
 		}
 		if (writeCheckingExcelFile) {
 			records.createCheckingFile(records, mainFolder+File.separator+fileNameExcelExperimentalRecordsCheck,maxExcelRows);
@@ -196,6 +205,29 @@ public class Parse {
 		
 		
 		System.out.println("done\n");
+	}
+
+	private void writeExcelRecordsByProperty(ExperimentalRecords records) {
+		Hashtable<String,ExperimentalRecords>ht=new Hashtable<>();
+		
+		for(ExperimentalRecord er:records) {
+			if(ht.get(er.property_name)!=null) {
+				ExperimentalRecords recs=ht.get(er.property_name);
+				recs.add(er);
+			} else {
+				ExperimentalRecords recs=new ExperimentalRecords();
+				recs.add(er);
+				ht.put(er.property_name,recs);
+			}
+		}
+		for(String property_name:ht.keySet()) {
+			ExperimentalRecords property_records=ht.get(property_name);
+			
+			String property_name2=property_name.replace(":","_");//messes up filewriting 
+			
+			String filepath=mainFolder+File.separator+fileNameExcelExperimentalRecords.replace(".xlsx", " "+property_name2+".xlsx");
+			property_records.toExcel_File_Split(filepath,maxExcelRows);
+		}
 	}
 	
 	/**

@@ -621,7 +621,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 
 		double pct = 0.01;
 		int min = 100;
-		int max = 500;
+		int max = 2000;
 		
 		int size = records.size();
 		int n = (int) Math.ceil(pct*size); // GS: Round up instead of just truncating
@@ -717,10 +717,10 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		
 		
 		if (size() <= maxRows) {
-			System.out.println("<="+maxRows+" records,"+fileNameExcelExperimentalRecords);
+			System.out.println(size()+"<="+maxRows+" records,"+fileNameExcelExperimentalRecords);
 			this.toExcel_File(filePath);
 		} else {
-			System.out.println(size()+" records, need to do batch");
+			System.out.println(size()+" records,"+fileNameExcelExperimentalRecords);
 			
 			ExperimentalRecords temp = new ExperimentalRecords();
 			Iterator<ExperimentalRecord> it = iterator();
@@ -744,7 +744,6 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		}
 	}
 	
-
 	public ExperimentalRecords dumpBadRecords() {
 		ExperimentalRecords recordsBad = new ExperimentalRecords();
 

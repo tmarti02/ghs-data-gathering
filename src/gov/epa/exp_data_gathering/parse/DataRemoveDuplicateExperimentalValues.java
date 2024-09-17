@@ -212,6 +212,8 @@ public class DataRemoveDuplicateExperimentalValues {
 
 	private void removeDuplicatesForSameSource(String key,ExperimentalRecords recs) {
 
+		boolean print=false;
+		
 		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 		String cas="NOCAS_902561";
 		
@@ -223,7 +225,7 @@ public class DataRemoveDuplicateExperimentalValues {
 //			if (reci.casrn!=null && reci.casrn.equals(cas))				
 //				System.out.println("before\t"+i+"\t"+reci.keep+"\t"+reci.reason);
 		}
-		
+				
 		for (int i=0;i<recs.size();i++) {			
 
 			ExperimentalRecord reci=recs.get(i);			
@@ -255,10 +257,31 @@ public class DataRemoveDuplicateExperimentalValues {
 				String tsj=recj.property_value_string;
 				
 				boolean match=false;
-			
-				if(reci.property_value_string.equals(recj.property_value_string)) match=true;
 				
-				if(!match && reci.property_value_point_estimate_final!=null && recj.property_value_point_estimate_final!=null) {
+				String pvi=null;
+				String pvj=null;
+				
+				if(reci.property_value_string_parsed!=null) pvi=reci.property_value_string_parsed;
+				else pvi=reci.property_value_string;
+				
+				if(recj.property_value_string_parsed!=null) pvj=recj.property_value_string_parsed;
+				else pvj=recj.property_value_string;
+				
+			
+				if(pvi.equals(pvj)) {
+					if(print) System.out.println("Same property_value_string:"+reci.property_value_string);
+					match=true;
+				}
+				
+				boolean haveBothPointEstimates=reci.property_value_point_estimate_final!=null && recj.property_value_point_estimate_final!=null;
+				
+				boolean unitsMatch=reci.property_value_units_final!=null && recj.property_value_units_final!=null && reci.property_value_units_final==recj.property_value_units_final;
+				
+				if(haveBothPointEstimates && unitsMatch) {
+
+//					if(!unitsMatch) {
+//						System.out.println(reci.property_value_units_final+"\t"+recj.property_value_units_final);
+//					}
 					
 					double diff=Math.abs(reci.property_value_point_estimate_final-recj.property_value_point_estimate_final);
 
@@ -268,14 +291,20 @@ public class DataRemoveDuplicateExperimentalValues {
 						diff/=Math.abs(reci.property_value_point_estimate_final);
 						diff*=100.0;//convert to %
 						
-						if(diff<0.01) {//<0.1% different
-//							System.out.println("<0.1%\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final+"\t"+diff);
+						if(diff<0.01) {//<0.01% different
+							if(print) System.out.println("<0.01%\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final+"\t"+diff);
 							match=true;
+						} else {
+							if(print) System.out.println(">0.01%\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final+"\t"+diff);
+							match=false;
 						}
 					} else {
 						if(diff<1e-6) {
-//							System.out.println("<1e-6\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final);
+							if(print) System.out.println("<1e-6\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final);
 							match=true;
+						} else {
+							match=false;
+							if(print) System.out.println(">1e-6\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final);
 						}
 					}
 				}
@@ -286,7 +315,17 @@ public class DataRemoveDuplicateExperimentalValues {
 					recj.keep=false;
 					recj.reason="Duplicate of experimental value from same source";
 					
-					System.out.println("Duplicate\t"+recj.property_name+"\t"+recj.property_value_point_estimate_final+"\t"+reci.property_value_point_estimate_final+"\t"+recj.comboID+"\t"+recj.getOriginalSourceNames());
+//					if(reci.casrn!=null && reci.casrn.equals("109-83-1")) {
+//						System.out.println("Duplicate\t"+reci.casrn+"\t"+reci.chemical_name+"\n"+pvi+"\t"+pvj+"\t"+haveBothPointEstimates+"\n");
+//					}
+					
+//					if(reci.casrn!=null && reci.casrn.equals("109-83-1")) {
+//						System.out.println("************************Duplicate:");
+//						System.out.println(gson.toJson(reci));
+//						System.out.println(gson.toJson(recj)+"\n");
+//					}
+
+					
 					
 //					System.out.println(key+"\t"+recj.reason+"\t"+tsi+"\t"+tsj);
 					
@@ -326,6 +365,9 @@ public class DataRemoveDuplicateExperimentalValues {
 
 					}
 				}
+				
+//				if(print) System.out.println("");
+
 			}//j loop
 		}//i loop
 			

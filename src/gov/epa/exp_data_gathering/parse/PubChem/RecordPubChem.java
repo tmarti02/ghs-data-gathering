@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -38,6 +39,7 @@ import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Data;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.IdentifierData;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Information;
+import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Markup;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Property;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Reference;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Section;
@@ -47,14 +49,16 @@ import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 public class RecordPubChem {
 	String cid;
-	String iupacName;//from pubchem- based on cid 
-	String smiles;////from pubchem - based on cid
+	String iupacNameCid;//from pubchem- based on cid 
+	String canonSmilesCid;////from pubchem - based on cid
 	String synonyms;
-	String cas;//cas number from original source from reference number
-	String chemical_name;// name from original source from reference number
+	
+	String casReference;//cas number from original source from reference number
+	String chemicalNameReference;// name from original source from reference number
 
-	transient Hashtable<String,String> htCAS;//lookup cas based on reference number
-	transient Hashtable<String,String> htChemicalName;//lookup chemical name based on reference number
+	
+//	transient Hashtable<String,String> htCAS;//lookup cas based on reference number
+//	transient Hashtable<String,String> htChemicalName;//lookup chemical name based on reference number
 	
 	
 	
@@ -81,6 +85,15 @@ public class RecordPubChem {
 
 	String propertyName;
 	String propertyValue;
+	
+	List<MarkupChemical> markupChemicals;
+	
+	
+	public class MarkupChemical {
+		String name;
+		String cid;
+	}
+
 
 	String reference;
 	String date_accessed;
@@ -100,8 +113,8 @@ public class RecordPubChem {
 
 	private RecordPubChem() {
 //		cas = new Vector<String>();
-		htCAS=new Hashtable<String,String>();
-		htChemicalName=new Hashtable<String, String>();
+//		htCAS=new Hashtable<String,String>();
+//		htChemicalName=new Hashtable<String, String>();
 //		physicalDescription = new Vector<String>();
 //		density = new Vector<String>();
 //		meltingPoint = new Vector<String>();
@@ -371,9 +384,89 @@ public class RecordPubChem {
 		}
 		return records;
 	}
+	
+	
+	protected static Vector<RecordPubChem> parseJSONInDatabase(String cid) {
+		String databaseFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
+//		String databasePath = databaseFolder + File.separator + sourceName + "_raw_json - Copy.db";
+		String databasePath = databaseFolder + File.separator + sourceName + "_raw_json.db";
+		Vector<RecordPubChem> records = new Vector<>();
+
+		try {
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			
+			String sql="select * from "+sourceName+" where cid="+cid+";";
+			
+			ResultSet rs = SQLite_GetRecords.getRecords(stat, sql);
+
+			int counter = 0;
+
+			System.out.println("Going through records in " + databasePath);
+
+			while (rs.next()) {
+
+				counter++;
+
+				if (counter % 1000 == 0) {
+					System.out.println(counter);
+				}
+
+				String date = rs.getString("date");
+				String experimental = rs.getString("experimental");
+				Data experimentalData = gson.fromJson(experimental, Data.class);
+
+				Hashtable<Integer, Reference> htReferences = getReferenceHashtable(experimentalData);
+//				System.out.println(gson.toJson(experimentalData.record.reference));
+
+				List<Section> experimentalProperties = experimentalData.record.section.get(0).section.get(0).section;
+
+				for (Section section : experimentalProperties) {
+
+//					System.out.println(gson.toJson(section));
+
+					getRecords(records, rs, date, experimentalData, htReferences, section);
+					
+//					if (section.tocHeading.trim().equals("Dissociation Constants")) {
+//						//TODO Other Experimental Properties has mix of things with no property name explicitly listed
+//						getRecordsWithEmbeddedPropertyNames(records, rs, date, experimentalData, htReferences, section);
+//					} else {
+//						getRecords(records, rs, date, experimentalData, htReferences, section);
+//					}
+
+				}
+
+//				if(true) break;
+
+			} // end loop over records
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return records;
+	}
 
 	private static void getRecords(Vector<RecordPubChem> records, ResultSet rs, String date, Data experimentalData,
 			Hashtable<Integer, Reference> htReferences, Section section) throws SQLException {
+		
+		Hashtable<String,String> htCAS=new Hashtable<String,String>();//lookup cas based on reference number
+		Hashtable<String,String> htChemicalName=new Hashtable<String,String>();//lookup chemical name based on reference number
+
+		String cas = rs.getString("cas");
+		Data casData = gson.fromJson(cas, Data.class);
+		if (casData != null) {
+			List<Information> casInfo = casData.record.section.get(0).section.get(0).section.get(0).information;
+			for (Information c : casInfo) {
+				String newCAS = c.value.stringWithMarkup.get(0).string;
+				htCAS.put(c.referenceNumber, newCAS);
+			}
+			
+			if(casData.record!=null && casData.record.reference!=null) {
+				List<Reference>reference=casData.record.reference;
+				for (Reference ref:reference) {
+					htChemicalName.put(ref.referenceNumber,ref.name);
+				}
+//				System.out.println(gson.toJson(pcr.htChemicalName));
+			}
+		}
 		
 		for (Information information : section.information) {
 //						System.out.println(gson.toJson(information));
@@ -402,57 +495,92 @@ public class RecordPubChem {
 					pcr.propertyName=section.tocHeading.trim();//temporary
 				}
 				
-				pcr.propertyValue = valueString.string;
+				pcr.propertyValue = valueString.string;				
+				if(pcr.propertyValue!=null) pcr.propertyValue=pcr.propertyValue.trim();
 				
+				String s=pcr.propertyValue;
 				
-				addIdentifiers(rs, pcr);
-				addSourceMetadata(htReferences, information, pcr);
-				records.add(pcr);
-			}
-
-		}
-	}
-
-	private static void getRecordsWithEmbeddedPropertyNames(Vector<RecordPubChem> records, ResultSet rs, String date,
-			Data experimentalData, Hashtable<Integer, Reference> htReferences, Section section) throws SQLException {
-
-		for (Information information : section.information) {
-
-			List<StringWithMarkup> valueStrings = information.value.stringWithMarkup;
-			if (valueStrings == null) {
-//							System.out.println(gson.toJson(information));
-				continue;
-			}
-
-			// Loop over property values
-			for (StringWithMarkup valueString : valueStrings) {
-
-				if (valueString.string == null)
-					continue;
-
-				RecordPubChem pcr = new RecordPubChem();
-				pcr.date_accessed = date.substring(0, date.indexOf(" "));
-				pcr.cid = experimentalData.record.recordNumber;
-
-				if (information.name != null) {
-					pcr.propertyName = information.name.trim();
-					// will have to extra later
-				} else {
-					pcr.propertyName=section.tocHeading.trim();//temporary
+//				if(s.substring(s.length()-1,s.length()).contentEquals("/") && !s.contains("Estimated")) {//ends with /
+//					System.out.println(pcr.propertyValue+"\n");
+//				}
+				
+//				if(valueString.Markup==null) {
+				
+//				if(!pcr.propertyName.contentEquals("Physical Description") && !pcr.propertyName.contains("Other") && !pcr.propertyName.contains("Odor")) {
+//				
+//					System.out.println(pcr.propertyName+"\n"+gson.toJson(valueString));
+				
+//				}
+				
+				if(valueString.Markup!=null) {
+					pcr.markupChemicals=new ArrayList<MarkupChemical>();
+					for (Markup m:valueString.Markup) {
+						MarkupChemical mc=pcr.new MarkupChemical();
+						
+						if (m.Extra!=null && m.Extra.indexOf("CID-")==0) {
+							mc.cid=m.Extra.substring(4,m.Extra.length());	
+						}
+						
+						if(m.URL!=null && m.URL.contains("compound")) 
+							mc.name=m.URL.replace("https://pubchem.ncbi.nlm.nih.gov/compound/", "");	
+						else if (m.URL!=null && m.URL.contains("element"))
+							mc.name=m.URL.replace("https://pubchem.ncbi.nlm.nih.gov/element/", "");
+					
+						pcr.markupChemicals.add(mc);
+					}
+					
+//					System.out.println(gson.toJson(pcr));
 				}
-
-				pcr.propertyValue = valueString.string;
-				addSourceMetadata(htReferences, information, pcr);
+				
+				
 				addIdentifiers(rs, pcr);
+				addSourceMetadata(htReferences, information, pcr, htCAS,htChemicalName);
 				records.add(pcr);
-//					System.out.println("here pcr="+gson.toJson(pcr));
 			}
 
 		}
 	}
+
+//	private static void getRecordsWithEmbeddedPropertyNames(Vector<RecordPubChem> records, ResultSet rs, String date,
+//			Data experimentalData, Hashtable<Integer, Reference> htReferences, Section section) throws SQLException {
+//
+//		for (Information information : section.information) {
+//
+//			List<StringWithMarkup> valueStrings = information.value.stringWithMarkup;
+//			if (valueStrings == null) {
+////							System.out.println(gson.toJson(information));
+//				continue;
+//			}
+//
+//			// Loop over property values
+//			for (StringWithMarkup valueString : valueStrings) {
+//
+//				if (valueString.string == null)
+//					continue;
+//
+//				RecordPubChem pcr = new RecordPubChem();
+//				pcr.date_accessed = date.substring(0, date.indexOf(" "));
+//				pcr.cid = experimentalData.record.recordNumber;
+//
+//				if (information.name != null) {
+//					pcr.propertyName = information.name.trim();
+//					// will have to extra later
+//				} else {
+//					pcr.propertyName=section.tocHeading.trim();//temporary
+//				}
+//
+//				pcr.propertyValue = valueString.string;
+//				addSourceMetadata(htReferences, information, pcr);
+//				addIdentifiers(rs, pcr);
+//				records.add(pcr);
+////					System.out.println("here pcr="+gson.toJson(pcr));
+//			}
+//
+//		}
+//	}
 
 	private static void addSourceMetadata(Hashtable<Integer, Reference> htReferences, Information information,
-			RecordPubChem pcr) {
+			RecordPubChem pcr, Hashtable<String, String> htCAS, Hashtable<String, String> htChemicalName) {
 
 		if (information.reference != null) {
 			pcr.literatureSource = new LiteratureSource();
@@ -523,51 +651,88 @@ public class RecordPubChem {
 			pcr.publicSourceOriginal.description = reference.description;
 			pcr.publicSourceOriginal.url = reference.url;// TODO fix these to remove specific page
 			
-			if(pcr.htCAS.containsKey(information.referenceNumber)) {
-				pcr.cas=pcr.htCAS.get(information.referenceNumber);
+			if(htCAS.containsKey(information.referenceNumber)) {
+				pcr.casReference=htCAS.get(information.referenceNumber);
 			} else {
 //				System.out.println("cant get cas from ref num:"+information.referenceNumber+"\t"+pcr.cid);
 			}
 
-			if(pcr.htChemicalName.containsKey(information.referenceNumber)) {
-				pcr.chemical_name=pcr.htChemicalName.get(information.referenceNumber);	
+			if(htChemicalName.containsKey(information.referenceNumber)) {
+				pcr.chemicalNameReference=htChemicalName.get(information.referenceNumber);	
 //				System.out.println(pcr.chemical_name);
 			} else {
 //				System.out.println("cant get name from ref num:"+pcr.iupacName);
 //				pcr.chemical_name=pcr.iupacName;//do we want to use this? doesnt come from original source
 			}
 			
+					
+			
 //			System.out.println(gson.toJson(reference));
 		}
 	}
 
-	protected ExperimentalRecord toExperimentalRecord() {
+	/**
+	 * Creates a new ExperimentalRecord object and sets all the fields that do not
+	 * require advanced parsing
+	 * 
+	 * @return ExperimentalRecord
+	 */
+	protected ExperimentalRecord toExperimentalRecord(String propertyValueNonSplit) {
 
+	
 		ExperimentalRecord er = new ExperimentalRecord();
 
 		er.experimental_parameters = new Hashtable<>();
 		er.experimental_parameters.put("PubChem CID", cid);
-		
-		// Creates a new ExperimentalRecord object and sets all the fields that do not
-		// require advanced parsing
 
 		er.date_accessed = date_accessed;
-//		er.casrn = String.join("|", cas);
-		er.casrn = cas;				
-		er.chemical_name = chemical_name;
-//		er.smiles = smiles;//this smiles is from identifiers api call and not the original source
+		
+		if(casReference==null && chemicalNameReference==null) {//use the values mapped to the cid if dont have anything from the reference
+			er.smiles=canonSmilesCid;//use pubchem mapped smiles
+			er.chemical_name=iupacNameCid;//use pubchem mapped name
+//			System.out.println("Using main pubchem identifiers="+er.chemical_name+", smiles="+er.smiles);
+//			System.out.println(er.publicSourceOriginal.name);
+		} else {
+			//use the identifiers from the property value's original reference (if available):
+			er.casrn = casReference;				
+			er.chemical_name = chemicalNameReference;
+//			System.out.println("Using reference identifiers="+er.chemical_name+", cas="+er.casrn);
+//			System.out.println("From main pubchem identifiers="+iupacNameCid+", smiles="+canonSmilesCid+"\n");
+		}
 
-		// TODO get DTXSID from compounds table from dsstox???
+		// TODO the propertyValue sometimes has a different chemical name inside it but
+		// it's too hard to consistently parse it out due to the free formatting
+		
+		// TODO should we override chemical identifiers by setting DTXSID from dsstox compounds table using pubchem cid???
 
 		if (synonyms != null) {
 			er.synonyms = synonyms;
 		}
-
-		standardizePropertyName();
+		
 		if (propertyName == null)
 			return null;
+		
 
-		er.property_name = propertyName;
+		//TODO no way of knowing which pKa is acidic or basic unless they tag it as acidic or amino group		
+//		if(propertyName.equals("Dissociation Constants")) {
+//			String pv2=propertyValue.replace(" ", "").toLowerCase();
+//
+//			if(pv2.contains("pkb")) {
+//				er.property_name=ExperimentalConstants.str_pKAb;
+//			} else if(pv2.contains("kb")) {
+//				er.property_name=ExperimentalConstants.str_KAb;
+//			} else if (pv2.contains("pk")) {
+//				er.property_name=ExperimentalConstants.str_pKA;//dont know whether acidic or basic
+//			} else { 
+//				System.out.println(er.casrn+"\t"+er.chemical_name+"\t"+ propertyValue);
+//				return er;
+//			}
+//		} else {
+//			er.property_name = standardizePropertyName(propertyName);	
+//		}
+
+		er.property_name = standardizePropertyName(propertyName);
+		
 		er.property_value_string = propertyValue;
 		er.source_name = RecordPubChem.sourceName;
 
@@ -576,32 +741,87 @@ public class RecordPubChem {
 		propertyValue = propertyValue.replaceAll("(?i)less than", "<");
 		propertyValue = propertyValue.replaceAll("(?i) or equal to ", "=");
 		propertyValue = propertyValue.replaceAll("(?i)about ", "~");
+		
+//		if(propertyValue.contains("pH") && !propertyName.equals(ExperimentalConstants.strWaterSolubility) && !propertyName.equals(ExperimentalConstants.strLogKOW) &&  !propertyName.equals(ExperimentalConstants.strAppearance)) {
+//			System.out.println(propertyName+"\t"+propertyValue);
+//		}
+		
 
-		if (propertyName.equals(ExperimentalConstants.strDensity)
-				|| propertyName.equals(ExperimentalConstants.strVaporDensity)) {
-			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
+		if (er.property_name.equals(ExperimentalConstants.strDensity)
+				|| er.property_name.equals(ExperimentalConstants.strVaporDensity)) {
+			foundNumeric = ParseUtilities.getDensity(er, propertyValue,propertyValueNonSplit);
 			ParseUtilities.getPressureCondition(er, propertyValue, sourceName);
 			ParseUtilities.getTemperatureCondition(er, propertyValue);
-		} else if (propertyName == ExperimentalConstants.strMeltingPoint
-				|| propertyName == ExperimentalConstants.strBoilingPoint
-				|| propertyName == ExperimentalConstants.strAutoIgnitionTemperature
-				|| propertyName == ExperimentalConstants.strFlashPoint) {
+						
+//			if(!foundNumeric)
+//				System.out.println("Density\t"+foundNumeric+"\t"+propertyValue);	
+
+			
+		} else if (er.property_name == ExperimentalConstants.strMeltingPoint
+				|| er.property_name == ExperimentalConstants.strBoilingPoint
+				|| er.property_name == ExperimentalConstants.strAutoIgnitionTemperature
+				|| er.property_name == ExperimentalConstants.strFlashPoint) {
 			foundNumeric = ParseUtilities.getTemperatureProperty(er, propertyValue);
 			ParseUtilities.getPressureCondition(er, propertyValue, sourceName);
-
-			//TODO need to make this exhaustive:
-//			if (propertyValue.contains("closed cup") || propertyValue.contains("c.c.")) {
-//				er.experimental_parameters.put("Measurement method", "closed cup");
+			
+//			if(propertyValue.toLowerCase().contains("decomp")) {
+//				er.keep=false;
+//				er.reason="Decomposes";
+////				er.property_value_qualitative="Decomposes";
+////				System.out.println("Decomposes: "+propertyValue);
 //			}
-		} else if (propertyName.equals(ExperimentalConstants.strWaterSolubility)) {
+
+			if(er.property_name.equals(ExperimentalConstants.strFlashPoint)) {
+				String PVLC=propertyValue.toLowerCase();
+				
+				if((PVLC.contains("close") && PVLC.contains("cup")) || PVLC.contains("c.c.") || PVLC.contains("closed")) {
+					er.measurement_method="Closed cup";
+				} else if((PVLC.contains("open") && PVLC.contains("cup")) || PVLC.contains("o.c.") || PVLC.contains("OC.") || PVLC.contains(", open")) {
+					er.measurement_method="Open cup";
+				} else {
+//					System.out.println(propertyValue);
+				}
+			}
+			
+			
+			if(propertyValue.toLowerCase().contains("not flammable")) {
+				er.keep=false;
+				er.property_value_qualitative="Not flammable";
+//				System.out.println("Decomposes: "+propertyValue);
+			} else if(propertyValue.toLowerCase().contains("flammable gas")) {
+				er.keep=false;
+				er.property_value_qualitative="Flammable gas";
+			}
+
+			
+			if(propertyValue.toLowerCase().contains("sublim")) {
+				er.keep=false;
+				er.reason="Sublimates";
+				er.property_value_qualitative="Sublimates";
+//				System.out.println("Decomposes: "+propertyValue);
+			}
+
+
+		} else if (er.property_name.equals(ExperimentalConstants.strWaterSolubility)) {
+			
+//			System.out.println("Here1 sol");
 			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue, sourceName);
+
 			if (er.temperature_C == null) {
 				ParseUtilities.getTemperatureCondition(er, propertyValue);
 			}
+			
+			ParseUtilities.get_pH_Condition(er, propertyValue);
 			// TODO get pH- difficult because pH can be in difference places, especially
 			// when have different solvents in same string
 
 			ParseUtilities.getQualitativeSolubility(er, propertyValue, sourceName);
+
+//			if(er.property_value_qualitative!=null && propertyValue.contains("ethanol") && !foundNumeric)
+//				System.out.println(er.property_value_qualitative+"\t"+propertyValue);
+			
+			
+//			System.out.println("Here2 sol");
 
 //			if(er.property_value_point_estimate_original!=null && er.property_value_point_estimate_original<0) {
 //				System.out.println("Negative value:"+gson.toJson(er));
@@ -609,12 +829,22 @@ public class RecordPubChem {
 
 			// TODO note- that ones with qualitative solubility will have keep=false due to
 			// missing units
-		} else if (propertyName.equals(ExperimentalConstants.strVaporPressure)) {
-			foundNumeric = ParseUtilities.getVaporPressure(er, propertyValue);
+		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
+			foundNumeric = ParseUtilities.getVaporPressure(er, propertyValue,propertyValue);
 			ParseUtilities.getTemperatureCondition(er, propertyValue);
-		} else if (propertyName == ExperimentalConstants.strHenrysLawConstant) {
+		} else if (er.property_name == ExperimentalConstants.strHenrysLawConstant) {
 			foundNumeric = ParseUtilities.getHenrysLawConstant(er, propertyValue);
-		} else if (propertyName == ExperimentalConstants.strLogKOW || propertyName == ExperimentalConstants.str_pKA) {
+			
+			ParseUtilities.getTemperatureCondition(er, propertyValue);
+			
+//			if(!foundNumeric)
+//				System.out.println("HLC\t"+foundNumeric+"\t"+propertyValue);	
+			
+			
+		} else if (er.property_name == ExperimentalConstants.strLogKOW
+				|| er.property_name == ExperimentalConstants.str_pKA
+				|| er.property_name == ExperimentalConstants.str_pKAa
+				|| er.property_name == ExperimentalConstants.str_pKAb) {
 
 			// TMM TODO fix cases with pH since it retrieves the pH instead of the property
 			// value:
@@ -627,60 +857,139 @@ public class RecordPubChem {
 			foundNumeric = ParseUtilities.getLogProperty(er, propertyValue);
 			er.property_value_units_original = ExperimentalConstants.str_LOG_UNITS;
 			ParseUtilities.getTemperatureCondition(er, propertyValue);
-		} else if (propertyName == ExperimentalConstants.strRefractiveIndex) {
+			ParseUtilities.get_pH_Condition(er, propertyValue);
+			
+		} else if (er.property_name == ExperimentalConstants.strRefractiveIndex) {
 			System.out.println("***TODO " + ExperimentalConstants.strRefractiveIndex + "\t" + propertyValue);
-		} else if (propertyName == ExperimentalConstants.strViscosity) {
-			System.out.println("***TODO " + ExperimentalConstants.strViscosity + "\t" + propertyValue);
-		} else if (propertyName == ExperimentalConstants.strSurfaceTension) {
-			System.out.println("***TODO " + ExperimentalConstants.strSurfaceTension + "\t" + propertyValue);
-		} else if (propertyName == ExperimentalConstants.strAppearance
-				|| propertyName == ExperimentalConstants.strOdor) {
+		
+		} else if (er.property_name == ExperimentalConstants.strViscosity) {
+			
+//			System.out.println("***TODO " + ExperimentalConstants.strViscosity + "\t" + propertyValue);
+			
+			foundNumeric = ParseUtilities.getViscosity(er, propertyValue);
+//			ParseUtilities.getPressureCondition(er, propertyValue, sourceName);
+			ParseUtilities.getTemperatureCondition(er, propertyValue);
+			
+			if(propertyValue.contains("@ boiling point") || propertyValue.contains("at boiling point")) {
+				er.reason="Value @ boiling point";
+				er.keep=false;
+			}
+			
+			if(propertyValue.contains("@ melting point") || propertyValue.contains("at melting point")) {
+				er.reason="Value @ melting point";
+				er.keep=false;
+			}
+
+			
+			
+		} else if (er.property_name == ExperimentalConstants.strSurfaceTension) {
+//			System.out.println("***TODO " + ExperimentalConstants.strSurfaceTension + "\t" + propertyValue);			
+			foundNumeric = ParseUtilities.getSurfaceTension(er, propertyValue);
+//			ParseUtilities.getPressureCondition(er, propertyValue, sourceName);
+			ParseUtilities.getTemperatureCondition(er, propertyValue);
+
+			
+		} else if (er.property_name == ExperimentalConstants.strAppearance
+				|| er.property_name == ExperimentalConstants.strOdor) {
 			er.property_value_string = propertyValue;
-			er.property_value_qualitative = propertyValue.toLowerCase().replaceAll("colour", "color")
-					.replaceAll("odour", "odor").replaceAll("vapour", "vapor");
+			
+//			er.property_value_qualitative = propertyValue.toLowerCase().replaceAll("colour", "color")
+			
+			er.property_value_qualitative = propertyValue.replace("colour", "color")
+					.replace("odour", "odor").replace("vapour", "vapor");
+			
 			er.property_value_units_original = ExperimentalConstants.strTEXT;
 			er.property_value_units_final = ExperimentalConstants.strTEXT;
 
 		} else {
-			System.out.println("Need to handle propertyValue for " + propertyName);
+			System.out.println("Need to handle propertyValue for " + er.property_name);
 		}
 
-		if (!propertyName.equals(ExperimentalConstants.strWaterSolubility)
-				&& propertyValue.toLowerCase().contains("decomposes")) {
-			er.updateNote(ExperimentalConstants.str_dec);
-		}
-		if (propertyValue.toLowerCase().contains("est") && !propertyValue.toLowerCase().contains("ester")
-				&& !propertyValue.toLowerCase().contains("test")) {
-			// TODO is above if statement bulletproof?
-
-			er.updateNote(ExperimentalConstants.str_est);
-			er.keep = false;
-			er.reason = "Estimated";
-		}
-		if ((propertyValue.toLowerCase().contains("ext") || propertyValue.toLowerCase().contains("from exp"))
-				&& !propertyValue.toLowerCase().contains("extreme")
-				&& !propertyValue.toLowerCase().contains("extent")) {
+//		if (!er.property_name.equals(ExperimentalConstants.strWaterSolubility)
+//				&& propertyValue.toLowerCase().contains("decomposes")) {
+//			er.updateNote(ExperimentalConstants.str_dec);
+//		}
+		
+//		if (propertyValue.toLowerCase().contains("est") && !propertyValue.toLowerCase().contains("ester")
+//				&& !propertyValue.toLowerCase().contains("test")) {
+//			// TODO is above if statement bulletproof?
+//			er.updateNote(ExperimentalConstants.str_est);
+//			er.keep = false;
+//			er.reason = "Estimated";
+//			System.out.println("Estimated:"+propertyValueNonSplit);
+//		}
+		
+		
+		if ((propertyValue.toLowerCase().contains("from experimentally derived coefficients"))) {
+//			er.updateNote("Estimated from experimentally fit equation");
 			er.updateNote(ExperimentalConstants.str_ext);
+//			System.out.println("extrapolated from exp eqn:"+propertyValueNonSplit);
+		} else if (propertyValueNonSplit.toLowerCase().contains("est vp/ws") 
+				|| propertyValueNonSplit.toLowerCase().contains("est from vp/wsol")
+				|| propertyValueNonSplit.toLowerCase().contains("estimated, vp/wsol")) {
+			
+			//OK
+		} else if (propertyValueNonSplit.toLowerCase().contains("calcul")
+				|| propertyValueNonSplit.toLowerCase().contains("estimat")
+				|| propertyValueNonSplit.toLowerCase().contains("(est")
+				|| propertyValueNonSplit.toLowerCase().contains("(calc")) {
+			// TODO is above if statement bulletproof?
+//			er.updateNote(ExperimentalConstants.str_est);
 			er.keep = false;
 			er.reason = "Estimated";
+//			System.out.println("calculated:"+propertyValueNonSplit);
+		
+		} else if (propertyValueNonSplit.toLowerCase().contains("est") && !propertyValue.toLowerCase().contains("ester")) {			
+//			System.out.println(propertyValueNonSplit);
+		} else if (propertyValueNonSplit.toLowerCase().contains("calc")) {			
+//			System.out.println(propertyValueNonSplit);			
+		} else if ((propertyValueNonSplit.toLowerCase().contains("extrap"))) {
+			er.updateNote(ExperimentalConstants.str_ext);
+//			System.out.println("extrapolated:"+propertyValueNonSplit);
 		}
+		
+		
+		
+
 		// Warns if there may be a problem with an entry
 		if (propertyValue.contains("?")) {
 			er.flag = true;
-			er.reason = "Question mark";
+//			er.keep=false;
+			er.updateNote("Question mark");
 		}
 
-		if ((foundNumeric || er.property_value_qualitative != null || er.note != null) && er.keep) {
-			er.keep = true;
-			er.reason = null;
-		} else if (er.keep) {
-			er.keep = false;
-			er.reason = "Bad data or units";
-		}
+		if(er.keep) {
+			if ((foundNumeric || er.property_value_qualitative != null || er.note != null)) {
 
+				if(er.reason!=null) {
+					System.out.println("reason: "+er.reason+"\tflag: "+er.flag+"\tpV:"+er.property_value_string+"\tNote: "+er.note);
+				}
+				
+//				er.reason = null;
+				
+			} else {
+
+				er.keep = false;
+				
+				if(er.reason!=null) {
+					System.out.println(er.reason);
+				}
+				
+//				if(er.reason==null) System.out.println("Prev reason:"+er.reason);
+				er.reason = "Bad data or units";
+
+//				if(er.reason!=null) {
+//					System.out.println(er.reason);
+//				}
+
+			}
+		}
+		
+		
 		if (publicSourceOriginal != null) {
 
 			er.publicSourceOriginal = publicSourceOriginal;
+			er.original_source_name=publicSourceOriginal.name;
 			er.url = publicSourceOriginal.url;
 
 			if (publicSourceOriginal.name.equals("EPA DSSTox")) {
@@ -693,19 +1002,45 @@ public class RecordPubChem {
 		}
 
 		if (literatureSource != null) {
-			if (literatureSource.doi != null)
-				System.out.println(gson.toJson(literatureSource));
+			
+//			if (literatureSource.doi != null)
+//				System.out.println(gson.toJson(literatureSource));
+			
 			er.literatureSource = literatureSource;
 			er.reference = literatureSource.citation;
 		}
 
+
 		unitConverter.convertRecord(er);
+				
+		if(propertyValue.toLowerCase().contains("decomp")) {
+			er.keep=false;
+			er.reason="decomposes";
+		} else if(er.property_value_qualitative!=null) {//TODO is this bullet proof?
+			er.keep=true;
+			er.reason=null;
+		}
+		
+		if(er.keep && er.property_value_qualitative==null && er.property_value_point_estimate_final==null 
+				&& er.property_value_max_final==null && er.property_value_min_final==null ) {
+
+			if(er.reason!=null && er.reason.equals("Not density")) {
+				// do nothing
+			} else {
+				er.keep=false;
+				er.reason="No values";
+//				er.updateNote("parsed propertyValue: "+er.property_value_string);
+			}
+			
+		}
 
 //		if(propertyValue.contains("pH") && (propertyValue.contains("@") || propertyValue.contains("log Kow"))) {
 //		if(er.reference!=null && er.reference.equals("MacBean C, ed; The e-Pesticide Manual, 15th ed., Version 5.0.1. Surrey UK, British Crop Protection Council. Spirodiclofen (148477-71-8) (2010)")) {
 //			System.out.println(propertyValue+"\tpoint_estimate="+er.property_value_point_estimate_original);
 ////			System.out.println(er.reference+"\n");
 //		}
+		
+
 
 		return er;
 	}
@@ -714,39 +1049,46 @@ public class RecordPubChem {
 	 * Convert pubchem names to our db name
 	 * 
 	 */
-	private void standardizePropertyName() {
+	private String standardizePropertyName(String propertyName) {
 		if (propertyName.equals("Physical Description") || propertyName.equals("Color/Form")) {
-			propertyName = ExperimentalConstants.strAppearance;
+			return ExperimentalConstants.strAppearance;
 		} else if (propertyName.equals("Odor")) {
-			propertyName = ExperimentalConstants.strOdor;
+			return ExperimentalConstants.strOdor;
 		} else if (propertyName.equals("Boiling Point")) {
-			propertyName = ExperimentalConstants.strBoilingPoint;
+			return ExperimentalConstants.strBoilingPoint;
 		} else if (propertyName.equals("Autoignition Temperature")) {
-			propertyName = ExperimentalConstants.strAutoIgnitionTemperature;
+			return ExperimentalConstants.strAutoIgnitionTemperature;
 		} else if (propertyName.equals("Refractive Index")) {
-			propertyName = ExperimentalConstants.strRefractiveIndex;
+			return ExperimentalConstants.strRefractiveIndex;
 		} else if (propertyName.equals("Flash Point")) {
-			propertyName = ExperimentalConstants.strFlashPoint;
+			return ExperimentalConstants.strFlashPoint;
 		} else if (propertyName.equals("Vapor Pressure")) {
-			propertyName = ExperimentalConstants.strVaporPressure;
+			return ExperimentalConstants.strVaporPressure;
 		} else if (propertyName.equals("Melting Point")) {
-			propertyName = ExperimentalConstants.strBoilingPoint;
+			return ExperimentalConstants.strMeltingPoint;
 		} else if (propertyName.equals("Solubility")) {
-			propertyName = ExperimentalConstants.strWaterSolubility;// may be any solvent though!
+			return ExperimentalConstants.strWaterSolubility;// may be any solvent though!
 		} else if (propertyName.equals("Henry's Law Constant")) {
-			propertyName = ExperimentalConstants.strHenrysLawConstant;
+			return ExperimentalConstants.strHenrysLawConstant;
 		} else if (propertyName.equals("Density")) {
-			propertyName = ExperimentalConstants.strDensity;
+			return ExperimentalConstants.strDensity;
 		} else if (propertyName.equals("Vapor Density")) {
-			propertyName = ExperimentalConstants.strVaporDensity;
+			return ExperimentalConstants.strVaporDensity;
 		} else if (propertyName.equals("Viscosity")) {
-			propertyName = ExperimentalConstants.strViscosity;
+			return ExperimentalConstants.strViscosity;
 		} else if (propertyName.equals("LogP")) {
-			propertyName = ExperimentalConstants.strLogKOW;
+			return ExperimentalConstants.strLogKOW;
+		} else if (propertyName.equals(ExperimentalConstants.str_pKA)) {
+			return ExperimentalConstants.str_pKA;
+		} else if (propertyName.equals(ExperimentalConstants.str_pKAa)) {
+			return ExperimentalConstants.str_pKAa;
+		} else if (propertyName.equals(ExperimentalConstants.str_pKAb)) {
+			return ExperimentalConstants.str_pKAb;
 		} else if (propertyName.equals("Surface Tension")) {
-			propertyName = ExperimentalConstants.strSurfaceTension;
+			return ExperimentalConstants.strSurfaceTension;
 		} else {
 			System.out.println("In standardizePropertyName() need to handle\t" + propertyName);
+			return null;
 		}
 	}
 
@@ -763,32 +1105,12 @@ public class RecordPubChem {
 
 		if (identifierData != null) {
 			Property identifierProperty = identifierData.propertyTable.properties.get(0);
-			pcr.iupacName = identifierProperty.iupacName;
-			pcr.smiles = identifierProperty.canonicalSMILES;
-		}
-
-		String cas = rs.getString("cas");
-		Data casData = gson.fromJson(cas, Data.class);
-		if (casData != null) {
-			List<Information> casInfo = casData.record.section.get(0).section.get(0).section.get(0).information;
-			for (Information c : casInfo) {
-				String newCAS = c.value.stringWithMarkup.get(0).string;
-				pcr.htCAS.put(c.referenceNumber, newCAS);
-			}
-			
-			if(casData.record!=null && casData.record.reference!=null) {
-				List<Reference>reference=casData.record.reference;
-				for (Reference ref:reference) {
-					pcr.htChemicalName.put(ref.referenceNumber,ref.name);
-				}
-//				System.out.println(gson.toJson(pcr.htChemicalName));
-			}
-
+			pcr.iupacNameCid = identifierProperty.iupacName;
+			pcr.canonSmilesCid = identifierProperty.canonicalSMILES;
 		}
 
 		if (rs.getString("synonyms") != null)
 			pcr.synonyms = rs.getString("synonyms").replaceAll("\r\n", "|");
-		
 		
 	}
 
@@ -865,13 +1187,42 @@ public class RecordPubChem {
 //				.readFile("Data\\Experimental\\PubChem\\solubilitycids-test.txt");
 
 		// TMM get data using cids from gabriels sqlite
-		RecordPubChem r = new RecordPubChem();
-		HashSet<String> cids = r.getCidsInDatabase("Pubchem");// old ones from 2020
-		downloadJSONsToDatabase(cids, false);
+//		RecordPubChem r = new RecordPubChem();
+//		HashSet<String> cids = r.getCidsInDatabase("Pubchem");// old ones from 2020
+//		downloadJSONsToDatabase(cids, false);
 
+//		Vector<RecordPubChem>recs=parseJSONInDatabase("62695");//trans-2-butene
+//		Vector<RecordPubChem>recs=parseJSONInDatabase("643835");//cis-2-hexene
+//		Vector<RecordPubChem>recs=parseJSONInDatabase("241");//trans-2-butene
+		
+//		printPhyschemRecords(recs);
+
+		
+		
 //		getCidsWithPropertyData();
 	}
 
+	private static void printPhyschemRecords(Vector<RecordPubChem> recs) {
+		for (RecordPubChem rec:recs) {
+			
+			if(!rec.propertyName.equals("Solubility") &&
+					!rec.propertyName.equals("Boiling Point") && 
+					!rec.propertyName.equals("Melting Point") &&
+					!rec.propertyName.equals("LogP") &&
+					!rec.propertyName.equals("Henry's Law Constant") &&
+					!rec.propertyName.equals("Vapor Pressure")) continue; 
+			
+			ExperimentalRecord er=rec.toExperimentalRecord(rec.propertyValue);
+			
+			if(rec.markupChemicals==null) continue;
+			
+			System.out.println(gson.toJson(rec)+"\n");
+			System.out.println(gson.toJson(er)+"\n\n**********************\n");
+			
+		}
+	}
+
+	
 	public void printObject(Object object) {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		System.out.println(gson.toJson(object));

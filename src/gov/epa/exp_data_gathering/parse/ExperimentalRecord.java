@@ -29,6 +29,7 @@ public class ExperimentalRecord {
 	public String property_category;
 	
 	//Property value fields:
+	public String property_value_string_parsed;//original string from source that was parsed (multiple value)
 	public String property_value_string;//Store original string from source for checking later
 	public Double property_value_min_original;//The minimum value of a property when a range of values is given
 	public Double property_value_max_original;//The maximum value of a property when a range of values is given
@@ -90,7 +91,12 @@ public class ExperimentalRecord {
 			"smiles",
 			"source_name",
 			"property_name",
+			"property_value_point_estimate_original",
+			"property_value_min_original",
+			"property_value_max_original",
+			"property_value_units_original",
 			"property_value_string",
+			"property_value_string_parsed",
 			"property_value_qualitative",
 			"property_value_numeric_qualifier",
 			"property_value_point_estimate_final",
@@ -153,9 +159,18 @@ public class ExperimentalRecord {
 		
 		srcs+="\t";
 		
-		if(literatureSource!=null) srcs+=literatureSource.name;
-		else if (reference!=null) srcs+=reference;
-		else srcs+="null";
+		if(literatureSource!=null) {			
+			if(literatureSource.citation!=null) {
+				srcs+=literatureSource.citation;	
+			} else if (literatureSource.name!=null) {
+				srcs+=literatureSource.name;
+			}
+			
+		} else if (reference!=null) {
+			srcs+=reference;
+		}else { 
+			srcs+="null";
+		}
 		
 		return srcs;
 	}
