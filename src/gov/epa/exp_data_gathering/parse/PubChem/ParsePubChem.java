@@ -28,9 +28,12 @@ import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Reference;
 
 /**
+
+For each spreadsheet:
+
 - Records tab
 	- are all the unit conversions correct (check example of each "property_value_units_original")
-		- Can also check source code such as ParseUtilities.getViscosity (sets "property_value_units_original") and UnitConverter.convertViscosity (converts to ""property_value_units_final")
+		- Also check source code (do a pull first) such as ParseUtilities.getViscosity (sets "property_value_units_original") and UnitConverter.convertViscosity (converts to "property_value_units_final")
 	- check records with "property_value_string" containing a semicolon (indicating a series of values). Are there cases where some of the individual records didnt make it in and was there something in first/last value that should have applied to all?
 
 - Records_Bad tab, report the cases where >5 records exist where 
@@ -43,10 +46,10 @@ import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Reference;
 	- for reason="Original units missing" are there some where it just failed to parse?
 	
 	
-For following properties, find examples where it fails to set the experimental conditions correctly (>5 cases), flag them in spreadsheet using cell color
+For following properties, also find examples (look at "property_value_string_parsed") where it fails to set the experimental conditions correctly (>5 cases for a given quirk), flag them in spreadsheet using cell color
 
 - boiling point:
-	- "pressure_mmHg" ? E.g. property_value_string = "159-160 °C at 2.00E+00 mm Hg" => pressure_mmHg = 0.0e0
+	- "pressure_mmHg" ? E.g. property_value_string_parsed = "159-160 °C at 2.00E+00 mm Hg" => pressure_mmHg = 0.0e0
 
 - Density tab:
 	- if g/cm3 assumed (see "note"), cases where this was wrong assumption

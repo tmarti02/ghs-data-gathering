@@ -228,7 +228,7 @@ public class ParseUtilities extends Parse {
 				er.keep=false;
 				er.reason="Incorrect property";
 //				er.updateNote("propertyValue="+propertyValue);
-//				System.out.println("Not density:\t"+badProp+"\t"+propertyValue);
+//				System.out.println("Incorrect property:\t"+badProp+"\t"+propertyValue);
 				return false;
 			}
 		}
@@ -523,7 +523,7 @@ public class ParseUtilities extends Parse {
 			propertyValue=propertyValue.replace(cpUnit, ExperimentalConstants.str_cP);			
 		}
 		
-		List<String> pUnits = Arrays.asList("poise","POISE","Poise","poises");		
+		List<String> pUnits = Arrays.asList("poises", "poise","POISE","Poise");		
 		for(String pUnit:pUnits) {
 			propertyValue=propertyValue.replace(pUnit, ExperimentalConstants.str_P);			
 		}

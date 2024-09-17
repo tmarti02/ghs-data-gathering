@@ -1024,7 +1024,7 @@ public class RecordPubChem {
 		if(er.keep && er.property_value_qualitative==null && er.property_value_point_estimate_final==null 
 				&& er.property_value_max_final==null && er.property_value_min_final==null ) {
 
-			if(er.reason!=null && er.reason.equals("Not density")) {
+			if(er.reason!=null && er.reason.equals("Incorrect property")) {
 				// do nothing
 			} else {
 				er.keep=false;
