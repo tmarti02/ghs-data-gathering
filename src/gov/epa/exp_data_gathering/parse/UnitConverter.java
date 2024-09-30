@@ -734,13 +734,22 @@ public class UnitConverter {
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_cP)) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_cP;
-
+		}	else if (er.property_value_units_original.equals(ExperimentalConstants.str_mP)) {			
+			convertAndAssignFinalFields(er, 0.1);
+			er.property_value_units_final = ExperimentalConstants.str_cP;		
+		}	else if (er.property_value_units_original.equals(ExperimentalConstants.str_uP)) {
+			convertAndAssignFinalFields(er, 1e-4);
+			er.property_value_units_final = ExperimentalConstants.str_cP;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_P)) {
 			convertAndAssignFinalFields(er, 100.0);
 			er.property_value_units_final = ExperimentalConstants.str_cP;
 
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_Pa_sec)) {
 			convertAndAssignFinalFields(er, 1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_cP;
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_uPa_sec)) {
+			convertAndAssignFinalFields(er, 1e-3);
 			er.property_value_units_final = ExperimentalConstants.str_cP;
 
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_cSt)) {
@@ -1092,6 +1101,11 @@ public class UnitConverter {
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_Pa_m3_mol)) {
 			convertAndAssignFinalFields(er, Pa_to_atm);
 			er.property_value_units_final = ExperimentalConstants.str_atm_m3_mol;
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_atm_cm3_mol)) {
+			convertAndAssignFinalFields(er, 1e-6);
+			er.property_value_units_final = ExperimentalConstants.str_atm_m3_mol;
+
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_atm_m3_mol)) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_atm_m3_mol;

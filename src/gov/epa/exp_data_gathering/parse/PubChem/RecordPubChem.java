@@ -866,18 +866,32 @@ public class RecordPubChem {
 			
 //			System.out.println("***TODO " + ExperimentalConstants.strViscosity + "\t" + propertyValue);
 			
-			foundNumeric = ParseUtilities.getViscosity(er, propertyValue);
+			foundNumeric = ParseUtilities.getViscosity(er, propertyValue,propertyValueNonSplit);
 //			ParseUtilities.getPressureCondition(er, propertyValue, sourceName);
 			ParseUtilities.getTemperatureCondition(er, propertyValue);
 			
-			if(propertyValue.contains("@ boiling point") || propertyValue.contains("at boiling point")) {
+			String pvLC=propertyValue.toLowerCase();
+			
+			if(pvLC.contains("@ boiling point") || pvLC.contains("at boiling point")) {
 				er.reason="Value @ boiling point";
 				er.keep=false;
 			}
 			
-			if(propertyValue.contains("@ melting point") || propertyValue.contains("at melting point")) {
+			if(pvLC.contains("@ melting point") || pvLC.contains("at melting point")) {
 				er.reason="Value @ melting point";
 				er.keep=false;
+			}
+
+			
+			
+			if(pvLC.contains("gas") || pvLC.contains("vapor")) {
+				er.reason="Gas viscosity";
+				er.keep=false;
+			}
+			
+			if(pvLC.contains("%")|| pvLC.contains("soln") || pvLC.contains("solution")) {
+				er.keep=false;
+				er.reason="Solution";
 			}
 
 			
@@ -932,6 +946,7 @@ public class RecordPubChem {
 		} else if (propertyValueNonSplit.toLowerCase().contains("calcul")
 				|| propertyValueNonSplit.toLowerCase().contains("estimat")
 				|| propertyValueNonSplit.toLowerCase().contains("(est")
+				|| propertyValueNonSplit.toLowerCase().contains("/est")
 				|| propertyValueNonSplit.toLowerCase().contains("(calc")) {
 			// TODO is above if statement bulletproof?
 //			er.updateNote(ExperimentalConstants.str_est);

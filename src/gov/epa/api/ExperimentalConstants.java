@@ -111,6 +111,7 @@ public class ExperimentalConstants {
 	public static final String str_ppb="ppb";
 	public static final String str_ppt = "ppt";
 	public static final String str_atm_m3_mol="atm-m3/mol";
+	public static final String str_atm_cm3_mol="atm-cm3/mol";
 	public static final String str_mol_m3_atm = "mol/m3-Pa";
 	public static final String str_Pa_m3_mol="Pa-m3/mol";
 	public static final String str_mmHg="mmHg";
@@ -193,7 +194,10 @@ public class ExperimentalConstants {
 	public static final String str_N_m="N/m";
 	
 	public static final String str_cP="cP";
+	public static final String str_uP="uP";
+	public static final String str_mP="mP";
 	public static final String str_P="Poise";//use longer name to avoid errors with Pa-sec type units
+	public static final String str_uPa_sec="uPa-sec";
 	public static final String str_Pa_sec="Pa-sec";
 	public static final String str_cSt="cSt";
 	
