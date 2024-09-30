@@ -111,6 +111,7 @@ public class ParseEcotox {
 		
 		//Write experimental records to excel file:
 		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
+
 		
 	}
 
@@ -206,9 +207,6 @@ public class ParseEcotox {
 
 		
 	}
-
-	
-
 
 
 	private void compareConcentrationTypeFactors(ExperimentalRecords experimentalRecords) {
@@ -553,11 +551,6 @@ public class ParseEcotox {
 
 	}
 	
-	/**
-	 * Omits if exposure_type is unknown
-	 * 
-	 * @param records
-	 */
 	private void excludeByExposureType(ExperimentalRecords records) {
 
 		int count=0;
@@ -773,25 +766,23 @@ public class ParseEcotox {
 
 		RecordEcotox.uc.debug=true;
 		
-		p.getDaphniaMagnaData();
+//		p.getDaphniaMagnaData();
 //		p.getRainbowTroutData();
 //		p.getScudData();
-//		p.getFatheadMinnowData();		
+//		p.getFatheadMinnowData();
+		p.getBluegillData();		
 		
 		
 		
 //		/************************************************************************
+		
+		
+		
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF,false);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCF);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);
 		
-//		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_BLUEGILL_LC50;
-//		String source=ExperimentalConstants.strSourceEcotox_2023_12_14;
-//		int species_number=2;//species number in Ecotox species table
-//		double durationDays=4.0;
-//		p.getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, source, species_number,durationDays);
-
 //		p.compareEcotoxToToxval();
 		
 //		p.maxExcelRows=999999;
@@ -836,8 +827,15 @@ public class ParseEcotox {
 
 		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
 	}
-	
+	private  void getBluegillData() {
+		boolean excludeByExposureType=true;
+		boolean includeConc2=false;
+		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_BLUEGILL_LC50;
+		String source=ExperimentalConstants.strSourceEcotox_2023_12_14;
+		int species_number=2;//species number in Ecotox species table
+		double durationDays=4.0;
+		
+		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
+	}
 }
-
-
 
