@@ -17,6 +17,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.PressureCondition;
+import gov.epa.exp_data_gathering.parse.TemperatureCondition;
 import gov.epa.exp_data_gathering.parse.TextUtilities;
 
 /**
@@ -99,7 +100,7 @@ public class ParseEChemPortal extends Parse {
 				String propertyValue = er.property_value_string;
 				if (!ecpr.temperature.isEmpty() && ecpr.temperature.get(i)!=null) { 
 					String temp = ecpr.temperature.get(i).replaceAll("—", "-");
-					ParseUtilities.getTemperatureCondition(er,temp);
+					TemperatureCondition.getTemperatureCondition(er,temp);
 					er.property_value_string = er.property_value_string + ";" + temp;
 				}
 				if (!ecpr.pressure.isEmpty() && ecpr.pressure.get(i)!=null) {
@@ -154,7 +155,7 @@ public class ParseEChemPortal extends Parse {
 				}
 				if (ecpr.section.equals("Density")) {
 					er.property_name = ExperimentalConstants.strDensity;
-					ParseUtilities.getDensity(er,propertyValue,propertyValue);
+					ParseUtilities.getDensity(er,propertyValue);
 				} else if (ecpr.section.equals("Melting / freezing point")) {
 					er.property_name = ExperimentalConstants.strMeltingPoint;
 					ParseUtilities.getTemperatureProperty(er,propertyValue);
@@ -169,7 +170,7 @@ public class ParseEChemPortal extends Parse {
 					ParseUtilities.getWaterSolubility(er,propertyValue,sourceName);
 				} else if (ecpr.section.equals("Vapour pressure")) {
 					er.property_name = ExperimentalConstants.strVaporPressure;
-					ParseUtilities.getVaporPressure(er,propertyValue,propertyValue);
+					ParseUtilities.getVaporPressure(er,propertyValue);
 				} else if (ecpr.section.equals("Partition coefficient")) {
 					er.property_name = ExperimentalConstants.strLogKOW;
 					ParseUtilities.getLogProperty(er,propertyValue);

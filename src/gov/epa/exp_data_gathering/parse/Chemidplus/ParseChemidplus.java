@@ -13,8 +13,10 @@ import java.util.regex.Pattern;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.TextUtilities;
 import gov.epa.exp_data_gathering.parse.Chemidplus.RecordChemidplus.PhysicalPropertyRecord;
 import gov.epa.exp_data_gathering.parse.Chemidplus.RecordChemidplus.ToxicityRecord;
 
@@ -51,9 +53,12 @@ public class ParseChemidplus extends Parse {
 	protected void createRecords() {
 		String databasePath = databaseFolder+File.separator+sourceName+"_raw_html.db";		
 
-		RecordChemidplus rc=new RecordChemidplus();
-		Vector<RecordChemidplus> records=rc.parseWebpagesInDatabase(databasePath);
-		writeOriginalRecordsToFile(records);
+		if(generateOriginalJSONRecords) {
+			RecordChemidplus rc=new RecordChemidplus();
+			Vector<RecordChemidplus> records=rc.parseWebpagesInDatabase(databasePath);
+			writeOriginalRecordsToFile(records);
+		}
+		
 	}
 	
 	/**
@@ -145,12 +150,35 @@ public class ParseChemidplus extends Parse {
 				} else {
 					er.property_name=tr.Organism;
 				}
-				er.property_name=er.property_name.replaceAll("[^a-zA-Z]+","_")+"_"+tr.Route+"_"+tr.TestType;
-				er.property_name=er.property_name.trim();
+//				er.property_name=er.property_name.replaceAll("[^a-zA-Z]+","_")+"_"+tr.Route+"_"+tr.TestType;
+								
+				String route=tr.Route.substring(0, 1).toUpperCase() + tr.Route.substring(1);
+				if(route.equals("Skin")) route="Dermal";
+				er.property_name=(route+" "+tr.Organism+" "+tr.TestType).trim();
+//				System.out.println(er.property_name);
+								
+				if(route.equals("Oral")) {
+					er.property_category="acute oral toxicity";
+				} if(route.equals("Dermal")) {
+					er.property_category="acute dermal toxicity";
+				} else if(route.equals("Inhalation")) {
+					er.property_category="acute inhalation toxicity";
+				}
+
 				
 				er.property_value_string = "Reported: "+tr.ReportedDose+"; Normalized: "+tr.NormalizedDose;
-				er.reference=tr.Source;
+//				er.reference=tr.Source;
 				
+				er.literatureSource=new LiteratureSource();
+				er.literatureSource.citation=tr.Source;
+				
+				
+				if(!tr.Effect.isBlank()) {
+					er.experimental_parameters=new Hashtable<>();
+					er.experimental_parameters.put("effect", tr.Effect.toLowerCase());
+				}
+				
+								
 				// boolean parseOK=parseAndConvertUniqueMeasurements(er,tr,MW,uv);
 				ParseUtilities.getToxicity(er,tr);
 				
@@ -201,39 +229,39 @@ public class ParseChemidplus extends Parse {
 			if (pr.PhysicalProperty.equals("Boiling Point")) {
 				er.property_name = ExperimentalConstants.strBoilingPoint;
 				er.property_value_units_original = ExperimentalConstants.str_C;
-				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				TextUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
 				valid = true;
 			} else if (pr.PhysicalProperty.equals("Henry's Law Constant")) {
 				er.property_name = ExperimentalConstants.strHenrysLawConstant;
 				er.property_value_units_original = ExperimentalConstants.str_atm_m3_mol;
 				if (pr.TempdegC!=null && !pr.TempdegC.isBlank()) { er.temperature_C = Double.parseDouble(pr.TempdegC); }
-				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				TextUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
 				valid = true;
 			} else if (pr.PhysicalProperty.equals("log P (octanol-water)")) {
 				er.property_name = ExperimentalConstants.strLogKOW;
-				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				TextUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
 				valid = true;
 			} else if (pr.PhysicalProperty.equals("Melting Point")) {
 				er.property_name = ExperimentalConstants.strMeltingPoint;
 				er.property_value_units_original = ExperimentalConstants.str_C;
-				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				TextUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
 				valid = true;
 			} else if (pr.PhysicalProperty.equals("pKa Dissociation Constant")) {
 				er.property_name = ExperimentalConstants.str_pKA;
 				if (pr.TempdegC!=null && !pr.TempdegC.isBlank()) { er.temperature_C = Double.parseDouble(pr.TempdegC); }
-				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				TextUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
 				valid = true;
 			} else if (pr.PhysicalProperty.equals("Vapor Pressure")) {
 				er.property_name = ExperimentalConstants.strVaporPressure;
 				er.property_value_units_original = ExperimentalConstants.str_mmHg;
 				if (pr.TempdegC!=null && !pr.TempdegC.isBlank()) { er.temperature_C = Double.parseDouble(pr.TempdegC); }
-				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				TextUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
 				valid = true;
 			} else if (pr.PhysicalProperty.equals("WaterSolubility")) {
 				er.property_name = ExperimentalConstants.strWaterSolubility;
 				er.property_value_units_original = ExperimentalConstants.str_mg_L;
 				if (pr.TempdegC!=null && !pr.TempdegC.isBlank()) { er.temperature_C = Double.parseDouble(pr.TempdegC); }
-				ParseUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
+				TextUtilities.getNumericalValue(er, pr.Value, pr.Value.length(), false);
 				valid = true;
 			}
 			
@@ -435,6 +463,9 @@ public class ParseChemidplus extends Parse {
 	public static void main(String[] args) {
 //		ParseChemidplus p = new ParseChemidplus("physchem");
 		ParseChemidplus p = new ParseChemidplus("tox");
+		p.generateOriginalJSONRecords=false;
+		p.writeExcelExperimentalRecordsFile=true;
+		p.writeCheckingExcelFile=false;
 		p.createFiles();
 	}
 

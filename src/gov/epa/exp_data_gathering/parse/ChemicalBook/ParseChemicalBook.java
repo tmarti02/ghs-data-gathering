@@ -27,6 +27,8 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.PressureCondition;
+import gov.epa.exp_data_gathering.parse.TemperatureCondition;
 
 /**
  * @author CRAMSLAN
@@ -34,12 +36,12 @@ import gov.epa.exp_data_gathering.parse.ParseUtilities;
  */
 
 public class ParseChemicalBook extends Parse {
-	
+
 	public ParseChemicalBook() {
 		sourceName = "ChemicalBook";
 		this.init();
 	}
-	
+
 	@Override
 	protected void createRecords() {
 		Vector<RecordChemicalBook> records = RecordChemicalBook.parseWebpagesInDatabase();
@@ -49,11 +51,11 @@ public class ParseChemicalBook extends Parse {
 	@Override
 	protected ExperimentalRecords goThroughOriginalRecords() {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
-		
+
 		try {
 			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
 			File jsonFile = new File(jsonFileName);
-			
+
 			List<RecordChemicalBook> recordsChemicalBook = new ArrayList<RecordChemicalBook>();
 			RecordChemicalBook[] tempRecords = null;
 			if (howManyOriginalRecordsFiles==1) {
@@ -71,7 +73,7 @@ public class ParseChemicalBook extends Parse {
 					}
 				}
 			}
-			
+
 			Iterator<RecordChemicalBook> it = recordsChemicalBook.iterator();
 			while (it.hasNext()) {
 				RecordChemicalBook r = it.next();
@@ -80,11 +82,11 @@ public class ParseChemicalBook extends Parse {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		
+
 		return recordsExperimental;
 	}
-	
-	
+
+
 	/**
 	 * This is the first part of what is essentially one addExperimentalRecord method for the parse class of other data sources<br> 
 	 * does the 
@@ -94,21 +96,21 @@ public class ParseChemicalBook extends Parse {
 	private void addExperimentalRecords(RecordChemicalBook cbr,ExperimentalRecords recordsExperimental) {
 		if (cbr.density != null && !cbr.density.isBlank()) {
 			addNewExperimentalRecord(cbr,ExperimentalConstants.strDensity,cbr.density,recordsExperimental);
-	    }
-        if (cbr.meltingPoint != null && !cbr.meltingPoint.isBlank()) {
+		}
+		if (cbr.meltingPoint != null && !cbr.meltingPoint.isBlank()) {
 			addNewExperimentalRecord(cbr,ExperimentalConstants.strMeltingPoint,cbr.meltingPoint,recordsExperimental);
-        }
-        if (cbr.boilingPoint != null && !cbr.boilingPoint.isBlank()) {
+		}
+		if (cbr.boilingPoint != null && !cbr.boilingPoint.isBlank()) {
 			addNewExperimentalRecord(cbr,ExperimentalConstants.strBoilingPoint,cbr.boilingPoint,recordsExperimental);
-	    }
-        if (cbr.solubility != null && !cbr.solubility.isBlank()) {
+		}
+		if (cbr.solubility != null && !cbr.solubility.isBlank()) {
 			addNewExperimentalRecord(cbr,ExperimentalConstants.strWaterSolubility,cbr.solubility,recordsExperimental);
-        }
+		}
 		if (cbr.vaporpressure != null && !cbr.vaporpressure.isBlank()) {
 			addNewExperimentalRecord(cbr,ExperimentalConstants.strVaporPressure,cbr.vaporpressure,recordsExperimental);
-	    }
+		}
 
-         
+
 	}
 
 	/**
@@ -130,7 +132,7 @@ public class ParseChemicalBook extends Parse {
 		er.property_value_string=propertyValue;
 		er.source_name= ExperimentalConstants.strSourceChemicalBook;
 		er.url = "https://www.chemicalbook.com/" + cbr.fileName;		
-		
+
 		// Adds measurement methods and notes to valid records
 		// Clears all numerical fields if property value was not obtainable
 		boolean foundNumeric = false;
@@ -138,49 +140,54 @@ public class ParseChemicalBook extends Parse {
 
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
-			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			PressureCondition.getPressureCondition(er,propertyValue,sourceName);
+			TemperatureCondition.getTemperatureCondition(er,propertyValue);
 			if (propertyValue.contains("±")) {
 				getUncertaintyRange(er,propertyValue);
 			}
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ) {
-			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
-			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+//			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
 			// performs the missing temperature check
-			ParseUtilities.getTemperatureProperty(er,propertyValue);
-			String temp = ParseUtilities.getTemperatureUnits(propertyValue);
-			if (temp.matches("")) {
-				er.reason = "missing temperature units";
-			}
+
+			foundNumeric = ParseUtilities.getTemperatureProperty(er, propertyValue);
+			PressureCondition.getPressureCondition(er, propertyValue, sourceName);
+
+			//TMM commented out following code- not sure what Christian was doing here...
+//			String temp = ParseUtilities.getTemperatureUnits(propertyValue);
+//			if (temp.matches("")) {
+//				er.reason = "missing temperature units";
+//			}
+			
 			// hard coded bits. I don't see how they can be avoided
+			//TMM: is following needed? I thought other methods should set qualifier
 			if (propertyValue.contains("<=")) {
 				er.property_value_numeric_qualifier = "<="; // CAS 15538-93-9 has a problem of alternative less than sign not registering.
 			}
-			
+
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			TemperatureCondition.getTemperatureCondition(er,propertyValue);
 			getQualitativeSolubility(er, propertyValue);
 		}
-		
+
 		if (propertyName==ExperimentalConstants.strVaporPressure) {
 			if (propertyValue.contains("l")) {
 				String s = propertyValue.replaceAll("l", "1");
 				propertyValue = s;
 				foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);
-				ParseUtilities.getTemperatureCondition(er,propertyValue);
+				TemperatureCondition.getTemperatureCondition(er,propertyValue);
 
 			} else {
-			foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+				foundNumeric = ParseUtilities.getVaporPressure(er,propertyValue);
+				TemperatureCondition.getTemperatureCondition(er,propertyValue);
 			}
-			
+
 
 
 		}
 
-		
-		
+
+
 		if (foundNumeric) {
 			uc.convertRecord(er);
 			if (propertyValue.contains("lit.")) { er.updateNote(ExperimentalConstants.str_lit); }
@@ -194,7 +201,7 @@ public class ParseChemicalBook extends Parse {
 			er.pressure_mmHg = null;
 			er.temperature_C = null;
 		}
-		
+
 		if (!(er.property_value_string.toLowerCase().contains("tox") && er.property_value_units_original==null)
 				&& (er.property_value_units_original!=null || er.property_value_qualitative!=null || er.note!=null)) {
 			er.keep = true;
@@ -214,18 +221,18 @@ public class ParseChemicalBook extends Parse {
 		if (propertyName==ExperimentalConstants.strBoilingPoint){
 			getPressureRange(er,propertyValue);
 		}
-		
-		
+
+
 		recordsExperimental.add(er);
 	}
-	
+
 	public static void main(String[] args) {
 		ParseChemicalBook p = new ParseChemicalBook();
 		p.generateOriginalJSONRecords = false;
 		p.createFiles();
 	}
-	
-	
+
+
 	/**
 	 * obtains a range of values from a string of the form 3.2 - 4.5 (units trimmed earlier), where the "-" is a minus sign.
 	 * @param er
@@ -246,15 +253,15 @@ public class ParseChemicalBook extends Parse {
 		}
 
 	}
-	
+
 	public void downloadPropertyLinksToDatabase(Vector<String> urls,String tableName, int start, int end, boolean startFresh) {
 		String databasePath = databaseFolder+File.separator+"search_property"+"_raw_html.db";
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
-		
+
 		java.sql.Connection conn=SQLite_CreateTable.create_table(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
 		Random rand = new Random();
-		
+
 		try {
 			int counter = 0;
 			for (int i = start; i < end; i++) {
@@ -262,7 +269,7 @@ public class ParseChemicalBook extends Parse {
 				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");  
 				Date date = new Date();  
 				String strDate=formatter.format(date);
-				
+
 				RawDataRecord rec=new RawDataRecord(strDate, url, "");
 				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
 				if (!haveRecord || startFresh) {
@@ -271,11 +278,11 @@ public class ParseChemicalBook extends Parse {
 						long startTime=System.currentTimeMillis();
 						rec.content= getSearchURLAndVerificationCheck(urls.get(i));
 						if (!(rec.content == null)) {
-						long endTime=System.currentTimeMillis();
-						delay = endTime-startTime;
-						rec.addRecordToDatabase(tableName, conn);
-						counter++;
-						if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
+							long endTime=System.currentTimeMillis();
+							delay = endTime-startTime;
+							rec.addRecordToDatabase(tableName, conn);
+							counter++;
+							if (counter % 100==0) { System.out.println("Downloaded "+counter+" pages"); }
 						}
 						else {
 							System.out.println("index of search url where break occurred: " + i);
@@ -287,7 +294,7 @@ public class ParseChemicalBook extends Parse {
 					Thread.sleep((long) (delay*(1+rand.nextDouble())));
 				}
 			}
-			
+
 			System.out.println("Downloaded "+counter+" pages");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -311,16 +318,16 @@ public class ParseChemicalBook extends Parse {
 				return emptysearchcheck.toString();
 			}
 			else {
-			String resultsFound = resultsHeader.text().toString();
-			if (resultsFound.matches("No results found")) {
+				String resultsFound = resultsHeader.text().toString();
+				if (resultsFound.matches("No results found")) {
 					return resultsFound; // reveals if there are no results found, second way the search can come back empty
 				}
-			else if (resultsFound.isEmpty()) {
-				System.out.println("javascript preventing any further checking. open website and spin wheel at " + url);
-				return null;
-			}
-			else {
-				Element propertiesBox = doc.select(".actionspro").first();
+				else if (resultsFound.isEmpty()) {
+					System.out.println("javascript preventing any further checking. open website and spin wheel at " + url);
+					return null;
+				}
+				else {
+					Element propertiesBox = doc.select(".actionspro").first();
 					if (!(propertiesBox == null)) {
 						String propertiesLink = propertiesBox.select("a:contains(Chemical)").attr("abs:href").toString();
 						return propertiesLink;
@@ -328,7 +335,7 @@ public class ParseChemicalBook extends Parse {
 					else {
 						return null;
 					}
-			}
+				}
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -336,7 +343,7 @@ public class ParseChemicalBook extends Parse {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Determines whether "solv" is contained in the string. Nonsensically structured.
 	 * @param er
@@ -348,7 +355,7 @@ public class ParseChemicalBook extends Parse {
 			er.reason = "solvent specified, want pure compound only";
 		}
 	}
-	
+
 	/**
 	 * Parses water solubility records and removes the ones with bad features. Similarly nonsensically structured.
 	 * @param er
@@ -368,9 +375,9 @@ public class ParseChemicalBook extends Parse {
 		if (er.keep == true) {
 			er.reason = ""; // for the moment I am hesitant to edit Parse class or override getWSaterSolubility, this is an inelegant solution
 		}
-		
+
 	}
-	
+
 	/**
 	 * guarantees that qualitative solubility descriptions are parsed properly.
 	 * @param er
@@ -403,7 +410,7 @@ public class ParseChemicalBook extends Parse {
 			er.property_value_qualitative = "decomposes";
 		if (propertyValue.contains("autoignition"))
 			er.property_value_qualitative = "autoignition";
-		
+
 		String[] qualifiers = {"none","very poor","poor","low","negligible","slight","significant","complete"};
 		for (String qual:qualifiers) {
 			if ((propertyValue.startsWith(qual) || (propertyValue.contains("solubility in water") && propertyValue.contains(qual))) &&
@@ -411,13 +418,13 @@ public class ParseChemicalBook extends Parse {
 				er.property_value_qualitative = qual;
 			}
 		}
-		
+
 		if (er.property_value_qualitative!=null || er.note!=null) {
 			er.keep = true;
 			er.reason = null;
 		}
 	}
-	
+
 	/**
 	 * populates the pressure condition field of experimental record when the pressure is given as a range.<br>
 	 * only applicable when the data comes in as Press: 760 or Press: 38.0 - 47.8
@@ -425,30 +432,30 @@ public class ParseChemicalBook extends Parse {
 	 * @param propertyValue
 	 */
 	public static void getPressureRange(ExperimentalRecord er, String propertyValue) {
-	// public static void getAveragePressureFromRange(String propertyValue) throws IllegalStateException {
+		// public static void getAveragePressureFromRange(String propertyValue) throws IllegalStateException {
 		if (propertyValue.toLowerCase().contains("press")){
 			try {
-		Matcher afterPressMatcher = Pattern.compile("(Press:)(\\s)?([0-9]*\\.?[0-9]+)(\\-)?([0-9]*\\.?[0-9]+)").matcher(propertyValue);
-		if (afterPressMatcher.find()) {
-		if (!(afterPressMatcher.group(1) == null)) {
-		String lowerPressure = afterPressMatcher.group(3);
-		String rangeCheck = afterPressMatcher.group(4);
-		String higherPressure = afterPressMatcher.group(5);
-		if (!(rangeCheck == null)) {
-			double min = Double.parseDouble(lowerPressure);
-			double max = Double.parseDouble(higherPressure);
-			er.pressure_mmHg = min+"~"+max;
-		}
-		}
-		}
-	} catch (IllegalStateException e) {
-		e.printStackTrace();
-	}
+				Matcher afterPressMatcher = Pattern.compile("(Press:)(\\s)?([0-9]*\\.?[0-9]+)(\\-)?([0-9]*\\.?[0-9]+)").matcher(propertyValue);
+				if (afterPressMatcher.find()) {
+					if (!(afterPressMatcher.group(1) == null)) {
+						String lowerPressure = afterPressMatcher.group(3);
+						String rangeCheck = afterPressMatcher.group(4);
+						String higherPressure = afterPressMatcher.group(5);
+						if (!(rangeCheck == null)) {
+							double min = Double.parseDouble(lowerPressure);
+							double max = Double.parseDouble(higherPressure);
+							er.pressure_mmHg = min+"~"+max;
+						}
+					}
+				}
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+			}
 
 		}
 	}
 
 }
-	
-	
+
+
 

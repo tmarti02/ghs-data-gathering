@@ -14,6 +14,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.TextUtilities;
 
 public class ParseChemBL extends Parse {
 
@@ -158,10 +159,10 @@ ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		Matcher pHMatcher = Pattern.compile("ph (value )?(of )?([-]?[ ]?[0-9]*\\.?[0-9]+)( to )?([-]?[ ]?[0-9]*\\.?[0-9]+)?").matcher(desc);
 		if (pHMatcher.find()) {
 			double min = Double.parseDouble(pHMatcher.group(3));
-			er.pH = ParseUtilities.formatDouble(min);
+			er.pH = TextUtilities.formatDouble(min);
 			if (pHMatcher.group(5)!=null) {
 				double max = Double.parseDouble(pHMatcher.group(5));
-				er.pH += "-" + ParseUtilities.formatDouble(max);
+				er.pH += "-" + TextUtilities.formatDouble(max);
 			}
 		}
 		

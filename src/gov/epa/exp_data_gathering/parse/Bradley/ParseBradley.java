@@ -14,6 +14,8 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.TemperatureCondition;
+import gov.epa.exp_data_gathering.parse.TextUtilities;
 import kong.unirest.json.JSONObject;
 
 /**
@@ -84,14 +86,14 @@ public class ParseBradley extends Parse {
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 
 			er.property_value_string = "Concentration (M): "+br.concentration_M;
-			ParseUtilities.getNumericalValue(er,br.concentration_M,br.concentration_M.length(),false);
+			TextUtilities.getNumericalValue(er,br.concentration_M,br.concentration_M.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_M;
 			// Christian's JSON property value string
 			JSONObject propertyValueJSON = new JSONObject();
 			propertyValueJSON.put("Concentration (M)", br.concentration_M);
 
 			if (br.notes!=null && !br.notes.isBlank()) {
-				ParseUtilities.getTemperatureCondition(er,br.notes);
+				TemperatureCondition.getTemperatureCondition(er,br.notes);
 				// er.property_value_string = er.property_value_string + "; Temperature: "+br.notes;
 				propertyValueJSON.put("Temperature", br.notes);
 			}

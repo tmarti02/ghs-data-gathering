@@ -16,6 +16,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.TextUtilities;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 
 public class ParseICF extends Parse {
@@ -157,17 +158,17 @@ public class ParseICF extends Parse {
 		
 		if (r.pressure_kPa!=null && !r.pressure_kPa.isBlank() && !er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
 			double p = Double.parseDouble(r.pressure_kPa);
-			er.pressure_mmHg = ParseUtilities.formatDouble(p*UnitConverter.kPa_to_mmHg);
+			er.pressure_mmHg = TextUtilities.formatDouble(p*UnitConverter.kPa_to_mmHg);
 			er.property_value_string += "; Pressure: " + r.pressure_kPa + " kPa";
 		} else if (r.pressure_atm!=null && !r.pressure_atm.isBlank() && !er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
 			double p = Double.parseDouble(r.pressure_atm);
-			er.pressure_mmHg = ParseUtilities.formatDouble(p*UnitConverter.atm_to_mmHg);
+			er.pressure_mmHg = TextUtilities.formatDouble(p*UnitConverter.atm_to_mmHg);
 			er.property_value_string += "; Pressure: " + r.pressure_atm + " atm";
 		} else if (er.property_name.equals(ExperimentalConstants.strBoilingPoint) && r.note!=null) {
 			Matcher bpPressureMatcher = bpPressure.matcher(r.note);
 			if (bpPressureMatcher.find()) {
 				double p = Double.parseDouble(bpPressureMatcher.group(1));
-				er.pressure_mmHg = ParseUtilities.formatDouble(p);
+				er.pressure_mmHg = TextUtilities.formatDouble(p);
 				er.property_value_string += "; Pressure: " + bpPressureMatcher.group();
 			}
 		}
@@ -186,7 +187,7 @@ public class ParseICF extends Parse {
 		}
 		
 		if (r.Uncertainty!=null && !r.Uncertainty.isBlank()) {
-			er.updateNote("Uncertainty: (+/-) " + ParseUtilities.formatDouble(Double.parseDouble(r.Uncertainty)));
+			er.updateNote("Uncertainty: (+/-) " + TextUtilities.formatDouble(Double.parseDouble(r.Uncertainty)));
 		}
 		
 		if (er.note!=null) {

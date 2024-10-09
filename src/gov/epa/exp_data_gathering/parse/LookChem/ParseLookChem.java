@@ -12,6 +12,8 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.PressureCondition;
+import gov.epa.exp_data_gathering.parse.TemperatureCondition;
 
 public class ParseLookChem extends Parse {
 	String[] versions;
@@ -161,15 +163,15 @@ public class ParseLookChem extends Parse {
 		propertyValue = propertyValue.replaceAll("(\\d),(\\d)", "$1.$2");
 		if (propertyName==ExperimentalConstants.strDensity) {
 			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
-			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
-			ParseUtilities.getTemperatureCondition(er,propertyValue);
+			PressureCondition.getPressureCondition(er,propertyValue,sourceName);
+			TemperatureCondition.getTemperatureCondition(er,propertyValue);
 		} else if (propertyName==ExperimentalConstants.strMeltingPoint || propertyName==ExperimentalConstants.strBoilingPoint ||
 				propertyName==ExperimentalConstants.strFlashPoint) {
 			foundNumeric = ParseUtilities.getTemperatureProperty(er,propertyValue);
-			ParseUtilities.getPressureCondition(er,propertyValue,sourceName);
+			PressureCondition.getPressureCondition(er,propertyValue,sourceName);
 		} else if (propertyName==ExperimentalConstants.strWaterSolubility) {
 			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue,sourceName);
-			if (er.temperature_C==null) { ParseUtilities.getTemperatureCondition(er,propertyValue); }
+			if (er.temperature_C==null) { TemperatureCondition.getTemperatureCondition(er,propertyValue); }
 			ParseUtilities.getQualitativeSolubility(er, propertyValue,sourceName);
 		}
 		

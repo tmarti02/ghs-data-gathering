@@ -16,6 +16,8 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.PressureCondition;
+import gov.epa.exp_data_gathering.parse.TemperatureCondition;
 import gov.epa.exp_data_gathering.parse.TextUtilities;
 
 /**
@@ -178,7 +180,7 @@ public class ParseEChemPortalAPI extends Parse {
 		}
 		
 		if (r.pressure!=null) {
-			ParseUtilities.getPressureCondition(er,r.pressure,sourceName);
+			PressureCondition.getPressureCondition(er,r.pressure,sourceName);
 			er.property_value_string = er.property_value_string + "; Pressure: " + r.pressure;
 		}
 		
@@ -186,7 +188,7 @@ public class ParseEChemPortalAPI extends Parse {
 			try {
 				er.temperature_C = Double.parseDouble(r.temperature);
 			} catch (NumberFormatException ex) {
-				ParseUtilities.getTemperatureCondition(er,r.temperature);
+				TemperatureCondition.getTemperatureCondition(er,r.temperature);
 			}
 			er.property_value_string = er.property_value_string + "; Temperature: " + r.temperature;
 		}
@@ -197,13 +199,13 @@ public class ParseEChemPortalAPI extends Parse {
 			er.property_value_string = er.property_value_string + "; pH: " + pHStr;
 			boolean foundpH = false;
 			try {
-				double[] range = ParseUtilities.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
+				double[] range = TextUtilities.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
 				er.pH = range[0]+"-"+range[1];
 				foundpH = true;
 			} catch (Exception ex) { }
 			if (!foundpH) {
 				try {
-					double[] range = ParseUtilities.extractAltFormatRangeFromString(pHStr,pHStr.length());
+					double[] range = TextUtilities.extractAltFormatRangeFromString(pHStr,pHStr.length());
 					er.pH = range[0]+"-"+range[1];
 					foundpH = true;
 				} catch (Exception ex) { }
@@ -225,7 +227,7 @@ public class ParseEChemPortalAPI extends Parse {
 			}
 			if (!foundpH) {
 				try {
-					double pHDouble = ParseUtilities.extractDoubleFromString(pHStr,pHStr.length());
+					double pHDouble = TextUtilities.extractLastDoubleFromString(pHStr,pHStr.length());
 					String pHDoubleStr = Double.toString(pHDouble);
 					String numQual = "";
 					if (pHDouble >= 0 && pHDouble < 1) {
