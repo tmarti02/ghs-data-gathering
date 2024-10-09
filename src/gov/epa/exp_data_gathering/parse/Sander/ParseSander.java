@@ -19,6 +19,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.Parse;
+import gov.epa.exp_data_gathering.parse.PublicSource;
 import kong.unirest.json.JSONObject;
 
 public class ParseSander extends Parse {
@@ -125,14 +126,16 @@ public class ParseSander extends Parse {
 		er.source_name = RecordSander.sourceName;
 		// er.original_source_name = rs.referenceAbbreviated.get(i);
 
-		LiteratureSource ls = new LiteratureSource();
-		er.literatureSource = ls;
-		ls.name = rs.referenceAbbreviated;
-		ls.citation = rs.referenceFull;
+		
 
 		// TODO store full citation from reference (it's in the HTML)
 
 		assignKeepAndNoteUsingType(er, rs.type);
+
+		addLiteratureSource(rs, er);
+		
+		
+		
 
 		er.updateNote(rs.notes);
 		
@@ -145,6 +148,62 @@ public class ParseSander extends Parse {
 		
 		records.add(er);
 
+	}
+	private void addLiteratureSource(RecordSander rs, ExperimentalRecord er) {
+		
+		if(rs.referenceFull!=null && rs.referenceFull.contains("HSDB")) {			
+//			System.out.println(rs.referenceFull);
+			PublicSource psOriginal=new PublicSource();
+			er.publicSourceOriginal=psOriginal;
+			psOriginal.name="HSDB";
+			psOriginal.url="https://www.nlm.nih.gov/toxnet/Accessing_HSDB_Content_from_PubChem.html";
+			return;
+		}
+
+		LiteratureSource ls = new LiteratureSource();
+		er.literatureSource = ls;
+		
+		if(rs.referenceFull!=null ) {
+
+			if(rs.referenceFull.contains(", URL")) {
+				ls.url=rs.referenceFull.substring(rs.referenceFull.indexOf(", URL ")+6,rs.referenceFull.length());
+				ls.url=ls.url.substring(0,ls.url.indexOf(" "));
+				rs.referenceFull=rs.referenceFull.substring(0,rs.referenceFull.indexOf(", URL"));
+//				System.out.println(ls.url+"\t"+rs.referenceFull);
+//				System.out.println(ls.url);
+//				System.out.println(rs.referenceFull);
+			}
+			
+			if(rs.referenceFull.contains(", doi:")) {
+				ls.doi=rs.referenceFull.substring(rs.referenceFull.indexOf(", doi:")+6,rs.referenceFull.length());
+				
+				if(ls.doi.indexOf(" ")!=-1) {
+					ls.doi=ls.doi.substring(0,ls.doi.indexOf(" "));	
+				} else {
+//					System.out.println(ls.doi);
+				}
+				
+				if(!ls.doi.contains("http")) ls.doi="https://doi.org/"+ls.doi;
+				ls.doi=ls.doi.replaceAll(", $","");
+				
+//				System.out.println(ls.doi);
+				
+				rs.referenceFull=rs.referenceFull.substring(0,rs.referenceFull.indexOf(", doi:"));
+//				System.out.println(ls.doi+"\t"+rs.referenceFull);
+			}
+			rs.referenceFull=rs.referenceFull.replaceAll(", $","");//remove trailing comma
+		}
+		
+		
+		ls.name = rs.referenceAbbreviated;
+		ls.citation = rs.referenceFull;
+		
+		er.reference=ls.citation;
+		
+//		if(ls.url!=null && ls.doi!=null && er.keep) {
+//			System.out.println(gson.toJson(ls));
+//		}
+				
 	}
 
 	public static void main(String[] args) {

@@ -60,8 +60,8 @@ public class RecordSander {
 			System.out.println(url);
 		}
 		
-		System.out.println(urls.size());
-		if(true) return;
+//		System.out.println(urls.size());
+//		if(true) return;
 		
 		//	Vector<String> html = parsePropertyLinksInDatabase();
 		
@@ -89,8 +89,17 @@ public class RecordSander {
 
 	//assigns a chemical name, cas number, and inchi key to the recordSander object
 	private static void getIdentifiers(Document doc, RecordSander rs) {
+		
 		Element chemicalName = doc.select("td[width=60%] > h1").first();
-		rs.chemicalName = chemicalName.ownText().trim().replace("→", "").trim();
+
+		rs.chemicalName=chemicalName.toString();
+		rs.chemicalName=rs.chemicalName.substring(rs.chemicalName.lastIndexOf("</a>")+4,rs.chemicalName.length());
+		rs.chemicalName=rs.chemicalName.substring(3,rs.chemicalName.indexOf("</h1>"));
+		
+		Document docName = Jsoup.parse(rs.chemicalName);
+		rs.chemicalName=docName.text();
+		
+//		rs.chemicalName=rs.chemicalName.substring(rs.chemicalName.indexOf("→")+1,rs.chemicalName.indexOf("</h1>"));
 
 		// I want this to not start with ???
 		
@@ -99,7 +108,10 @@ public class RecordSander {
 
 		Element casrn = doc.selectFirst("td[width=60%] > table > tbody > tr > td:contains(CAS RN:) ~ td");
 		if(casrn!=null && casrn.text()!=null)	rs.CASRN = casrn.text().trim();
-		 
+
+//		System.out.println(rs.CASRN+"\t"+rs.chemicalName);
+
+		
 	}
 	// scrapes the 'Sander - full' page to obtain the links for all chemicals on the site
 	private static Vector<String> ObtainWebpages() {
@@ -109,19 +121,25 @@ public class RecordSander {
 		String baseSearchLink = "https://www.henrys-law.org/henry/search_identifier.html?csrfmiddlewaretoken=ZaAV0nh7GWRmm5Z5UDshScMxM4OujgEpC2Ywh1iSPfqDh6CCafT9iHkx0lrIIfgc&x=0&y=0&search=";
 		Vector<String> allLinks = new Vector<String>();
 		try {
-			Document doc = Jsoup.connect(baseSearchLink).get();
+			
+//			Document doc = Jsoup.connect(baseSearchLink).get();//Jsoup fails to wait long enough- so download manually and then parse that file
+			Document doc = Jsoup.parse(new File("data\\experimental\\Sander_v5\\Henry's Law Constants.html"));
+						
 			//		Elements rows = doc.select("td[width=60%] > table > tbody > tr");
 			//		for (int i = 0; i < rows.size(); i++) {
 			//			allLinks.add(rows.get(i).select("td ~ td > a").attr("abs:href").toString());
 			//		}
 
-
 			Elements rows = doc.select("a");
+			
 			for (int i = 0; i < rows.size(); i++) {
 				Element row=rows.get(i);
 				String url = row.attr("href");
-				url="https://www.henrys-law.org/henry"+url;
+				
+//				url="https://www.henrys-law.org/henry"+url;
 				if(!url.contains("/henry/casrn") && !url.contains("/henry/inchikey")) continue;
+				
+				url=url.replace("https://henrys-law.org/","https://www.henrys-law.org/");
 
 				if(!allLinks.contains(url)) {
 					allLinks.add(url);
@@ -131,7 +149,7 @@ public class RecordSander {
 			}
 			return allLinks;
 		}
-		catch (IOException e) {
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
@@ -228,6 +246,11 @@ public class RecordSander {
 			getFullReference(url, rs, fullRefs);
 
 			recordno++;
+			
+//			if(rs.CASRN==null) {
+//				System.out.println("Skip since has no cas"+rs.chemicalName);
+//				continue;
+//			}
 
 			records.add(rs);
 			
