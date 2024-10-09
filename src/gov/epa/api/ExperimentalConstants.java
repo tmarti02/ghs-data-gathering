@@ -119,6 +119,8 @@ public class ExperimentalConstants {
 	public static final String str_kpa="kPa";
 	public static final String str_hpa="hPa";
 	public static final String str_mpa="mPa";
+	public static final String str_upa="uPa";
+	public static final String str_npa="nPa";
 	public static final String str_pa="Pa";
 	public static final String str_mbar="mbar";
 	public static final String str_bar="bar";

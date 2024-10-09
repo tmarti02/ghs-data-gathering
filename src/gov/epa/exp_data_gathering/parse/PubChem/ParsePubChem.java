@@ -69,6 +69,10 @@ For following properties, also find examples (look at "property_value_string_par
 public class ParsePubChem extends Parse {
 	
 	static boolean storeDTXCIDs=false;
+	boolean runOnlySelectedProperties=false;
+	List<String>selectedProperties=null;
+	
+	
 	
 	public ParsePubChem() {
 		sourceName = RecordPubChem.sourceName;
@@ -127,8 +131,9 @@ public class ParsePubChem extends Parse {
 			
 			System.out.println(recordsPubChem.size());
 			
-			Hashtable<String,String>htCID=getCID_HT();
-			
+			Hashtable<String,String>htCID=null;
+			if(this.storeDTXCIDs) htCID=getCID_HT();
+				
 			Iterator<RecordPubChem> it = recordsPubChem.iterator();
 			while (it.hasNext()) {
 				RecordPubChem r = it.next();
@@ -176,26 +181,6 @@ public class ParsePubChem extends Parse {
 //				String property=ExperimentalConstants.strLogKOW;
 //				
 //
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strWaterSolubility);//								
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strDensity,ExperimentalConstants.strVaporDensity);
-				
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strDensity);
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strVaporPressure);
-
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strLogKOW);
-				List<String>properties=Arrays.asList(ExperimentalConstants.strMeltingPoint);
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strBoilingPoint);
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strAutoIgnitionTemperature);
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strFlashPoint);
-
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strViscosity);
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strSurfaceTension);
-//				List<String>properties=Arrays.asList(ExperimentalConstants.strHenrysLawConstant);
-				
-//				List<String>properties=Arrays.asList(ExperimentalConstants.str_pKA);
-//				List<String>properties=Arrays.asList(ExperimentalConstants.str_pKA,ExperimentalConstants.str_pKAa,ExperimentalConstants.str_pKAb);
-				
-				boolean runOnly=false;
 				
 				if(r.propertyValue.contains(";") && !r.propertyName.equals("Physical Description") && !r.propertyName.equals("Color/Form") &&  !r.propertyName.equals("Odor") ) {
 				
@@ -242,7 +227,7 @@ public class ParsePubChem extends Parse {
 						er.property_value_string_parsed=propertyValue;						
 						er.property_value_string=propertyValueOriginal;
 						
-						if(runOnly && !properties.contains(er.property_name)) continue;
+						if(runOnlySelectedProperties && !selectedProperties.contains(er.property_name)) continue;
 //						if(!er.property_name.equals(property)) continue;
 						
 						if(er==null) continue;	
@@ -271,7 +256,7 @@ public class ParsePubChem extends Parse {
 					er.property_value_string_parsed=r.propertyValue;						
 					
 //					if(!er.property_name.equals(property)) continue;
-					if(runOnly && !properties.contains(er.property_name)) continue;
+					if(runOnlySelectedProperties && !selectedProperties.contains(er.property_name)) continue;
 					
 //					if(er.reason!=null && er.reason.equals("No values")) {
 //						System.out.println(r.propertyValue+"\t"+er.property_value_point_estimate_original);
@@ -361,10 +346,30 @@ public class ParsePubChem extends Parse {
 		p.howManyOriginalRecordsFiles=3;
 		p.removeDuplicates=true;
 
-		p.writeJsonExperimentalRecordsFile=true;
+		p.writeJsonExperimentalRecordsFile=false;
 		p.writeExcelExperimentalRecordsFile=true;
 		p.writeExcelFileByProperty=true;		
-		p.writeCheckingExcelFile=true;
+		p.writeCheckingExcelFile=false;
+		
+		
+//		selectedProperties=Arrays.asList(ExperimentalConstants.strWaterSolubility);//								
+//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strDensity,ExperimentalConstants.strVaporDensity);
+//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strVaporDensity);
+//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strVaporPressure);
+//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strLogKOW);
+//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strMeltingPoint);
+		p.selectedProperties=Arrays.asList(ExperimentalConstants.strBoilingPoint);
+//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strAutoIgnitionTemperature);
+//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strFlashPoint);
+
+//		selectedProperties=Arrays.asList(ExperimentalConstants.strViscosity);
+//		selectedProperties=Arrays.asList(ExperimentalConstants.strSurfaceTension);
+//		selectedProperties=Arrays.asList(ExperimentalConstants.strHenrysLawConstant);
+		
+//		selectedProperties=Arrays.asList(ExperimentalConstants.str_pKA);
+//		selectedProperties=Arrays.asList(ExperimentalConstants.str_pKA,ExperimentalConstants.str_pKAa,ExperimentalConstants.str_pKAb);
+		p.runOnlySelectedProperties=true;
+
 		
 		
 		p.createFiles();

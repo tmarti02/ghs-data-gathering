@@ -14,6 +14,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.TextUtilities;
 import gov.epa.exp_data_gathering.parse.ToxicityDictionary.DictionarySkinCorrosionIrritation;
 
 import java.util.regex.Matcher;
@@ -100,7 +101,7 @@ private void addExperimentalRecord(RecordBagley r, ExperimentalRecords recordsEx
 	Matcher matcher = digitpattern.matcher(r.PII);
 	if(matcher.find()) {
 		int index = matcher.start();
-		er.property_value_numeric_qualifier = ParseUtilities.getNumericQualifier(r.PII, index);
+		er.property_value_numeric_qualifier = TextUtilities.getNumericQualifier(r.PII, index);
 	}
 	Pattern numericpat = Pattern.compile("[0-9]*\\.?[0-9]+");
 	Matcher numbermatcher = numericpat.matcher(r.PII);

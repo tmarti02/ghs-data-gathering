@@ -16,6 +16,8 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.PressureCondition;
+import gov.epa.exp_data_gathering.parse.TextUtilities;
 
 /**
  * Parses data from echemportal.org
@@ -102,7 +104,7 @@ public class ParseEChemPortal extends Parse {
 				}
 				if (!ecpr.pressure.isEmpty() && ecpr.pressure.get(i)!=null) {
 					String pressure = ecpr.pressure.get(i).replaceAll("—", "-");
-					ParseUtilities.getPressureCondition(er,pressure,sourceName);
+					PressureCondition.getPressureCondition(er,pressure,sourceName);
 					er.property_value_string = er.property_value_string + ";" + pressure;
 				}
 				if (!ecpr.pH.isEmpty() && ecpr.pH.get(i)!=null) { 
@@ -110,13 +112,13 @@ public class ParseEChemPortal extends Parse {
 					er.property_value_string = er.property_value_string + ";" + pHStr;
 					boolean foundpH = false;
 					try {
-						double[] range = ParseUtilities.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
+						double[] range = TextUtilities.extractFirstDoubleRangeFromString(pHStr,pHStr.length());
 						er.pH = range[0]+"-"+range[1];
 						foundpH = true;
 					} catch (Exception ex) { }
 					if (!foundpH) {
 						try {
-							double[] range = ParseUtilities.extractAltFormatRangeFromString(pHStr,pHStr.length());
+							double[] range = TextUtilities.extractAltFormatRangeFromString(pHStr,pHStr.length());
 							er.pH = range[0]+"-"+range[1];
 							foundpH = true;
 						} catch (Exception ex) { }
@@ -137,13 +139,13 @@ public class ParseEChemPortal extends Parse {
 					}
 					if (!foundpH) {
 						try {
-							double pHDouble = ParseUtilities.extractDoubleFromString(pHStr,pHStr.length());
+							double pHDouble = TextUtilities.extractClosestDoubleFromString(pHStr,pHStr.length(),"pH");
 							String pHDoubleStr = Double.toString(pHDouble);
 							String numQual = "";
 							if (pHDouble >= 0 && pHDouble < 1) {
-								numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf("0"));
+								numQual = TextUtilities.getNumericQualifier(pHStr,pHStr.indexOf("0"));
 							} else {
-								numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
+								numQual = TextUtilities.getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
 							}
 							er.pH = numQual+pHDoubleStr;
 							foundpH = true;
@@ -152,7 +154,7 @@ public class ParseEChemPortal extends Parse {
 				}
 				if (ecpr.section.equals("Density")) {
 					er.property_name = ExperimentalConstants.strDensity;
-					ParseUtilities.getDensity(er,propertyValue);
+					ParseUtilities.getDensity(er,propertyValue,propertyValue);
 				} else if (ecpr.section.equals("Melting / freezing point")) {
 					er.property_name = ExperimentalConstants.strMeltingPoint;
 					ParseUtilities.getTemperatureProperty(er,propertyValue);
@@ -167,7 +169,7 @@ public class ParseEChemPortal extends Parse {
 					ParseUtilities.getWaterSolubility(er,propertyValue,sourceName);
 				} else if (ecpr.section.equals("Vapour pressure")) {
 					er.property_name = ExperimentalConstants.strVaporPressure;
-					ParseUtilities.getVaporPressure(er,propertyValue);
+					ParseUtilities.getVaporPressure(er,propertyValue,propertyValue);
 				} else if (ecpr.section.equals("Partition coefficient")) {
 					er.property_name = ExperimentalConstants.strLogKOW;
 					ParseUtilities.getLogProperty(er,propertyValue);

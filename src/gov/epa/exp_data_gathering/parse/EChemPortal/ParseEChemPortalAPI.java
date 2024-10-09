@@ -16,6 +16,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.TextUtilities;
 
 /**
  * Parses downloaded results from eChemPortal API into RecordEChemPortal API objects and translates them to ExperimentalRecords
@@ -228,9 +229,9 @@ public class ParseEChemPortalAPI extends Parse {
 					String pHDoubleStr = Double.toString(pHDouble);
 					String numQual = "";
 					if (pHDouble >= 0 && pHDouble < 1) {
-						numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf("0"));
+						numQual = TextUtilities.getNumericQualifier(pHStr,pHStr.indexOf("0"));
 					} else {
-						numQual = ParseUtilities.getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
+						numQual = TextUtilities.getNumericQualifier(pHStr,pHStr.indexOf(pHDoubleStr.charAt(0)));
 					}
 					er.pH = numQual+pHDoubleStr;
 					foundpH = true;

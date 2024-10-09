@@ -21,6 +21,8 @@ public class UnitConverter {
 	public static final double atm_to_Pa = 101325.0;
 	public static final double Pa_to_atm = 1.0 / 101325.0;
 	public static final double megaPa_to_mmHg=kPa_to_mmHg*1000.0;
+	public static final double uPa_to_mmHg = 7.50062e-9;
+	public static final double nPa_to_mmHg = 7.50062e-12;
 
 	public static final double N_m_to_dyn_cm=1000.0;
 	public static final double N_cm_to_dyn_cm=100000.0;
@@ -661,6 +663,9 @@ public class UnitConverter {
 			} else if (er.property_value_units_original.equals(ExperimentalConstants.str_lb_gal)) {
 				convertAndAssignFinalFields(er, 0.119826);
 				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+			} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)) {
+				convertAndAssignFinalFields(er, 0.000001);
+				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
 			}
 
 		} else {
@@ -805,6 +810,12 @@ public class UnitConverter {
 			er.property_value_units_final = ExperimentalConstants.str_mmHg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_kpa)) {
 			convertAndAssignFinalFields(er, kPa_to_mmHg);
+			er.property_value_units_final = ExperimentalConstants.str_mmHg;
+		}else if (er.property_value_units_original.equals(ExperimentalConstants.str_upa)) {
+			convertAndAssignFinalFields(er, uPa_to_mmHg);
+			er.property_value_units_final = ExperimentalConstants.str_mmHg;
+		}else if (er.property_value_units_original.equals(ExperimentalConstants.str_npa)) {
+			convertAndAssignFinalFields(er, nPa_to_mmHg);
 			er.property_value_units_final = ExperimentalConstants.str_mmHg;
 		} else {
 			er.flag = true;

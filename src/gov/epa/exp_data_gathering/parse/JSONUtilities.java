@@ -95,7 +95,7 @@ public class JSONUtilities {
 			BufferedWriter bwAppend = new BufferedWriter(new FileWriter(filePath,true));
 		
 			for (String s:strRecords) {
-				s=ParseUtilities.fixChars(s);
+				s=TextUtilities.fixChars(s);
 				bwAppend.write(s+"\n");
 			}
 			bwAppend.flush();

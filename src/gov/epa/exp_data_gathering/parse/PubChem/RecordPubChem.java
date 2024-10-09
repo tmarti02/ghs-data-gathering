@@ -33,6 +33,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.PressureCondition;
 import gov.epa.exp_data_gathering.parse.PublicSource;
 import gov.epa.exp_data_gathering.parse.RecordDashboard;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
@@ -750,7 +751,7 @@ public class RecordPubChem {
 		if (er.property_name.equals(ExperimentalConstants.strDensity)
 				|| er.property_name.equals(ExperimentalConstants.strVaporDensity)) {
 			foundNumeric = ParseUtilities.getDensity(er, propertyValue,propertyValueNonSplit);
-			ParseUtilities.getPressureCondition(er, propertyValue, sourceName);
+			PressureCondition.getPressureCondition(er, propertyValue, sourceName);
 			ParseUtilities.getTemperatureCondition(er, propertyValue);
 						
 //			if(!foundNumeric)
@@ -762,7 +763,7 @@ public class RecordPubChem {
 				|| er.property_name == ExperimentalConstants.strAutoIgnitionTemperature
 				|| er.property_name == ExperimentalConstants.strFlashPoint) {
 			foundNumeric = ParseUtilities.getTemperatureProperty(er, propertyValue);
-			ParseUtilities.getPressureCondition(er, propertyValue, sourceName);
+			PressureCondition.getPressureCondition(er, propertyValue, sourceName);
 			
 //			if(propertyValue.toLowerCase().contains("decomp")) {
 //				er.keep=false;
