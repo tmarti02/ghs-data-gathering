@@ -186,6 +186,9 @@ public class RecordBurkhard {
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.experimental_parameters=new Hashtable<>();
 
+		er.experimental_parameters.put("Reliability", Study_Quality_BAF);
+//		er.reliability=Study_Quality_BAF;
+
 		
 		if (!isNumeric(Log_BAF_mean) && !isNumeric(Log_BAF_max)) {
 			er.keep=false;
@@ -202,7 +205,6 @@ public class RecordBurkhard {
 		er.property_value_units_original.replace("(L/kg-ww)", "(L/kg)");
 		
 //		er.experimental_parameters.put("study quality",Study_Quality_BAF);
-		er.reliability=Study_Quality_BAF;
 		
 		try {
 			
@@ -287,7 +289,7 @@ public class RecordBurkhard {
 		
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.experimental_parameters=new Hashtable<>();
-		er.reliability=Study_Quality_BCF;
+		er.experimental_parameters.put("Reliability", Study_Quality_BCF);
 		er.experimental_parameters.put("Measurement method",method);
 		er.property_name = propertyName;
 		
@@ -425,7 +427,7 @@ public class RecordBurkhard {
 
 		er.literatureSource=new LiteratureSource();
 		er.literatureSource.citation=Reference;
-//		er.literatureSource.name=Reference;
+		er.literatureSource.name=Reference;
 		er.reference=Reference;
 		
 		Marine_Brackish_Freshwater=Marine_Brackish_Freshwater.toLowerCase();
