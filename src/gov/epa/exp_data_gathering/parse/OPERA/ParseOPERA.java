@@ -19,6 +19,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.TextUtilities;
 
 public class ParseOPERA extends Parse {
 
@@ -276,7 +277,7 @@ public class ParseOPERA extends Parse {
 			er.property_category="acute oral toxicity";
 			
 			//Use detailed code to get qualifier, min/max/point estimates: 
-			ParseUtilities.getNumericalValue(er, ro.CATMoS_LD50_str, ro.CATMoS_LD50_str.length(), false);
+			TextUtilities.getNumericalValue(er, ro.CATMoS_LD50_str, ro.CATMoS_LD50_str.length(), false);
 			er.property_value_string=ro.CATMoS_LD50_str+" "+ro.property_value_units_original;
 			splitRecords(records, er);
 			

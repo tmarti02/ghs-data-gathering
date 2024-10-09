@@ -7,61 +7,65 @@ import gov.epa.api.ExperimentalConstants;
 
 
 public class PressureCondition {
+
 	
-	int pressureIndex;
-	double conversionFactor;
-	
-	public PressureCondition(String propertyValue) {
-		setValues(propertyValue);
+	public static class PressureUnitsResults {
+		int pressureIndex;
+		double conversionFactor;
 	}
 	
 	
-	private void setValues(String propertyValue) {
+	
+	private static PressureUnitsResults setValues(String propertyValue) {
 		
-		pressureIndex=-1;
-		conversionFactor=1.0;
+		PressureUnitsResults pr=new PressureUnitsResults();
+		
+		pr.pressureIndex=-1;
+		pr.conversionFactor=1.0;
 
 		
 		if (propertyValue.contains("kpa")) {
-			pressureIndex = propertyValue.indexOf("kpa");
-			conversionFactor = UnitConverter.kPa_to_mmHg;
+			pr.pressureIndex = propertyValue.indexOf("kpa");
+			pr.conversionFactor = UnitConverter.kPa_to_mmHg;
 		} else if (propertyValue.contains("mmhg") || propertyValue.contains("mm hg") || propertyValue.contains("mm")) {
-			pressureIndex = propertyValue.indexOf("mm");
+			pr.pressureIndex = propertyValue.indexOf("mm");
 		} else if (propertyValue.contains("atm")) {
-			pressureIndex = propertyValue.indexOf("atm");
-			conversionFactor = UnitConverter.atm_to_mmHg;
+			pr.pressureIndex = propertyValue.indexOf("atm");
+			pr.conversionFactor = UnitConverter.atm_to_mmHg;
 		} else if (propertyValue.contains("hpa")) {
-			pressureIndex = propertyValue.indexOf("hpa");
-			conversionFactor = UnitConverter.hPa_to_mmHg;
+			pr.pressureIndex = propertyValue.indexOf("hpa");
+			pr.conversionFactor = UnitConverter.hPa_to_mmHg;
 		} else if (propertyValue.contains("pa")) {
 
 			int epaIndex=propertyValue.indexOf("epa");
-			pressureIndex = propertyValue.indexOf("pa");
+			pr.pressureIndex = propertyValue.indexOf("pa");
 			
-			if(epaIndex==pressureIndex-1) {
-				pressureIndex=-1;
+			if(epaIndex==pr.pressureIndex-1) {
+				pr.pressureIndex=-1;
 //				System.out.println(propertyValue+"\tfound EPA when looking for pressure condition");
 			}
 			
-			conversionFactor = UnitConverter.Pa_to_mmHg;
+			pr.conversionFactor = UnitConverter.Pa_to_mmHg;
 		} else if (propertyValue.contains("mbar")) {
-			pressureIndex = propertyValue.indexOf("mb");
-			conversionFactor = UnitConverter.hPa_to_mmHg;
+			pr.pressureIndex = propertyValue.indexOf("mb");
+			pr.conversionFactor = UnitConverter.hPa_to_mmHg;
 		} else if (propertyValue.contains("bar")) {
-			pressureIndex = propertyValue.indexOf("bar");
-			conversionFactor = UnitConverter.bar_to_mmHg;
+			pr.pressureIndex = propertyValue.indexOf("bar");
+			pr.conversionFactor = UnitConverter.bar_to_mmHg;
 		} else if (propertyValue.contains("torr")) {
-			pressureIndex = propertyValue.indexOf("torr");
+			pr.pressureIndex = propertyValue.indexOf("torr");
 		} else if (propertyValue.contains("psi")) {
-			pressureIndex = propertyValue.indexOf("psi");
-			conversionFactor = UnitConverter.psi_to_mmHg;
+			pr.pressureIndex = propertyValue.indexOf("psi");
+			pr.conversionFactor = UnitConverter.psi_to_mmHg;
 		} else if (propertyValue.contains("upa")) {
-			pressureIndex = propertyValue.indexOf("upa");
-			conversionFactor = UnitConverter.uPa_to_mmHg;
+			pr.pressureIndex = propertyValue.indexOf("upa");
+			pr.conversionFactor = UnitConverter.uPa_to_mmHg;
 		} else if (propertyValue.contains("npa")) {
-			pressureIndex = propertyValue.indexOf("npa");
-			conversionFactor = UnitConverter.nPa_to_mmHg;
+			pr.pressureIndex = propertyValue.indexOf("npa");
+			pr.conversionFactor = UnitConverter.nPa_to_mmHg;
 		}
+		
+		return pr;
 	}
 	
 	/**
@@ -81,14 +85,13 @@ public class PressureCondition {
 //		int pressureIndex = -1;
 //		double conversionFactor = 1.0;
 		
-		PressureCondition pc=new PressureCondition(propertyValue);
-		
+		PressureUnitsResults pur=setValues(propertyValue);
 		
 		
 		// If any pressure units were found, looks for the last number that precedes them
 		boolean foundNumeric = false;
 
-		if (pc.pressureIndex > 0) {
+		if (pur.pressureIndex > 0) {
 			if (sourceName.contains(ExperimentalConstants.strSourceEChemPortal)) {
 //				if (!foundNumeric) {
 //					int pressureIndexOriginal = pressureIndex;
@@ -97,10 +100,10 @@ public class PressureCondition {
 //					er.pressure_mmHg = mantissa*Math.pow(10, magnitude);
 //				}
 				if (!foundNumeric) {
-					double[] range = TextUtilities.extractFirstDoubleRangeFromString(propertyValue,pc.pressureIndex);
+					double[] range = TextUtilities.extractFirstDoubleRangeFromString(propertyValue,pur.pressureIndex);
 					if (range!=null) {
-						String min = TextUtilities.formatDouble(range[0]*pc.conversionFactor);
-						String max = TextUtilities.formatDouble(range[1]*pc.conversionFactor);
+						String min = TextUtilities.formatDouble(range[0]*pur.conversionFactor);
+						String max = TextUtilities.formatDouble(range[1]*pur.conversionFactor);
 						er.pressure_mmHg = min+"-"+max;
 						foundNumeric = true;
 					}
@@ -108,10 +111,10 @@ public class PressureCondition {
 				if (!foundNumeric) {
 					try {
 
-						double[] range = TextUtilities.extractAltFormatRangeFromString(propertyValue,pc.pressureIndex);
+						double[] range = TextUtilities.extractAltFormatRangeFromString(propertyValue,pur.pressureIndex);
 						if (range!=null) {
-							String min = TextUtilities.formatDouble(range[0]*pc.conversionFactor);
-							String max = TextUtilities.formatDouble(range[1]*pc.conversionFactor);
+							String min = TextUtilities.formatDouble(range[0]*pur.conversionFactor);
+							String max = TextUtilities.formatDouble(range[1]*pur.conversionFactor);
 							er.pressure_mmHg = min+"-"+max;
 							foundNumeric = true;
 						}
@@ -123,7 +126,7 @@ public class PressureCondition {
 				}
 				if (!foundNumeric) {
 					try {
-						Matcher caMatcher = Pattern.compile(".*?(ca. )?([-]?[ ]?[0-9]*\\.?[0-9]+)( ca. )([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(propertyValue.substring(0,pc.pressureIndex));
+						Matcher caMatcher = Pattern.compile(".*?(ca. )?([-]?[ ]?[0-9]*\\.?[0-9]+)( ca. )([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(propertyValue.substring(0,pur.pressureIndex));
 						if (caMatcher.find()) {
 							String numQual = caMatcher.group(1).isBlank() ? "" : "~";
 							String min = TextUtilities.formatDouble(Double.parseDouble(caMatcher.group(2)));
@@ -138,7 +141,7 @@ public class PressureCondition {
 			}
 			if (!foundNumeric) {
 				try {
-					er.pressure_mmHg = TextUtilities.formatDouble(pc.conversionFactor*TextUtilities.extractLastDoubleFromString(propertyValue,pc.pressureIndex));
+					er.pressure_mmHg = TextUtilities.formatDouble(pur.conversionFactor*TextUtilities.extractLastDoubleFromString(propertyValue,pur.pressureIndex));
 					foundNumeric = true;
 				} catch (NumberFormatException ex) {
 					// NumberFormatException means no numerical value was found; leave foundNumeric = false and do nothing else

@@ -4,7 +4,7 @@ import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
+//import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 //import java.util.Hashtable;
@@ -461,8 +461,8 @@ public class ParseToxVal {
 //		p.getAcuteAquaticExperimentalRecords(versionV93,"Fathead minnow",ToxValQuery.FATHEAD_MINNOW_DURATION,ToxValQuery.TYPE_LC50,ToxValQuery.CRITICAL_EFFECT,ToxValQuery.propertyCategoryAcuteAquaticToxicity);
 //		p.getAcuteAquaticExperimentalRecords(versionProd,"Fathead minnow",ToxValQuery.FATHEAD_MINNOW_DURATION,ToxValQuery.TYPE_LC50,ToxValQuery.CRITICAL_EFFECT,ToxValQuery.propertyCategoryAcuteAquaticToxicity);
 
-//		String version=versionV94;
-		String version=versionProd;
+		String version=versionV94;
+//		String version=versionProd;
 		
 		p.getBCFExperimentalRecords(version);
 //		p.getBCFExperimentalRecordsFishWholeBody(version);

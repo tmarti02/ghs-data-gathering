@@ -556,7 +556,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 						String strValue=null;
 						
 						if(headers.get(i).equals("chemical_name")) {//TODO is this the only one?
-							strValue= ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
+							strValue= TextUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
 						} else {
 							strValue= StringEscapeUtils.unescapeHtml4(value.toString());
 						}

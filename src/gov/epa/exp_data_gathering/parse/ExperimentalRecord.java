@@ -448,13 +448,13 @@ public class ExperimentalRecord {
 				case "java.lang.String":
 					if (myField.get(this)==null) val="";	
 					else val=myField.get(this)+"";						
-					val=ParseUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'")));					
+					val=TextUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(val.replaceAll("(?<!\\\\)'", "\'")));					
 					break;
 				
 				case "java.lang.Double":
 					if (myField.get(this)==null) val="";	
 					else {
-						val=ParseUtilities.formatDouble((Double)myField.get(this));						
+						val=TextUtilities.formatDouble((Double)myField.get(this));						
 					}										
 					break;
 					

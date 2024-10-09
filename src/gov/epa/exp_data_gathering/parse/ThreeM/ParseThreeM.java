@@ -17,6 +17,8 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.PressureCondition;
+import gov.epa.exp_data_gathering.parse.TemperatureCondition;
 
 public class ParseThreeM extends Parse {
 
@@ -27,7 +29,7 @@ public class ParseThreeM extends Parse {
 
 	@Override
 	protected void createRecords() {
-		Vector<JsonObject> records = RecordThreeM.parseThreeMRecordsFromExcel();
+		Vector<JsonObject> records = RecordThreeM.parseRecordsFromExcel();
 		writeOriginalRecordsToFile(records);
 	}
 
@@ -257,12 +259,12 @@ public class ParseThreeM extends Parse {
 
 	private void assignExperimentalParameters(RecordThreeM r3m, ExperimentalRecord er) {
 		if (r3m.property_measurement_conditions != null) {
-			ParseUtilities.getPressureCondition(er, r3m.property_measurement_conditions, "r3m");
+			PressureCondition.getPressureCondition(er, r3m.property_measurement_conditions, "r3m");
 
 			if (r3m.property_measurement_conditions.contains("-")) {
 				getConditions(er, r3m.property_measurement_conditions);
 			} else {
-				ParseUtilities.getTemperatureCondition(er,
+				TemperatureCondition.getTemperatureCondition(er,
 						r3m.property_measurement_conditions.replace("degrees", "").replace("+", ""));
 			}
 		}

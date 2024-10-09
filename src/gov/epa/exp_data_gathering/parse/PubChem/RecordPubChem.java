@@ -36,6 +36,7 @@ import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.PressureCondition;
 import gov.epa.exp_data_gathering.parse.PublicSource;
 import gov.epa.exp_data_gathering.parse.RecordDashboard;
+import gov.epa.exp_data_gathering.parse.TemperatureCondition;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Data;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.IdentifierData;
@@ -750,9 +751,9 @@ public class RecordPubChem {
 
 		if (er.property_name.equals(ExperimentalConstants.strDensity)
 				|| er.property_name.equals(ExperimentalConstants.strVaporDensity)) {
-			foundNumeric = ParseUtilities.getDensity(er, propertyValue,propertyValueNonSplit);
+			foundNumeric = ParseUtilities.getDensity(er, propertyValue);
 			PressureCondition.getPressureCondition(er, propertyValue, sourceName);
-			ParseUtilities.getTemperatureCondition(er, propertyValue);
+			TemperatureCondition.getTemperatureCondition(er, propertyValue);
 						
 //			if(!foundNumeric)
 //				System.out.println("Density\t"+foundNumeric+"\t"+propertyValue);	
@@ -809,7 +810,7 @@ public class RecordPubChem {
 			foundNumeric = ParseUtilities.getWaterSolubility(er, propertyValue, sourceName);
 
 			if (er.temperature_C == null) {
-				ParseUtilities.getTemperatureCondition(er, propertyValue);
+				TemperatureCondition.getTemperatureCondition(er, propertyValue);
 			}
 			
 			ParseUtilities.get_pH_Condition(er, propertyValue);
@@ -831,12 +832,12 @@ public class RecordPubChem {
 			// TODO note- that ones with qualitative solubility will have keep=false due to
 			// missing units
 		} else if (er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
-			foundNumeric = ParseUtilities.getVaporPressure(er, propertyValue,propertyValue);
-			ParseUtilities.getTemperatureCondition(er, propertyValue);
+			foundNumeric = ParseUtilities.getVaporPressure(er, propertyValue);
+			TemperatureCondition.getTemperatureCondition(er, propertyValue);
 		} else if (er.property_name == ExperimentalConstants.strHenrysLawConstant) {
 			foundNumeric = ParseUtilities.getHenrysLawConstant(er, propertyValue);
 			
-			ParseUtilities.getTemperatureCondition(er, propertyValue);
+			TemperatureCondition.getTemperatureCondition(er, propertyValue);
 			
 //			if(!foundNumeric)
 //				System.out.println("HLC\t"+foundNumeric+"\t"+propertyValue);	
@@ -857,7 +858,7 @@ public class RecordPubChem {
 
 			foundNumeric = ParseUtilities.getLogProperty(er, propertyValue);
 			er.property_value_units_original = ExperimentalConstants.str_LOG_UNITS;
-			ParseUtilities.getTemperatureCondition(er, propertyValue);
+			TemperatureCondition.getTemperatureCondition(er, propertyValue);
 			ParseUtilities.get_pH_Condition(er, propertyValue);
 			
 		} else if (er.property_name == ExperimentalConstants.strRefractiveIndex) {
@@ -869,7 +870,7 @@ public class RecordPubChem {
 			
 			foundNumeric = ParseUtilities.getViscosity(er, propertyValue,propertyValueNonSplit);
 //			ParseUtilities.getPressureCondition(er, propertyValue, sourceName);
-			ParseUtilities.getTemperatureCondition(er, propertyValue);
+			TemperatureCondition.getTemperatureCondition(er, propertyValue);
 			
 			String pvLC=propertyValue.toLowerCase();
 			
@@ -901,7 +902,7 @@ public class RecordPubChem {
 //			System.out.println("***TODO " + ExperimentalConstants.strSurfaceTension + "\t" + propertyValue);			
 			foundNumeric = ParseUtilities.getSurfaceTension(er, propertyValue);
 //			ParseUtilities.getPressureCondition(er, propertyValue, sourceName);
-			ParseUtilities.getTemperatureCondition(er, propertyValue);
+			TemperatureCondition.getTemperatureCondition(er, propertyValue);
 
 			
 		} else if (er.property_name == ExperimentalConstants.strAppearance

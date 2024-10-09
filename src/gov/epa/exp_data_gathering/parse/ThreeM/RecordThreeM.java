@@ -32,7 +32,7 @@ public class RecordThreeM {
 
 	private static final String fileName = "physchem_brief_extraction_16mar2021_CRnotes3_rrs.xlsx";
 
-	public static Vector<JsonObject> parseThreeMRecordsFromExcel() {
+	public static Vector<JsonObject> parseRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(0,false);
 		return records;

@@ -6,431 +6,19 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.text.StringEscapeUtils;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.Chemidplus.RecordChemidplus.ToxicityRecord;
+import gov.epa.exp_data_gathering.parse.TemperatureCondition.TempUnitsResult;
 
 public class ParseUtilities extends Parse {
 
 	public static Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues().create();		
 
 	
-	/**
-	 * This version tries to find the numbers which are closest to the unitsIndex
-	 * 
-	 * @param er
-	 * @param propertyValue
-	 * @param unitsIndex
-	 * @param badUnits
-	 * @return
-	 */
-	public static boolean getNumericalValue(ExperimentalRecord er, String propertyValue, int unitsIndex, boolean badUnits) {
-
-		if (badUnits) unitsIndex = propertyValue.length();
-		
-		int unitsIndexOriginal=unitsIndex;
-
-		Double plusMinus=null;
-
-		if (propertyValue.contains("Â±")) {
-			try {
-				plusMinus=Double.parseDouble(propertyValue.substring(propertyValue.indexOf("Â±")+1,unitsIndex));
-			} catch (Exception ex) {
-//				ex.printStackTrace();
-			}
-			unitsIndex = Math.min(propertyValue.indexOf("Â±"),unitsIndex);
-		}
-		
-		if (propertyValue.contains("±")) {//TMM added 10/9/24- ideally this should be done with regex but this is quick way to preserve +/- number
-			try {
-				plusMinus=Double.parseDouble(propertyValue.substring(propertyValue.indexOf("±")+1,unitsIndex));
-			} catch (Exception ex) {
-//				ex.printStackTrace();
-			}
-//			System.out.println(propertyValue+"\t"+strPlusMinus);
-			unitsIndex = Math.min(propertyValue.indexOf("±"),unitsIndex);//make it so that +/- value isnt selected as the value 
-		}
-		
-			
-		
-//		System.out.println("here1\t"+unitsIndex+"\t"+propertyValue);
-		
-		Pattern tempPattern = Pattern.compile("[0-9.]+ ?\\u00B0 ?[CcFfKk]");
-		//Following block changes the unitsIndex if a temperature is found. Does this help?
-		//TODO difficulty is when the temperature appears before or after the property value
-
-		if (!er.property_name.equals(ExperimentalConstants.strMeltingPoint)
-				&& !er.property_name.equals(ExperimentalConstants.strBoilingPoint)
-				&& !er.property_name.equals(ExperimentalConstants.strFlashPoint)
-//				&& !er.property_name.equals(ExperimentalConstants.strDensity)
-//				&& !er.property_name.equals(ExperimentalConstants.strVaporDensity)
-				&& unitsIndex == propertyValue.length()) {//only do it when have bad units- assumes temp appears after property value
-			Matcher tempMatcher = tempPattern.matcher(propertyValue);
-			if (tempMatcher.find()) {
-//				if(tempMatcher.start()!=unitsIndex) {
-//					System.out.println(unitsIndex+"\t"+tempMatcher.start()+"\t"+propertyValue);
-//				}
-				unitsIndex = tempMatcher.start();
-			}
-		}
-		
-//		if (er.property_name.equals(ExperimentalConstants.strDensity) || er.property_name.equals(ExperimentalConstants.strVaporDensity)) {
-//			if(propertyValue.contains(":")) unitsIndex = propertyValue.length();
-//		}
-		//Following finds the numerical value in sci notation where numerical value is located closest to the selected unitsIndex
-		boolean foundNumeric = false;
-		
-		foundNumeric = findClosestScientificNotationValue(er, propertyValue, unitsIndex, unitsIndexOriginal,
-				foundNumeric);
-		
-
-//		System.out.println("here3\t"+unitsIndex+"\t"+propertyValue);
-		
-		if (!foundNumeric) {
-			try {
-
-				double[] range=null;
-				
-				if(badUnits) {
-//					System.out.println("bad units look for range\t"+propertyValue);
-					range = TextUtilities.extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
-				} else {
-					range = TextUtilities.extractClosestDoubleRangeFromString(propertyValue,unitsIndex);
-				}
-				
-				if (!badUnits && range!=null) {
-					if (range[0]<=range[1]) {
-						er.property_value_min_original = range[0];
-						er.property_value_max_original = range[1];
-						foundNumeric = true;
-					} else {
-						er.keep = false;
-						er.reason = "Failed range correction";
-					}
-				}
-				if (!badUnits && (propertyValue.contains("~") || propertyValue.contains("ca."))) {
-					er.property_value_numeric_qualifier = "~";
-				}
-			} catch (Exception ex) {
-//				ex.printStackTrace();
-			}
-		}
-
-		if (!foundNumeric) {
-			try {
-				
-				double[] range = TextUtilities.extractAltFormatRangeFromString(propertyValue,unitsIndex);
-				
-				if (!badUnits && range!=null) {
-					er.property_value_min_original = range[0];
-					er.property_value_max_original = range[1];
-					foundNumeric = true;
-				}
-				if (!badUnits && (propertyValue.contains("~") || propertyValue.contains("ca."))) {
-					er.property_value_numeric_qualifier = "~";
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-		
-		if (!foundNumeric) {
-			
-			
-			try {
-				
-				Double propertyValueAsDouble = TextUtilities.extractClosestDoubleFromString(propertyValue,unitsIndex,er.property_name);
-				
-				propertyValue = StringEscapeUtils.unescapeHtml4(propertyValue);
-				int propertyValueIndex = -1;
-				
-				if ( propertyValueAsDouble >= 0 && propertyValueAsDouble < 1) {
-					// Bug fix for zeroes, 12/17/2020 - This if statement is new; previous was just the contents of the "else" clause
-					if (!propertyValue.contains(".")) {
-						// If property value is the integer 0, sets start index to the location of the 0
-						
-						propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf("0");
-						
-//						System.out.println(propertyValue+"\t"+propertyValueIndex);
-					} else {
-						// Otherwise, sets start index to the location of the 0 (if present) or the . (if formatted .xx instead of 0.xx)
-						// Without the above "if", if an entry contains just the integer 0, the Math.min will select -1 as the index since it can't find a .
-						propertyValueIndex = Math.min(propertyValue.replaceAll("\\s","").indexOf("0"),propertyValue.replaceAll("\\s","").indexOf("."));
-					}
-				} else {
-					propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
-				}
-				
-				if (!badUnits) {
-					er.property_value_point_estimate_original = propertyValueAsDouble;
-					foundNumeric = true;
-					if (propertyValueIndex > 0) {
-						String checkSymbol = propertyValue.replaceAll("\\s","");
-						er.property_value_numeric_qualifier = TextUtilities.getNumericQualifier(checkSymbol,propertyValueIndex);
-					}
-				}
-			} catch (Exception ex) {
-//				ex.printStackTrace();
-				// NumberFormatException means no numerical value was found; leave foundNumeric = false and do nothing else
-			}
-		}
-		
-
-//		if(er.property_value_units_original!=null && er.property_value_units_original.equals("%")) {
-//			System.out.println(unitsIndex+"\t"+propertyValue);			
-//			System.out.println(gson.toJson(er));
-//		}
-		
-//		if(foundNumeric && unitsIndex!=unitsIndexOriginal && er.property_name.equals(ExperimentalConstants.strDensity)) {
-//			System.out.println("unitsIndex changed:"+unitsIndexOriginal+"\t"+unitsIndex+"\t"+er.property_value_point_estimate_original+"\t"+er.property_value_units_original+"\t"+ propertyValue);
-//		}
-		
-//		if(propertyValue.contains("<0.01mPa (20 °C)")) {
-//			System.out.println(unitsIndexOriginal+"\t"+unitsIndex+"\t"+er.property_value_point_estimate_original+"\t"+er.property_value_units_original+"\t"+ propertyValue);
-//		}
-
-		if(foundNumeric && plusMinus!=null) {
-			//TODO is this bullet proof?
-			//TMM added 10/9/24
-			er.property_value_max_original=er.property_value_point_estimate_original+plusMinus;
-			er.property_value_min_original=er.property_value_point_estimate_original-plusMinus;
-			er.property_value_point_estimate_original=null;
-			
-		}
-		
-		
-		return foundNumeric;
-	}
-
-	/**
-	 * Finds the scientific notation value that is closest in location to the unitsIndex
-	 * 
-	 * @param er
-	 * @param propertyValue
-	 * @param unitsIndex
-	 * @param unitsIndexOriginal
-	 * @param foundNumeric
-	 * @return
-	 */
-	private static boolean findClosestScientificNotationValue(ExperimentalRecord er, String propertyValue,
-			int unitsIndex, int unitsIndexOriginal, boolean foundNumeric) {
-		try {
-			Matcher sciMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?(e|x[ ]?10\\^?|\\*?10\\^)[ ]?[\\(]?([-|\\+]?[ ]?[0-9]+)[\\)]?").matcher(propertyValue.toLowerCase().substring(0,unitsIndex));
-			
-			int minDiff=9999;
-			String strMantissaMin="";
-			String strMagnitudeMin="";
-			
-			int count=0;
-			
-			while (sciMatcher.find()) {
-				
-				count++;
-				String strMantissa = sciMatcher.group(1).trim();
-				
-				String strMagnitude = sciMatcher.group(3);
-				
-//				int propertyValueIndex2=propertyValue.indexOf(strMantissa);
-								
-				int propertyValueIndex2=sciMatcher.start(1);
-				
-//				System.out.println(propertyValueIndex2+"\t"+propertyValueIndex2b+"\t"+unitsIndex);
-								
-				int diff=unitsIndexOriginal-propertyValueIndex2;
-
-				if(diff<minDiff) {
-					minDiff=diff;
-					strMantissaMin=strMantissa;
-					strMagnitudeMin=strMagnitude;
-				}
-			}
-			
-			
-			if(!strMagnitudeMin.isBlank()) {
-				
-//				if(count>1)
-//					System.out.println(strMantissaMin+"\t"+strMagnitudeMin+"\t"+er.property_value_units_original+"\t"+propertyValue);
-				
-				foundNumeric = true;
-				
-				Double mantissa = Double.parseDouble(strMantissaMin.replaceAll("\\s",""));
-				Double magnitude =  Double.parseDouble(strMagnitudeMin.replaceAll("\\s","").replaceAll("\\+", ""));
-
-				er.property_value_point_estimate_original = mantissa*Math.pow(10, magnitude);
-				
-				if (propertyValue.indexOf(strMantissaMin) > 0) {
-					String checkSymbol = StringEscapeUtils.unescapeHtml4(propertyValue.replaceAll("\\s",""));
-					int propertyValueIndex = checkSymbol.indexOf(strMantissaMin);
-//					System.out.println(unitsIndex+"\t"+propertyValueIndex+"\t*"+strMantissa+"*\t"+checkSymbol);
-					er.property_value_numeric_qualifier = TextUtilities.getNumericQualifier(checkSymbol,propertyValueIndex);
-					
-//					if(!er.property_value_numeric_qualifier.isBlank()) {
-//						System.out.println(er.property_value_numeric_qualifier);
-//					}
-				}
-
-			}
-			
-		} catch (Exception ex) {
-//			System.out.println(propertyValue);
-//			ex.printStackTrace();
-		}
-		return foundNumeric;
-	}
-	
-	
-	public static boolean getNumericalValueOld(ExperimentalRecord er, String propertyValue, int unitsIndex, boolean badUnits) {
-
-		if (badUnits) unitsIndex = propertyValue.length();
-		
-//		System.out.println("here1\t"+unitsIndex+"\t"+propertyValue);
-		
-		Pattern tempPattern = Pattern.compile("[0-9.]+ ?\\u00B0 ?[CcFfKk]");
-		if (propertyValue.contains("Â±")) { unitsIndex = Math.min(propertyValue.indexOf("Â±"),unitsIndex); }
-
-		//Following block changes the unitsIndex if a temperature is found. Does this help?
-		//TODO difficulty is when the temperature appears before or after the property value
-
-		if (!er.property_name.equals(ExperimentalConstants.strMeltingPoint)
-				&& !er.property_name.equals(ExperimentalConstants.strBoilingPoint)
-				&& !er.property_name.equals(ExperimentalConstants.strFlashPoint)
-//				&& !er.property_name.equals(ExperimentalConstants.strDensity)
-//				&& !er.property_name.equals(ExperimentalConstants.strVaporDensity)
-				&& unitsIndex == propertyValue.length()) {
-			Matcher tempMatcher = tempPattern.matcher(propertyValue);
-			if (tempMatcher.find()) {
-//				if(tempMatcher.start()!=unitsIndex) {
-//					System.out.println(unitsIndex+"\t"+tempMatcher.start()+"\t"+propertyValue);
-//				}
-				unitsIndex = tempMatcher.start();
-			}
-		}	
-		
-		boolean foundNumeric = false;
-		foundNumeric = findFirstScientificNotationValue(er, propertyValue, unitsIndex, badUnits, foundNumeric);
-
-//		System.out.println("here3\t"+unitsIndex+"\t"+propertyValue);
-		
-		if (!foundNumeric) {
-			try {
-				double[] range = TextUtilities.extractFirstDoubleRangeFromString(propertyValue,unitsIndex);
-				if (!badUnits && range!=null) {
-					if (range[0]<=range[1]) {
-						er.property_value_min_original = range[0];
-						er.property_value_max_original = range[1];
-						foundNumeric = true;
-					} else {
-						er.keep = false;
-						er.reason = "Failed range correction";
-					}
-				}
-				if (!badUnits && (propertyValue.contains("~") || propertyValue.contains("ca."))) {
-					er.property_value_numeric_qualifier = "~";
-				}
-			} catch (Exception ex) {
-//				ex.printStackTrace();
-			}
-		}
-
-		if (!foundNumeric) {
-			try {
-				double[] range = TextUtilities.extractAltFormatRangeFromString(propertyValue,unitsIndex);
-				if (!badUnits && range!=null) {
-					er.property_value_min_original = range[0];
-					er.property_value_max_original = range[1];
-					foundNumeric = true;
-				}
-				if (!badUnits && (propertyValue.contains("~") || propertyValue.contains("ca."))) {
-					er.property_value_numeric_qualifier = "~";
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-		
-		if (!foundNumeric) {
-			
-			
-			try {
-				double propertyValueAsDouble = TextUtilities.extractLastDoubleFromString(propertyValue,unitsIndex);
-				propertyValue = StringEscapeUtils.unescapeHtml4(propertyValue);
-				int propertyValueIndex = -1;
-				if (propertyValueAsDouble >= 0 && propertyValueAsDouble < 1) {
-					// Bug fix for zeroes, 12/17/2020 - This if statement is new; previous was just the contents of the "else" clause
-					if (!propertyValue.contains(".")) {
-						// If property value is the integer 0, sets start index to the location of the 0
-						propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf("0");
-					} else {
-						// Otherwise, sets start index to the location of the 0 (if present) or the . (if formatted .xx instead of 0.xx)
-						// Without the above "if", if an entry contains just the integer 0, the Math.min will select -1 as the index since it can't find a .
-						propertyValueIndex = Math.min(propertyValue.replaceAll("\\s","").indexOf("0"),propertyValue.replaceAll("\\s","").indexOf("."));
-					}
-				} else {
-					propertyValueIndex = propertyValue.replaceAll("\\s","").indexOf(Double.toString(propertyValueAsDouble).charAt(0));
-				}
-				
-				if (!badUnits) {
-					er.property_value_point_estimate_original = propertyValueAsDouble;
-					foundNumeric = true;
-					if (propertyValueIndex > 0) {
-						String checkSymbol = propertyValue.replaceAll("\\s","");
-						er.property_value_numeric_qualifier = TextUtilities.getNumericQualifier(checkSymbol,propertyValueIndex);
-					}
-				}
-			} catch (Exception ex) {
-				// NumberFormatException means no numerical value was found; leave foundNumeric = false and do nothing else
-			}
-		}
-		
-
-//		if(er.property_value_units_original!=null && er.property_value_units_original.equals("%")) {
-//			System.out.println(unitsIndex+"\t"+propertyValue);			
-//			System.out.println(gson.toJson(er));
-//		}
-
-		
-		return foundNumeric;
-	}
-
-	private static boolean findFirstScientificNotationValue(ExperimentalRecord er, String propertyValue, int unitsIndex,
-			boolean badUnits, boolean foundNumeric) {
-		try {
-			Matcher sciMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?(e|x[ ]?10\\^?|\\*?10\\^)[ ]?[\\(]?([-|\\+]?[ ]?[0-9]+)[\\)]?").matcher(propertyValue.toLowerCase().substring(0,unitsIndex));
-			
-			//Gabriel's old code which assumes only one instance of scientific notation
-			if (sciMatcher.find()) {
-//			while (sciMatcher.find()) {
-				String strMantissa = sciMatcher.group(1).trim();
-				String strMagnitude = sciMatcher.group(3);
-				Double mantissa = Double.parseDouble(strMantissa.replaceAll("\\s",""));
-				Double magnitude =  Double.parseDouble(strMagnitude.replaceAll("\\s","").replaceAll("\\+", ""));
-				
-				if (!badUnits) {
-					foundNumeric = true;
-					er.property_value_point_estimate_original = mantissa*Math.pow(10, magnitude);
-
-					if (propertyValue.indexOf(strMantissa) > 0) {
-						String checkSymbol = StringEscapeUtils.unescapeHtml4(propertyValue.replaceAll("\\s",""));
-						int propertyValueIndex = checkSymbol.indexOf(strMantissa);
-//						System.out.println(unitsIndex+"\t"+propertyValueIndex+"\t*"+strMantissa+"*\t"+checkSymbol);
-						er.property_value_numeric_qualifier = TextUtilities.getNumericQualifier(checkSymbol,propertyValueIndex);
-					}
-				}
-			} 
-			
-			
-		} catch (Exception ex) {
-//			System.out.println(propertyValue);
-//			ex.printStackTrace();
-		}
-		return foundNumeric;
-	}
-
-	public static boolean getDensity(ExperimentalRecord er, String propertyValue,String propertyValueNonSplit) {
+	public static boolean getDensity(ExperimentalRecord er, String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
@@ -448,7 +36,7 @@ public class ParseUtilities extends Parse {
 //		propertyValue = propertyValue.replace(" lb at "," lb/gal at ");
 		
 		String PVLC=propertyValue.toLowerCase(); 
-		String pvlc2=propertyValueNonSplit.toLowerCase();
+//		String pvlc2=propertyValueNonSplit.toLowerCase();
 		
 		if(PVLC.contains("will float") || PVLC.contains("will sink") || PVLC.contains("will rise")) {
 			er.keep=false;
@@ -662,7 +250,7 @@ public class ParseUtilities extends Parse {
 		
 
 		
-		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		
 //		if(propertyValue.contains("(NTP, 1992) - Heavier than air")) {
 //			System.out.println("NTP3\t"+unitsIndex+"\t"+propertyValue+"\t"+foundNumeric+"\t"+er.property_value_point_estimate_original);
@@ -752,7 +340,7 @@ public class ParseUtilities extends Parse {
 		}
 		
 
-		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
 	}
 	
@@ -832,13 +420,12 @@ public class ParseUtilities extends Parse {
 
 		
 		if(unitsIndex!=-1) badUnits=false;
-		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
 	}
 
 	private static int lookForUnitsInList(ExperimentalRecord er, String propertyValue, int unitsIndex, List<String> unitsList,
 			String finalUnit) {
-		
 		
 		if(er.property_value_units_original!=null) 
 			return unitsIndex;
@@ -900,7 +487,7 @@ public class ParseUtilities extends Parse {
 			}
 		}
 
-		TempUnitResult tempUnitResult = getTemperatureUnits(propertyValue);
+		TempUnitsResult tempUnitResult = TemperatureCondition.getTemperatureUnits(propertyValue);
 		
 		if(tempUnitResult==null) {
 //			if(er.property_name.equals(ExperimentalConstants.strFlashPoint))			
@@ -918,14 +505,8 @@ public class ParseUtilities extends Parse {
 //			System.out.println(er.property_value_units_original+"\t"+tempUnitResult.unitsIndex+"\t"+propertyValue);
 
 		
-		boolean foundNumeric = getNumericalValue(er,propertyValue, tempUnitResult.unitsIndex,badUnits);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue, tempUnitResult.unitsIndex,badUnits);
 		return foundNumeric;
-	}
-	
-	private static boolean containsNumber(String str) {
-		if (str==null) { return false; }
-		Matcher anyNumber = Pattern.compile(".*\\d.*").matcher(str);
-		return anyNumber.find();
 	}
 	
 	private static String adjustPropertyValue(ExperimentalRecord er,String propertyValue) {
@@ -981,7 +562,7 @@ public class ParseUtilities extends Parse {
 						if (!parsed) {
 							Matcher colonFormat1 = Pattern.compile(water+"( solubility)?(: |[ ]?=[ ]?)([ <>~=\\.0-9MmGguLl/@%()\u00B0CcFfKkPpHh]+)[;,$]")
 									.matcher(propertyValue.toLowerCase().trim());
-							if (colonFormat1.find() && containsNumber(colonFormat1.group(3))) {
+							if (colonFormat1.find() && TextUtilities.containsNumber(colonFormat1.group(3))) {
 								propertyValue = colonFormat1.group(3);
 								parsed = true;
 //								er.updateNote("Aqueous entry: "+propertyValue);
@@ -990,7 +571,7 @@ public class ParseUtilities extends Parse {
 						if (!parsed) {
 							Matcher colonFormat2 = Pattern.compile("solubility: ([ <>~=\\.0-9MmGguLl/@%()\\u00B0CcFfKkPpHh]+)\\("+water+"\\)[;,$]")
 									.matcher(propertyValue.toLowerCase().trim());
-							if (colonFormat2.find() && containsNumber(colonFormat2.group())) {
+							if (colonFormat2.find() && TextUtilities.containsNumber(colonFormat2.group())) {
 								propertyValue = colonFormat2.group();
 								parsed = true;
 //								er.updateNote("Aqueous entry: "+propertyValue);
@@ -999,7 +580,7 @@ public class ParseUtilities extends Parse {
 						if (!parsed) {
 							Matcher colonFormat3 = Pattern.compile("@ [0-9]+ \\u00B0[cfk]: "+water+"[ <>~=.*0-9XxMmGguLlat/@%()\\u00B0CcFfKkPpHhWwTtVvOoLl+-]*")
 									.matcher(propertyValue.toLowerCase().trim());
-							if (colonFormat3.find() && containsNumber(colonFormat3.group())) {
+							if (colonFormat3.find() && TextUtilities.containsNumber(colonFormat3.group())) {
 								propertyValue = colonFormat3.group();
 								parsed = true;
 //								er.updateNote("Aqueous entry: "+propertyValue);
@@ -1009,7 +590,7 @@ public class ParseUtilities extends Parse {
 							Matcher inWaterFormat1 = Pattern.compile("([<>=~?]{0,2} ?[0-9.]+[ <>~=.*0-9XxMmGguLlat/@%()\\u00B0CcFfKkPpHhWwTtVvOoznLl+-]* ?(g )?(in)? ?)"
 									+water+":?( ?(@|at)? ?[ <>~=0-9MmGgLl/@%()\\u00B0CcFfKPpHh.]+)?")
 									.matcher(propertyValue.toLowerCase().trim());
-							if (inWaterFormat1.find() && containsNumber(inWaterFormat1.group())) {
+							if (inWaterFormat1.find() && TextUtilities.containsNumber(inWaterFormat1.group())) {
 								Matcher volMatcher = Pattern.compile("[0-9]+ ?ml ?"+water).matcher(inWaterFormat1.group());
 								if (!volMatcher.matches()) {
 									propertyValue = inWaterFormat1.group().replaceAll(":","");
@@ -1030,7 +611,7 @@ public class ParseUtilities extends Parse {
 						if (!parsed) {
 							Matcher inWaterFormat3 = Pattern.compile("(in )?"+water+"(( ?[(]?(@|at)? ?[0-9.]+ ?\\u00B0[CcFfKk])?[)]?,?:? ([^).,;$]*((?<=[0-9])[\\.,][0-9])?([^).;$]|,(?! ))*)*[).,;$[^\\p{Graph}]])")
 									.matcher(propertyValue.toLowerCase().trim());
-							if (inWaterFormat3.find() && containsNumber(inWaterFormat3.group())) {
+							if (inWaterFormat3.find() && TextUtilities.containsNumber(inWaterFormat3.group())) {
 								propertyValue = inWaterFormat3.group();
 								parsed = true;
 //								er.updateNote("Aqueous entry: "+propertyValue);
@@ -1067,7 +648,7 @@ public class ParseUtilities extends Parse {
 		if (propertyValue==null) { return false; }
 		
 		// Don't waste time looking for a numerical entry if there are no numbers in the string!
-		if (!containsNumber(propertyValue)) { return false; }
+		if (!TextUtilities.containsNumber(propertyValue)) { return false; }
 		
 		String PVLC=propertyValue.toLowerCase();
 		
@@ -1167,7 +748,7 @@ public class ParseUtilities extends Parse {
 				}
 			}
 			if (!foundNumeric) {
-				foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+				foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 			}
 		}
 		
@@ -1497,7 +1078,7 @@ public class ParseUtilities extends Parse {
 //		}
 	}
 
-	public static boolean getVaporPressure(ExperimentalRecord er,String propertyValue,String propertyValueNonSplit) {
+	public static boolean getVaporPressure(ExperimentalRecord er,String propertyValue) {
 		
 		if (propertyValue.toLowerCase().contains(ExperimentalConstants.str_negl)) {
 			er.property_value_qualitative = ExperimentalConstants.str_negl;
@@ -1601,7 +1182,7 @@ public class ParseUtilities extends Parse {
 //			unitsIndex = propertyValue.length();
 //		}
 		
-		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
 	}
 
@@ -1657,7 +1238,7 @@ public class ParseUtilities extends Parse {
 		if(unitsIndex!=-1) badUnits=false;
 
 		
-		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 
 //		if(propertyValue.equals("Henry's Law constant = 1.76X10-5 Pa-cu m/mol /1.74X10-10 atm-cu m/mol/ at 25 °C")) {
 //			System.out.println("unitsIndex="+unitsIndex);
@@ -1721,7 +1302,7 @@ public class ParseUtilities extends Parse {
 			er.updateNote("analytical units");
 		}
 
-		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
 	}
 
@@ -1765,7 +1346,7 @@ public class ParseUtilities extends Parse {
 			badUnits = false;
 		}
 		
-		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		
 		String strippedReportedDose = tr.ReportedDose.replaceAll("\\s","");
 		Matcher m = Pattern.compile("\\d").matcher(strippedReportedDose);
@@ -1879,99 +1460,11 @@ public class ParseUtilities extends Parse {
 //		System.out.println(propertyValue+"\t"+unitsIndex);
 		
 		boolean badUnits = false;
-		boolean foundNumeric = getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 		return foundNumeric;
 	}
 
-	/**
-	 * Sets the temperature condition for an ExperimentalRecord object, if present
-	 * @param er			The ExperimentalRecord object to be updated
-	 * @param propertyValue	The string to be read
-	 * @return				The temperature condition in C
-	 */
-	public static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
-		
-//		System.out.println("here1 propertyValue="+propertyValue);
-		
-		TempUnitResult tempUnitResult=getTemperatureUnits(propertyValue);
-		
-		if(tempUnitResult==null) {
-//			if(er.property_name.equals(ExperimentalConstants.strVaporPressure))			
-//				System.out.println("cant get temp units for:"+propertyValue);
-//			System.out.println("Cant find temp units for "+propertyValue);
-			return;
-		}
-		
-		
-//		int tempIndex = propertyValue.indexOf(units);
-//		if (tempIndex==propertyValue.toLowerCase().indexOf("cc")) {
-//			tempIndex = propertyValue.indexOf(units,tempIndex+2);
-//		}
-		
-//		if (propertyValue.toLowerCase().indexOf("cc")>-1) {
-//			System.out.println("Have cc in:"+propertyValue);
-//		}
-		
-		
-		// If temperature units were found, looks for the last number that precedes them
-		if (tempUnitResult.unitsIndex > 0) {
-			try {
-				
-				String substring=propertyValue.substring(0,tempUnitResult.unitsIndex);
-//				System.out.println(propertyValue);
-				
-				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(0,tempUnitResult.unitsIndex));
-				String tempStr = "";
-				
-				int minDiff=9999;
-				
-				String strClosest=null;
-				
-				while (m.find()) { 
-					tempStr = m.group();
-					
-					
-//					int index=propertyValue.indexOf(tempStr);
-					int diff=tempUnitResult.unitsIndex-m.start();
-					
-					if(diff<minDiff) {
-						minDiff=diff;
-						strClosest=tempStr;
-					}
-				}
-				
-				
-//				if(!strClosest.equals(tempStr)) {
-//					System.out.println("Mismatch:"+tempStr+"\t"+strClosest+"\t"+minDiff);
-//				}
-				
-				
-				if (tempStr.length()!=0) {
-					// Converts to C as needed
-					double temp = Double.parseDouble(tempStr);
-					switch ( tempUnitResult.units) {
-					case ExperimentalConstants.str_C:
-						er.temperature_C = temp;
-						break;
-					case ExperimentalConstants.str_F:
-						er.temperature_C = UnitConverter.F_to_C(temp);
-						break;
-					case ExperimentalConstants.str_K:
-						er.temperature_C = UnitConverter.K_to_C(temp);
-						break;
-					}
-					
-					
-					
-				}
-				
-//				System.out.println(er.temperature_C+"\n");
-				
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
+	
 	
 	
 	/**
@@ -1979,6 +1472,9 @@ public class ParseUtilities extends Parse {
 	 * @param er			The ExperimentalRecord object to be updated
 	 * @param propertyValue	The string to be read
 	 * @return				The pH
+	 *
+	 * TODO move to separate class and add ability to find ranges in pH values
+	 *
 	 */
 	public static void get_pH_Condition(ExperimentalRecord er, String propertyValue) {
 		
@@ -2021,96 +1517,7 @@ public class ParseUtilities extends Parse {
 	
 	
 
-	static class TempUnitResult {
-		int unitsIndex=1;
-		String units;
-	}
 	
-	/**
-	 * Gets temp units and index
-	 * 
-	 * @param propertyValue	The string to be read
-	 * @return temp units and index as object
-	 */
-	public static TempUnitResult getTemperatureUnits(String propertyValue) {
-
-		String pv1=propertyValue;
-		
-		TempUnitResult result=new TempUnitResult();
-		
-		propertyValue=propertyValue.replace("Â","");
-		
-//		System.out.println("here2 propertyValue="+propertyValue);
-
-		propertyValue = TextUtilities.correctDegreeSymbols(propertyValue);
-		
-		if(!propertyValue.equals(pv1)) {
-//			System.out.println("changed:"+pv1+"\t"+propertyValue);
-		}
-		
-//		System.out.println("here3 propertyValue="+propertyValue);
-
-		
-//		if(propertyValue.equals("-27 dec C (closed cup)")) {
-//			System.out.println("***propertyValue1="+propertyValue1);
-//		}
-		
-		
-		List <String>listC=Arrays.asList("\u00B0C","oC","deg.C","degC","C degrees","degrees C","C deg","degree C","deg. C","dec C","°C","°C","°C");
-		List <String>listF=Arrays.asList("\u00B0F","oF","degrees F","F deg","° F","degree F","deg. F","°F","°F", "°F");
-		List <String>listK=Arrays.asList("K");
-
-		
-		for(String strC:listC) {
-			if(propertyValue.contains(strC)) {
-				result.units = ExperimentalConstants.str_C;
-				result.unitsIndex=propertyValue.indexOf(strC);
-				return result;
-			}
-		}
-		
-		for(String strF:listF) {
-			if(propertyValue.contains(strF)) {
-				result.units = ExperimentalConstants.str_F;
-				result.unitsIndex=propertyValue.indexOf(strF);
-				return result;
-			}
-		}
-		
-		for(String strK:listK) {
-			if(propertyValue.contains(strK)) {
-				result.units = ExperimentalConstants.str_K;
-				result.unitsIndex=propertyValue.indexOf(strK);
-				return result;
-			}
-		}
-		
-		//If cant find longer strings, use single character;
-		if (propertyValue.indexOf("C") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("C")-1))) {
-			result.units = ExperimentalConstants.str_C;
-			result.unitsIndex=propertyValue.indexOf("C");
-//			System.out.println("C by itself:"+propertyValue1);
-			return result;
-		}
-				
-		if (propertyValue.indexOf("F") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("F")-1))) {
-			result.units = ExperimentalConstants.str_F;
-			result.unitsIndex=propertyValue.indexOf("F");
-//			System.out.println("F by itself:"+propertyValue1);
-			return result;
-		}
-		
-		if (propertyValue.indexOf("K") > 0 && Character.isDigit(propertyValue.charAt(propertyValue.indexOf("K")-1))) {
-			result.units = ExperimentalConstants.str_K;
-			result.unitsIndex=propertyValue.indexOf("K");
-//			System.out.println("K by itself:"+propertyValue1);
-			return result;
-		}
-
-//		System.out.println("No temp units match:"+propertyValue);
-		
-		return null;
-	}
 	
 	public static boolean hasIdentifiers(ExperimentalRecord er) {
 		if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&

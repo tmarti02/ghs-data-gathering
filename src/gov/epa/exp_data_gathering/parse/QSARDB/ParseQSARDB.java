@@ -12,6 +12,7 @@ import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.TextUtilities;
 
 /**
  * Parses data from qsardb.org
@@ -80,7 +81,7 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strWaterSolubility;
 			er.property_value_string = "LogS: "+qr.logS;
-			ParseUtilities.getNumericalValue(er,qr.logS,qr.logS.length(),false);
+			TextUtilities.getNumericalValue(er,qr.logS,qr.logS.length(),false);
 			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
 			if (qr.units.contains("mgL")) { er.property_value_units_original = ExperimentalConstants.str_log_mg_L;
 			} else if (qr.units.contains("M")) { er.property_value_units_original = ExperimentalConstants.str_log_M;
@@ -98,7 +99,7 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strMeltingPoint;
 			er.property_value_string = "MP (C): "+qr.mp;
-			ParseUtilities.getNumericalValue(er,qr.mp,qr.mp.length(),false);
+			TextUtilities.getNumericalValue(er,qr.mp,qr.mp.length(),false);
 			er.property_value_units_original = ExperimentalConstants.str_C;
 			uc.convertRecord(er);
 			records.add(er);
@@ -113,7 +114,7 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strLogKOW;
 			er.property_value_string = "mLogP: "+qr.mLogP;
-			ParseUtilities.getNumericalValue(er,qr.mLogP,qr.mLogP.length(),false);
+			TextUtilities.getNumericalValue(er,qr.mLogP,qr.mLogP.length(),false);
 			uc.convertRecord(er);
 			records.add(er);
 		}
@@ -127,7 +128,7 @@ public class ParseQSARDB extends Parse {
 			er.casrn = qr.casrn;
 			er.property_name = ExperimentalConstants.strVaporPressure;
 			er.property_value_string = "LogVP (Log_mmHg): "+qr.vp;
-			ParseUtilities.getNumericalValue(er,qr.vp,qr.vp.length(),false);
+			TextUtilities.getNumericalValue(er,qr.vp,qr.vp.length(),false);
 			er.property_value_point_estimate_original = er.property_value_point_estimate_original;
 			er.property_value_units_original = ExperimentalConstants.str_log_mmHg;
 			uc.convertRecord(er);
