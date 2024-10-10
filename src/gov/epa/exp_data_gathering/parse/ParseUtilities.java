@@ -467,9 +467,9 @@ public class ParseUtilities extends Parse {
 		//"range"
 		
 		if(!er.property_name.equals(ExperimentalConstants.strBoilingPoint)) badProps.add("bp");
-		if(er.property_name.equals(ExperimentalConstants.strBoilingPoint)) badProps.add("mp");
-		if(er.property_name.equals(ExperimentalConstants.strBoilingPoint)) badProps.add("fp");
-		if(er.property_name.equals(ExperimentalConstants.strMeltingPoint)) badProps.add("fp");
+		if(!er.property_name.equals(ExperimentalConstants.strMeltingPoint)) badProps.add("mp");
+		if(!er.property_name.equals(ExperimentalConstants.strMeltingPoint)) badProps.add("fp");//TMM In this case I think fp=mp (but sometimes fp=flash point) 
+
 		
 		for (String badProp:badProps) {
 			if(PVLC.contains(badProp)) {
