@@ -1467,58 +1467,6 @@ public class ParseUtilities extends Parse {
 	
 	
 	
-	/**
-	 * Sets the pH condition for an ExperimentalRecord object, if present
-	 * @param er			The ExperimentalRecord object to be updated
-	 * @param propertyValue	The string to be read
-	 * @return				The pH
-	 *
-	 * TODO move to separate class and add ability to find ranges in pH values
-	 *
-	 */
-	public static void get_pH_Condition(ExperimentalRecord er, String propertyValue) {
-		
-		if(!propertyValue.contains("pH")) return;
-		
-//		System.out.println(propertyValue);
-		int pHindex = propertyValue.indexOf("pH");
-		
-		// If temperature units were found, looks for the last number that precedes them
-		if (pHindex > 0) {
-			try {
-				Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(pHindex,propertyValue.length()));
-				String tempStr = "";
-				
-				int counter=0;
-
-				while (m.find()) {
-					counter++;
-					tempStr = m.group();
-					if (tempStr.length()!=0) break;//use first one
-				}
-				
-				if (tempStr.length()!=0) {
-					// Converts to C as needed
-					er.pH = tempStr;
-					
-//					if(!propertyValue.contains("The mean of the results")) {
-//						System.out.println(propertyValue+"\t"+er.property_value_point_estimate_original+"\t"+er.pH);	
-//					}
-				}
-				
-				
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
-
-	
-	
-	
-
-	
-	
 	public static boolean hasIdentifiers(ExperimentalRecord er) {
 		if ((er.casrn==null || er.casrn.isBlank()) && (er.einecs==null || er.einecs.isBlank()) &&
 				(er.chemical_name==null || er.chemical_name.isBlank()) && (er.smiles==null || er.smiles.isBlank())) {

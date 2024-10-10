@@ -38,6 +38,7 @@ import gov.epa.exp_data_gathering.parse.PublicSource;
 import gov.epa.exp_data_gathering.parse.RecordDashboard;
 import gov.epa.exp_data_gathering.parse.TemperatureCondition;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
+import gov.epa.exp_data_gathering.parse.pHCondition;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Data;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.IdentifierData;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Information;
@@ -813,7 +814,7 @@ public class RecordPubChem {
 				TemperatureCondition.getTemperatureCondition(er, propertyValue);
 			}
 			
-			ParseUtilities.get_pH_Condition(er, propertyValue);
+			pHCondition.get_pH_Condition(er, propertyValue);
 			// TODO get pH- difficult because pH can be in difference places, especially
 			// when have different solvents in same string
 
@@ -859,7 +860,7 @@ public class RecordPubChem {
 			foundNumeric = ParseUtilities.getLogProperty(er, propertyValue);
 			er.property_value_units_original = ExperimentalConstants.str_LOG_UNITS;
 			TemperatureCondition.getTemperatureCondition(er, propertyValue);
-			ParseUtilities.get_pH_Condition(er, propertyValue);
+			pHCondition.get_pH_Condition(er, propertyValue);
 			
 		} else if (er.property_name == ExperimentalConstants.strRefractiveIndex) {
 			System.out.println("***TODO " + ExperimentalConstants.strRefractiveIndex + "\t" + propertyValue);
