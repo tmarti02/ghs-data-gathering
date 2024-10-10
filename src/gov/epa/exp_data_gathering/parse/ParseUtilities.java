@@ -463,13 +463,15 @@ public class ParseUtilities extends Parse {
 				"conductivity", "mobility", "dispersion", "logp", "vapor pressure", "magnetic", "viscosity",
 				"loss", "equiv", "osmolality", "collision", "liquifies", "explosion", "stability", "storage", "% in",
 				"detonation", "friction", "energy", "heat of", "enthalpy", "abundance", "dielectric", "activation", "loses",
-				"volatility", "specific gravity", "pk", "entropy", "coeff", "cps", "specific heat", "refractive index", "freezing point"));
+				"volatility", "specific gravity", "pk", "entropy", "coeff", "cps", "specific heat", "refractive index"));
 		//"range"
 		
 		if(!er.property_name.equals(ExperimentalConstants.strBoilingPoint)) badProps.add("bp");
-		if(!er.property_name.equals(ExperimentalConstants.strMeltingPoint)) badProps.add("mp");
-		if(!er.property_name.equals(ExperimentalConstants.strMeltingPoint)) badProps.add("fp");//TMM In this case I think fp=mp (but sometimes fp=flash point) 
-
+		if(!er.property_name.equals(ExperimentalConstants.strMeltingPoint)) {
+			badProps.add("mp");
+			badProps.add("fp");//TMM In this case I think fp=mp (but sometimes fp=flash point)
+			badProps.add("freezing point");
+		}
 		
 		for (String badProp:badProps) {
 			if(PVLC.contains(badProp)) {
