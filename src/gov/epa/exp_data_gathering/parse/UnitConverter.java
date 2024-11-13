@@ -213,6 +213,11 @@ public class UnitConverter {
 			er.reason = "Property not handled in UnitConverter.convertRecord";
 		}
 
+//		if(er.temperature_C!=null &&  er.temperature_C.contains("886-60.0")) {
+//			System.out.println(er.property_name+"\t"+er.property_value_string+"\t"+  er.chemical_name+"\t"+er.casrn);
+//		}
+		
+		
 		if (er.property_value_units_final != null && !er.property_value_units_final.isBlank()
 				&& !er.property_value_units_final.equals(ExperimentalConstants.str_C)
 				&& !er.property_value_units_final.toLowerCase().contains("log")
@@ -231,19 +236,13 @@ public class UnitConverter {
 //					System.out.println(er.property_value_string+"\n");
 				}
 			}
-		} else if (er.temperature_C != null && er.temperature_C < 0 ) {
-
+		} else if (er.temperature_C != null && er.temperature_C < 0) {
 			if(er.keep) {
 				er.flag=true;
 				er.reason = "Negative temperature may be artifact of bad range parsing";				
-//				System.out.println("Keep, neg temp: "+er.property_value_string);
-				
 			} else {
 				er.updateNote("Negative temperature may be artifact of bad range parsing");
-//				System.out.println("Dont keep, neg temp: "+er.reason+"\t"+er.property_value_string);
-
 			}
-
 		}
 
 //		System.out.println(rec.property_value_units_original+"\t"+rec.property_value_units_final);
@@ -663,8 +662,12 @@ public class UnitConverter {
 			} else if (er.property_value_units_original.equals(ExperimentalConstants.str_lb_gal)) {
 				convertAndAssignFinalFields(er, 0.119826);
 				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
-			} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)) {
+			} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)
+					|| er.property_value_units_original.equals(ExperimentalConstants.str_g_m3)) {
 				convertAndAssignFinalFields(er, 0.000001);
+				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
+			} else if (er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)) {
+				convertAndAssignFinalFields(er, 1000.0);
 				er.property_value_units_final = ExperimentalConstants.str_g_cm3;
 			}
 
@@ -894,6 +897,9 @@ public class UnitConverter {
 				er.property_value_units_final = ExperimentalConstants.str_g_L;
 				er.updateNote("Converted using density: " + density + " g/mL");
 			}
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_kg_L)) {
+			convertAndAssignFinalFields(er, 1000.0);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_L)
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL)
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)) {
@@ -1054,6 +1060,12 @@ public class UnitConverter {
 			convertAndAssignFinalFields(er, 1000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 			// under construction - CR
+//		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_kg_H20)) {
+//			// TMM TODO we just have to assume a density of water
+//			convertAndAssignFinalFields(er, 1.0 / 1000.0);
+//			er.property_value_units_final = ExperimentalConstants.str_g_kg_H20;
+//			er.flag = true;
+//			er.updateNote("Conversion to g/L not possible (dimensions differ)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_kg_H20)) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_g_kg_H20;

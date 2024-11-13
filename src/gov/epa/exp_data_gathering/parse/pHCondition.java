@@ -23,24 +23,38 @@ public class pHCondition {
 			
 	//		System.out.println(propertyValue);
 			int pHindex = propertyValue.indexOf("pH");
-			
+			String substring=propertyValue.substring(pHindex,propertyValue.length());
 			// If pH string found, looks for the last number that precedes them
 			if (pHindex > 0) {
 				try {
-					Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(propertyValue.substring(pHindex,propertyValue.length()));
-					String tempStr = "";
+					Matcher m = Pattern.compile("[-]?[0-9]*\\.?[0-9]+").matcher(substring);
+					String pHStr = "";
 					
 					int counter=0;
 	
 					while (m.find()) {
 						counter++;
-						tempStr = m.group();
-						if (tempStr.length()!=0) break;//use first one
+						pHStr = m.group();
+						if (pHStr.length()!=0) break;//use first one
 					}
 					
-					if (tempStr.length()!=0) {
-						// Converts to C as needed
-						er.pH = tempStr;
+					if (pHStr.length()!=0) {
+						double[] range = TextUtilities.extractClosestDoubleRangeFromString(substring,substring.length());
+						if(range!= null) {
+							double min = range[0];
+							double max = range[1];
+							double diff = max-min;
+							
+							if (diff!=0) {
+								double avg=(min+max)/2.0;
+								er.pH = "" + avg;
+								er.note = "pH averaged";
+							}
+						} else {
+							er.pH = pHStr;
+						} 
+					} else {
+							er.pH = pHStr;
 						
 	//					if(!propertyValue.contains("The mean of the results")) {
 	//						System.out.println(propertyValue+"\t"+er.property_value_point_estimate_original+"\t"+er.pH);	
