@@ -58,6 +58,19 @@ public class TextUtilities {
 			return null;
 		}
 	}
+	
+	public static List<Double> getNumbers(String str,int end) throws NumberFormatException {
+		Matcher numberMatcher = Pattern.compile("[-]?[ ]?[0-9]*\\.?[0-9]+").matcher(str.substring(0,end));
+
+		List<Double>values=new ArrayList<>();
+		while (numberMatcher.find()) {
+			double value=Double.parseDouble(numberMatcher.group().replace("- ",""));
+			values.add(value);
+		}
+		
+		return values;
+	}
+	
 
 	/**
 	 * Extracts the number closest to index of unitsIndex
@@ -132,6 +145,7 @@ public class TextUtilities {
 	 */
 	public static double[] extractClosestDoubleRangeFromString(String str,int end) throws IllegalStateException {
 		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([â€”]|[-]{1}|to|/|ca\\.|[\\?])[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
+//		Matcher anyRangeMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]*([â€”]|[-]{1}|to|/|[ - ]|ca\\.|[\\?])[ ]*([-]?[ ]?[0-9]*\\.?[0-9]+)").matcher(str.substring(0,end));
 
 		int counter=0;
 
@@ -379,6 +393,9 @@ public class TextUtilities {
 		//		replaceAll(sb,"[]","\u00B0");
 
 		s_new = s_new.replace("&deg;","\u00B0"); 
+		
+		
+		s_new=s_new.replace("Â°","\u00B0");
 
 
 		return s_new;
@@ -446,8 +463,32 @@ public class TextUtilities {
 			//			System.out.println(propertyValue+"\t"+strPlusMinus);
 			unitsIndex = Math.min(propertyValue.indexOf("±"),unitsIndex);//make it so that +/- value isnt selected as the value 
 		}
-
-
+		
+		if (propertyValue.contains("+/-")) {//TMM added 10/9/24- ideally this should be done with regex but this is quick way to preserve +/- number
+			try {
+				plusMinus=Double.parseDouble(propertyValue.substring(propertyValue.indexOf("+/-")+3,unitsIndex));
+			} catch (Exception ex) {
+				//				ex.printStackTrace();
+			}
+			//			System.out.println(propertyValue+"\t"+strPlusMinus);
+			unitsIndex = Math.min(propertyValue.indexOf("+/-"),unitsIndex);//make it so that +/- value isnt selected as the value 
+		} else if (propertyValue.contains("+ or -")) {
+			try {
+				plusMinus=Double.parseDouble(propertyValue.substring(propertyValue.indexOf("+ or -")+6,unitsIndex));
+			} catch (Exception ex) {
+				//				ex.printStackTrace();
+			}
+			//			System.out.println(propertyValue+"\t"+strPlusMinus);
+			unitsIndex = Math.min(propertyValue.indexOf("+ or -"),unitsIndex);
+		} else if (propertyValue.contains("+-")) {
+			try {
+				plusMinus=Double.parseDouble(propertyValue.substring(propertyValue.indexOf("+-")+2,unitsIndex));
+			} catch (Exception ex) {
+				//				ex.printStackTrace();
+			}
+			//			System.out.println(propertyValue+"\t"+strPlusMinus);
+			unitsIndex = Math.min(propertyValue.indexOf("+-"),unitsIndex);
+		}
 
 		//		System.out.println("here1\t"+unitsIndex+"\t"+propertyValue);
 
@@ -584,7 +625,14 @@ public class TextUtilities {
 		//		if(propertyValue.contains("<0.01mPa (20 °C)")) {
 		//			System.out.println(unitsIndexOriginal+"\t"+unitsIndex+"\t"+er.property_value_point_estimate_original+"\t"+er.property_value_units_original+"\t"+ propertyValue);
 		//		}
-
+		
+		if(propertyValue.contains("Double MP:") || propertyValue.contains("Occurs in two steps")) {	
+			er.property_value_qualitative = "Melts in two steps";
+			er.property_value_point_estimate_final = null;
+			er.property_value_min_final = null;
+			er.property_value_max_final =null;
+		}
+		
 		if(foundNumeric && plusMinus!=null) {
 			//TODO is this bullet proof?
 			//TMM added 10/9/24
@@ -608,7 +656,7 @@ public class TextUtilities {
 		 * @param foundNumeric
 		 * @return
 		 */
-		private static boolean findClosestScientificNotationValue(ExperimentalRecord er, String propertyValue,
+		public static boolean findClosestScientificNotationValue(ExperimentalRecord er, String propertyValue,
 				int unitsIndex, int unitsIndexOriginal, boolean foundNumeric) {
 			try {
 				Matcher sciMatcher = Pattern.compile("([-]?[ ]?[0-9]*\\.?[0-9]+)[ ]?(e|x[ ]?10\\^?|\\*?10\\^)[ ]?[\\(]?([-|\\+]?[ ]?[0-9]+)[\\)]?").matcher(propertyValue.toLowerCase().substring(0,unitsIndex));
