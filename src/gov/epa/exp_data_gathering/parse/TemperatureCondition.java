@@ -22,9 +22,16 @@ public class TemperatureCondition {
 	
 	/**
 	 * Sets the temperature condition for an ExperimentalRecord object, if present
-	 * @param er			The ExperimentalRecord object to be updated
-	 * @param propertyValue	The string to be read
-	 * @return				The temperature condition in C
+	 * 
+	 * @param er            The ExperimentalRecord object to be updated
+	 * @param propertyValue The string to be read
+	 * @return The temperature condition in C
+	 * 
+	 * 
+	 * Props with temperature condition: Density, Water solubility, Vapor pressure, LogKow,
+	 * Viscosity, Surface tension
+	 * 
+	 * 
 	 */
 	public static void getTemperatureCondition(ExperimentalRecord er, String propertyValue) {
 		

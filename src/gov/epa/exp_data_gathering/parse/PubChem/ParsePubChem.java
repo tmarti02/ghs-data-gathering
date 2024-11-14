@@ -220,9 +220,9 @@ public class ParsePubChem extends Parse {
 //							System.out.println(r.propertyValue);
 //						}
 						
-						if(!propertyValue.equals(propertyValueOriginal)) {
-							er.updateNote("parsed property_value: "+propertyValue);
-						}
+//						if(!propertyValue.equals(propertyValueOriginal)) {
+//							er.updateNote("parsed property_value: "+propertyValue);
+//						}
 						
 						er.property_value_string_parsed=propertyValue;						
 						er.property_value_string=propertyValueOriginal;
