@@ -1031,8 +1031,14 @@ public class RecordPubChem {
 			er.reference = literatureSource.citation;
 		}
 
+		
+		if(er.property_value_units_final==null && er.property_value_qualitative!=null) {
+			//TODO what happens if have both quantitative and qualitative?
+			er.property_value_units_final=ExperimentalConstants.strTEXT;
+		} else {
+			unitConverter.convertRecord(er);	
+		}
 
-		unitConverter.convertRecord(er);
 				
 		if(propertyValue.toLowerCase().contains("decomp")) {
 			er.keep=false;

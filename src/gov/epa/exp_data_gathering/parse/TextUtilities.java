@@ -402,7 +402,7 @@ public class TextUtilities {
 	}
 
 	public static String getNumericQualifier(String str,int index) {
-		String symbol = "";
+		String symbol = null;
 		if (index > 0) {
 			if (str.charAt(index-1)=='>' || str.toLowerCase().contains("above") || str.toLowerCase().contains("more than")) {
 				symbol = ">";
