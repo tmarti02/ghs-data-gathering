@@ -599,8 +599,7 @@ public class ParseUtilities extends Parse {
 		propertyValue = propertyValue.replaceAll("[0-9.]+ ?(M|N) (NaOH|HCl)", "$1 $2"); // Acid/base molarities confuse the parser, so snip them out
 		propertyValue = propertyValue.replaceAll(" [Pp][Ee][Rr] ","/"); // Correct usage of "per" in some PubChem records
 		
-<<<<<<< HEAD
-		
+	
 		if(propertyValue.toLowerCase().contains("solubility of water in")) {
 			//We want the solubility of the chemical in water
 			er.keep = false;
@@ -608,32 +607,24 @@ public class ParseUtilities extends Parse {
 			return propertyValue;
 		}
 
-		String[] badSolvents = { "heptane", "hexan", "ethyl", "ether", "benzene", "naoh", "hcl", "chloroform", "ligroin", "acet", "alc",
-				"dmso", "hexane", "meoh", "dichloromethane", "dcm", "toluene", "glyc", "oils", "soybean oil",
-				"organic solvent", "dmf", "mcoh", "chc1", "xylene", "dioxane", "hydrocarbon", "kerosene", "acid",
-				"oxide", "pyri", "carbon tetrachloride", "pet", "anol", "ch3oh", "ch2cl2", "chcl3", "alkali", "dsmo",
-				"dma", "buffer", "ammonia water", "pgmea", "water-ethanol solution", "cs2", "mineral oil","lard oil",
-				"hydrochloric", "sodium carbonate", "nh4oh", "kh2po4", "ethanol:buffered water", "c2h5oh", "et2o",
-				"etoac", "etoh", "ethanol: water", "ethanol:water", "ethanol", "tfa","dichloroethane","dimethoxyethane","bromoethane","tetrachloroethane" };
-		
-		
-//		"dimethyl sulfoxide"
-//		"ethylene dichloride"
+		String[] badSolvents = { "heptane", "hexan", "ether", "ethyl", "benzene", "naoh", "hcl", "chloroform",
+				"ligroin", "acet", "alc", "dmso", "dimethyl sulfoxide", "meoh", "dichloromethane", "dcm", "toluene",
+				"glyc", "oils", "organic solvent", "dmf", "mcoh", "chc1", "xylene", "dioxane", "hydrocarbon",
+				"kerosene", "acid", "oxide", "pyri", "carbon tetrachloride", "pet", "anol", "ch3oh", "ch2cl2", "chcl3",
+				"alkali", "dsmo", "dma", "buffer", "ammonia water", "pgmea", "water-ethanol solution", "cs2",
+				"ethylene dichloride", "mineral oil", "hydrochloric", "sodium carbonate", "nh4oh", "kh2po4",
+				"ethanol:buffered water", "c2h5oh", "et2o", "etoac", "etoh", "ethanol: water", "ethanol:water",
+				"ethanol", "tetrachloroethane", "xylene", "isopropyl stearate", "tfa", "ethanol", "methanol",
+				"ethylenediamine", "morpholine", "lard oil", "tetrahydrofuran", "diglyime", "cottonseed oil",
+				"polysorbate 80", "pine oil", "dimethylformamide", "hydrogen fluoride", "dimethyl formamide",
+				"olive oil", "ch3cn", "methylene chloride", "isophorone", "stoddard solvent", "turpentine", "n-pentane",
+				"pentane", "heptane", "cyclohexanone", "2-butanone", "mineral spirit", "corn oil", "octane",
+				"carbon disulfide", "soybean oil", "tetrahydrofuran", "intestinal juice", "methyl ethyl ketone",
+				"liquid ammonia", "morpholine", "butan-2-ol", "bromoethane", "methyl cellosolve", "sodium salt",
+				"methyl isobutyl ketone", "amyl chloride", "butyl butyrate", "alpha-chloronaphthalene", "dibutyl",
+				"diethyl", "peanut oil", "hydroxylic", "potassium salt", "dichloroethane", "dimethoxyethane",
+				"bromoethane", "tetrachloroethane" };		
 
-=======
-		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","hexane","meoh",
-				"dichloromethane","dcm","toluene","glyc","oils","organic solvent","dmf","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
-				"acid","oxide","pyri","carbon tetrachloride","pet","anol","ch3oh","ch2cl2","chcl3","alkali","dsmo","dma","buffer","ammonia water","pgmea",
-				"water-ethanol solution","cs2","ethylene dichloride","mineral oil","hydrochloric","sodium carbonate","nh4oh","kh2po4","ethanol:buffered water",
-				"c2h5oh","et2o","etoac","etoh","ethanol: water","ethanol:water","ethanol", "tetrachloroethane", "xylene", "isopropyl stearate",
-				"tfa", "ethanol", "methanol", "ethylenediamine","morpholine","lard oil", "tetrahydrofuran","diglyime", "cottonseed oil",
-				"polysorbate 80","pine oil", "dimethylformamide","hydrogen fluoride","dimethyl formamide","olive oil", "ch3cn",
-				"methylene chloride", "isophorone", "stoddard solvent", "turpentine", "n-pentane", "pentane", "heptane", "cyclohexanone",
-				"2-butanone","mineral spirit", "corn oil", "octane","carbon disulfide", "soybean oil","tetrahydrofuran", "intestinal juice", "methyl ethyl ketone",
-				"liquid ammonia", "morpholine", "butan-2-ol", "bromoethane", "methyl cellosolve", "sodium salt", "methyl isobutyl ketone",
-				"amyl chloride", "butyl butyrate", "alpha-chloronaphthalene", "dibutyl","diethyl", "peanut oil", "hydroxylic", "potassium salt"};
-		
->>>>>>> dd07d0425e3df135a8d0b20e058e9d30c45e78cf
 //		if(propertyValue.equals("Soluble (in ethanol)")) {
 //			System.out.println("Found1: Soluble (in ethanol)");
 //		}
