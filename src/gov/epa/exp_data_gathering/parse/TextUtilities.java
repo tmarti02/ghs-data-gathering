@@ -559,6 +559,7 @@ public class TextUtilities {
 				double[] range = TextUtilities.extractAltFormatRangeFromString(propertyValue,unitsIndex);
 
 				if (!badUnits && range!=null) {
+//					System.out.println("Found alt format range:	" + " propertyValue");
 					er.property_value_min_original = range[0];
 					er.property_value_max_original = range[1];
 					foundNumeric = true;

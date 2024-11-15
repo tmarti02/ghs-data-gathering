@@ -1149,12 +1149,12 @@ public class RecordPubChem {
 		propertyValue = propertyValue.replace("In aqueous media with a pH 1.1-7.8, axitinib has a solubility of over 0.2 ?g/mL.","In aqueous media with a pH between 1.1 to 7.8, axitinib has a solubility of over 0.2 g/mL.");
 		propertyValue = propertyValue.replace("Toluene - 4.0X10+3. Water - 2.5 ppm at 22 °C","Water - 2.5 ppm at 22 °C");
 		propertyValue = propertyValue.replace("Water pH 9 2-3 (mg/mL)","Water 2-3 (mg/mL) at pH 9");
+
 		
 		propertyValue = propertyValue.replace("PPM @ 25 °C: ACETONE 16,800, BENZENE 500, XYLENE 400, DIMETHYLFORMAMIDE 50,300, WATER 230,800, ISOPROPANOL 20,900, METHYLETHYL KETONE 5,900","230800 ppm @ 25 °C");
 		propertyValue = propertyValue.replace("Solubility (mg/ml): propylene glycol 75, methanol 44, ethanol 29, 2-propanol 6.7, dimethylsulfoxide 6.5, water 2.2, chloroform 0.5, acetone <0.5, ethyl acetate <0.5, diethyl ether <0.5, benzene <0.5, acetonitrile <0.5.","2.2 mg/ml");
-		
-
-		
+		propertyValue = propertyValue.replace("Solubility (mg/mL): water 83, ethanol (200 proof) 26, propylene glycol 93, ethanol (190 proof) >100, methanol >100, 2-propanol 4.6, ethyl acetate 1.0, DMF >100, methylene chloride >100, hexane 0.001; Freely soluble in chloroform, practically insoluble in ether /Verapamil hydrochloride/", "83 mg/mL");
+		propertyValue = propertyValue.replace("In an experiment performed under inert gas atmosphere, the solubility /in water/ of freshly precipitated chromium(III) hydroxide was determined from under-saturation and from over-saturation at different pH. As an amphoteric hydroxide, the solubility curve of chromium(III) hydroxide is parabolic, depending on pH. The solubility is as follows: >pH 4: moderately soluble; pH 6.8 - 11.5: insoluble; > pH 11.5 - 14 slightly soluble ... at pH 4, the solubility was about 520 mg/L; at pH 6.8 to 11.8, the solubility was about 0.005 mg/L","The solubility is as follows: >pH 4: moderately soluble; insoluble at pH 6.8 - 11.5; slightly soluble at pH 11.5 - 14; at pH 4, the solubility was about 520 mg/L; the solubility was about 0.005 mg/L at pH 6.8 to 11.8");
 	}
 
 	/**
