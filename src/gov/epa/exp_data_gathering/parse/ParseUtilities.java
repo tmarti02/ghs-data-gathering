@@ -53,12 +53,22 @@ public class ParseUtilities extends Parse {
 		String PVLC=propertyValue.toLowerCase(); 
 //		String pvlc2=propertyValueNonSplit.toLowerCase();
 		
-		if(PVLC.contains("will float") || PVLC.contains("will sink") || PVLC.contains("will rise")) {
-			er.keep=false;
-			er.reason=PVLC;
+		if(PVLC.contains("will float")) {
+			er.property_value_qualitative="will float";
 			return false;
 		}
 		
+		if(PVLC.contains("will sink")) {
+			er.property_value_qualitative="will sink";
+			return false;
+		}
+		
+		if(PVLC.contains("will rise")) {
+			er.property_value_qualitative="will rise";
+			return false;
+		}
+
+
 
 		List<String> badProps = Arrays.asList("properties","corros", "odor", "react", "volume",
 				"absorption", "particle", "range", "vp", "tension", "buffering", "charge density", "optical",
@@ -113,6 +123,7 @@ public class ParseUtilities extends Parse {
 			} else if(PVLC.contains("(uscg")){
 				unitsIndex = PVLC.indexOf("(uscg");	
 			} else if((PVLC.contains("relative density of the vapour/air-mixture") || PVLC.contains("relative vapor density")) && PVLC.contains(":")) {
+				unitsIndex = propertyValue.length();
 			} else if (PVLC.contains("(air")) {
 				unitsIndex=PVLC.indexOf("(air");
 			} else {
@@ -227,8 +238,21 @@ public class ParseUtilities extends Parse {
 
 			if (er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
 				unitsIndex = propertyValue.length();
+			
+			} else if (propertyValue.contains("°F):")) {
+				
+				String value=propertyValue.substring(propertyValue.indexOf(":")+1,propertyValue.length());
+				String temp=propertyValue.substring(0,propertyValue.indexOf(":")).replace("(","").replace(")", "");
+				propertyValue=value+" @ "+temp;//fix the formatting of property value
+//				System.out.println(propertyValue);
+				
+				unitsIndex = propertyValue.length();
+				
 			} else if (propertyValue.contains(":")) {
 				unitsIndex = propertyValue.length();
+				
+				
+				
 			} else if (propertyValue.contains(" ")) {
 				unitsIndex = propertyValue.indexOf(" ");
 			} else {
@@ -512,19 +536,20 @@ public class ParseUtilities extends Parse {
 				"volatility", "specific gravity", "pk", "entropy", "coeff", "cps", "specific heat", "refractive index", "specific rotation", "triple point", "stable at"));
 		//"range"
 		
-		if(!er.property_name.equals(ExperimentalConstants.strBoilingPoint)) {
+		if(!er.property_name.contentEquals(ExperimentalConstants.strBoilingPoint)) {
 			badProps.add("bp");
 			badProps.add("boiling point");
 		}
-        if(!er.property_name.equals(ExperimentalConstants.strMeltingPoint)) {
+        if(!er.property_name.contentEquals(ExperimentalConstants.strMeltingPoint)) {
             badProps.add("mp");
             badProps.add("fp");//TMM In this case I think fp=mp (but sometimes fp=flash point)
             badProps.add("freezing point");
-            badProps.add("boiling point");
         }
 		
 		for (String badProp:badProps) {
+			
 			if(PVLC.contains(badProp)) {
+				
 				er.keep=false;
 				er.reason="Incorrect property";
 //				er.updateNote("parsed propertyValue: "+propertyValue);
@@ -570,12 +595,25 @@ public class ParseUtilities extends Parse {
 		propertyValue = propertyValue.replaceAll("[0-9.]+ ?(M|N) (NaOH|HCl)", "$1 $2"); // Acid/base molarities confuse the parser, so snip them out
 		propertyValue = propertyValue.replaceAll(" [Pp][Ee][Rr] ","/"); // Correct usage of "per" in some PubChem records
 		
-		String[] badSolvents = {"ether","benzene","naoh","hcl","chloroform","ligroin","acet","alc","dmso","dimethyl sulfoxide","hexane","meoh",
-				"dichloromethane","dcm","toluene","glyc","oils","organic solvent","dmf","mcoh","chc1","xylene","dioxane","hydrocarbon","kerosene",
-				"acid","oxide","pyri","carbon tetrachloride","pet","anol","ch3oh","ch2cl2","chcl3","alkali","dsmo","dma","buffer","ammonia water","pgmea",
-				"water-ethanol solution","cs2","ethylene dichloride","mineral oil","hydrochloric","sodium carbonate","nh4oh","kh2po4","ethanol:buffered water",
-				"c2h5oh","et2o","etoac","etoh","ethanol: water","ethanol:water","ethanol",
-				"tfa"};
+		
+		if(propertyValue.toLowerCase().contains("solubility of water in")) {
+			//We want the solubility of the chemical in water
+			er.keep = false;
+			er.reason = "Non-aqueous solubility";
+			return propertyValue;
+		}
+
+		String[] badSolvents = { "heptane", "hexan", "ethyl", "ether", "benzene", "naoh", "hcl", "chloroform", "ligroin", "acet", "alc",
+				"dmso", "hexane", "meoh", "dichloromethane", "dcm", "toluene", "glyc", "oils", "soybean oil",
+				"organic solvent", "dmf", "mcoh", "chc1", "xylene", "dioxane", "hydrocarbon", "kerosene", "acid",
+				"oxide", "pyri", "carbon tetrachloride", "pet", "anol", "ch3oh", "ch2cl2", "chcl3", "alkali", "dsmo",
+				"dma", "buffer", "ammonia water", "pgmea", "water-ethanol solution", "cs2", "mineral oil","lard oil",
+				"hydrochloric", "sodium carbonate", "nh4oh", "kh2po4", "ethanol:buffered water", "c2h5oh", "et2o",
+				"etoac", "etoh", "ethanol: water", "ethanol:water", "ethanol", "tfa","dichloroethane","dimethoxyethane","bromoethane","tetrachloroethane" };
+		
+		
+//		"dimethyl sulfoxide"
+//		"ethylene dichloride"
 
 //		if(propertyValue.equals("Soluble (in ethanol)")) {
 //			System.out.println("Found1: Soluble (in ethanol)");

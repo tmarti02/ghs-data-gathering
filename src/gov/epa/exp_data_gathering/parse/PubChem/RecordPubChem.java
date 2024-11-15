@@ -801,9 +801,7 @@ public class RecordPubChem {
 
 			
 			if(propertyValue.toLowerCase().contains("sublim")) {
-				er.keep=false;
-				er.reason="Sublimates";
-				er.property_value_qualitative="Sublimates";
+				er.property_value_qualitative="sublimates";
 //				System.out.println("Decomposes: "+propertyValue);
 			}
 
@@ -1031,8 +1029,13 @@ public class RecordPubChem {
 			er.reference = literatureSource.citation;
 		}
 
+
+		if(propertyValue.toLowerCase().contains("decomp")) {
+			er.property_value_qualitative="decomposes";
+			er.property_value_point_estimate_final=null;
+			er.property_value_units_final=ExperimentalConstants.strTEXT;
 		
-		if(er.property_value_units_final==null && er.property_value_qualitative!=null) {
+		} else if(er.property_value_units_final==null && er.property_value_qualitative!=null) {
 			//TODO what happens if have both quantitative and qualitative?
 			er.property_value_units_final=ExperimentalConstants.strTEXT;
 		} else {
@@ -1040,10 +1043,7 @@ public class RecordPubChem {
 		}
 
 				
-		if(propertyValue.toLowerCase().contains("decomp")) {
-			er.keep=false;
-			er.reason="decomposes";
-		} else if(er.property_value_qualitative!=null) {//TODO is this bullet proof?
+		if(er.property_value_qualitative!=null) {//TODO is this bullet proof?
 			er.keep=true;
 			er.reason=null;
 		}
@@ -1149,6 +1149,12 @@ public class RecordPubChem {
 		propertyValue = propertyValue.replace("In aqueous media with a pH 1.1-7.8, axitinib has a solubility of over 0.2 ?g/mL.","In aqueous media with a pH between 1.1 to 7.8, axitinib has a solubility of over 0.2 g/mL.");
 		propertyValue = propertyValue.replace("Toluene - 4.0X10+3. Water - 2.5 ppm at 22 °C","Water - 2.5 ppm at 22 °C");
 		propertyValue = propertyValue.replace("Water pH 9 2-3 (mg/mL)","Water 2-3 (mg/mL) at pH 9");
+		
+		propertyValue = propertyValue.replace("PPM @ 25 °C: ACETONE 16,800, BENZENE 500, XYLENE 400, DIMETHYLFORMAMIDE 50,300, WATER 230,800, ISOPROPANOL 20,900, METHYLETHYL KETONE 5,900","230800 ppm @ 25 °C");
+		propertyValue = propertyValue.replace("Solubility (mg/ml): propylene glycol 75, methanol 44, ethanol 29, 2-propanol 6.7, dimethylsulfoxide 6.5, water 2.2, chloroform 0.5, acetone <0.5, ethyl acetate <0.5, diethyl ether <0.5, benzene <0.5, acetonitrile <0.5.","2.2 mg/ml");
+		
+
+		
 	}
 
 	/**
