@@ -164,14 +164,24 @@ public class Parse {
 
 		System.out.println("Going through original records...");
 		ExperimentalRecords records=goThroughOriginalRecords();
+		
 		records.addSourceBasedIDNumbers();
 
-		
 		if (removeDuplicates) {
 			DataRemoveDuplicateExperimentalValues d=new DataRemoveDuplicateExperimentalValues();	
 			d.removeDuplicates(records,sourceName);
+			
+			int dupCount=0;
+			for(ExperimentalRecord er:records) {
+				if(er.reason!=null && er.reason.contains("Duplicate of experimental value from same source")) {
+					dupCount++;
+				}
+			}
+ 			System.out.println("\nDuplicates removed:"+dupCount);
+			
 		}
-
+		
+		records.getRecordsByProperty();
 		
 		if (writeExcelExperimentalRecordsFile) {
 

@@ -310,7 +310,7 @@ public class ParsePubChem extends Parse {
 				
 			}
 			
-			recordsExperimental.getRecordsByProperty();
+			
 			
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -460,6 +460,8 @@ public class ParsePubChem extends Parse {
 		r.propertyValue=r.propertyValue.replace("In water at 20 °C, 0.5 g/L at pH 6, 1.5 g/L at pH 9","In water at 20 °C, 0.5 g/L at pH 6; 1.5 g/L at 20 °C, pH 9");
 		r.propertyValue=r.propertyValue.replace("In water, 788 g/L at 25 °C, 3926 g/L at 97.5 °C","In water, 788 g/L at 25 °C; 3926 g/L at 97.5 °C");
 		r.propertyValue=r.propertyValue.replace("Fluffy white powder, mp 238 °C. Solubility in water (mg/100 mL) at 30 °C: 220 (ph 3.8), 280 (pH 5.5), 290 (pH 6.7), 264 (pH 7.9), 244 (pH 9.2-10.1) /Hydrochloride/","Fluffy white powder. Solubility in water (mg/100 mL) at 30 °C: 220 (ph 3.8); 280 mg/100 mL at 30 °C (pH 5.5); 290 mg/100 mL at 30 °C (pH 6.7); 264 mg/100 mL) at 30 °C (pH 7.9); 244 mg/100 mL) at 30 °C (pH 9.2-10.1) /Hydrochloride/");
+				
+		r.propertyValue=r.propertyValue.replace("log Kow: pH 5: 6.2-6.3 (10 °C), 6-6.1 (20 °C), 5.8-6.0 (30 °C); pH 7: 5.1 (10 °C), 4.9 (20 °C), 4.8 (30 °C); pH 9: 4.9 (10 °C), 4.8 (20 °C), 4.6 (30 °C)","6.2-6.3 @ pH 5 and 10 °C; 6-6.1 @ pH 5 and 20 °C; 5.8-6.0 @ pH 5 and 30 °C; 5.1 @ pH 7 and 10 °C; 4.9 @ pH 7 and 20 °C; 4.8 @ pH 7 and 30 °C; 4.9 @ pH 9 and 10 °C; 4.8 @ pH 9 and 20 °C; 4.6 @ pH 9 and 30 °C");
 	}
 	
 	public static Hashtable<String, String> getCID_HT() {
@@ -512,9 +514,10 @@ public class ParsePubChem extends Parse {
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strVaporPressure);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strLogKOW);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strMeltingPoint);
-		p.selectedProperties=Arrays.asList(ExperimentalConstants.strBoilingPoint);
+//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strBoilingPoint);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strAutoIgnitionTemperature);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strFlashPoint);
+		p.selectedProperties=Arrays.asList(ExperimentalConstants.strLogKOW);
 
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strViscosity);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strSurfaceTension);

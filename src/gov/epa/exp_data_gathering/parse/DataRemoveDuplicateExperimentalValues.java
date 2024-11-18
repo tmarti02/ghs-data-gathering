@@ -256,7 +256,6 @@ public class DataRemoveDuplicateExperimentalValues {
 				
 				String tsj=recj.property_value_string;
 				
-				boolean match=false;
 				
 				String pvi=null;
 				String pvj=null;
@@ -267,49 +266,26 @@ public class DataRemoveDuplicateExperimentalValues {
 				if(recj.property_value_string_parsed!=null) pvj=recj.property_value_string_parsed;
 				else pvj=recj.property_value_string;
 				
-			
-				if(pvi.equals(pvj)) {
-					if(print) System.out.println("Same property_value_string:"+reci.property_value_string);
+				boolean matchPropertyValueString=pvi.contentEquals(pvj);
+				boolean matchPointEstimate = getMatchPointEstimate(print, reci, recj);
+
+				boolean matchUnits=reci.property_value_units_final!=null && recj.property_value_units_final!=null && reci.property_value_units_final==recj.property_value_units_final;
+				boolean matchPressure = getMatchPressure(reci, recj);
+				boolean matchTemp = getMatchTemp(reci, recj);
+				boolean match_pH = getMatch_pH(reci, recj);
+				
+				boolean match=false;
+				if((matchPropertyValueString || matchPointEstimate) && matchUnits && matchTemp && matchPressure && match_pH) 
 					match=true;
-				}
 				
-				boolean haveBothPointEstimates=reci.property_value_point_estimate_final!=null && recj.property_value_point_estimate_final!=null;
-				
-				boolean unitsMatch=reci.property_value_units_final!=null && recj.property_value_units_final!=null && reci.property_value_units_final==recj.property_value_units_final;
-				
-				if(haveBothPointEstimates && unitsMatch) {
-
-//					if(!unitsMatch) {
-//						System.out.println(reci.property_value_units_final+"\t"+recj.property_value_units_final);
+//				if(matchUnits && matchTemp && matchPressure && match_pH && match==false  && !matchPropertyValueString) {
+//					if (reci.property_value_point_estimate_final==null && recj.property_value_point_estimate_final==null) {
+//						System.out.println(pvi);
+//						System.out.println(pvj+"\n");
 //					}
-					
-					double diff=Math.abs(reci.property_value_point_estimate_final-recj.property_value_point_estimate_final);
-
-					//TODO need to check if at same temperature or pressure
-					
-					if (reci.property_value_point_estimate_final!=0) {
-						diff/=Math.abs(reci.property_value_point_estimate_final);
-						diff*=100.0;//convert to %
-						
-						if(diff<0.01) {//<0.01% different
-							if(print) System.out.println("<0.01%\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final+"\t"+diff);
-							match=true;
-						} else {
-							if(print) System.out.println(">0.01%\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final+"\t"+diff);
-							match=false;
-						}
-					} else {
-						if(diff<1e-6) {
-							if(print) System.out.println("<1e-6\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final);
-							match=true;
-						} else {
-							match=false;
-							if(print) System.out.println(">1e-6\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final);
-						}
-					}
-				}
+//				}
 				
-				if (match) {
+				if(match) {
 					flagged=true;
 //					System.out.println("Remove exact match same src:"+recj);
 					recj.keep=false;
@@ -324,8 +300,6 @@ public class DataRemoveDuplicateExperimentalValues {
 //						System.out.println(gson.toJson(reci));
 //						System.out.println(gson.toJson(recj)+"\n");
 //					}
-
-					
 					
 //					System.out.println(key+"\t"+recj.reason+"\t"+tsi+"\t"+tsj);
 					
@@ -377,6 +351,78 @@ public class DataRemoveDuplicateExperimentalValues {
 //				System.out.println("after\t"+i+"\t"+reci.keep+"\t"+reci.reason);
 //		}
 
+	}
+
+	private boolean getMatch_pH(ExperimentalRecord reci, ExperimentalRecord recj) {
+		boolean match_pH=false;
+		
+		if(reci.pH==null && recj.pH==null) {
+			match_pH=true;
+		}
+		
+		if(reci.pH!=null && recj.pH!=null) {
+			if(reci.pH.contentEquals(recj.pH)) {
+				match_pH=true;
+			}
+		}
+		return match_pH;
+	}
+
+	private boolean getMatchTemp(ExperimentalRecord reci, ExperimentalRecord recj) {
+		boolean matchTemp=false;
+		if(reci.temperature_C==null && recj.temperature_C==null) {
+			matchTemp=true;
+		}
+		if(reci.temperature_C !=null && recj.temperature_C!=null) {
+			if(Math.abs(reci.temperature_C-recj.temperature_C)<0.01) {
+				matchTemp=true;
+			}
+		}
+		return matchTemp;
+	}
+
+	private boolean getMatchPressure(ExperimentalRecord reci, ExperimentalRecord recj) {
+		boolean matchPressure=false;
+		if(reci.pressure_mmHg==null && recj.pressure_mmHg==null) {
+			matchPressure=true;
+		}
+		
+		if(reci.pressure_mmHg!=null && recj.pressure_mmHg!=null) {
+			if(reci.pressure_mmHg.contentEquals(recj.pressure_mmHg)) {
+				matchPressure=true;
+			}
+		}
+		return matchPressure;
+	}
+
+	private boolean getMatchPointEstimate(boolean print, ExperimentalRecord reci, ExperimentalRecord recj) {
+		boolean matchPointEstimate=false;
+
+		if (reci.property_value_point_estimate_final!=null && recj.property_value_point_estimate_final!=null) {
+			double diff=Math.abs(reci.property_value_point_estimate_final-recj.property_value_point_estimate_final);
+
+			//TODO need to check if at same temperature or pressure
+			
+			if (reci.property_value_point_estimate_final!=0) {
+				diff/=Math.abs(reci.property_value_point_estimate_final);
+				diff*=100.0;//convert to %
+				
+				if(diff<0.01) {//<0.01% different
+					if(print) System.out.println("<0.01%\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final+"\t"+diff);
+					matchPointEstimate=true;
+				} else {
+					if(print) System.out.println(">0.01%\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final+"\t"+diff);
+				}
+			} else {
+				if(diff<1e-6) {
+					if(print) System.out.println("<1e-6\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final);
+					matchPointEstimate=true;
+				} else {
+					if(print) System.out.println(">1e-6\t"+reci.property_value_point_estimate_final+"\t"+recj.property_value_point_estimate_final);
+				}
+			}
+		}
+		return matchPointEstimate;
 	}
 
 	private void removeOriginalSource2IfOriginalHaveSource1(ExperimentalRecords recs, String originalSource1, String originalSource2) {

@@ -876,6 +876,8 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	public void getRecordsByProperty() {
 		TreeMap <String,ExperimentalRecords>map=new TreeMap<String,ExperimentalRecords>();
 
+		int total=0;
+		
 		for (ExperimentalRecord er:this) {
 			if(!er.keep) continue;
 			if(map.get(er.property_name)==null) {
@@ -886,8 +888,10 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 				ExperimentalRecords recs=map.get(er.property_name);
 				recs.add(er);
 			}
+			
+			total++;
 		}
-		System.out.println("\nKept records:");
+		System.out.println("\nKept records:"+total);
 		for(String property:map.keySet()) {
 			System.out.println(property+"\t"+map.get(property).size());
 		}
