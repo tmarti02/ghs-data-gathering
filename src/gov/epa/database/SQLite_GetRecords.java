@@ -28,7 +28,7 @@ public class SQLite_GetRecords {
 		}
 	}
 	
-	public static ResultSet getRecords(String databasePath,String tableName,String keyField,String keyValue) {
+	public static ResultSet getRecords(String databasePath,String tableName,String keyField,Object keyValue) {
 		Statement stat = SQLite_Utilities.getStatement(databasePath);
 		return getRecords(stat, tableName, keyField, keyValue);
 	}
@@ -42,7 +42,7 @@ public class SQLite_GetRecords {
 	 * @param keyField
 	 * @param vec
 	 */
-	public static ResultSet getRecords(Statement stat,String tableName,String keyField,Vector<String> vec) {
+	public static ResultSet getRecords(Statement stat,String tableName, String keyField,Vector<String> vec) {
 
 		try {
 
@@ -105,7 +105,7 @@ public class SQLite_GetRecords {
 	}	
 
 
-	public static ResultSet getRecords(Statement stat,String tableName,String keyField,String keyValue) {
+	public static ResultSet getRecords(Statement stat,String tableName,String keyField,Object keyValue) {
 
 		try {
 			String query="select * from "+tableName+" where "+keyField+" = \""+keyValue+"\";";

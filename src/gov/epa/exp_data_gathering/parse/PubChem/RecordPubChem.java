@@ -51,6 +51,10 @@ import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.StringWithMarkup
 
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
+/**
+ * Contact at PubChem: Evan (NIH/NLM/NCBI) Bolton: bolton@ncbi.nlm.nih.gov
+ * 
+ */
 public class RecordPubChem {
 	String cid;
 	String iupacNameCid;//from pubchem- based on cid 
@@ -108,7 +112,8 @@ public class RecordPubChem {
 
 	String notes;
 
-	static final String sourceName = ExperimentalConstants.strSourcePubChem + "_2024_03_20";
+//	static final String sourceName = ExperimentalConstants.strSourcePubChem + "_2024_03_20";
+	static final String sourceName = ExperimentalConstants.strSourcePubChem + "_2024_11_27";
 
 	static Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues()
 			.create();
@@ -207,7 +212,7 @@ public class RecordPubChem {
 		return cids;
 	}
 
-	HashSet<String> getCidsInDatabase(String sourceName) {
+	public static HashSet<String> getCidsInDatabase(String sourceName) {
 		String databaseName = sourceName + "_raw_json.db";
 		String tableName = sourceName;
 		String databaseFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
@@ -234,8 +239,37 @@ public class RecordPubChem {
 		}
 
 	}
+	
+	public static HashSet<Long> getCidsInDatabase2(String sourceName) {
+		String databaseName = sourceName + "_raw_json.db";
+		String tableName = sourceName;
+		String databaseFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
+		String databasePath = databaseFolder + File.separator + databaseName;
 
-	private static void downloadJSONsToDatabase(HashSet<String> cids, boolean startFresh) {
+		java.sql.Connection conn = SQLite_Utilities.getConnection(databasePath);
+
+		HashSet<Long> cidsAlreadyQueried = new HashSet<>();
+		
+		ResultSet rs = SQLite_GetRecords.getRecords(SQLite_Utilities.getStatement(conn), "select cid from "+tableName);
+		try {
+			long start = System.currentTimeMillis();
+			while (rs.next()) {
+				cidsAlreadyQueried.add(rs.getLong(1));
+			}
+			long end = System.currentTimeMillis();
+
+			System.out.println(cidsAlreadyQueried.size() + " CIDs in " + databasePath);
+
+			return cidsAlreadyQueried;
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
+
+	}
+
+	private static void downloadJSONsToDatabase(HashSet<Long> cids, boolean startFresh) {
 		ParsePubChem p = new ParsePubChem();
 		String databaseName = p.sourceName + "_raw_json.db";
 		String tableName = p.sourceName;
@@ -246,25 +280,18 @@ public class RecordPubChem {
 		}
 		java.sql.Connection conn = SQLite_CreateTable.create_table(databasePath, tableName,
 				RawDataRecordPubChem.fieldNames, startFresh);
-		HashSet<String> cidsAlreadyQueried = new HashSet<String>();
-		ResultSet rs = SQLite_GetRecords.getAllRecords(SQLite_Utilities.getStatement(conn), tableName);
-		try {
-			long start = System.currentTimeMillis();
-			while (rs.next()) {
-				cidsAlreadyQueried.add(rs.getString("cid"));
-			}
-			long end = System.currentTimeMillis();
-			System.out.println(cidsAlreadyQueried.size() + " CIDs already queried (" + (end - start) + " ms)");
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
 
+		HashSet<Long> cidsAlreadyQueried=getCidsInDatabase2(p.sourceName);
+		
+		long sleep=200;
+		
+		
 		try {
 			int counterSuccess = 0;
 			int counterTotal = 0;
 			int counterMissingExpData = 0;
 			long start = System.currentTimeMillis();
-			for (String cid : cids) {
+			for (Long cid : cids) {
 				String experimentalURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/" + cid
 						+ "/JSON?heading=Experimental+Properties";
 				String idURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid="
@@ -288,7 +315,7 @@ public class RecordPubChem {
 						counterMissingExpData++;
 						keepLooking = false;
 					}
-					Thread.sleep(200);
+					Thread.sleep(sleep);
 					if (keepLooking) {
 						try {
 //							rec.cas=FileUtilities.getText_UTF8(casURL).replaceAll("'", "\'").replaceAll(";", "\\;");
@@ -296,21 +323,21 @@ public class RecordPubChem {
 							rec.cas = rec.cas.replaceAll("'", "''").replaceAll(";", "\\;");
 						} catch (Exception ex) {
 						}
-						Thread.sleep(200);
+						Thread.sleep(sleep);
 						try {
 //							rec.identifiers=FileUtilities.getText_UTF8(idURL).replaceAll("'", "\'").replaceAll(";", "\\;");
 							rec.identifiers = FileUtilities.getText_UTF8(idURL);
 							rec.identifiers = rec.identifiers.replaceAll("'", "''").replaceAll(";", "\\;");
 						} catch (Exception ex) {
 						}
-						Thread.sleep(200);
+						Thread.sleep(sleep);
 						try {
 //							rec.synonyms=FileUtilities.getText_UTF8(synonymURL).replaceAll("'", "\'").replaceAll(";", "\\;");
 							rec.synonyms = StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(synonymURL));
 							rec.synonyms = rec.synonyms.replaceAll("'", "''").replaceAll(";", "\\;");
 						} catch (Exception ex) {
 						}
-						Thread.sleep(200);
+						Thread.sleep(sleep);
 					}
 					if (rec.experimental != null && !rec.experimental.isBlank()) {
 						rec.addRecordToDatabase(tableName, conn);
@@ -700,6 +727,9 @@ public class RecordPubChem {
 			//use the identifiers from the property value's original reference (if available):
 			er.casrn = casReference;				
 			er.chemical_name = chemicalNameReference;
+			
+			//What if have name but no CAS? Are we losing records when creating dataset?
+			
 //			System.out.println("Using reference identifiers="+er.chemical_name+", cas="+er.casrn);
 //			System.out.println("From main pubchem identifiers="+iupacNameCid+", smiles="+canonSmilesCid+"\n");
 		}
@@ -1308,9 +1338,18 @@ public class RecordPubChem {
 //				.readFile("Data\\Experimental\\PubChem\\solubilitycids-test.txt");
 
 		// TMM get data using cids from gabriels sqlite
-//		RecordPubChem r = new RecordPubChem();
+		RecordPubChem r = new RecordPubChem();
+
+		//old way get from prev db:
 //		HashSet<String> cids = r.getCidsInDatabase("Pubchem");// old ones from 2020
-//		downloadJSONsToDatabase(cids, false);
+
+		//New way get from annotation jsons:
+		GetCIDsFromProperty g=new GetCIDsFromProperty();
+		String folder="data\\experimental\\"+r.sourceName+"\\json\\";
+		HashSet<Long>cids=g.getCidsFromFolder(folder);
+
+//		downloadJSONsToDatabase(cids, true);
+		downloadJSONsToDatabase(cids, false);
 
 //		Vector<RecordPubChem>recs=parseJSONInDatabase("62695");//trans-2-butene
 //		Vector<RecordPubChem>recs=parseJSONInDatabase("643835");//cis-2-hexene

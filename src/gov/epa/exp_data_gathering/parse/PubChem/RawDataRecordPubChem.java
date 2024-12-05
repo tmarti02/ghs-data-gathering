@@ -11,7 +11,7 @@ import gov.epa.database.SQLite_Utilities;
 public class RawDataRecordPubChem {
 
 	public String date;//date accessed
-	public String cid;//url accessed
+	public Long cid;//url accessed
 	public String experimental;//raw experimental data as json
 	public String identifiers;//raw id data as json
 	public String cas;//raw cas data as json
@@ -19,7 +19,7 @@ public class RawDataRecordPubChem {
 	
 	public final static String [] fieldNames= {"date","cid","experimental","identifiers","cas","synonyms"};
 	
-	public RawDataRecordPubChem (String date,String cid,String experimental,String identifiers,String cas, String synonyms) {
+	public RawDataRecordPubChem (String date,Long cid,String experimental,String identifiers,String cas, String synonyms) {
 		this.date=date;
 		this.cid=cid;
 		this.experimental=experimental;
@@ -29,7 +29,7 @@ public class RawDataRecordPubChem {
 	}
 	
 	public void addRecordToDatabase(String tableName,Connection conn) {
-		String [] values= {date,cid,experimental,identifiers,cas,synonyms};
+		Object [] values= {date,cid,experimental,identifiers,cas,synonyms};
 		SQLite_CreateTable.addDataToTable(tableName, fieldNames, values, conn);
 	}
 	

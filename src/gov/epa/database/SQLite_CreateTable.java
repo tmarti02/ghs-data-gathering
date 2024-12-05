@@ -366,7 +366,7 @@ public class SQLite_CreateTable {
 	 * @param filepath
 	 * @return
 	 */
-	public static void addDataToTable(String tableName,String [] fieldNames,String [] values,Connection conn) {
+	public static void addDataToTable(String tableName,String [] fieldNames,Object [] values,Connection conn) {
 	
 		//		Example:
 		//		INSERT INTO Customers (CustomerName, ContactName, Address, City, PostalCode, Country)
