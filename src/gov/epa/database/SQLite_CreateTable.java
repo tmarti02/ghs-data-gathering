@@ -394,13 +394,13 @@ public class SQLite_CreateTable {
 	
 			sql+=")\r\n";
 	
-			//			System.out.println(sql);
+//			System.out.println(sql);
 	
 			Statement stat = SQLite_Utilities.getStatement(conn);
 			stat.executeUpdate(sql);
 	
 		} catch (Exception ex) {
-			System.out.println(sql);
+//			System.out.println(sql);
 			ex.printStackTrace();
 		}
 	
