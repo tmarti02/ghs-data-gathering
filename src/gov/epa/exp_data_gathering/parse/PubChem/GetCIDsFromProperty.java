@@ -49,6 +49,11 @@ public class GetCIDsFromProperty {
 	void getAnnotationJsons(String heading,String folder) {
 		
 		//get first page:
+		File Folder=new File(folder);
+		if(!Folder.exists()) {
+			Folder.mkdirs();
+		}
+		
 		int page=1;
 		String url="https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/annotations/heading/JSON?heading="+heading.replace(" ", "+")+"&page="+page+"&heading_type=Compound";
 		String json=FileUtilities.getText(url);
@@ -415,6 +420,7 @@ public class GetCIDsFromProperty {
 		GetCIDsFromProperty g=new GetCIDsFromProperty();
 		
 		String folder="data\\experimental\\PubChem_2024_11_27\\json\\physchem\\";
+		
 //		g.renameFilesFolder(folder);
 //		g.getAnnotationJsons("Henry's Law Constant", folder);
 //		g.getAnnotationJsons("LogP", folder);
@@ -422,7 +428,6 @@ public class GetCIDsFromProperty {
 //		g.getAnnotationJsons("Vapor Pressure", folder);
 //		g.getAnnotationJsons("Melting Point", folder);
 //		g.getAnnotationJsons("Boiling Point", folder);
-		
 //		g.getAnnotationJsons("Density", folder);
 //		g.getAnnotationJsons("Viscosity", folder);
 //		g.getAnnotationJsons("Surface Tension", folder);
@@ -430,7 +435,7 @@ public class GetCIDsFromProperty {
 //		g.getAnnotationJsons("Autoignition Temperature", folder);
 //		g.getAnnotationJsons("Vapor Density", folder);
 
-		HashSet<Long>cidsNew=g.getCidsFromFolder(folder);
+//		HashSet<Long>cidsNew=g.getCidsFromFolder(folder);
 //		System.out.println(cidsNew.size());
 
 //		String folder="data\\experimental\\PubChem_2024_11_27\\json\\toxicity\\";
