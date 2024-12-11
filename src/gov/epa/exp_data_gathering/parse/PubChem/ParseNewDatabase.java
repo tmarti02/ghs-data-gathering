@@ -838,8 +838,8 @@ public class ParseNewDatabase {
 	public static void main(String[] args) {
 		ParseNewDatabase r=new ParseNewDatabase();
 		//		
-//		r.loadFromAnnotationJsons();
-		r.loadIdentifiers();
+		r.loadFromAnnotationJsons();
+//		r.loadIdentifiers();
 //		r.deleteBadIdentifiers();
 
 		//r.testParseFromAnnotation();

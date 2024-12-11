@@ -350,7 +350,7 @@ public class SqlUtilities {
 	}
 
 
-	public static void batchCreate(String tableName, String []fieldNames, List<Object> records, Connection conn) throws SQLException {
+	public static void batchCreateWithCloning(String tableName, String []fieldNames, List<Object> records, Connection conn) throws SQLException {
 
 		long t1=System.currentTimeMillis();
 
@@ -381,6 +381,43 @@ public class SqlUtilities {
 			
 			
 		}
+		conn.setAutoCommit(true);
+
+	}
+	
+	/**
+	 * Doesnt clone
+	 * 
+	 * @param tableName
+	 * @param fieldNames
+	 * @param records
+	 * @param conn
+	 * @throws SQLException
+	 */
+
+	public static void batchCreate(String tableName, String []fieldNames, List<Object> records, Connection conn) throws SQLException {
+		long t1=System.currentTimeMillis();
+
+		String sql = createSqlInsert(fieldNames,tableName,null);	
+		PreparedStatement prep = conn.prepareStatement(sql);
+				
+		int batchSize=1000;
+		
+		conn.setAutoCommit(false);
+		
+		List<Object> records2=new ArrayList<>();
+		
+		for (int i=0;i<records.size();i++) {
+			records2.add(records.get(i));//might be slightly slow if have large list since has to seek from start
+			if(records2.size() == batchSize) {
+				addBatch(prep, records2,fieldNames);
+				records2.clear();
+			}
+		}
+		
+		//do what's left
+		addBatch(prep, records2,fieldNames);
+
 		conn.setAutoCommit(true);
 
 	}
@@ -448,7 +485,13 @@ public class SqlUtilities {
 
 						
 					} else {//string
-						prep.setString(fieldNum, (String)myField.get(r));
+						
+						if(myField.get(r)==null) {
+							prep.setNull(fieldNum, Types.VARCHAR);
+						} else {
+							prep.setString(fieldNum, (String)myField.get(r));	
+						}
+						
 //						System.out.println(fieldNum+"\t"+fieldName+"\t"+myField.get(r));
 					}
 					
@@ -472,50 +515,64 @@ public class SqlUtilities {
 
 	
 	static class Annotation extends Object {
-		long ANID;
-		String TOCHeading;
-		String Annotation;
-//		String created_at;
-//		Date created_at;
-		String created_at;
+		public long ANID;
+		public String TOCHeading;
+		public String Annotation;
+		public String Date;
 		
 //		Annotation(long ANID, String TOCHeading,String Annotation,Date created_at) {
-		Annotation(long ANID, String TOCHeading,String Annotation,String created_at) {
+		public Annotation(long ANID, String TOCHeading,String Annotation,String Date) {
 			this.ANID=ANID;
 			this.TOCHeading=TOCHeading;
 			this.Annotation=Annotation;
-			this.created_at=created_at;
+			this.Date=Date;
 		}
 	}
 	
 	public static void main(String[] args) {
 		SqlUtilities s=new SqlUtilities();
 		
-		String [] fieldNames= {"ANID","TOCHeading","Annotation","created_at"};
+		testBatchCreate(s);
 		
+	}
 
-		List<Object>annotations=new ArrayList<>();
-		
-		for (int i=1;i<=12001;i++) {
-			
-			Date date = new Date();
-			SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-			String strDate = formatter.format(date);
+	private static void testBatchCreate(SqlUtilities s) {
+		String [] fieldNames= {"ANID","TOCHeading","Annotation","Date"};
 
-			annotations.add(new Annotation(i,"Water Solubility","{a}",strDate));	
-		}
-				
-		Connection conn=getConnectionSqlite("C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\0 java\\0 model_management\\ghs-data-gathering\\data\\experimental\\PubChem_2024_11_27\\PubChem_2024_11_27_raw_json_v2_no data.db");
-		
+
 		try {
-			s.batchCreate("annotation", fieldNames, annotations, conn);
+
+			Connection conn=getConnectionSqlite("C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\0 java\\0 model_management\\ghs-data-gathering\\data\\experimental\\PubChem_2024_11_27\\PubChem_2024_11_27_raw_json_v2_no data.db");
+
+			long t1=System.currentTimeMillis();
+			
+			List<Object>annotations=new ArrayList<>();
+
+			for (int i=1;i<=10001;i++) {
+
+				Date date = new Date();
+				SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+				String strDate = formatter.format(date);
+
+				annotations.add(new Annotation(i,"Water Solubility","{a}",strDate));	
+
+				if (annotations.size()==1000) {
+					s.batchCreate("annotations", fieldNames, annotations, conn);	
+					annotations.clear();
+				}
+			}
+
+			//Do what's left:
+			s.batchCreate("annotations", fieldNames, annotations, conn);	
+
+			long t2=System.currentTimeMillis();
+			
+			System.out.println((t2-t1)+" millisecs");
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
-
-
 
 }
