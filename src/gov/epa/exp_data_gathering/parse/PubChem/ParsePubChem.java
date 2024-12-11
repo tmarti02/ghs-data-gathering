@@ -1,6 +1,7 @@
 package gov.epa.exp_data_gathering.parse.PubChem;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -17,8 +18,10 @@ import org.apache.commons.text.StringEscapeUtils;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
@@ -71,7 +74,11 @@ public class ParsePubChem extends Parse {
 	static boolean storeDTXCIDs=false;
 	boolean createExcelForSelectedProperties=false;
 	List<String>selectedProperties=null;
+	List<String>selectedHeadings=null;
 	
+	String databaseFormatCompound="compound";
+	String databaseFormatAnnotation="annotation";
+	String databaseFormat=databaseFormatAnnotation;
 	
 	
 	public ParsePubChem() {
@@ -91,9 +98,15 @@ public class ParsePubChem extends Parse {
 	protected void createRecords() {
 		
 		if(generateOriginalJSONRecords) {
-			Vector<RecordPubChem> records = RecordPubChem.parseJSONsInDatabase();
-			System.out.println("Added "+records.size()+" records");
-			writeOriginalRecordsToFile(records);
+			
+			if(databaseFormat.equals(databaseFormatCompound)) {
+				Vector<RecordPubChem> records = RecordPubChem.parseJSONsInDatabase();
+				System.out.println("Added "+records.size()+" records");
+				writeOriginalRecordsToFile(records);
+			} else if(databaseFormat.equals(databaseFormatAnnotation)) {
+				ParseNewDatabase p=new ParseNewDatabase();
+				p.parseJSONsInDatabase();
+			}
 		}
 	}
 	
@@ -191,94 +204,7 @@ public class ParsePubChem extends Parse {
 				// Fix before splitting, need programmatic way than just replacing: 
 				fixPropertyValueBeforeSplit(r);	
 				
-				if(r.propertyValue.contains(";") && !r.propertyName.equals("Physical Description") && !r.propertyName.equals("Color/Form") &&  !r.propertyName.equals("Odor") ) {
-				
-					String propertyValueOriginal=r.propertyValue;
-					
-					String [] vals=r.propertyValue.split(";");
-					
-					boolean haveDensity=false;
-					boolean haveVP=false;
-					
-					for (String propertyValue:vals) {
-						if(propertyValue.toLowerCase().contains("density")) haveDensity=true;
-						if(propertyValue.toLowerCase().contains("vapor pressure")) haveVP=true;
-					}
-					
-					for (String propertyValue:vals) {
-
-						r.propertyValue=propertyValue.trim();
-						
-						if(r.propertyValue.indexOf("OECD")==0) continue;
-						
-						ExperimentalRecord er=r.toExperimentalRecord(propertyValueOriginal);
-						
-						
-						if(haveDensity && !propertyValue.toLowerCase().contains("density") && er.property_name.toLowerCase().contains("density")) {
-//							System.out.println("missing density: "+r.propertyName+"\t"+r.propertyValue);
-							continue;
-						}
-						
-//						if(haveVP && !propertyValue.toLowerCase().contains("vapor pressure") && er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
-//							System.out.println("missingVP: "+r.propertyName+"\t"+r.propertyValue+"\t"+propertyValueOriginal);
-//							continue;
-//						}
-
-
-//						if(er.reason!=null && er.reason.equals("No values")) {
-//							System.out.println(r.propertyValue);
-//						}
-						
-//						if(!propertyValue.equals(propertyValueOriginal)) {
-//							er.updateNote("parsed property_value: "+propertyValue);
-//						}
-						
-						er.property_value_string_parsed=propertyValue;						
-						er.property_value_string=propertyValueOriginal;
-						
-						if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name)) continue;
-//						if(!er.property_name.equals(property)) continue;
-						
-						if(er==null) continue;	
-
-						if (storeDTXCIDs) 
-							if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
-
-						
-//						System.out.println(originalValue+"\t"+r.propertyValue);
-						
-//						if(er.casrn!=null && er.casrn.equals("75-38-7")) {
-//							System.out.println(gson.toJson(er));
-//						}
-						
-//						if(er.reason!=null && er.reason.equals("Original units missing")) {
-//							System.out.println(propertyValue);
-//						}
-
-						recordsExperimental.add(er);
-					}	
-					
-				} else {//treat as one record
-
-					ExperimentalRecord er=r.toExperimentalRecord(r.propertyValue);
-
-					er.property_value_string_parsed=r.propertyValue;						
-					
-//					if(!er.property_name.equals(property)) continue;
-					if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name)) continue;
-					
-//					if(er.reason!=null && er.reason.equals("No values")) {
-//						System.out.println(r.propertyValue+"\t"+er.property_value_point_estimate_original);
-//					}
-					
-					if(er==null) continue;	
-					
-					if (storeDTXCIDs) 
-						if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
-					
-					recordsExperimental.add(er);
-
-				}
+				handleRecordPubChem(recordsExperimental, htCID, r);
 							
 				
 				
@@ -320,14 +246,14 @@ public class ParsePubChem extends Parse {
 	}
 	
 	
-	@Override
-	protected ExperimentalRecords goThroughOriginalRecords() {
-		
+	ExperimentalRecords goThroughOriginalRecordsCompound() {
+
 		System.out.println("Enter goThroughOriginalRecords");
 		
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		
 		try {
+			
 			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
 			File jsonFile = new File(jsonFileName);
 			
@@ -367,167 +293,11 @@ public class ParsePubChem extends Parse {
 				RecordPubChem r = it.next();
 				
 				//Skip the following until we have code to handle it:
-				if(r.propertyName.equals("Other Experimental Properties")) continue;//TODO see what properties are in there
-				if(r.propertyName.equals("Collision Cross Section")) continue;
-				if(r.propertyName.equals("Odor Threshold")) continue;
-				if(r.propertyName.equals("Ionization Potential")) continue;
-				if(r.propertyName.equals("Polymerization")) continue;
-				if(r.propertyName.equals("Stability/Shelf Life")) continue;
-				if(r.propertyName.equals("Decomposition")) continue;
-				if(r.propertyName.equals("Heat of Vaporization")) continue;
-				if(r.propertyName.equals("Heat of Combustion")) continue;
-				if(r.propertyName.equals("Enthalpy of Sublimation")) continue;
-				if(r.propertyName.equals("Corrosivity")) continue;
-				if(r.propertyName.equals("Taste")) continue;
+				if(skipRecord(r)) continue;
 				
-				if(r.propertyName.equals("Dissociation Constants")) continue;//TODO can get Acidic pKa if add more code
-				if(r.propertyName.contains("pK")) continue;
-				
-				if(r.propertyName.equals("Ionization Efficiency")) continue;
-				if(r.propertyName.equals("Optical Rotation")) continue;
-				if(r.propertyName.equals("Refractive Index")) continue;
-				if(r.propertyName.equals("Relative Evaporation Rate")) continue;
-//				if(r.propertyName.equals("Viscosity")) continue;				
-//				if(r.propertyName.equals("Surface Tension")) continue;
-				if(r.propertyName.equals("pH")) continue;
-				if(r.propertyName.equals("Acid Value")) continue;
-				if(r.propertyName.equals("Additive")) continue;
-				if(r.propertyName.equals("Organic modifier")) continue;
-				if(r.propertyName.equals("Reference")) continue;
-				if(r.propertyName.equals("Ionization mode")) continue;
-				if(r.propertyName.equals("logIE")) continue;
-				if(r.propertyName.equals("Acid Value")) continue;
-				if(r.propertyName.equals("Instrument")) continue;
-				if(r.propertyName.equals("Ion source")) continue;
-				if(r.propertyName.equals("Stability")) continue;
-				if(r.propertyName.equals("Dielectric Constant")) continue;
-				if(r.propertyName.equals("Accelerating Rate Calorimetry (ARC)")) continue;
-				if(r.propertyName.equals("Differential Scanning Calorimetry (DSC)")) continue;
-				if(r.propertyName.equals("Dispersion")) continue;
-				
-				
-//				String property=ExperimentalConstants.strLogKOW;
-
-				// Fix before splitting, need programmatic way than just replacing: 
 				fixPropertyValueBeforeSplit(r);	
-				
-				if(r.propertyValue.contains(";") && !r.propertyName.equals("Physical Description") && !r.propertyName.equals("Color/Form") &&  !r.propertyName.equals("Odor") ) {
-				
-					String propertyValueOriginal=r.propertyValue;
-					
-					String [] vals=r.propertyValue.split(";");
-					
-					boolean haveDensity=false;
-					boolean haveVP=false;
-					
-					for (String propertyValue:vals) {
-						if(propertyValue.toLowerCase().contains("density")) haveDensity=true;
-						if(propertyValue.toLowerCase().contains("vapor pressure")) haveVP=true;
-					}
-					
-					for (String propertyValue:vals) {
-
-						r.propertyValue=propertyValue.trim();
-						
-						if(r.propertyValue.indexOf("OECD")==0) continue;
-						
-						ExperimentalRecord er=r.toExperimentalRecord(propertyValueOriginal);
-						
-						
-						if(haveDensity && !propertyValue.toLowerCase().contains("density") && er.property_name.toLowerCase().contains("density")) {
-//							System.out.println("missing density: "+r.propertyName+"\t"+r.propertyValue);
-							continue;
-						}
-						
-//						if(haveVP && !propertyValue.toLowerCase().contains("vapor pressure") && er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
-//							System.out.println("missingVP: "+r.propertyName+"\t"+r.propertyValue+"\t"+propertyValueOriginal);
-//							continue;
-//						}
-
-
-//						if(er.reason!=null && er.reason.equals("No values")) {
-//							System.out.println(r.propertyValue);
-//						}
-						
-//						if(!propertyValue.equals(propertyValueOriginal)) {
-//							er.updateNote("parsed property_value: "+propertyValue);
-//						}
-						
-						er.property_value_string_parsed=propertyValue;						
-						er.property_value_string=propertyValueOriginal;
-						
-						if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name)) continue;
-//						if(!er.property_name.equals(property)) continue;
-						
-						if(er==null) continue;	
-
-						if (storeDTXCIDs) 
-							if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
-
-						
-//						System.out.println(originalValue+"\t"+r.propertyValue);
-						
-//						if(er.casrn!=null && er.casrn.equals("75-38-7")) {
-//							System.out.println(gson.toJson(er));
-//						}
-						
-//						if(er.reason!=null && er.reason.equals("Original units missing")) {
-//							System.out.println(propertyValue);
-//						}
-
-						recordsExperimental.add(er);
-					}	
-					
-				} else {//treat as one record
-
-					ExperimentalRecord er=r.toExperimentalRecord(r.propertyValue);
-
-					er.property_value_string_parsed=r.propertyValue;						
-					
-//					if(!er.property_name.equals(property)) continue;
-					if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name)) continue;
-					
-//					if(er.reason!=null && er.reason.equals("No values")) {
-//						System.out.println(r.propertyValue+"\t"+er.property_value_point_estimate_original);
-//					}
-					
-					if(er==null) continue;	
-					
-					if (storeDTXCIDs) 
-						if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
-					
-					recordsExperimental.add(er);
-
-				}
+				handleRecordPubChem(recordsExperimental, htCID, r);
 							
-				
-				
-//				if(r.markupChemicals!=null) {
-//					System.out.println(r.propertyName);
-					
-//					if(er.property_name.contentEquals(ExperimentalConstants.strWaterSolubility) ||
-//							er.property_name.equals(ExperimentalConstants.strBoilingPoint) || 
-//							er.property_name.equals(ExperimentalConstants.strMeltingPoint) ||
-//							er.property_name.equals(ExperimentalConstants.strLogKOW) ||
-//							er.property_name.equals(ExperimentalConstants.strHenrysLawConstant) ||
-//							er.property_name.equals(ExperimentalConstants.strDensity) ||
-//							er.property_name.equals(ExperimentalConstants.strVaporPressure))
-					
-//					System.out.println(r.propertyName+"\t"+r.propertyValue+"\trefCAS"+er.casrn+"\trefName="+ r.chemicalNameReference+"\tfirstMarkupName="+r.markupChemicals.get(0).name+"\tcidName="+r.iupacNameCid);
-//					System.out.println(r.propertyName+"\t"+r.propertyValue+"\trefCAS="+er.casrn+"\trefName="+ r.chemicalNameReference+"\tcidName="+r.iupacNameCid);
-
-//				}
-				
-//				if(er.property_name.contentEquals(ExperimentalConstants.strWaterSolubility)){
-//					if(er.property_value_point_estimate_original!=null)
-//						System.out.println(er.chemical_name+"\t"+er.casrn+"\t"+ er.property_value_string+"\t"+er.property_value_numeric_qualifier+"\t"+  er.property_value_point_estimate_original+"\t"+er.property_value_units_original+"\t"+er.pH);
-//				}
-						
-				
-				//do we want to trust the cid from compounds table in dsstox???
-				
-				
-				
 			}
 			
 			
@@ -539,6 +309,214 @@ public class ParsePubChem extends Parse {
 		return recordsExperimental;
 	}
 
+	private void handleRecordPubChem(ExperimentalRecords recordsExperimental, Hashtable<String, String> htCID,
+			RecordPubChem r) {
+		
+		if(r.propertyValue.contains(";") && !r.propertyName.equals("Physical Description") && !r.propertyName.equals("Color/Form") &&  !r.propertyName.equals("Odor") ) {
+		
+			String propertyValueOriginal=r.propertyValue;
+			
+			String [] vals=r.propertyValue.split(";");
+			
+			boolean haveDensity=false;
+			boolean haveVP=false;
+			
+			for (String propertyValue:vals) {
+				if(propertyValue.toLowerCase().contains("density")) haveDensity=true;
+				if(propertyValue.toLowerCase().contains("vapor pressure")) haveVP=true;
+			}
+			
+			for (String propertyValue:vals) {
+
+				r.propertyValue=propertyValue.trim();
+				
+				if(r.propertyValue.indexOf("OECD")==0) continue;
+				
+				ExperimentalRecord er=r.toExperimentalRecord(propertyValueOriginal);
+				
+				//Density is hard to parse, need to exclude the cases where density appeared in one of the split values but not the others
+				if(haveDensity && !propertyValue.toLowerCase().contains("density") && er.property_name.toLowerCase().contains("density")) {
+//					System.out.println("missing density: "+r.propertyName+"\t"+r.propertyValue);
+					continue;
+				}
+				
+//				if(haveVP && !propertyValue.toLowerCase().contains("vapor pressure") && er.property_name.equals(ExperimentalConstants.strVaporPressure)) {
+//					System.out.println("missingVP: "+r.propertyName+"\t"+r.propertyValue+"\t"+propertyValueOriginal);
+//					continue;
+//				}
+
+
+//				if(er.reason!=null && er.reason.equals("No values")) {
+//					System.out.println(r.propertyValue);
+//				}
+				
+//				if(!propertyValue.equals(propertyValueOriginal)) {
+//					er.updateNote("parsed property_value: "+propertyValue);
+//				}
+				
+				er.property_value_string_parsed=propertyValue;						
+				er.property_value_string=propertyValueOriginal;
+				
+				if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name)) continue;
+//						if(!er.property_name.equals(property)) continue;
+				
+				if(er==null) continue;	
+
+				if (storeDTXCIDs) 
+					if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
+
+				
+//				System.out.println(originalValue+"\t"+r.propertyValue);
+//				System.out.println(gson.toJson(er));
+//				
+//				if(er.reason!=null && er.reason.equals("Original units missing")) {
+//					System.out.println(propertyValue);
+//				}
+
+				recordsExperimental.add(er);
+				
+			} //end loop over split values	
+			
+		} else {//treat as one record
+
+			ExperimentalRecord er=r.toExperimentalRecord(r.propertyValue);
+
+			er.property_value_string_parsed=r.propertyValue;						
+			
+//					if(!er.property_name.equals(property)) continue;
+			if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name))
+				return;
+			
+//			if(er.reason!=null && er.reason.equals("No values")) {
+//				System.out.println(r.propertyValue+"\t"+er.property_value_point_estimate_original);
+//			}
+			
+			if(er==null)
+				return;	
+			
+			if (storeDTXCIDs) {
+				//Do we want to trust the cid from compounds table in dsstox???
+				if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
+			}
+			
+			recordsExperimental.add(er);
+
+		}
+	}
+	
+	
+	boolean skipRecord (RecordPubChem r) {
+		
+		List<String>skipProperties=new ArrayList<>();
+		
+		skipProperties.add("Other Experimental Properties");
+		skipProperties.add("Collision Cross Section");
+		skipProperties.add("Odor Threshold");
+		skipProperties.add("Ionization Potential");
+		skipProperties.add("Polymerization");
+		skipProperties.add("Stability/Shelf Life");
+		skipProperties.add("Decomposition");
+		skipProperties.add("Heat of Vaporization");
+		skipProperties.add("Heat of Combustion");
+		skipProperties.add("Enthalpy of Sublimation");
+		skipProperties.add("Corrosivity");
+		skipProperties.add("Taste");
+		skipProperties.add("Dissociation Constants");
+		skipProperties.add("pK");
+		skipProperties.add("Ionization Efficiency");
+		skipProperties.add("Optical Rotation");
+		skipProperties.add("Refractive Index");
+		skipProperties.add("Relative Evaporation Rate");
+		skipProperties.add("Viscosity");
+		skipProperties.add("Surface Tension");
+		skipProperties.add("pH");
+		skipProperties.add("Acid Value");
+		skipProperties.add("Additive");
+		skipProperties.add("Organic modifier");
+		skipProperties.add("Reference");
+		skipProperties.add("Ionization mode");
+		skipProperties.add("logIE");
+		skipProperties.add("Acid Value");
+		skipProperties.add("Instrument");
+		skipProperties.add("Ion source");
+		skipProperties.add("Stability");
+		skipProperties.add("Dielectric Constant");
+		skipProperties.add("Accelerating Rate Calorimetry (ARC");
+		skipProperties.add("Differential Scanning Calorimetry (DSC");
+		skipProperties.add("Dispersion");
+		
+		
+		for (String skipProperty:skipProperties) {
+			if(r.propertyName.contains(skipProperty)) return true;
+		}
+
+		return false;
+
+	}
+	
+	
+	@Override
+	protected ExperimentalRecords goThroughOriginalRecords() {
+		if(databaseFormat.equals(databaseFormatCompound)) return goThroughOriginalRecordsCompound();
+		else if(databaseFormat.equals(databaseFormatAnnotation)) return goThroughOriginalRecordsAnnotation();
+		else return null;
+	}
+
+
+	private ExperimentalRecords goThroughOriginalRecordsAnnotation() {
+		
+		List<RecordPubChem> recordsPubChem = getPubChemRecordsForSelectedHeadings();
+		
+		Hashtable<String,String>htCID=null;
+		if(this.storeDTXCIDs) htCID=getCID_HT();
+		
+		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		
+		Iterator<RecordPubChem> it = recordsPubChem.iterator();
+		while (it.hasNext()) {
+			RecordPubChem r = it.next();
+			
+//			String property=ExperimentalConstants.strLogKOW;
+
+			// Fix before splitting, need programmatic way than just replacing: 
+			fixPropertyValueBeforeSplit(r);	
+			
+			handleRecordPubChem(recordsExperimental, htCID, r);
+						
+			//do we want to trust the cid from compounds table in dsstox???
+			
+		}
+		
+		return recordsExperimental;
+		
+	}
+
+	private List<RecordPubChem> getPubChemRecordsForSelectedHeadings() {
+		File folder=new File(jsonFolder);
+		List<RecordPubChem> recordsPubChem = new ArrayList<RecordPubChem>();
+		
+		
+		for (File file:folder.listFiles()) {
+			
+			if(!file.getName().contains(".json")) continue;
+			if(!file.getName().contains("Original Records")) continue;
+
+			String heading=file.getName().replace(".json", "").replace("Original Records ","");
+			if(selectedHeadings!=null && !selectedHeadings.contains(heading)) continue; 
+			
+			RecordPubChem[] tempRecords;
+			try {
+				tempRecords = gson.fromJson(new FileReader(file), RecordPubChem[].class);
+				for(RecordPubChem record:tempRecords) recordsPubChem.add(record);
+				System.out.println(heading+"\t"+tempRecords.length);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}			
+			
+		}
+		System.out.println("total original records\t"+recordsPubChem.size());
+		return recordsPubChem;
+	}
 
 	/**
 	 * Fix records that have nonstandard delimiting into property values
@@ -718,38 +696,48 @@ public class ParsePubChem extends Parse {
 		
 		p.storeDTXCIDs=false;//if true it stores dtxcid based on the lookup from the compounds table in dsstox
 		p.generateOriginalJSONRecords=false;
-		p.howManyOriginalRecordsFiles=3;
+//		p.howManyOriginalRecordsFiles=3;
 		p.removeDuplicates=true;
 
-		
 		p.writeJsonExperimentalRecordsFile=false;
 		p.writeExcelExperimentalRecordsFile=true;
 		p.writeExcelFileByProperty=true;		
 		p.writeCheckingExcelFile=false;
-		
 		
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strWaterSolubility);								
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strDensity,ExperimentalConstants.strVaporDensity);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strVaporDensity);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strDensity);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strVaporPressure);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strLogKOW);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strMeltingPoint);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strBoilingPoint);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strAutoIgnitionTemperature);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strFlashPoint);
-		p.selectedProperties=Arrays.asList(ExperimentalConstants.strLogKOW);
-
+//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strLogKOW);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strViscosity);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strSurfaceTension);
 //		p.selectedProperties=Arrays.asList(ExperimentalConstants.strHenrysLawConstant);
-		
+
 //		selectedProperties=Arrays.asList(ExperimentalConstants.str_pKA);
 //		selectedProperties=Arrays.asList(ExperimentalConstants.str_pKA,ExperimentalConstants.str_pKAa,ExperimentalConstants.str_pKAb);
+		
+//		p.selectedHeadings=null;
+//		p.selectedHeadings=Arrays.asList("Solubility");								
+//		p.selectedHeadings=Arrays.asList("Density","Vapor Density");
+//		p.selectedHeadings=Arrays.asList("Vapor Density");
+//		p.selectedHeadings=Arrays.asList("Density");
+//		p.selectedHeadings=Arrays.asList("Vapor Pressure");
+//		p.selectedHeadings=Arrays.asList("LogP");
+//		p.selectedHeadings=Arrays.asList("Melting Point");
+//		p.selectedHeadings=Arrays.asList("Boiling Point");
+//		p.selectedHeadings=Arrays.asList("Autoignition Temperature");
+//		p.selectedHeadings=Arrays.asList("Flash Point");
+//		p.selectedHeadings=Arrays.asList("Viscosity");
+//		p.selectedHeadings=Arrays.asList("Surface Tension);
+		p.selectedHeadings=Arrays.asList("Henry's Law Constant");
+		
 		p.createExcelForSelectedProperties=false;
 
-		
-		
 		p.createFiles();
 	}
 }

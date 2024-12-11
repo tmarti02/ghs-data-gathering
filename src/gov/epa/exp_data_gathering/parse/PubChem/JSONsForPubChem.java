@@ -86,7 +86,7 @@ public class JSONsForPubChem {
 		@SerializedName("LicenseURL")
 		public String licenseURL;
 		@SerializedName("ANID")
-		public String aNID;
+		public String ANID;
 		@SerializedName("IsToxnet")
 		public Boolean isToxnet;
 	}

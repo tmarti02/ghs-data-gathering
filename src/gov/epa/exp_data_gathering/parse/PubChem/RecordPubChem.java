@@ -6,13 +6,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -24,16 +22,12 @@ import org.apache.commons.text.StringEscapeUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.exp_data_gathering.parse.DownloadWebpageUtilities;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
-import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.PressureCondition;
@@ -42,7 +36,6 @@ import gov.epa.exp_data_gathering.parse.RecordDashboard;
 import gov.epa.exp_data_gathering.parse.TemperatureCondition;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.pHCondition;
-import gov.epa.exp_data_gathering.parse.PubChem.AnnotationQuery.Annotation;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Data;
 
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.IdentifierData;
@@ -60,7 +53,8 @@ import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
  * 
  */
 public class RecordPubChem {
-	String cid;
+	Long ANID;
+	Long cid;
 	String iupacNameCid;//from pubchem- based on cid 
 	String canonSmilesCid;////from pubchem - based on cid
 	String synonyms;
@@ -124,7 +118,7 @@ public class RecordPubChem {
 
 	private static final transient UnitConverter unitConverter = new UnitConverter("data/density.txt");
 
-	private RecordPubChem() {
+	public RecordPubChem() {
 //		cas = new Vector<String>();
 //		htCAS=new Hashtable<String,String>();
 //		htChemicalName=new Hashtable<String, String>();
@@ -519,7 +513,7 @@ public class RecordPubChem {
 					continue;
 				RecordPubChem pcr = new RecordPubChem();
 				pcr.date_accessed = date.substring(0, date.indexOf(" "));
-				pcr.cid = experimentalData.record.recordNumber;
+				pcr.cid = Long.parseLong(experimentalData.record.recordNumber);
 				
 //				pcr.propertyName = section.tocHeading.trim();
 				
@@ -1043,7 +1037,7 @@ public class RecordPubChem {
 
 			er.publicSourceOriginal = publicSourceOriginal;
 			er.original_source_name=publicSourceOriginal.name;
-			er.url = publicSourceOriginal.url;
+			er.url = publicSourceOriginal.url;//store direct link in url instead
 
 			if (publicSourceOriginal.name.equals("EPA DSSTox")) {
 				er.keep = false;
@@ -1333,189 +1327,20 @@ public class RecordPubChem {
 
 	}
 	
-	void loadAnnotationFile(String filepath, Connection conn,HashSet<Long>ANIDs) 
-	{
-		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting();
-		Gson gson = builder.create();
-//		Gson gson = builder.setPrettyPrinting().disableHtmlEscaping().create();
-		
-		try {
-//			JsonObject jo=gson.fromJson(new FileReader(filepath), JsonObject.class);
-			
-			AnnotationQuery aq=gson.fromJson(new FileReader(filepath), AnnotationQuery.class);
-//			if(true) return;
-			
-//			System.out.println(jaAnnotations.size());
-			
-			String [] fieldNamesAnnotation= {"ANID","TOCHeading","Annotation"};
-			String [] fieldNamesAnnotationCID= {"ANID","cid"};
-
-			
-			List<Annotation> annotations=aq.Annotations.Annotation;
-			
-			for (Annotation annotation:annotations) {
-				
-				if (ANIDs.contains(annotation.ANID)) continue;
-				
-				ANIDs.add(annotation.ANID);
-				
-				if (annotation.linkedRecords==null) continue;
-				if (annotation.linkedRecords.cids==null) continue;
-				
-				String strAnnotation=gson.toJson(annotation);
-				String TOCHeading=annotation.data.get(0).TOCHeading.TOCHeading;
-				TOCHeading=TOCHeading.replace("'", "''");
-				
-				Object [] values= {annotation.ANID,TOCHeading,strAnnotation};
-				SQLite_CreateTable.addDataToTable("annotations", fieldNamesAnnotation, values, conn);
-
-				for (long cid:annotation.linkedRecords.cids) {
-					Object [] valuesCid= {annotation.ANID,cid};
-					SQLite_CreateTable.addDataToTable("annotation_cids", fieldNamesAnnotationCID, valuesCid, conn);
-				}
-
-//				if(true)break;
-//				System.out.println(gson.toJson(joAnnotation));
-//				System.out.println(cids+"\t"+cids.size()+"\n");	
-			}
-			
-//			System.out.println(cidsAll.size());
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-	}
 	
-	void loadAnnotationFiles(String folderPath,Connection conn) {
-		
-		File folder=new File(folderPath);
-		
-		Statement stat=SQLite_Utilities.getStatement(conn);
-		
-		HashSet<Long> ANIDs = getANIDsInDB(stat);
-		
-//		System.out.println(ANIDs.size());
-		
-		for (File file:folder.listFiles()) {
-			if(!file.getName().contains(".json")) continue;
-			
-			loadAnnotationFile(file.getAbsolutePath(), conn, ANIDs);
-			
-			System.out.println(file.getName()+"\t"+ANIDs.size());
-		}
-		
-		
-	}
+	
+	
+	
+	
 	
 	
 
-	void loadIdentifiers(String folderPath,Connection conn) {
-		
-		Statement stat=SQLite_Utilities.getStatement(conn);
-		
-		HashSet<Long> CIDsInAnnotationCIDs = getCIDsInDB(stat,"annotation_cids");
-		HashSet<Long> CIDsInIdentifiers = getCIDsInDB(stat,"identifiers");
-		
-		long sleep=200;
-		
-		int count=0;
-		
-		
-		for (long cid:CIDsInAnnotationCIDs) {
-			
-			if(CIDsInIdentifiers.contains(cid)) {
-				count++;
-				continue;
-			}
-			
-			String idURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/property/IUPACName,CanonicalSMILES/JSON?cid="
-					+ cid;
-			String casURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/" + cid
-					+ "/JSON?heading=CAS";
-			String synonymURL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/synonyms/TXT";
-
-			SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-			Date date = new Date();
-			String strDate = formatter.format(date);
-			
-			try {
-				
-				String cas = FileUtilities.getText_UTF8(casURL);
-				if (cas!=null) cas = cas.replaceAll("'", "''").replaceAll(";", "\\;");
-				Thread.sleep(sleep);
-				
-				String identifiers = FileUtilities.getText_UTF8(idURL);
-				if(identifiers!=null) identifiers = identifiers.replaceAll("'", "''").replaceAll(";", "\\;");
-				Thread.sleep(sleep);
-				
-				String synonyms = StringEscapeUtils.escapeHtml4(FileUtilities.getText_UTF8(synonymURL));
-				if(synonyms!=null) synonyms = synonyms.replaceAll("'", "''").replaceAll(";", "\\;");
-				Thread.sleep(sleep);
-				
-
-//				System.out.println(cid);
-//				System.out.println(cas+"\t"+casURL);
-//				System.out.println(identifiers+"\t"+idURL);
-//				System.out.println(synonyms+"\n");
-				
-				Object [] values= {strDate,cid,identifiers,cas,synonyms};
-				String [] fieldNames= {"date","cid","identifiers","cas","synonyms"};
-				SQLite_CreateTable.addDataToTable("identifiers", fieldNames, values, conn);
 	
-				count++;
-				
-				if(count%10==0) System.out.println(count+" of "+CIDsInAnnotationCIDs.size());
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
-			
-			
-		}//end loop over cids
-		
-//		System.out.println(CIDs.size());
-		
-		
-		
-	}
 
-	private HashSet<Long> getANIDsInDB(Statement stat) {
-		String sql="select ANID from annotations;";
-		ResultSet rs=SQLite_GetRecords.getRecords(stat, sql);
-		HashSet<Long>ANIDs=new HashSet<>();
-		
-		try {
-			while (rs.next()) {
-				long ANID=rs.getLong(1);
-				ANIDs.add(ANID);
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return ANIDs;
-	}
+
+
 	
-	private HashSet<Long> getCIDsInDB(Statement stat,String tableName) {
-		String sql="select cid  from "+tableName+";";
-		ResultSet rs=SQLite_GetRecords.getRecords(stat, sql);
-		HashSet<Long>CIDs=new HashSet<>();
-		
-		try {
-			while (rs.next()) {
-				long ANID=rs.getLong(1);
-				CIDs.add(ANID);
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return CIDs;
-	}
+	
 	
 	
 	
@@ -1530,25 +1355,8 @@ public class RecordPubChem {
 		// TMM get data using cids from gabriels sqlite
 		RecordPubChem r = new RecordPubChem();
 		
-		String folderMain="data\\experimental\\PubChem_2024_11_27\\";
-		String folder=folderMain+"\\json\\physchem\\";
-//		String annotationFilePath=folder+"Henry's Law Constant 1.json";
-		String annotationFilePath=folder+"Henry's Law Constant 2.json";
-		String databasePath=folderMain+"PubChem_2024_11_27_raw_json_v2.db";
 		
-		Connection conn= SQLite_Utilities.getConnection(databasePath);
-		
-		try {
-			conn.setAutoCommit(true);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-//		r.loadAnnotationFile(annotationFilePath,conn);
-		
-//    	r.loadAnnotationFiles(folder, conn);
-		
-		r.loadIdentifiers(folder, conn);
+//		r.loadIdentifiers(folder, conn);
 		
 
 		//old way get from prev db:

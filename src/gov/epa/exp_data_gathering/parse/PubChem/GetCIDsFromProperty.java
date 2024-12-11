@@ -48,10 +48,7 @@ public class GetCIDsFromProperty {
 	
 	void getAnnotationJsons(String heading,String folder) {
 		
-		//TODO make it so that it replaces space in heading with + in the url but saves filename with space
-		
 		//get first page:
-
 		int page=1;
 		String url="https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/annotations/heading/JSON?heading="+heading.replace(" ", "+")+"&page="+page+"&heading_type=Compound";
 		String json=FileUtilities.getText(url);
@@ -135,6 +132,11 @@ public class GetCIDsFromProperty {
 				
 				for (int j=0;j<cids.size();j++) {
 					long CID=cids.get(j).getAsLong();
+					
+//					if(CID==241L) {
+//						System.out.println(filepath+"\thas 241");
+//					}
+					
 					cidsAll.add(CID);
 				}
 //				System.out.println(cids+"\t"+cids.size()+"\n");	
@@ -201,23 +203,29 @@ public class GetCIDsFromProperty {
 		
 		for (File file:Folder.listFiles()) {
 			if (!file.getName().contains(".json")) continue;
+//			if (!file.getName().contains("Solubility")) continue;
 			getCidsFromFile(file.getAbsolutePath(), cidsAll);
 		}
 
 		List<Long>cids=new ArrayList<>();
 		for (Long cid:cidsAll) cids.add(cid);
 		Collections.sort(cids);
+		
+//		for(Long cid:cids) {
+//			System.out.println(cid);
+//		}
+		
 
 //		System.out.println(cidsAll.size());
 		
-		try {
-			FileWriter fw=new FileWriter(folder+"cids.txt");
-			for(Long cid:cids) fw.write(cid+"\r\n");
-			fw.flush();
-			fw.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+//		try {
+//			FileWriter fw=new FileWriter(folder+"cids.txt");
+//			for(Long cid:cids) fw.write(cid+"\r\n");
+//			fw.flush();
+//			fw.close();
+//		} catch (Exception ex) {
+//			ex.printStackTrace();
+//		}
 		return cidsAll;
  		
 	}
@@ -406,26 +414,26 @@ public class GetCIDsFromProperty {
 	public static void main(String[] args) {
 		GetCIDsFromProperty g=new GetCIDsFromProperty();
 		
-//		String folder="data\\experimental\\PubChem_2024_11_27\\json\\physchem\\";
+		String folder="data\\experimental\\PubChem_2024_11_27\\json\\physchem\\";
 //		g.renameFilesFolder(folder);
 //		g.getAnnotationJsons("Henry's Law Constant", folder);
 //		g.getAnnotationJsons("LogP", folder);
 //		g.getAnnotationJsons("Solubility", folder);
-//		g.getAnnotationJsons("Vapor+Pressure", folder);
-//		g.getAnnotationJsons("Melting+Point", folder);
-//		g.getAnnotationJsons("Boiling+Point", folder);
+//		g.getAnnotationJsons("Vapor Pressure", folder);
+//		g.getAnnotationJsons("Melting Point", folder);
+//		g.getAnnotationJsons("Boiling Point", folder);
 		
 //		g.getAnnotationJsons("Density", folder);
 //		g.getAnnotationJsons("Viscosity", folder);
-//		g.getAnnotationJsons("Surface+Tension", folder);
-//		g.getAnnotationJsons("Flash+Point", folder);
-//		g.getAnnotationJsons("Autoignition+Temperature", folder);
-//		g.getAnnotationJsons("Vapor+Density", folder);
+//		g.getAnnotationJsons("Surface Tension", folder);
+//		g.getAnnotationJsons("Flash Point", folder);
+//		g.getAnnotationJsons("Autoignition Temperature", folder);
+//		g.getAnnotationJsons("Vapor Density", folder);
 
-//		HashSet<Long>cidsNew=g.getCidsFromFolder(folder);
+		HashSet<Long>cidsNew=g.getCidsFromFolder(folder);
 //		System.out.println(cidsNew.size());
 
-		String folder="data\\experimental\\PubChem_2024_11_27\\json\\toxicity\\";
+//		String folder="data\\experimental\\PubChem_2024_11_27\\json\\toxicity\\";
 //		g.renameFilesFolder(folder);
 //		g.getAnnotationJsons("Toxicity+Data", folder);//		
 //		g.getAnnotationJsons("Acute+Effects", folder);
@@ -433,12 +441,12 @@ public class GetCIDsFromProperty {
 //		HashSet<Long>sids=g.getSidsFromFolder(folder);
 //		System.out.println(sids.size());
 
-//		
+//		String collection ="chemidplus";
 //		String collection ="niosh";
 //		g.downloadCollectionData(collection, folder,1000);
 //		g.compileCollectionFromFolder(collection,folder);
 //		
-		g.compareCids(folder);
+//		g.compareCids(folder);
 		
 //		compareOldToNew(g, folder);
 		

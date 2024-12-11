@@ -7,7 +7,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 
-import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.*;
+import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Value;
+
 
 public class AnnotationQuery {
 
@@ -24,14 +25,21 @@ public class AnnotationQuery {
 		String LicenseURL;
 		
 		@SerializedName("Data")
-		List<Data> data;
+		List<AnnotationData> data;
 		
-		long ANID;
+		Long ANID;
 		
 		@SerializedName("LinkedRecords")
 		LinkedRecords linkedRecords;
-				
+
+		
+		String getKey() {
+			return ANID+"\t"+data.get(0).TOCHeading.TOCHeading;
+		}
+
 	}
+	
+	
 	
 	public class LinkedRecords {
 		@SerializedName("CID")
@@ -39,10 +47,12 @@ public class AnnotationQuery {
 	}
 
 	
-	class Data {
+	class AnnotationData {
 		TOCHeading TOCHeading;
 		String Description;
-		String []Reference;
+		
+		@SerializedName("Reference")
+		String [] references;
 		
 		@SerializedName("Value")
 		Value value;

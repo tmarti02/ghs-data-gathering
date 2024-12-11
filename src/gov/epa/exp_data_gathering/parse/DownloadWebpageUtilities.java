@@ -57,6 +57,9 @@ public class DownloadWebpageUtilities {
 				RawDataRecord rec=new RawDataRecord(strDate, url, "");
 				boolean haveRecord=rec.haveRecordInDatabase(databasePath,tableName,conn);
 				if (!haveRecord || startFresh) {
+					
+					System.out.println("Downloading "+url);
+					
 					long delay = 0;
 					try {
 						long startTime=System.currentTimeMillis();
