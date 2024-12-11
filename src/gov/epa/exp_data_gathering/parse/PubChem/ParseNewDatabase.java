@@ -52,6 +52,14 @@ import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Section;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.StringWithMarkup;
 
 /**
+ * 
+ * select a.ANID, a.Annotation, a.TOCHeading, a.Date,ac.cid,i.identifiers,i.cas,i.synonyms from annotations a
+left join annotation_cids ac on  a.ANID=ac.ANID
+left join identifiers i on i.cid=ac.cid
+-- where ac.cid=241
+where a.ANID=9155079
+order by TOCHeading;
+ * 
  * @author TMARTI02
  */
 public class ParseNewDatabase {
@@ -830,7 +838,7 @@ public class ParseNewDatabase {
 	public static void main(String[] args) {
 		ParseNewDatabase r=new ParseNewDatabase();
 		//		
-		//		r.loadFromAnnotationJsons();
+//		r.loadFromAnnotationJsons();
 		r.loadIdentifiers();
 //		r.deleteBadIdentifiers();
 

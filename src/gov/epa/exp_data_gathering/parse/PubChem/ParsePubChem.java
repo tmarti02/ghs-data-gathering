@@ -78,7 +78,9 @@ public class ParsePubChem extends Parse {
 	
 	String databaseFormatCompound="compound";
 	String databaseFormatAnnotation="annotation";
-	String databaseFormat=databaseFormatAnnotation;
+	
+//	String databaseFormat=databaseFormatAnnotation;
+	String databaseFormat=databaseFormatCompound;
 	
 	
 	public ParsePubChem() {
@@ -257,25 +259,48 @@ public class ParsePubChem extends Parse {
 			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
 			File jsonFile = new File(jsonFileName);
 			
-			List<RecordPubChem> recordsPubChem = new ArrayList<RecordPubChem>();
-			RecordPubChem[] tempRecords = null;
-			
+//			List<RecordPubChem> recordsPubChem = new ArrayList<RecordPubChem>();
+//			RecordPubChem[] tempRecords = null;
+//			
 //			System.out.println(howManyOriginalRecordsFiles);
 			
-			if (howManyOriginalRecordsFiles==1) {
-				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordPubChem[].class);
-				for (int i = 0; i < tempRecords.length; i++) {
-					recordsPubChem.add(tempRecords[i]);
-				}
-			} else {
-				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
-					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
-					File batchFile = new File(batchFileName);
-					tempRecords = gson.fromJson(new FileReader(batchFile), RecordPubChem[].class);
-					for (int i = 0; i < tempRecords.length; i++) {
-						recordsPubChem.add(tempRecords[i]);
-					}
-				}
+//			if (howManyOriginalRecordsFiles==1) {
+//				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordPubChem[].class);
+//				for (int i = 0; i < tempRecords.length; i++) {
+//					recordsPubChem.add(tempRecords[i]);
+//				}
+//			} else {
+//				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+//					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+//					File batchFile = new File(batchFileName);
+//					tempRecords = gson.fromJson(new FileReader(batchFile), RecordPubChem[].class);
+//					for (int i = 0; i < tempRecords.length; i++) {
+//						recordsPubChem.add(tempRecords[i]);
+//					}
+//				}
+//			}
+			
+			File folder=new File(jsonFolder);
+			List<RecordPubChem> recordsPubChem = new ArrayList<RecordPubChem>();
+			
+			//Dont rely on the howManyOriginalRecordsFiles variable- just go by filenames:
+			for (File file:folder.listFiles()) {
+				
+				if(!file.getName().contains(".json")) continue;
+				if(file.getName().contains("Copy")) continue;
+				if(!file.getName().contains("Original Records")) continue;
+
+//				String heading=file.getName().replace(".json", "").replace("Original Records ","");
+//				if(selectedHeadings!=null && !selectedHeadings.contains(heading)) continue; 
+				
+				RecordPubChem[] tempRecords;
+				try {
+					tempRecords = gson.fromJson(new FileReader(file), RecordPubChem[].class);
+					for(RecordPubChem record:tempRecords) recordsPubChem.add(record);
+					System.out.println(file.getName()+"\t"+tempRecords.length);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}			
 			}
 			
 			System.out.println(recordsPubChem.size());
@@ -283,8 +308,10 @@ public class ParsePubChem extends Parse {
 			Hashtable<String,String>htCID=null;
 			if(this.storeDTXCIDs) htCID=getCID_HT();
 			
-			for(String prop:selectedProperties) {
-				System.out.println("selProp="+prop);
+			if(selectedProperties!=null) {
+				for(String prop:selectedProperties) {
+					System.out.println("selProp="+prop);
+				}
 			}
 			
 			
@@ -427,8 +454,8 @@ public class ParsePubChem extends Parse {
 		skipProperties.add("Optical Rotation");
 		skipProperties.add("Refractive Index");
 		skipProperties.add("Relative Evaporation Rate");
-		skipProperties.add("Viscosity");
-		skipProperties.add("Surface Tension");
+//		skipProperties.add("Viscosity");
+//		skipProperties.add("Surface Tension");
 		skipProperties.add("pH");
 		skipProperties.add("Acid Value");
 		skipProperties.add("Additive");
@@ -499,6 +526,7 @@ public class ParsePubChem extends Parse {
 		for (File file:folder.listFiles()) {
 			
 			if(!file.getName().contains(".json")) continue;
+			if(file.getName().contains("Copy")) continue;
 			if(!file.getName().contains("Original Records")) continue;
 
 			String heading=file.getName().replace(".json", "").replace("Original Records ","");
@@ -695,7 +723,7 @@ public class ParsePubChem extends Parse {
 		ParsePubChem p = new ParsePubChem();
 		
 		p.storeDTXCIDs=false;//if true it stores dtxcid based on the lookup from the compounds table in dsstox
-		p.generateOriginalJSONRecords=false;
+		p.generateOriginalJSONRecords=true;
 //		p.howManyOriginalRecordsFiles=3;
 		p.removeDuplicates=true;
 
@@ -734,7 +762,7 @@ public class ParsePubChem extends Parse {
 //		p.selectedHeadings=Arrays.asList("Flash Point");
 //		p.selectedHeadings=Arrays.asList("Viscosity");
 //		p.selectedHeadings=Arrays.asList("Surface Tension);
-		p.selectedHeadings=Arrays.asList("Henry's Law Constant");
+//		p.selectedHeadings=Arrays.asList("Henry's Law Constant");
 		
 		p.createExcelForSelectedProperties=false;
 
