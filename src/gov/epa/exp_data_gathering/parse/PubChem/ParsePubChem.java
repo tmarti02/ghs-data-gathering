@@ -364,6 +364,7 @@ public class ParsePubChem extends Parse {
 				if(r.propertyValue.indexOf("OECD")==0) continue;
 				
 				ExperimentalRecord er=r.toExperimentalRecord(propertyValueOriginal);
+				if(er==null) continue;
 				
 				//Density is hard to parse, need to exclude the cases where density appeared in one of the split values but not the others
 				if(haveDensity && !propertyValue.toLowerCase().contains("density") && er.property_name.toLowerCase().contains("density")) {
@@ -387,12 +388,6 @@ public class ParsePubChem extends Parse {
 				
 				er.property_value_string_parsed=propertyValue;						
 				er.property_value_string=propertyValueOriginal;
-				
-//				if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name)) continue;
-////			if(!er.property_name.equals(property)) continue;
-				
-				if(er==null) continue;	
-
 				if (storeDTXCIDs) 
 					if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
 
@@ -411,19 +406,13 @@ public class ParsePubChem extends Parse {
 		} else {//treat as one record
 
 			ExperimentalRecord er=r.toExperimentalRecord(r.propertyValue);
+			if(er==null) return;	
 
 			er.property_value_string_parsed=r.propertyValue;						
-			
-//					if(!er.property_name.equals(property)) continue;
-//			if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name))
-//				return;
 			
 //			if(er.reason!=null && er.reason.equals("No values")) {
 //				System.out.println(r.propertyValue+"\t"+er.property_value_point_estimate_original);
 //			}
-			
-			if(er==null)
-				return;	
 			
 			if (storeDTXCIDs) {
 				//Do we want to trust the cid from compounds table in dsstox???
