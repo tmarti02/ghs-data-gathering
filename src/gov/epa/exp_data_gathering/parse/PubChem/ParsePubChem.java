@@ -72,8 +72,8 @@ For following properties, also find examples (look at "property_value_string_par
 public class ParsePubChem extends Parse {
 	
 	static boolean storeDTXCIDs=false;
-	boolean createExcelForSelectedProperties=false;
-	List<String>selectedProperties=null;
+//	boolean createExcelForSelectedProperties=false;
+//	List<String>selectedProperties=null;
 	List<String>selectedHeadings=null;
 	
 	String databaseFormatCompound="compound";
@@ -152,9 +152,9 @@ public class ParsePubChem extends Parse {
 			Hashtable<String,String>htCID=null;
 			if(this.storeDTXCIDs) htCID=getCID_HT();
 			
-			for(String prop:selectedProperties) {
-				System.out.println("selProp="+prop);
-			}
+//			for(String prop:selectedProperties) {
+//				System.out.println("selProp="+prop);
+//			}
 			
 			
 			Iterator<RecordPubChem> it = recordsPubChem.iterator();
@@ -259,60 +259,60 @@ public class ParsePubChem extends Parse {
 			String jsonFileName = jsonFolder + File.separator + fileNameJSON_Records;
 			File jsonFile = new File(jsonFileName);
 			
-//			List<RecordPubChem> recordsPubChem = new ArrayList<RecordPubChem>();
-//			RecordPubChem[] tempRecords = null;
-//			
-//			System.out.println(howManyOriginalRecordsFiles);
-			
-//			if (howManyOriginalRecordsFiles==1) {
-//				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordPubChem[].class);
-//				for (int i = 0; i < tempRecords.length; i++) {
-//					recordsPubChem.add(tempRecords[i]);
-//				}
-//			} else {
-//				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
-//					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
-//					File batchFile = new File(batchFileName);
-//					tempRecords = gson.fromJson(new FileReader(batchFile), RecordPubChem[].class);
-//					for (int i = 0; i < tempRecords.length; i++) {
-//						recordsPubChem.add(tempRecords[i]);
-//					}
-//				}
-//			}
-			
-			File folder=new File(jsonFolder);
 			List<RecordPubChem> recordsPubChem = new ArrayList<RecordPubChem>();
+			RecordPubChem[] tempRecords = null;
 			
-			//Dont rely on the howManyOriginalRecordsFiles variable- just go by filenames:
-			for (File file:folder.listFiles()) {
-				
-				if(!file.getName().contains(".json")) continue;
-				if(file.getName().contains("Copy")) continue;
-				if(!file.getName().contains("Original Records")) continue;
-
-//				String heading=file.getName().replace(".json", "").replace("Original Records ","");
-//				if(selectedHeadings!=null && !selectedHeadings.contains(heading)) continue; 
-				
-				RecordPubChem[] tempRecords;
-				try {
-					tempRecords = gson.fromJson(new FileReader(file), RecordPubChem[].class);
-					for(RecordPubChem record:tempRecords) recordsPubChem.add(record);
-					System.out.println(file.getName()+"\t"+tempRecords.length);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}			
+			System.out.println("howManyOriginalRecordsFiles="+howManyOriginalRecordsFiles);
+			
+			if (howManyOriginalRecordsFiles==1) {
+				tempRecords = gson.fromJson(new FileReader(jsonFile), RecordPubChem[].class);
+				for (int i = 0; i < tempRecords.length; i++) {
+					recordsPubChem.add(tempRecords[i]);
+				}
+			} else {
+				for (int batch = 1; batch <= howManyOriginalRecordsFiles; batch++) {
+					String batchFileName = jsonFileName.substring(0,jsonFileName.indexOf(".")) + " " + batch + ".json";
+					File batchFile = new File(batchFileName);
+					tempRecords = gson.fromJson(new FileReader(batchFile), RecordPubChem[].class);
+					for (int i = 0; i < tempRecords.length; i++) {
+						recordsPubChem.add(tempRecords[i]);
+					}
+				}
 			}
 			
-			System.out.println(recordsPubChem.size());
+//			File folder=new File(jsonFolder);
+//			List<RecordPubChem> recordsPubChem = new ArrayList<RecordPubChem>();
+//			
+//			//Dont rely on the howManyOriginalRecordsFiles variable- just go by filenames:
+//			for (File file:folder.listFiles()) {
+//				
+//				if(!file.getName().contains(".json")) continue;
+//				if(file.getName().contains("Copy")) continue;
+//				if(!file.getName().contains("Original Records")) continue;
+//
+////				String heading=file.getName().replace(".json", "").replace("Original Records ","");
+////				if(selectedHeadings!=null && !selectedHeadings.contains(heading)) continue; 
+//				
+//				RecordPubChem[] tempRecords;
+//				try {
+//					tempRecords = gson.fromJson(new FileReader(file), RecordPubChem[].class);
+//					for(RecordPubChem record:tempRecords) recordsPubChem.add(record);
+//					System.out.println(file.getName()+"\t"+tempRecords.length);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}			
+//			}
+			
+			System.out.println("Number of records="+recordsPubChem.size());
 			
 			Hashtable<String,String>htCID=null;
 			if(this.storeDTXCIDs) htCID=getCID_HT();
 			
-			if(selectedProperties!=null) {
-				for(String prop:selectedProperties) {
-					System.out.println("selProp="+prop);
-				}
-			}
+//			if(selectedProperties!=null) {
+//				for(String prop:selectedProperties) {
+//					System.out.println("selProp="+prop);
+//				}
+//			}
 			
 			
 			Iterator<RecordPubChem> it = recordsPubChem.iterator();
@@ -339,6 +339,10 @@ public class ParsePubChem extends Parse {
 	private void handleRecordPubChem(ExperimentalRecords recordsExperimental, Hashtable<String, String> htCID,
 			RecordPubChem r) {
 		
+		
+		if(selectedHeadings!=null && !selectedHeadings.contains(r.propertyName)) return; 
+		
+		
 		if(r.propertyValue.contains(";") && !r.propertyName.equals("Physical Description") && !r.propertyName.equals("Color/Form") &&  !r.propertyName.equals("Odor") ) {
 		
 			String propertyValueOriginal=r.propertyValue;
@@ -360,6 +364,7 @@ public class ParsePubChem extends Parse {
 				if(r.propertyValue.indexOf("OECD")==0) continue;
 				
 				ExperimentalRecord er=r.toExperimentalRecord(propertyValueOriginal);
+				if(er==null) continue;
 				
 				//Density is hard to parse, need to exclude the cases where density appeared in one of the split values but not the others
 				if(haveDensity && !propertyValue.toLowerCase().contains("density") && er.property_name.toLowerCase().contains("density")) {
@@ -383,12 +388,6 @@ public class ParsePubChem extends Parse {
 				
 				er.property_value_string_parsed=propertyValue;						
 				er.property_value_string=propertyValueOriginal;
-				
-				if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name)) continue;
-//						if(!er.property_name.equals(property)) continue;
-				
-				if(er==null) continue;	
-
 				if (storeDTXCIDs) 
 					if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
 
@@ -407,19 +406,13 @@ public class ParsePubChem extends Parse {
 		} else {//treat as one record
 
 			ExperimentalRecord er=r.toExperimentalRecord(r.propertyValue);
+			if(er==null) return;	
 
 			er.property_value_string_parsed=r.propertyValue;						
-			
-//					if(!er.property_name.equals(property)) continue;
-			if(createExcelForSelectedProperties && !selectedProperties.contains(er.property_name))
-				return;
 			
 //			if(er.reason!=null && er.reason.equals("No values")) {
 //				System.out.println(r.propertyValue+"\t"+er.property_value_point_estimate_original);
 //			}
-			
-			if(er==null)
-				return;	
 			
 			if (storeDTXCIDs) {
 				//Do we want to trust the cid from compounds table in dsstox???
@@ -785,32 +778,25 @@ public class ParsePubChem extends Parse {
 	public static void main(String[] args) {
 		ParsePubChem p = new ParsePubChem();
 		
+<<<<<<< HEAD
 		p.storeDTXCIDs=false;//if true it stores dtxcid based on the lookup from the compounds table in dsstox
 		p.generateOriginalJSONRecords=false;
 //		p.howManyOriginalRecordsFiles=3;
+=======
+//		p.databaseFormat=p.databaseFormatCompound;//old format
+		p.databaseFormat=p.databaseFormatAnnotation;//new format based on annotation queries of pubchem
+		
+		storeDTXCIDs=false;//if true it stores dtxcid based on the lookup from the compounds table in dsstox
+
+		p.generateOriginalJSONRecords=false;
+		p.howManyOriginalRecordsFiles=3;//used for old format which doesnt store original jsons by heading
+>>>>>>> origin/master
 		p.removeDuplicates=true;
 
 		p.writeJsonExperimentalRecordsFile=false;
 		p.writeExcelExperimentalRecordsFile=true;
 		p.writeExcelFileByProperty=true;		
-		p.writeCheckingExcelFile=false;
-		
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strWaterSolubility);								
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strDensity,ExperimentalConstants.strVaporDensity);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strVaporDensity);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strDensity);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strVaporPressure);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strMeltingPoint);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strBoilingPoint);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strAutoIgnitionTemperature);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strFlashPoint);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strLogKOW);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strViscosity);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strSurfaceTension);
-//		p.selectedProperties=Arrays.asList(ExperimentalConstants.strHenrysLawConstant);
-
-//		selectedProperties=Arrays.asList(ExperimentalConstants.str_pKA);
-//		selectedProperties=Arrays.asList(ExperimentalConstants.str_pKA,ExperimentalConstants.str_pKAa,ExperimentalConstants.str_pKAb);
+		p.writeCheckingExcelFile=false;//creates random sample spreadsheet
 		
 //		p.selectedHeadings=null;
 //		p.selectedHeadings=Arrays.asList("Solubility");								
@@ -824,10 +810,9 @@ public class ParsePubChem extends Parse {
 //		p.selectedHeadings=Arrays.asList("Autoignition Temperature");
 //		p.selectedHeadings=Arrays.asList("Flash Point");
 //		p.selectedHeadings=Arrays.asList("Viscosity");
-//		p.selectedHeadings=Arrays.asList("Surface Tension);
+		p.selectedHeadings=Arrays.asList("Surface Tension");
 //		p.selectedHeadings=Arrays.asList("Henry's Law Constant");
 		
-		p.createExcelForSelectedProperties=false;
 
 		p.createFiles();
 	}
