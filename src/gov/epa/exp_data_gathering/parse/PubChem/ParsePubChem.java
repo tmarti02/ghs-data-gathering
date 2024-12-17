@@ -79,8 +79,8 @@ public class ParsePubChem extends Parse {
 	String databaseFormatCompound="compound";
 	String databaseFormatAnnotation="annotation";
 	
-//	String databaseFormat=databaseFormatAnnotation;
-	String databaseFormat=databaseFormatCompound;
+	String databaseFormat=databaseFormatAnnotation;
+//	String databaseFormat=databaseFormatCompound;
 	
 	
 	public ParsePubChem() {
@@ -689,6 +689,69 @@ public class ParsePubChem extends Parse {
 		r.propertyValue=r.propertyValue.replace("Fluffy white powder, mp 238 �C. Solubility in water (mg/100 mL) at 30 �C: 220 (ph 3.8), 280 (pH 5.5), 290 (pH 6.7), 264 (pH 7.9), 244 (pH 9.2-10.1) /Hydrochloride/","Fluffy white powder. Solubility in water (mg/100 mL) at 30 �C: 220 (ph 3.8); 280 mg/100 mL at 30 �C (pH 5.5); 290 mg/100 mL at 30 �C (pH 6.7); 264 mg/100 mL) at 30 �C (pH 7.9); 244 mg/100 mL) at 30 �C (pH 9.2-10.1) /Hydrochloride/");
 				
 		r.propertyValue=r.propertyValue.replace("log Kow: pH 5: 6.2-6.3 (10 �C), 6-6.1 (20 �C), 5.8-6.0 (30 �C); pH 7: 5.1 (10 �C), 4.9 (20 �C), 4.8 (30 �C); pH 9: 4.9 (10 �C), 4.8 (20 �C), 4.6 (30 �C)","6.2-6.3 @ pH 5 and 10 �C; 6-6.1 @ pH 5 and 20 �C; 5.8-6.0 @ pH 5 and 30 �C; 5.1 @ pH 7 and 10 �C; 4.9 @ pH 7 and 20 �C; 4.8 @ pH 7 and 30 �C; 4.9 @ pH 9 and 10 �C; 4.8 @ pH 9 and 20 �C; 4.6 @ pH 9 and 30 �C");
+		//Melting Point 12/12/2024
+		r.propertyValue = r.propertyValue.replace("MP: 70-100 °C; stable toward dil mineral acids; hydrolyzed rapidly by alkalies; commercial product is a mixture of alpha-isomer, MP: 108-110 °C, and beta-isomer, MP: 208-210 °C /Technical/","MP: 70-100 °C; stable toward dil mineral acids; hydrolyzed rapidly by alkalies; commercial product is a mixture of alpha-isomer, MP: 108-110 °C; and beta-isomer, MP: 208-210 °C /Technical/");
+		r.propertyValue = r.propertyValue.replace("Exists in alpha, beta, and gamma forms having mp 63 °C, 55-56 °C, and 50 °C respectively. MP for acid of commerce: 61-63 °C","mp: 63 °C in alpha form; 55-56 °C in beta form; and 50 °C in gamma form; MP for acid of commerce: 61-63 °C");
+		r.propertyValue = r.propertyValue.replace("-76.5 °C (trans), -69 °C (cis)","-76.5 °C (trans); -69 °C (cis)");
+		r.propertyValue = r.propertyValue.replace("6.9 °C (trans), 21 °C (cis)","6.9 °C (trans); 21 °C (cis)");
+		r.propertyValue = r.propertyValue.replace("44 °F (trans-) 70 °F (cis-)","44 °F (trans-); 70 °F (cis-)");
+		r.propertyValue = r.propertyValue.replace("44.4-70 °F (trans-) 70 °F (cis-)","44.4-70 °F (trans-); 70 °F (cis-)");
+		r.propertyValue = r.propertyValue.replace("15 °C for pure glyoxal and approximately -10 °C for the 40% solution","15 °C for pure glyoxal; approximately -10 °C for the 40% solution");
+		r.propertyValue = r.propertyValue.replace("MP: 7 °C (ALPHA), 0 °C (BETA), 4.1 °C (GAMMA)","MP: 7 °C (ALPHA); 0 °C (BETA); 4.1 °C (GAMMA)");
+		r.propertyValue = r.propertyValue.replace("5-10 °C and 20-25 °C (two forms)","5-10 °C; 20-25 °C (two forms)");
+		r.propertyValue = r.propertyValue.replace("MP: 176-178 °C, resolidifying and remelting at 185-187 °C; (technical melts 150-170 °C, and again at 170-185 °C)","MP: 176-178 °C; resolidifying and remelting at 185-187 °C; (technical melts 150-170 °C, and again at 170-185 °C)");
+		r.propertyValue = r.propertyValue.replace("Two crystalline modifications with melting point of 12 °C for beta-form and 46.5 °C for alpha-form","Two crystalline modifications with melting point of 12 °C for beta-form; 46.5 °C for alpha-form");
+		r.propertyValue = r.propertyValue.replace("Crystals, melting point 184 to 186 °C, 188 to 189 °C (a cis-trans mixture of approx 1:5) /HYDROCHLORIDE/","Crystals, melting point 184 to 186 °C; 188 to 189 °C (a cis-trans mixture of approx 1:5) /HYDROCHLORIDE/");
+		r.propertyValue = r.propertyValue.replace("Crystals, melting point 161 to 164 °C, 168 to 169 °C /MALEATE/","Crystals, melting point 161 to 164 °C; 168 to 169 °C /MALEATE/");
+		r.propertyValue = r.propertyValue.replace("One form of polymorphic crystals melts at about 155 °C, the other at about 162 °C","One form of polymorphic crystals melts at about 155 °C; the other at about 162 °C");
+		r.propertyValue = r.propertyValue.replace("MP: 184 °C (Lewistein), 177-178 °C (Sankyo Co)","MP: 184 °C (Lewistein); 177-178 °C (Sankyo Co)");
+		r.propertyValue = r.propertyValue.replace("224.5 to 225.5 °C (also reported as 221 to 223 °C)","224.5 to 225.5 °C; (also reported as 221 to 223 °C)");
+		r.propertyValue = r.propertyValue.replace("Crystals from absolute alcohol. MP: 235-237 °C, also reported as 224.5-226 °C /Fluphenazine dihydrochloride/","Crystals from absolute alcohol. MP: 235-237 °C; also reported as 224.5-226 °C /Fluphenazine dihydrochloride/");
+		r.propertyValue = r.propertyValue.replace("MP: also reported as -75.24 °C and -81.53 °C for two unstable solid forms","MP: also reported as -75.24 °C; -81.53 °C for two unstable solid forms");
+		r.propertyValue = r.propertyValue.replace("221 °C ... also reported as 208-209 °C","221 °C; also reported as 208-209 °C");
+		r.propertyValue = r.propertyValue.replace("176 °C (also reported as mp 178-179 °C; mp 198-199 °C; mp 205-207 °C)","176 °C; (also reported as mp 178-179 °C; mp 198-199 °C; mp 205-207 °C)");
+		r.propertyValue = r.propertyValue.replace("169 °C ... Also frequently reported as 90 °C from benzene (one mole of benzene of crystallization)","169 °C; Also frequently reported as 90 °C from benzene (one mole of benzene of crystallization)");
+		r.propertyValue = r.propertyValue.replace("Solvated crystals from ethyl acetate: MP = 162-163 °C and 233-234 °C; solvated crystals from methanol or ethanol: MP: 249-250 °C","Solvated crystals from ethyl acetate: MP = 162-163 °C; and 233-234 °C; solvated crystals from methanol or ethanol: MP: 249-250 °C");
+		r.propertyValue = r.propertyValue.replace("14 °C (cis-isomer), 71 °C (trans-isomer)","14 °C (cis-isomer); 71 °C (trans-isomer)");
+		r.propertyValue = r.propertyValue.replace("43 °C (cis-isomer), 67 °C (trans-isomer)","43 °C (cis-isomer); 67 °C (trans-isomer)");
+		r.propertyValue = r.propertyValue.replace("MP: 55 °C (ALPHA), 64.5 °C (BETA'), 73 °C (BETA)","MP: 55 °C (ALPHA); 64.5 °C (BETA'); 73 °C (BETA)");
+		r.propertyValue = r.propertyValue.replace("120-130 °C (crystals from ethyl acetatetoluene) and 119-121.5 °C (crystals from acetonitrile)","120-130 °C (crystals from ethyl acetatetoluene); 119-121.5 °C (crystals from acetonitrile)");
+		r.propertyValue = r.propertyValue.replace("86-87 °C, also reported as mp 96 °C","86-87 °C; also reported as mp 96 °C");
+		r.propertyValue = r.propertyValue.replace("147-149 °C ... from hexane/ethyl acetate, mp 151-152 °C ... also reported as white crystalline solid, mp 161 °C","147-149 °C; from hexane/ethyl acetate mp 151-152 °C; also reported as white crystalline solid, mp 161 °C");
+		r.propertyValue = r.propertyValue.replace("MP: 44.6-46.9 °C, also reported as ... 46 °C","MP: 44.6-46.9 °C; also reported as ... 46 °C");
+		r.propertyValue = r.propertyValue.replace("275-277 °C ... /also reported as/ 272-275 °C","275-277 °C; /also reported as/ 272-275 °C");
+		r.propertyValue = r.propertyValue.replace("140-143.6 °F (cis-cis) 147.2-149 °F (trans-trans) (NTP, 1992)","140-143.6 °F (cis-cis); 147.2-149 °F (trans-trans) (NTP, 1992)");
+		r.propertyValue = r.propertyValue.replace("-174.6 °F (Melting point is -13.7 °F for a 39.17% weight/weight solution.) (EPA, 1998)","-174.6 °F; (Melting point is -13.7 °F for a 39.17% weight/weight solution.) (EPA, 1998)");
+		//Boiling Point 12/16/2024
+		r.propertyValue = r.propertyValue.replace("Boiling point = 98.9 °C at 100 mm Hg, 61 °C at 20 mm Hg, 47.4 °C at 10 mm Hg, and 9.6 °C at 1.0 mm Hg","Boiling point = 98.9 °C at 100 mm Hg; 61 °C at 20 mm Hg; 47.4 °C at 10 mm Hg; and 9.6 °C at 1.0 mm Hg");
+		r.propertyValue = r.propertyValue.replace("337.5 °C at 760 mm Hg: 265 °C at 100 mm Hg: 240.5 °C at 40 mm Hg: 222 °Cat 20 mm Hg: 205.5 °C at 10 mm Hg; 191 °C at 5 mm Hg; 159.5 °C at 1.0 mm Hg","337.5 °C at 760 mm Hg; 265 °C at 100 mm Hg; 240.5 °C at 40 mm Hg; 222 °Cat 20 mm Hg; 205.5 °C at 10 mm Hg; 191 °C at 5 mm Hg; 159.5 °C at 1.0 mm Hg");
+		r.propertyValue = r.propertyValue.replace("31.8 °C at 760 mm Hg, also reported as 36.5 °C /at 760 mm Hg/","31.8 °C at 760 mm Hg; also reported as 36.5 °C /at 760 mm Hg/");
+		r.propertyValue = r.propertyValue.replace("Boiling point: 106-108 °C at 50 mm Hg, 71-72 °C at 10 mm Hg","Boiling point: 106-108 °C at 50 mm Hg; 71-72 °C at 10 mm Hg");
+		r.propertyValue = r.propertyValue.replace("306 °C, also stated as  294 °C","306 °C; also stated as  294 °C");
+		r.propertyValue = r.propertyValue.replace("203 °C (also reported as 201.030 °C)","203 °C; (also reported as 201.030 °C)");
+		r.propertyValue = r.propertyValue.replace("Boiling point = 185-195 °C at 1 mbar and 140-150 °C at 0.1 mbar","Boiling point = 185-195 °C at 1 mbar; 140-150 °C at 0.1 mbar");
+		r.propertyValue = r.propertyValue.replace("338 °F (Pyrethrin I), 392 °F (Pyrethrin II), 279 °F (Cinerin I), 361 °F (Cinerin II)","338 °F (Pyrethrin I); 392 °F (Pyrethrin II); 279 °F (Cinerin I); 361 °F (Cinerin II)");
+		//Vapor Pressuew 12/16/2024
+		r.propertyValue = r.propertyValue.replace("Specific heat = 1.747 Joules/g; Vapor pressure = 0.15 kPa at 20 °C, 0.48 kPa at 45 °C", "Specific heat = 1.747 Joules/g; Vapor pressure = 0.15 kPa at 20 °C; 0.48 kPa at 45 °C");
+		r.propertyValue = r.propertyValue.replace("Vapor pressure: 120 mm Hg at 20 °C, 190 mm Hg at 30 °C", "Vapor pressure: 120 mm Hg at 20 °C; 190 mm Hg at 30 °C");
+		r.propertyValue = r.propertyValue.replace("Vapor pressure = 0.06 atm at 0 °C, 0.11 atm at 10 °C, 0.173 atm at 20 °C, 0.26 atm at 30 °C", "Vapor pressure = 0.06 atm at 0 °C; 0.11 atm at 10 °C; 0.173 atm at 20 °C; 0.26 atm at 30 °C");
+		r.propertyValue = r.propertyValue.replace("Vapor pressure: 1 Pa at -139 °C, 10 Pa at -127 °C, 100 Pa at -112 °C; 1 kPa at -94.5 °C (solids); 10 kPa at -71.3 °C, 100 kPa at -33.6 °C (liquid)", "Vapor pressure: 1 Pa at -139 °C; 10 Pa at -127 °C; 100 Pa at -112 °C; 1 kPa at -94.5 °C (solids); 10 kPa at -71.3 °C; 100 kPa at -33.6 °C (liquid)");
+		r.propertyValue = r.propertyValue.replace("VP: 1 Pa at -158 °C (solid), 10 Pa at -147 °C (solid), 100 Pa at -133.6 °C (solid), 1 kPa at -116.6 °C (solid), 10 kPa at -94.4 °C (solid), 100 kPa at -64.1 °C (solid)", "VP: 1 Pa at -158 °C (solid); 10 Pa at -147 °C (solid); 100 Pa at -133.6 °C (solid); 1 kPa at -116.6 °C (solid); 10 kPa at -94.4 °C (solid); 100 kPa at -64.1 °C (solid)");
+		r.propertyValue = r.propertyValue.replace("34.3 mm Hg at 25 °C (cis isomer), 23.0 mm Hg at 25 °C (trans isomer)", "34.3 mm Hg at 25 °C (cis isomer); 23.0 mm Hg at 25 °C (trans isomer)");
+		r.propertyValue = r.propertyValue.replace("VP: approx 60 Pa at 20 °C, approx 130 Pa at 30 °C, approx 520 Pa at 50 °C", "VP: approx 60 Pa at 20 °C; approx 130 Pa at 30 °C; approx 520 Pa at 50 °C");
+		r.propertyValue = r.propertyValue.replace("Vapor pressure = 200 kPa at 21 °C, 669 kPa at 54 °C", "Vapor pressure = 200 kPa at 21 °C; 669 kPa at 54 °C");
+		r.propertyValue = r.propertyValue.replace("VP: 0.16, 0.40, 1.6 and 2.7 mm Hg at 0, 10, 30 and 40 °C, respectively", "VP: 0.16 mm Hg at 0 °C; 0.40 mm Hg at 10 °C; 1.6 mm Hg at 30 °C; 2.7 mm Hg at 40 °C, respectively");
+		r.propertyValue = r.propertyValue.replace("2.13 kPa at 150 °C /0.000246 mm Hg at 25 °C/ (extrapolated)", "2.13 kPa at 150 °C; /0.000246 mm Hg at 25 °C/ (extrapolated)");
+		r.propertyValue = r.propertyValue.replace("VP: 0.5 mm Hg at 98-100 °C, 2 mm Hg at 138-140 °C, 11 mm Hg at 154-156 °C", "VP: 0.5 mm Hg at 98-100 °C; 2 mm Hg at 138-140 °C; 11 mm Hg at 154-156 °C");
+		r.propertyValue = r.propertyValue.replace("1 mmHg at -36.9 °F, 100 mmHg at 96.3 °F, 760 mmHg at 192.2 °F", "1 mmHg at -36.9 °F; 100 mmHg at 96.3 °F; 760 mmHg at 192.2 °F");
+		r.propertyValue = r.propertyValue.replace("1 mmHg at 211.6 °F, 0.0018 mmHg at 77 °F", "1 mmHg at 211.6 °F; 0.0018 mmHg at 77 °F");
+		r.propertyValue = r.propertyValue.replace("1.1 mmHg at 122 °F, 3 mmHg at 140 °F", "1.1 mmHg at 122 °F; 3 mmHg at 140 °F");
+		r.propertyValue = r.propertyValue.replace("3 mmHg at 86 °F, 760 mmHg at 410.9 °F", "3 mmHg at 86 °F; 760 mmHg at 410.9 °F");
+		r.propertyValue = r.propertyValue.replace("1 mmHg@68 °F, 1.5 mmHg@77 °F", "1 mmHg@68 °F; 1.5 mmHg@77 °F");
+		r.propertyValue = r.propertyValue.replace("1 mmHg at 32 °F, 5 mmHg at 76.5 °F", "1 mmHg at 32 °F; 5 mmHg at 76.5 °F");
+		r.propertyValue = r.propertyValue.replace("14 mmHg at 36 °F, 26.2 mmHg at 73 °F, 67 mmHg at 118 °F", "14 mmHg at 36 °F; 26.2 mmHg at 73 °F; 67 mmHg at 118 °F");
+		
+		
 	}
 	
 	public static Hashtable<String, String> getCID_HT() {
@@ -723,7 +786,7 @@ public class ParsePubChem extends Parse {
 		ParsePubChem p = new ParsePubChem();
 		
 		p.storeDTXCIDs=false;//if true it stores dtxcid based on the lookup from the compounds table in dsstox
-		p.generateOriginalJSONRecords=true;
+		p.generateOriginalJSONRecords=false;
 //		p.howManyOriginalRecordsFiles=3;
 		p.removeDuplicates=true;
 
@@ -756,7 +819,7 @@ public class ParsePubChem extends Parse {
 //		p.selectedHeadings=Arrays.asList("Density");
 //		p.selectedHeadings=Arrays.asList("Vapor Pressure");
 //		p.selectedHeadings=Arrays.asList("LogP");
-//		p.selectedHeadings=Arrays.asList("Melting Point");
+		p.selectedHeadings=Arrays.asList("Melting Point");
 //		p.selectedHeadings=Arrays.asList("Boiling Point");
 //		p.selectedHeadings=Arrays.asList("Autoignition Temperature");
 //		p.selectedHeadings=Arrays.asList("Flash Point");
