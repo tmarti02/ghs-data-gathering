@@ -410,9 +410,9 @@ public class TextUtilities {
 				symbol = "?";
 			} else if (str.charAt(index-1)=='<' || str.toLowerCase().contains("below")) {
 				symbol = "<";
-			} else if (str.charAt(index-1)=='~' || str.contains("ca.") || str.contains("circa") || str.toLowerCase().contains("approx") || str.contains("near") || str.toLowerCase().contains("approximately")) {
+			} else if (str.charAt(index-1)=='~' || str.contains("ca.") || str.contains("circa") || str.toLowerCase().contains("approx") || str.toLowerCase().contains("near") || str.toLowerCase().contains("approximately")) {
 				symbol = "~";
-			} else if (index > 1 && str.charAt(index-2)=='>' && str.charAt(index-1)=='=' || str.contains("more than=") || str.contains(">/=")) {
+			} else if (index > 1 && str.charAt(index-2)=='>' && str.charAt(index-1)=='=' || str.contains("more than=") || str.contains(">/=") || str.toLowerCase().contains("not less than")) {
 				symbol = ">=";
 			} else if (index > 1 && str.charAt(index-2)=='<' && str.charAt(index-1)=='=') {
 				symbol = "<=";
@@ -447,7 +447,7 @@ public class TextUtilities {
 
 		if (propertyValue.contains("±")) {
 			try {
-				plusMinus=Double.parseDouble(propertyValue.substring(propertyValue.indexOf("±")+1,unitsIndex));
+				plusMinus=Double.parseDouble(propertyValue.substring(propertyValue.indexOf("±")+2,unitsIndex));
 			} catch (Exception ex) {
 				//				ex.printStackTrace();
 			}

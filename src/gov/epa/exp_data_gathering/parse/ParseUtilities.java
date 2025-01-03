@@ -31,10 +31,16 @@ public class ParseUtilities extends Parse {
 	 * @return
 	 */
 	public static boolean getDensity(ExperimentalRecord er, String propertyValue) {
+		
+
+		String strFind="f): 1.07";
+		
+		
 		boolean badUnits = true;
 		int unitsIndex = -1;
 		propertyValue = propertyValue.replaceAll("([0-9]),([0-9])", "$1.$2");
 		propertyValue = propertyValue.replace("lbs/gal","lb/gal");
+		propertyValue = propertyValue.replace("-", "-");
 
 		propertyValue=propertyValue.replace("Specific gravity = ","").replace("Specific gravity: ","").replace("Specific gravity ","").replace("Bulk density = ","").replace("Specific Gravity = ", "");
 		propertyValue=propertyValue.replace("Density = ","").replace("BULK DENSITY ","");
@@ -50,7 +56,11 @@ public class ParseUtilities extends Parse {
 
 		//		propertyValue = propertyValue.replace(" lb at "," lb/gal at ");
 
-		String PVLC=propertyValue.toLowerCase(); 
+		String PVLC=propertyValue.toLowerCase();
+		
+
+//		if(PVLC.contains(strFind)) System.out.println("here0:"+strFind);
+		
 		//		String pvlc2=propertyValueNonSplit.toLowerCase();
 
 		if(PVLC.contains("will float")) {
@@ -76,7 +86,7 @@ public class ParseUtilities extends Parse {
 				"conversion", "coefficient", "critical", "radius", "resistivity", "ionization", "heat capacity",
 				"conductivity", "mobility", "dispersion", "bp", "logp", "vapor pressure", "magnetic", "viscosity",
 				"loss", "equiv", "osmolality", "collision", "liquifies", "explosion", "stability", "storage", "% in",
-				"detonation", "friction", "energy", "heat", "enthalpy", "abundance", "dielectric", "activation", "liquid", "0%)","5%)", "kmol", "distillation");
+				"detonation", "friction", "energy", "heat", "enthalpy", "abundance", "dielectric", "activation", "(90%)","(25%)", "kmol", "distillation", "regulatory note");
 
 		for (String badProp:badProps) {
 			if(PVLC.contains(badProp)) {
@@ -93,6 +103,10 @@ public class ParseUtilities extends Parse {
 		//			System.out.println("pow:"+PVLC);
 		//		}
 
+		
+//		if(PVLC.contains(strFind)) System.out.println("here1:"+strFind);
+		
+		
 		if ((PVLC.contains("relative") || PVLC.contains("gas") || PVLC.replace(" ","").contains("air=1") || PVLC.contains("than air")) && !PVLC.contains("(liq") && !PVLC.contains("liquid")) {//fix the relative one
 
 			//			if(!PVLC.contains("relative") && !PVLC.replace(" ","").contains("air=1") && !PVLC.contains("than air") && !PVLC.contains("saturated air") && !PVLC.contains("gas")) {
@@ -153,6 +167,20 @@ public class ParseUtilities extends Parse {
 				//				System.out.println("here3\t"+propertyValueNonSplit+"\t"+propertyValue);
 				//				System.out.println("here3\t"+propertyValue);
 				er.updateNote(ExperimentalConstants.str_relative_density);//liquid
+				
+				if((PVLC.contains(" at") || PVLC.contains("(")) && PVLC.contains("°")) {
+					
+					propertyValue=propertyValue.replace("Relative density (water = 1):", "");
+					if(propertyValue.contains(" at ")) {
+						propertyValue=propertyValue.substring(0,propertyValue.indexOf(" at"));
+					} else if (propertyValue.contains("(")) {
+						propertyValue=propertyValue.substring(0,propertyValue.indexOf("("));	
+					}
+					unitsIndex = propertyValue.length();
+//					System.out.println("fixed:\t"+propertyValue);
+				}
+				
+				
 			}
 
 		} else if (PVLC.contains("g/cm") || PVLC.contains("g/cu cm") || PVLC.contains("gm/cu cm") || PVLC.contains("gm/cc")) {
@@ -232,27 +260,44 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_kg_dm3;
 			unitsIndex = PVLC.indexOf("kg/dm3");
 			badUnits = false;
+		
+		} else if (PVLC.contains("mol/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_mol_L;
+			unitsIndex = PVLC.indexOf("mol/l");
+			badUnits = false;
 
 
-		} else {
+		} else {//no density units
 
 			if (er.source_name.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
 				unitsIndex = propertyValue.length();
 
 			} else if (propertyValue.contains("°F):")) {
 
+				
 				String value=propertyValue.substring(propertyValue.indexOf(":")+1,propertyValue.length());
 				String temp=propertyValue.substring(0,propertyValue.indexOf(":")).replace("(","").replace(")", "");
-				propertyValue=value+" @ "+temp;//fix the formatting of property value
+//				propertyValue=value+" @ "+temp;//fix the formatting of property value
+				propertyValue=value;//fix the formatting of property value
 				//				System.out.println(propertyValue);
+				unitsIndex = propertyValue.length();
+				
+				
+				if(PVLC.contains(strFind)) System.out.println("here2:"+strFind+"\t"+propertyValue);
 
+			} else if (PVLC.contains(" at")) {
+				String old=propertyValue;
+				propertyValue=PVLC.substring(0,PVLC.indexOf(" at"));
+//				System.out.println(old+"\t"+propertyValue);
+				unitsIndex = propertyValue.length();
+			} else if (PVLC.contains("@")) {
+				String old=propertyValue;
+				propertyValue=PVLC.substring(0,PVLC.indexOf("@"));
+//				System.out.println(old+"\t"+propertyValue);
 				unitsIndex = propertyValue.length();
 
 			} else if (propertyValue.contains(":")) {
 				unitsIndex = propertyValue.length();
-
-
-
 			} else if (propertyValue.contains(" ")) {
 				unitsIndex = propertyValue.indexOf(" ");
 			} else {
@@ -327,7 +372,12 @@ public class ParseUtilities extends Parse {
 			er.reason="Solution";
 			return foundNumeric;
 		}
-
+		
+		if(PVLC.equals("relative density (water = 1):")) {
+			er.keep=false;
+			er.reason="No values";
+		}
+		
 		if(er.property_value_point_estimate_original!=null && er.property_value_point_estimate_original==0) {
 			er.keep=false;
 			er.reason="Density of zero not possible";
@@ -474,14 +524,14 @@ public class ParseUtilities extends Parse {
 		unitsIndex = lookForUnitsInList(er, propertyValue, unitsIndex, mpUnits, ExperimentalConstants.str_mP);
 
 
-		List<String> Pa_secUnits = Arrays.asList("Pa.s","Pa-s","Pa-sec","Pa sec","Pa-secec","Pa-sec","Pa*s","pascal-sec");		
+		List<String> Pa_secUnits = Arrays.asList("Pa.s","Pa-s","Pa-sec","Pa sec","Pa-secec","Pa-sec","Pa*s","pascal-sec", "Pa/s", "Pa/sec");		
 		unitsIndex = lookForUnitsInList(er, propertyValue, unitsIndex, Pa_secUnits, ExperimentalConstants.str_Pa_sec);
 
 		List<String> pUnits = Arrays.asList("poises", "poise","POISE","Poise");
 		unitsIndex = lookForUnitsInList(er, propertyValue, unitsIndex, pUnits, ExperimentalConstants.str_P);
 
 		List<String> cStUnits = Arrays.asList("centistokes","Centistokes","CENTISTOKE","cSt","cST", 
-				"mm^2/s","sq mm/s","sq mm.s","sq m/sec");		
+				"mm^2/s","sq mm/s","sq mm.s","sq m/sec", "mmÂ^2/s");		
 		unitsIndex = lookForUnitsInList(er, propertyValue, unitsIndex, cStUnits, ExperimentalConstants.str_cSt);
 
 
@@ -533,12 +583,14 @@ public class ParseUtilities extends Parse {
 				"conductivity", "mobility", "dispersion", "logp", "vapor pressure", "magnetic", "viscosity",
 				"loss", "equiv", "osmolality", "collision", "liquifies", "explosion", "stability", "storage", "% in",
 				"detonation", "friction", "energy", "heat of", "enthalpy", "abundance", "dielectric", "activation", "loses",
-				"volatility", "specific gravity", "pk", "entropy", "coeff", "cps", "specific heat", "refractive index", "specific rotation", "triple point", "stable at"));
+				"volatility", "specific gravity", "pk", "entropy", "coeff", "cps", "specific heat", "refractive index", "specific rotation", "triple point", "stable at", 
+				"g/100 cc", "stable between", "is stable", "soluble in", "ignites in","sol (mg/ml)","11-sep","(c=1 in h2o)"));
 		//"range"
 
 		if(!er.property_name.contentEquals(ExperimentalConstants.strBoilingPoint)) {
 			badProps.add("bp");
 			badProps.add("boiling point");
+			badProps.add("boiling  point");
 		}
 		if(!er.property_name.contentEquals(ExperimentalConstants.strMeltingPoint)) {
 			badProps.add("mp");
@@ -548,7 +600,7 @@ public class ParseUtilities extends Parse {
 
 		for (String badProp:badProps) {
 
-			if(PVLC.contains(badProp)) {
+			if(PVLC.contains(badProp) && !PVLC.contains("nfpa")) {
 
 				er.keep=false;
 				er.reason="Incorrect property";
@@ -798,7 +850,9 @@ public class ParseUtilities extends Parse {
 				"conversion", "coefficient", "critical", "radius", "resistivity", "ionization", "heat capacity",
 				"conductivity", "mobility", "dispersion", "logp", "vapor pressure", "magnetic", "viscosity",
 				"loss", "equiv", "osmolality", "collision", "liquifies", "explosion", "stability", "storage", 
-				"detonation", "friction", "energy", "heat of", "enthalpy", "abundance", "dielectric", "activation", "ph of 1%", "ph of 10%", "ph (1% aq", "ph of a 1% aq", "ph of 3%", "ph of a 2%", "1% soln"));
+				"detonation", "friction", "energy", "heat of", "enthalpy", "abundance", "dielectric", "activation", "ph of 1%", "ph of 10%", "ph (1% aq", "ph of a 1% aq", "ph of 3%", "ph of a 2%", "1% soln",
+				"bromoform", "in fat", "furfural", "ethanol", "sodium bicarbonate", "toluene", "octan-1-ol", "dioxine", "hydrazine", "gasoline", "jet fuel", "diesel fuel", "tolune", "xylenol", "ml co2/100 ml", 
+				"2% zn", "mm hg", "magnesium salt", "trihydrate", "n hc1", "m nahco3", "buoh", "almond oil", "petrolatum", "olive oil", "hexane", "n hci", "flow rate", "h 25 (mg/ml)"));
 
 		for (String badProp:badProps) {
 			if(PVLC.contains(badProp)) {
@@ -940,6 +994,9 @@ public class ParseUtilities extends Parse {
 		} else if (pvLC.contains("kg/kg")) {
 			er.property_value_units_original = ExperimentalConstants.str_kg_kg_H20;
 			unitsIndex = pvLC.indexOf("kg/");
+		} else if (propertyValue.toLowerCase().contains("mg/kg")) {
+				er.property_value_units_original = ExperimentalConstants.str_mg_kg_H20;
+				unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
 		} else if (pvLC.contains("g/kg")) {
 			er.property_value_units_original = ExperimentalConstants.str_g_kg_H20;
 			unitsIndex = pvLC.indexOf("g/");
@@ -1229,7 +1286,7 @@ public class ParseUtilities extends Parse {
 			er.property_value_qualitative = "low";
 		}
 
-		if(propertyValue.contains("(approx)")) {
+		if(propertyValue.contains("(approx)") || propertyValue.contains("Generally")) {
 			er.keep=false;
 			er.reason="Approximate value";
 			return false;
@@ -1346,6 +1403,15 @@ public class ParseUtilities extends Parse {
 		return foundNumeric;
 	}
 
+	
+	/**
+	 * See https://www.henrys-law.org/henry/ for info
+	 * 
+	 * 
+	 * @param er
+	 * @param propertyValue
+	 * @return
+	 */
 	public static boolean getHenrysLawConstant(ExperimentalRecord er,String propertyValue) {
 		boolean badUnits = true;
 		int unitsIndex = -1;
@@ -1356,7 +1422,7 @@ public class ParseUtilities extends Parse {
 			return false;
 		}
 
-		if(propertyValue.contains("the Henry's Law constant of water (4.34X10-7 atm-cu m/mol)") || propertyValue.contains("Henry's law constant: 7.352x10-5 to 3.505x10-4 MPa-cu m/mol at 4-40 °C")) {
+		if(propertyValue.contains("the Henry's Law constant of water (4.34X10-7 atm-cu m/mol)") || propertyValue.contains("Henry's law constant: 7.352x10-5 to 3.505x10-4 MPa-cu m/mol at 4-40 °C") || propertyValue.contains("Henry's law constant: 7.352x10-5 to 3.505x10-4 MPa-cu m/mol at 4-40 Â°C")) {
 			//			System.out.println("Found < water HLC");
 			er.keep=false;
 			er.reason="Bad data or units";
@@ -1389,7 +1455,6 @@ public class ParseUtilities extends Parse {
 
 		List<String> valsPA_M3_MOL=  Arrays.asList("pa m³/mol","pa m^3/mol","Pa-cu m/mol","Pa-cu m/mol");
 		unitsIndex = lookForUnitsInList(er, propertyValue, unitsIndex, valsPA_M3_MOL, ExperimentalConstants.str_Pa_m3_mol);
-
 
 		unitsIndex = lookForUnitsInList(er, propertyValue.toLowerCase(), unitsIndex, Arrays.asList("dimensionless - vol"), ExperimentalConstants.str_dimensionless_H_vol);
 		unitsIndex = lookForUnitsInList(er, propertyValue.toLowerCase(), unitsIndex, Arrays.asList("dimensionless"), ExperimentalConstants.str_dimensionless_H);
