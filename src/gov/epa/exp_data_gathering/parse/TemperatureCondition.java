@@ -364,7 +364,7 @@ public class TemperatureCondition {
 //		}
 		
 		
-		List <String>listC=Arrays.asList("\u00B0C","oC","deg.C","degC","C degrees","degrees C","C deg","degree C","deg. C","dec C","°C","°C","°C");
+		List <String>listC=Arrays.asList("\u00B0C","oC","deg.C","degC","C degrees","degrees C","C deg","degree C","deg. C","dec C","°C","°C","°C", "dg C");
 		List <String>listF=Arrays.asList("\u00B0F","oF","degrees F","F deg","° F","degree F","deg. F","°F","°F", "°F");
 		List <String>listK=Arrays.asList("K");
 		List <String>listD=Arrays.asList("\u00B0");

@@ -12,4 +12,5 @@ public class PublicSource {
 	public String description;
 	public 	String type;
 	public 	String url;
+	public String licenseUrl;
 }

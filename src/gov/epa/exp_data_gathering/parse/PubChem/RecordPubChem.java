@@ -1119,9 +1119,7 @@ public class RecordPubChem {
 			}
 		}
 		
-		
 		if (publicSourceOriginal != null) {
-
 			er.publicSourceOriginal = publicSourceOriginal;
 			er.original_source_name=publicSourceOriginal.name;
 			er.url = publicSourceOriginal.url;//store direct link in url instead
@@ -1133,6 +1131,7 @@ public class RecordPubChem {
 				er.keep = false;
 				er.reason = "source data not retrievable";
 			}
+			
 		}
 
 		if (literatureSource != null) {
@@ -1175,6 +1174,19 @@ public class RecordPubChem {
 			}
 			
 		}
+		
+		
+		if(er.reference!=null && er.reference.equals("Extrapolated")) {
+			er.keep = false;
+			er.reason = "Estimated";
+//			System.out.println("here extrapolated");
+			if (publicSourceOriginal != null) {
+				if(!publicSourceOriginal.name.equals("Human Metabolome Database (HMDB)")) {
+					System.out.println("Extrapolated:\t"+publicSourceOriginal.name);
+				} 
+			}
+		}
+
 
 //		if(propertyValue.contains("pH") && (propertyValue.contains("@") || propertyValue.contains("log Kow"))) {
 //		if(er.reference!=null && er.reference.equals("MacBean C, ed; The e-Pesticide Manual, 15th ed., Version 5.0.1. Surrey UK, British Crop Protection Council. Spirodiclofen (148477-71-8) (2010)")) {
@@ -1230,6 +1242,8 @@ public class RecordPubChem {
 		propertyValue = propertyValue.replace("log Kow = 3.8-4.1 (pH 6-7, 20-25 �C)", "log Kow = 3.8-4.1 (20-25 �C, pH 6-7)");
 		propertyValue = propertyValue.replace("log Kow = 2.5-3.2 (pH 9-10, 20-25 �C)", "log Kow = 2.5-3.2 (20-25 �C, pH 9-10)");
 		propertyValue = propertyValue.replace("24X10-5 to 30X10-5 (5.8X10-6 to 7.3X10-6 atm-cu m/mol) at 37 �C", "6.55X10-6 atm-cu m/mol at 37 �C");
+		propertyValue = propertyValue.replace("Henry's Law constant = 24X10-5 to 30X10-5 (5.8X10-6 to 7.3X10-6 atm-cu m/mol) at 37 °C", "6.55X10-6 atm-cu m/mol at 37 �C");
+		propertyValue = propertyValue.replace("Henry's Law constant = 6.00X10-6  to 9.96X10-12 atm-cu m/mol at 25 °C /individual isomers/", "3.00X10-6 atm-cu m/mol at 25 °C /individual isomers/");
 		propertyValue = propertyValue.replace("8.5X10-12 to 4.1X10-8 Pa-cu m/mol (Aminoglycosides) (etc)", "2.05X10-8 Pa-cu m/mol (Aminoglycosides) (etc)");
 		propertyValue = propertyValue.replace("The relative density will be between the bulk density and its density in molten form: 600 < D < 960 kg/cu m", "960 kg/cu m");
 		//Vapor Pressure
@@ -1276,9 +1290,113 @@ public class RecordPubChem {
 		propertyValue = propertyValue.replace("log Kow > 5 (pH 4-5, 20-25 �C)","log Kow > 5 @ pH 4.5 and 22.5�C");
 		propertyValue = propertyValue.replace("log Kow = 3.8-4.1 (pH 6-7, 20-25 �C)","log Kow = 3.8-4.1 @ pH 6.5 and 22.5�C)");
 		propertyValue = propertyValue.replace("log Kow = 2.5-3.2 (pH 9-10, 20-25 �C)","");
+		//Melting Point
+		propertyValue = propertyValue.replace("-77 - (-)14 °F","-77 - -14 °F");
+		propertyValue = propertyValue.replace("-22-(-)13 °F","-22- -13 °F");
+		propertyValue = propertyValue.replace("-15..2 °C, 258 K, 5 °F","-15.2 °C, 258 K, 5 °F");
+		propertyValue = propertyValue.replace("121,5 - 123,5 °C","121.5 - 123.5 °C");
+		propertyValue = propertyValue.replace("for benzoic acidMelting range of benzoic acid isolated by acidification and not recrystallised 121,5 °C to 123,5 °C, after drying in a sulphuric acid desiccator","for benzoic acidMelting range of benzoic acid isolated by acidification and not recrystallised 121.5 °C to 123.5 °C, after drying in a sulphuric acid desiccator");
+		propertyValue = propertyValue.replace("The white precipitate formed by acidifying with hydrochloric acid a 10 % (w/v) aqueous solution of the sodium derivative of methylp-hydroxybenzoate (using litmus paper as indicator) shall, when washed with water and dried at 80 °C for two hours, have a melting range of 125 °C to 128 °C","The white precipitate formed by acidifying with hydrochloric acid a 10 % (w/v) aqueous solution of the sodium derivative of methylp-hydroxybenzoate (using litmus paper as indicator) shall, when washed with water and dried, have a melting range of 125-128 °C");
+		propertyValue = propertyValue.replace("151,5-154,0 °C","151.5-154.0 °C");
+		propertyValue = propertyValue.replace("185,0-190,0 °C","185.0-190.0 °C");
+		propertyValue = propertyValue.replace("1,014 °C","1014 °C");
+		propertyValue = propertyValue.replace("2,075 °C","2075 °C");
+		propertyValue = propertyValue.replace("2,550 °C","2550 °C");
+		propertyValue = propertyValue.replace("2,446 °C","2446 °C");
+		propertyValue = propertyValue.replace("1,495 °C","1495 °C");
+		propertyValue = propertyValue.replace("O-2 °C","0-2 °C");
+		propertyValue = propertyValue.replace("289 °C +/- 2 deg","289 °C +/- 2 °C");
+		propertyValue = propertyValue.replace("101 °C to 105 °C","101 to 105 °C");
+		propertyValue = propertyValue.replace("The physical description reflects the varying melting points which range from around -30 °C to 25 °C.","The physical description reflects the varying melting points which range from around -30 to 25 °C.");
+		propertyValue = propertyValue.replace("Between 168 °C and 170 °C","Between 168-170 °C");
+		propertyValue = propertyValue.replace("Between 48 °C and 63 °C","Between 48-63 °C");
+		propertyValue = propertyValue.replace("Between 95 °C and 98 °C after drying at 90 °C for six hours","Between 95-98 °C after drying");
+		propertyValue = propertyValue.replace("Between 99 °C and 102 °C after drying at 90 °C for six hours","Between 99-102 °C after drying");
+		propertyValue = propertyValue.replace("Between 146 °C and 150 °C after drying at 110 °C for four hours","Between 146-150 °C after drying");
+		propertyValue = propertyValue.replace("Between 107 °C and 117 °C","Between 107-117 °C");
+		propertyValue = propertyValue.replace("213 °C to 217 °C","213-217 °C");
+		propertyValue = propertyValue.replace("121,5 °C to 123,5 °C","121.5-123.5 °C");
+		propertyValue = propertyValue.replace("Between 133 °C and 135 °C, after vacuum drying for four hours in a sulphuric acid desiccator","Between 133-135 °C, after vacuum drying for four hours in a sulphuric acid desiccator");
+		propertyValue = propertyValue.replace("-245 °F to -148 °F","-245- -148 °F");
+		// Boiling Point
+		propertyValue = propertyValue.replace("2,861 °C","2861 °C");
+		propertyValue = propertyValue.replace("1,500 °C","1500 °C");
+		propertyValue = propertyValue.replace("3,600 °C","3600 °C");
+		propertyValue = propertyValue.replace("4,000 °C","4000 °C");
+		propertyValue = propertyValue.replace("10,701 °F","10701 °F");
+		propertyValue = propertyValue.replace("Boiling point: 61-63 °C (51 mm Hg)","Boiling point: 61-63 °C at 51 mm Hg");
+		propertyValue = propertyValue.replace("70-80 °C at 2-5X10-5 mm Hg","70-80 °C at 3.5X10-5 mm Hg");
+		// Vapor Pressure
+		propertyValue = propertyValue.replace("Vapor pressure, Pa at 20 °C: 8.1x10", "Vapor pressure, Pa at 20 °C: 8.1x10-7");
+		//Density
+		propertyValue = propertyValue.replace("Density: 0.7149 /1-Octene/; 0.7199 g/cu cm @ 20 °C /2-Octene (E)/; 0.7243 g/cu cm @ 20 °C /2-Octene (Z)/; 0.7152 g/cu cm @ 20 °C /3-Octene (E)/; 0.7159 g/cu cm @ 20 °C /3-Octene (Z)/; 0.7141 g/cu cm @ 20 °C /4-Octene (E)/; 0.7212 g/cu cm @ 20 °C /4-Octene (Z)/","Density: 0.7149 (1-Octene); 0.7199 g/cu cm @ 20 °C /2-Octene (E)/; 0.7243 g/cu cm @ 20 °C /2-Octene (Z)/; 0.7152 g/cu cm @ 20 °C /3-Octene (E)/; 0.7159 g/cu cm @ 20 °C /3-Octene (Z)/; 0.7141 g/cu cm @ 20 °C /4-Octene (E)/; 0.7212 g/cu cm @ 20 °C /4-Octene (Z)/");
+		propertyValue = propertyValue.replace("Specific gravity = 1.01 - 1.02","Specific gravity = 1.01-1.02");
+		propertyValue = propertyValue.replace("0.861-0.871(d20/4)","0.861-0.871");
+		propertyValue = propertyValue.replace("0.87505(15Â°)","0.87505 (15Â°)");
+		propertyValue = propertyValue.replace("0.8789(20Â°)","0.8789 (20Â°)");
+		propertyValue = propertyValue.replace("Density: 4.69 (CdSO4)", "Density: 4.69");
+		propertyValue = propertyValue.replace("Cf2O3: pale green, hexagonal, density = 12.69 g/mL", "pale green, hexagonal, density = 12.69 g/mL");
+		propertyValue = propertyValue.replace("CfBr2: amber, tetragonal, density = 7.22 g/mL", "amber, tetragonal, density = 7.22 g/mL");
+		propertyValue = propertyValue.replace("density: 1.73 20 °C/4 °C", "density: 1.73 at 20 °C/4 °C");
+ 		propertyValue = propertyValue.replace("Density  (at 0-4 °C): 0.6 g/cm�^3", "Density: 0.6 g/cm�^3 at 0-4 °C");
+ 		propertyValue = propertyValue.replace("Sp gr: 1.04 (water= 1)", "Sp gr: 1.04");
+		propertyValue = propertyValue.replace("Sp gr: 1.1122 20 °C/20 °C", "Sp gr: 1.1122 at 20 °C/20 °C");
+		propertyValue = propertyValue.replace("1.1270 (Milbemycin A3) at 25 �C; 1.1265 (Milbemycin A4) at 25 �C", "1.1270 at 25 �C; 1.1265 at 25 �C");
+		propertyValue = propertyValue.replace("1.1416 at 20 °C g/cu cm", "1.1416 g/cu cm at 20 °C");
+		propertyValue = propertyValue.replace("1.66 @ 25 °C referred to water at 4 °C", "1.66 @ 25 °C");
+		propertyValue = propertyValue.replace("1.507 (99.2%) at 20 °C", " 1.507 at 20 °C");
+		propertyValue = propertyValue.replace("0.885-0.887(d20/4)", "0.885-0.887");
+		propertyValue = propertyValue.replace("Styrene oxide (98 mole % pure) is available in USA with following specifications: density, 1.0490-1.0515 (25/25 °C)", "Styrene oxide (98 mole % pure) is available in USA with following specifications: density, 1.0490-1.0515 at 25/25 °C");
+		propertyValue = propertyValue.replace("Density: 0.7149 /1-Octene/", "Density: 0.7149 (1-Octene)");
+		propertyValue = propertyValue.replace("MP 35 °C, density 1.5235, readily loses 12H2O at 100 °C /Disodium phosphate dodecahydrate/", " density 1.5235 /Disodium phosphate dodecahydrate/");
+//		propertyValue = propertyValue.replace("", "");
+		//Flash Point
+		propertyValue = propertyValue.replace("strong at 3-10 ppm. [ACGIH] 10 °F","[ACGIH] 10 °F");
+		propertyValue = propertyValue.replace("Powder will ignite at flash point >73 but <100 °F","Powder will ignite at flash point 73-100 °F");
+		//Log Kow
+		propertyValue = propertyValue.replace("Kow = 1600 at 24 °C (log Kow = 3.20)", "log Kow = 3.20 at 24 °C");
+		propertyValue = propertyValue.replace("log Kow = -0.82 (20 °C)", "log Kow = -0.82 at 20 °C");
+		propertyValue = propertyValue.replace("-0.34 (20 °C)", "-0.34 at 20 °C");
+		propertyValue = propertyValue.replace("-4.60 (20 °C)", "-4.60 at 20 °C");
+		propertyValue = propertyValue.replace("0.99 (30 °C)", "0.99 at 30 °C");
+		//Water Solubility
+		propertyValue = propertyValue.replace("In water, 4.2X10+5 to 5.95X10+5 mg/L at 20 °C", "In water, 5.0755X10+5 mg/L at 20 °C");
+		propertyValue = propertyValue.replace("Solubility in water: 2-4% at 22 °C and pH 4.6 to pH 8.9 /Dihydrochloride salt/", "Solubility in water: 2-4% at 22 °C and pH 4.6 to 8.9 /Dihydrochloride salt/");
+		propertyValue = propertyValue.replace("In water, 8.5X10-7 mol/L (0.40 mg/L) at 37 °C", "In water, 0.40 mg/L at 37 °C");
+		propertyValue = propertyValue.replace("Water solubility = 2,460,000 mg/l at 4.5 °C", "Water solubility = 2460000 mg/l at 4.5 °C");
+		propertyValue = propertyValue.replace("Solubility decreases with addition of ammonia: at 10 °C, from 73 g in 100 g of water, to 18 g in 100 g of 24.5% aqueous ammonia", "Solubility decreases with addition of ammonia: at 10 °C, from 73 g in 100 g of water");
+		propertyValue = propertyValue.replace("Solubility (g/100 cc solvent): 5.70 g in water @ 10 °C; 6.23 g in water @ 25 °C; 250 +/- 10 g in carbon tetrachloride @ 20 °C", "Solubility (solvent): 5.70 g/100 cc in water @ 10 °C; 6.23 g/100 cc in water @ 25 °C; 250 +/- 10 g/100 cc in carbon tetrachloride @ 20 °C");
+		propertyValue = propertyValue.replace("Solubility (ppm): water 230 (@ 25 °C), acetone 52,000 (@ 27 °C), benzene 2900 (@ 27 °C)", "Solubility: water 230 ppm @ 25 °C, acetone 52,000 (@ 27 °C), benzene 2900 (@ 27 °C)");
+		propertyValue = propertyValue.replace("SOLUBILITY IN WATER @ 20-25 °C: 22% /LITHIUM SALT/; 14% /SODIUM SALT/; 10.7% /POTASSIUM SALT/", "SOLUBILITY IN WATER: 22% @ 20-25 °C /LITHIUM SALT/; 14% @ 20-25 °C/SODIUM SALT/; 10.7% @ 20-25 °C /POTASSIUM SALT/");
+		propertyValue = propertyValue.replace("In water (g/100 g water): 36.4 at 20 °C", "In water: 36.4 g/100 g water at 20 °C");
+		propertyValue = propertyValue.replace("Solubility in water as weight %: 24%, 0 °C; 26.3%, 20 °C; 28.9%, 40 °C; 31.7%, 60 °C; 34.4%, 80 °C, 26.2%, 100 °C", "Solubility in water as weight %: 24% at 0 °C; Solubility in water as weight %: 26.3% at 20 °C; Solubility in water as weight %: 28.9% at 40 °C; Solubility in water as weight %: 31.7% at 60 °C; Solubility in water as weight %: 34.4% at 80 °C; Solubility in water as weight %: 26.2% at 100 °C");
+		propertyValue = propertyValue.replace("Solubility in water in mg/mL at 25 °C: 18.2 at pH 3.72; 16.1 at pH 4.00, 15.2 at pH 4.05, 14.5 at pH 4.27, 13.8 at pH 4.78, 13.5 at pH 5.30, 13.7 at pH 5.70 and 14.2 at pH 6.00; in distilled water, 10.20 mg/mL at pH 7.00", "Solubility in water: 18.2 mg/mL at 25 °C (pH 3.72); 16.1 mg/mL at 25 °C, pH 4.00; 15.2 mg/mL at 25 °C, pH 4.05; 14.5 mg/mL at 25 °C, pH 4.27; 13.8 mg/mL at 25 °C pH 4.78; 13.5 mg/mL at 25 °C pH 5.30; 13.7 mg/mL at 25 °C, pH 5.70; 14.2 mg/mL at 25 °C, pH 6.00; in distilled water, 10.20 mg/mL at pH 7.00");
+		propertyValue = propertyValue.replace("Solubility (mg/mL): water 83, ethanol (200 proof) 26, propylene glycol 93, ethanol (190 proof) >100, methanol >100, 2-propanol 4.6, ethyl acetate 1.0, DMF >100, methylene chloride >100, hexane 0.001", "Solubility: water 83 mg/mL; ethanol (200 proof) 26, propylene glycol 93, ethanol (190 proof) >100, methanol >100, 2-propanol 4.6, ethyl acetate 1.0, DMF >100, methylene chloride >100, hexane 0.001");
+		propertyValue = propertyValue.replace("PPM @ 25 °C: ACETONE 16,800, BENZENE 500, XYLENE 400, DIMETHYLFORMAMIDE 50,300, WATER 230,800, ISOPROPANOL 20,900, METHYLETHYL KETONE 5,900; INSOL IN HEXANE; MISCIBLE IN DIMETHYLSULFOXIDE", "WATER 230,800 PPM @ 25 °C");
+		propertyValue = propertyValue.replace("In water (g/L at 20 °C): 7.24X10-3 (pH 5)", "In water: 7.24X10-3 g/L at 20 °C (pH 5)");
+		propertyValue = propertyValue.replace("White to off-white powder. MP 120-122 °C. Solubility in water: 792 mg/mL /Lisdexamfetamine dimethanesulfonate/", "White to off-white powder. Solubility in water: 792 mg/mL /Lisdexamfetamine dimethanesulfonate/");
+		propertyValue = propertyValue.replace("White crystals, mp 262-263 °C. Solubility in water: 20 g/100mL. Freely soluble in methanol", "Solubility in water: 20 g/100mL");
+		propertyValue = propertyValue.replace("Amorphous, hygroscopic, white powder. Mp 169.0-171.2 °C. Solubility in water: approx 500 mg/mL. Similarly soluble in methanol, ethanol,; sparingly soluble in chloroform. /21-Sodium succinate/", "Solubility in water: approx 500 mg/mL");
+		propertyValue = propertyValue.replace("Crystals. Bitter taste. mp 194-198 °C. Sol in water. Sparingly sol in methanol. Practically insol in benzene, ether. pH (2% aq soln): 4.5. /Phosphate/", "Sol in water");
+		propertyValue = propertyValue.replace("mp 78-81 °C. Solubility (room temperature): 918 mg/l water","Solubility (room temperature): 918 mg/l water");
+		propertyValue = propertyValue.replace("SOLUBILITY IN WATER @ 20-25 °C: 22% /LITHIUM SALT/; 14% /SODIUM SALT/; 10.7% /POTASSIUM SALT/","SOLUBILITY IN WATER: 22% @ 20-25 °C /LITHIUM SALT/; 14% @ 20-25 °C /SODIUM SALT/; 10.7% @ 20-25 °C /POTASSIUM SALT/");
+		propertyValue = propertyValue.replace("In aqueous media with a pH between 1.1 to 7.8, axitinib has a solubility of over 0.2 μg/mL.","axitinib has a solubility of over 0.2 ug/mL in aqueous media with a pH 1.1-7.8");
+		propertyValue = propertyValue.replace("Freely soluble at neutral pH (350 mg/mL at 37 °C, pH 7.0).","Freely soluble (350 mg/mL at 37 °C, pH 7.0).");
+		propertyValue = propertyValue.replace("Maximum water solubility of 16�  ��18 g/L at 24°", "Maximum water solubility of 16-��18 g/L at 24°");
+		propertyValue = propertyValue.replace("≥ 10g/100g", ">= 10g/100g");
+		propertyValue = propertyValue.replace("soluble in water at 50 g/l at 20ï¿½C and white petrolatum at <100 g/kg at 20ï¿½C", "soluble in water at 50 g/l at 20°C");
+		propertyValue = propertyValue.replace("100 g in 100 ml water at 23ï¿½C", "100 g in 100 ml water at 23 °C");
+		propertyValue = propertyValue.replace("Soluble in water (2.70 g/l at 20C); soluble in white petrolatum (>1000 g/l at 20C)", "Soluble in water (2.70 g/l at 20C)");
+		propertyValue = propertyValue.replace("Solubility (g/100 g water): 3.1 at 0 °C","Solubility: 3.1 g/100 g water at 0 °C");
+		propertyValue = propertyValue.replace("Aqueous solubility data in g/L: 0.4676 at 0 °C","Aqueous solubility data: 0.4676 g/L at 0 °C");
+		propertyValue = propertyValue.replace("In water, 1./0X10+4 mg/L at 20 °C","In water, 1.0X10+4 mg/L at 20 °C");
+		propertyValue = propertyValue.replace("pK2 = 9.76. Solubility in water (g/L): 18.3 at 0 °C"," pK2 = 9.76. Solubility in water: 18.3 g/L at 0 °C");
+		propertyValue = propertyValue.replace("pK2 = 9.60. Solubility in water (g/L): 7.97 (0 °C)","pK2 = 9.60. Solubility in water: 7.97 g/L at 0 °C");
+		propertyValue = propertyValue.replace("Solubility in water (g/L): 19.8 at 0 °C","Solubility in water: 19.8 g/L at 0 °C");
+		propertyValue = propertyValue.replace("Solubility in water (g/L): 37.9 at 0 °C","Solubility in water: 37.9 g/L at 0 °C");
+		propertyValue = propertyValue.replace("Solubility in water (g/L): 22.7 (0 °C)","Solubility in water: 22.7 g/L at 0 °C");
+		//propertyValue = propertyValue.replace("","");
 
-	
-	
 	}
 
 	/**
