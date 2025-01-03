@@ -3,6 +3,7 @@ package gov.epa.exp_data_gathering.parse;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import kong.unirest.Unirest;
 
@@ -16,7 +17,7 @@ public class UtilitiesUnirest {
 				Set<String> artifactoryLoggers = new HashSet<String>(Arrays.asList("org.apache.http", "groovyx.net.http"));
 				for(String log:artifactoryLoggers) {
 					ch.qos.logback.classic.Logger artLogger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(log);
-					artLogger.setLevel(ch.qos.logback.classic.Level.INFO);
+					artLogger.setLevel(ch.qos.logback.classic.Level.WARN);
 					artLogger.setAdditive(false);
 				}
 			}

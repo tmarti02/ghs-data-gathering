@@ -263,7 +263,7 @@ public class ToxQueryOptions extends QueryOptions {
 	}
 	
 	/**
-	 * Recursively splits a vector of ToxQueryOptions until all queries have size {@literal <} 10000
+	 * Recursively splits a vector of ToxQueryOptions until all queries have size {@literal <} maxSize
 	 * @param options	Vector of ToxQueryOptions to be resized
 	 * @return			Vector of ToxQueryOptions of permitted size
 	 */
@@ -392,6 +392,7 @@ public class ToxQueryOptions extends QueryOptions {
 		List<ToxQueryOptions> splitOptions = resize(maxSize);
 		QueryHandler handler = new QueryHandler(1000,10);
 		int counter = 0;
+						
 		for (ToxQueryOptions options:splitOptions) {
 			String after = options.afterYear==null ? "the beginning of time" : options.afterYear;
 			String before = options.beforeYear==null ? "present" : options.beforeYear;
