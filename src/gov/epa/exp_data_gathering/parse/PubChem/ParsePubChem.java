@@ -1,34 +1,24 @@
 package gov.epa.exp_data_gathering.parse.PubChem;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Vector;
 
-import org.apache.commons.text.StringEscapeUtils;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 
-import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
-import gov.epa.exp_data_gathering.parse.ParseUtilities;
-import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Reference;
 
 /**
 
@@ -339,9 +329,7 @@ public class ParsePubChem extends Parse {
 	private void handleRecordPubChem(ExperimentalRecords recordsExperimental, Hashtable<String, String> htCID,
 			RecordPubChem r) {
 		
-		
 		if(selectedHeadings!=null && !selectedHeadings.contains(r.propertyName)) return; 
-		
 		
 		if(r.propertyValue.contains(";") && !r.propertyName.equals("Physical Description") && !r.propertyName.equals("Color/Form") &&  !r.propertyName.equals("Odor") ) {
 		
@@ -377,11 +365,6 @@ public class ParsePubChem extends Parse {
 //					continue;
 //				}
 
-
-//				if(er.reason!=null && er.reason.equals("No values")) {
-//					System.out.println(r.propertyValue);
-//				}
-				
 //				if(!propertyValue.equals(propertyValueOriginal)) {
 //					er.updateNote("parsed property_value: "+propertyValue);
 //				}
@@ -391,13 +374,7 @@ public class ParsePubChem extends Parse {
 				if (storeDTXCIDs) 
 					if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
 
-				
-//				System.out.println(originalValue+"\t"+r.propertyValue);
 //				System.out.println(gson.toJson(er));
-//				
-//				if(er.reason!=null && er.reason.equals("Original units missing")) {
-//					System.out.println(propertyValue);
-//				}
 
 				recordsExperimental.add(er);
 				
@@ -408,24 +385,23 @@ public class ParsePubChem extends Parse {
 			
 			ExperimentalRecord er=r.toExperimentalRecord(r.propertyValue);
 			if(er==null) return;	
-
 			er.property_value_string_parsed=r.propertyValue;						
-			
-//			if(er.reason!=null && er.reason.equals("No values")) {
-//				System.out.println(r.propertyValue+"\t"+er.property_value_point_estimate_original);
-//			}
 			
 			if (storeDTXCIDs) {
 				//Do we want to trust the cid from compounds table in dsstox???
 				if(htCID.containsKey(r.cid)) er.dsstox_compound_id=htCID.get(r.cid);
 			}
-			
 			recordsExperimental.add(er);
 
 		}
 	}
 	
-	
+	/**
+	 * For old db format, skip the properties we dont havent handled yet 
+	 * 
+	 * @param r
+	 * @return
+	 */
 	boolean skipRecord (RecordPubChem r) {
 		
 		List<String>skipProperties=new ArrayList<>();

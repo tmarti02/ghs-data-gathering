@@ -36,6 +36,7 @@ import gov.epa.exp_data_gathering.parse.RecordDashboard;
 import gov.epa.exp_data_gathering.parse.TemperatureCondition;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.pHCondition;
+import gov.epa.exp_data_gathering.parse.Chemidplus.RecordChemidplus.ToxicityRecord;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Data;
 
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.IdentifierData;
@@ -45,7 +46,7 @@ import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Property;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Reference;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Section;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.StringWithMarkup;
-
+import gov.epa.exp_data_gathering.parse.PubChem.ParseNewDatabase.DB_Identifier;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 /**
@@ -53,8 +54,13 @@ import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
  * 
  */
 public class RecordPubChem {
+
 	Long ANID;
 	Long cid;
+	Long sid;
+	String sourceid;
+	
+	
 	String iupacNameCid;//from pubchem- based on cid 
 	String canonSmilesCid;////from pubchem - based on cid
 	String synonyms;
@@ -65,9 +71,6 @@ public class RecordPubChem {
 	
 //	transient Hashtable<String,String> htCAS;//lookup cas based on reference number
 //	transient Hashtable<String,String> htChemicalName;//lookup chemical name based on reference number
-	
-	
-	
 //	Vector<String> physicalDescription;
 //	Vector<String> density;
 //	Vector<String> meltingPoint;
@@ -91,6 +94,7 @@ public class RecordPubChem {
 
 	String propertyName;
 	String propertyValue;
+	String effect;//for chemidplus tox data
 	
 	List<MarkupChemical> markupChemicals;
 	
@@ -107,7 +111,6 @@ public class RecordPubChem {
 	PublicSource publicSourceOriginal;
 
 	String pageUrl;
-
 	String notes;
 
 //	static final String sourceName = ExperimentalConstants.strSourcePubChem + "_2024_03_20";
@@ -473,6 +476,61 @@ public class RecordPubChem {
 		return records;
 	}
 
+	public void addReferenceNameCasFromSourceId(Data casData,String sourceName) {
+
+		if (casData == null) return; 
+
+		Hashtable<Long,String> htCASByRefNum=new Hashtable<Long,String>();//lookup cas based on reference number
+
+		List<Information> casInfo = casData.record.section.get(0).section.get(0).section.get(0).information;
+
+		for (Information c : casInfo) {
+			String newCAS = c.value.stringWithMarkup.get(0).string;
+			Long refNum = Long.parseLong(c.referenceNumber);
+			//			String refNum = c.referenceNumber;
+			htCASByRefNum.put(refNum, newCAS);
+		}
+
+		//		for (long refNum:htCASByRefNum.keySet()) {
+		//			System.out.println(refNum+"\t"+htCASByRefNum.get(refNum));
+		//		}
+
+		List<Reference> references = casData.record.reference;
+
+
+		//Try to match by sourceID:
+		for (Reference reference:references) {
+			Long refNum = Long.parseLong(reference.referenceNumber);
+
+			if(reference.sourceID.equals(this.sourceid)) {
+//				System.out.println(reference.sourceName);
+				if(htCASByRefNum.containsKey(refNum)) {
+					this.casReference=htCASByRefNum.get(refNum);	
+				}
+				this.chemicalNameReference=reference.name;
+				return;
+			}
+		}
+		
+		//Try to match by sourceName:
+		for (Reference reference:references) {
+			Long refNum = Long.parseLong(reference.referenceNumber);
+			
+			if(reference.sourceName.equals(sourceName)) {//just use it even though sourceId doesnt match
+				if(htCASByRefNum.containsKey(refNum)) {
+					this.casReference=htCASByRefNum.get(refNum);	
+				}
+				this.chemicalNameReference=reference.name;
+//				System.out.println("Match by sourceName:"+this.cid+"\t"+this.casReference+"\t"+this.chemicalNameReference);
+				return;
+			}
+		}
+
+//		System.out.println("No match on sourceId");
+	}
+	
+	
+	
 	private static void getRecords(Vector<RecordPubChem> records, ResultSet rs, String date, Data experimentalData,
 			Hashtable<Integer, Reference> htReferences, Section section) throws SQLException {
 		
@@ -562,8 +620,14 @@ public class RecordPubChem {
 				}
 				
 				
-				addIdentifiers(rs, pcr);
-				addSourceMetadata(htReferences, information, pcr, htCAS,htChemicalName);
+				String identifiers = rs.getString("identifiers");
+				IdentifierData identifierData=null;
+				if (identifiers!=null) {
+					identifierData = gson.fromJson(identifiers, IdentifierData.class);
+				}
+				String synonyms=rs.getString("synonyms");
+				pcr.addIdentifiers(identifierData,synonyms);
+				pcr.addSourceMetadata(htReferences, information, htCAS,htChemicalName);
 				records.add(pcr);
 			}
 
@@ -608,11 +672,11 @@ public class RecordPubChem {
 //		}
 //	}
 
-	private static void addSourceMetadata(Hashtable<Integer, Reference> htReferences, Information information,
-			RecordPubChem pcr, Hashtable<String, String> htCAS, Hashtable<String, String> htChemicalName) {
+	private void addSourceMetadata(Hashtable<Integer, Reference> htReferences, Information information,
+			Hashtable<String, String> htCAS, Hashtable<String, String> htChemicalName) {
 
 		if (information.reference != null) {
-			pcr.literatureSource = new LiteratureSource();
+			this.literatureSource = new LiteratureSource();
 
 			String citation1 = null;
 			String citation2 = null;
@@ -623,7 +687,7 @@ public class RecordPubChem {
 
 					if (reference.indexOf("PMID:") == 0) {
 						String pmid = reference.substring(reference.indexOf(":") + 1, reference.length());
-						pcr.literatureSource.url = "https://pubmed.ncbi.nlm.nih.gov/" + pmid + "/";
+						this.literatureSource.url = "https://pubmed.ncbi.nlm.nih.gov/" + pmid + "/";
 //						System.out.println(pcr.literatureSource.doi);
 					} else if (reference.indexOf("DOI") > -1) {
 
@@ -631,32 +695,32 @@ public class RecordPubChem {
 							String doi2 = reference.substring(reference.indexOf("DOI:") + 4, reference.length());
 							doi2 = doi2.substring(0, doi2.indexOf(" ") - 1).trim();
 							doi2 = "https://doi.org/" + doi2;
-							pcr.literatureSource.doi = doi2;
+							this.literatureSource.doi = doi2;
 
 						} else {
 							System.out.println("Here2\treference=" + reference);
 						}
 
 						citation1 = reference.substring(0, reference.indexOf("DOI"));
-						pcr.literatureSource.citation = citation1;
+						this.literatureSource.citation = citation1;
 
 						if (reference.indexOf("PMID:") > 0) {
 //							System.out.println(reference);
 							String pmid = reference.substring(reference.indexOf("PMID:") + 5, reference.length());
-							pcr.literatureSource.url = "https://pubmed.ncbi.nlm.nih.gov/" + pmid + "/";
+							this.literatureSource.url = "https://pubmed.ncbi.nlm.nih.gov/" + pmid + "/";
 //							System.out.println(pcr.literatureSource.url);
 						}
 					} else {
 //						System.out.println("Here3\treference="+reference);
-						pcr.literatureSource.citation = reference;
+						this.literatureSource.citation = reference;
 					}
 
 				} else if (reference.contains("Tested as SID")) {
-					pcr.notes = reference;
+					this.notes = reference;
 //					System.out.println(pcr.notes);
 				} else {
 					citation2 = reference;
-					pcr.literatureSource.citation = citation2;
+					this.literatureSource.citation = citation2;
 //					System.out.println(citation2);
 				}
 			}
@@ -675,19 +739,19 @@ public class RecordPubChem {
 			int refNum = Integer.parseInt(information.referenceNumber);
 
 			Reference reference = htReferences.get(refNum);
-			pcr.publicSourceOriginal = new PublicSource();
-			pcr.publicSourceOriginal.name = reference.sourceName;
-			pcr.publicSourceOriginal.description = reference.description;
-			pcr.publicSourceOriginal.url = reference.url;// TODO fix these to remove specific page
+			this.publicSourceOriginal = new PublicSource();
+			this.publicSourceOriginal.name = reference.sourceName;
+			this.publicSourceOriginal.description = reference.description;
+			this.publicSourceOriginal.url = reference.url;// TODO fix these to remove specific page
 			
 			if(htCAS.containsKey(information.referenceNumber)) {
-				pcr.casReference=htCAS.get(information.referenceNumber);
+				this.casReference=htCAS.get(information.referenceNumber);
 			} else {
 //				System.out.println("cant get cas from ref num:"+information.referenceNumber+"\t"+pcr.cid);
 			}
 
 			if(htChemicalName.containsKey(information.referenceNumber)) {
-				pcr.chemicalNameReference=htChemicalName.get(information.referenceNumber);	
+				this.chemicalNameReference=htChemicalName.get(information.referenceNumber);	
 //				System.out.println(pcr.chemical_name);
 			} else {
 //				System.out.println("cant get name from ref num:"+pcr.iupacName);
@@ -947,6 +1011,29 @@ public class RecordPubChem {
 			er.property_value_units_original = ExperimentalConstants.strTEXT;
 			er.property_value_units_final = ExperimentalConstants.strTEXT;
 
+		
+		} else if (er.property_name.contains("LD50") || er.property_name.contains("LC50")) {
+			
+			if(er.property_name.contains("Oral")) {
+				er.property_category="acute oral toxicity";
+//				System.out.println(er.property_name+"\t"+er.property_category);
+				foundNumeric=ParseUtilities.getToxicity(er,this.propertyValue);
+			} else if(er.property_name.contains("Inhalation")) {
+				er.property_category="acute inhalation toxicity";
+//				System.out.println(er.property_name+"\t"+er.property_category);
+				ToxicityRecord tr=new ToxicityRecord();			
+				tr.NormalizedDose=this.propertyValue;
+				tr.ReportedDose=this.propertyValue;
+				foundNumeric=ParseUtilities.getToxicity(er,tr);
+			}
+			
+//			if(this.propertyValue.contains("mg/kg")) {
+//				System.out.println(gson.toJson(this));
+//			}
+			
+			
+//			System.out.println(gson.toJson(this));
+		
 		} else {
 			System.out.println("Need to handle propertyValue for " + er.property_name);
 		}
@@ -1353,12 +1440,37 @@ public class RecordPubChem {
 			return ExperimentalConstants.str_pKAb;
 		} else if (propertyName.equals("Surface Tension")) {
 			return ExperimentalConstants.strSurfaceTension;
+		} else if (propertyName.contains("LD") || propertyName.contains("TC") || propertyName.contains("LC") || propertyName.contains("TD")) {
+			return propertyName;
 		} else {
 			System.out.println("In standardizePropertyName() need to handle\t" + propertyName);
 			return null;
 		}
 	}
 
+//	/***
+//	 * This info is from pubchem cid and not the original source
+//	 * 
+//	 * @param rs
+//	 * @param pcr
+//	 * @throws SQLException
+//	 */
+//	private static void addIdentifiers(ResultSet rs, RecordPubChem pcr) throws SQLException {
+//		String identifiers = rs.getString("identifiers");
+//		IdentifierData identifierData = gson.fromJson(identifiers, IdentifierData.class);
+//
+//		if (identifierData != null) {
+//			Property identifierProperty = identifierData.propertyTable.properties.get(0);
+//			pcr.iupacNameCid = identifierProperty.iupacName;
+//			pcr.canonSmilesCid = identifierProperty.canonicalSMILES;
+//		}
+//
+//		if (rs.getString("synonyms") != null)
+//			pcr.synonyms = rs.getString("synonyms").replaceAll("\r\n", "|");
+//		
+//	}
+	
+	
 	/***
 	 * This info is from pubchem cid and not the original source
 	 * 
@@ -1366,20 +1478,19 @@ public class RecordPubChem {
 	 * @param pcr
 	 * @throws SQLException
 	 */
-	private static void addIdentifiers(ResultSet rs, RecordPubChem pcr) throws SQLException {
-		String identifiers = rs.getString("identifiers");
-		IdentifierData identifierData = gson.fromJson(identifiers, IdentifierData.class);
+	void addIdentifiers(IdentifierData identifierData, String synonyms)  {
 
 		if (identifierData != null) {
 			Property identifierProperty = identifierData.propertyTable.properties.get(0);
-			pcr.iupacNameCid = identifierProperty.iupacName;
-			pcr.canonSmilesCid = identifierProperty.canonicalSMILES;
+			this.iupacNameCid = identifierProperty.iupacName;
+			this.canonSmilesCid = identifierProperty.canonicalSMILES;
 		}
 
-		if (rs.getString("synonyms") != null)
-			pcr.synonyms = rs.getString("synonyms").replaceAll("\r\n", "|");
-		
+		this.synonyms = synonyms;
+
 	}
+	
+	
 
 	private static Hashtable<Integer, Reference> getReferenceHashtable(Data experimentalData) {
 		Hashtable<Integer, Reference> htReferences = null;
@@ -1473,10 +1584,6 @@ public class RecordPubChem {
 		// TMM get data using cids from gabriels sqlite
 		RecordPubChem r = new RecordPubChem();
 		
-		
-//		r.loadIdentifiers(folder, conn);
-		
-
 		//old way get from prev db:
 //		HashSet<String> cids = r.getCidsInDatabase("Pubchem");// old ones from 2020
 
