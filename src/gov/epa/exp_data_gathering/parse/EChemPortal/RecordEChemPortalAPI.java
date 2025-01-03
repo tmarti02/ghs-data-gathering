@@ -15,8 +15,8 @@ import com.google.gson.GsonBuilder;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.eChemPortalAPI.eChemPortalAPI;
-import gov.epa.eChemPortalAPI.Query.APIJSONs.*;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Query.APIJSONs.*;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.eChemPortalAPI.eChemPortalAPI;
 
 /**
  * Stores data downloaded from eChemPortal API
