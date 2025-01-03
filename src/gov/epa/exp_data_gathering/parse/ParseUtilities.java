@@ -1438,6 +1438,11 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_ppm;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
 			badUnits = false;
+
+		} else if (propertyValue.toLowerCase().contains("ug/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_ug_kg;
+			unitsIndex = propertyValue.toLowerCase().indexOf("ug");
+			badUnits = false;
 		} else if (propertyValue.toLowerCase().contains("mg/kg") || propertyValue.toLowerCase().contains("mg /kg")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
 			unitsIndex = propertyValue.toLowerCase().indexOf("mg");
@@ -1446,6 +1451,8 @@ public class ParseUtilities extends Parse {
 			er.property_value_units_original = ExperimentalConstants.str_g_kg;
 			unitsIndex = propertyValue.toLowerCase().indexOf("g");
 			badUnits = false;
+
+
 		} else if (propertyValue.toLowerCase().contains("ml/kg")) {
 			er.property_value_units_original = ExperimentalConstants.str_mL_kg;
 			unitsIndex = propertyValue.toLowerCase().indexOf("ml/");
@@ -1461,8 +1468,11 @@ public class ParseUtilities extends Parse {
 		} else if (propertyValue.toLowerCase().contains("analytical")) {
 			er.updateNote("analytical units");
 		}
-
+		
+		
 		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		
+		
 		return foundNumeric;
 	}
 
@@ -1471,40 +1481,77 @@ public class ParseUtilities extends Parse {
 		if (propertyValue == null) { return false; }
 		boolean badUnits = true;
 		int unitsIndex = -1;
-
-		if (propertyValue.toLowerCase().contains("mg/m3")) {
+		
+		String pvlc=propertyValue.toLowerCase();
+		
+		if (pvlc.contains("mg/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_L;
+			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			badUnits = false;
+		} else if (pvlc.contains("mg/m^3") || pvlc.contains("mg/cu m") || pvlc.contains("mg/m3")) {
 			er.property_value_units_original = ExperimentalConstants.str_mg_m3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			unitsIndex = pvlc.indexOf("mg/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ml/m3")) {
+		} else if (pvlc.contains("g/m^3") || pvlc.contains("g/m³") || pvlc.contains("g/m3") ||
+				pvlc.contains("g/cubic meter") || pvlc.contains("gm/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_m3;
+			unitsIndex = pvlc.indexOf("g");
+			badUnits = false;
+		} else if (pvlc.contains("ml/m3")) {
 			er.property_value_units_original = ExperimentalConstants.str_mL_m3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ml/");
+			unitsIndex = pvlc.indexOf("ml/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+
+		} else if (pvlc.contains("ul/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_uL_m3;
+			unitsIndex = pvlc.indexOf("ul/");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ml/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_mL_kg;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ml/");
+
+			
+		} else if (pvlc.contains("pph")) {
+			er.property_value_units_original = ExperimentalConstants.str_pph;
+			unitsIndex = pvlc.indexOf("pph");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("iu/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_iu_kg;
-			unitsIndex = propertyValue.toLowerCase().indexOf("iu/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("units/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_units_kg;
-			unitsIndex = propertyValue.toLowerCase().indexOf("units/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ppm")) {
+
+			
+		} else if (pvlc.contains("ppm")) {
 			er.property_value_units_original = ExperimentalConstants.str_ppm;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
+			unitsIndex = pvlc.indexOf("ppm");
 			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg");
+
+		} else if (pvlc.contains("ppb")) {
+			er.property_value_units_original = ExperimentalConstants.str_ppb;
+			unitsIndex = pvlc.indexOf("ppb");
 			badUnits = false;
+
+		} else if (pvlc.contains("mg/kg") || pvlc.contains("mg /kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
+			unitsIndex = pvlc.indexOf("mg");
+			badUnits = false;
+		} else if (pvlc.contains("g/kg") || pvlc.contains("gm/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_kg;
+			unitsIndex = pvlc.indexOf("g");
+			badUnits = false;
+		} else if (pvlc.contains("ml/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mL_kg;
+			unitsIndex = pvlc.indexOf("ml/");
+			badUnits = false;
+
+		} else if (pvlc.contains("ul/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_uL_kg;
+			unitsIndex = pvlc.indexOf("ul/");
+			badUnits = false;
+
+		} else {
+			badUnits = true;
+			er.keep = false;
+			er.reason = "Unhandled units";
 		}
+		
+//		if(tr.NormalizedDose.contains("mg/m3")) {
+//			System.out.println(tr.NormalizedDose+"\t"+er.property_value_units_original);
+//		}
+		
 
 		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
 
@@ -1524,9 +1571,29 @@ public class ParseUtilities extends Parse {
 					er.note="Duration: "+TextUtilities.formatDouble(h)+" H, adjusted to 4 H using Haber's law (conc*time=constant)";
 				}
 			} catch (Exception ex) {
-				ex.printStackTrace();
+				System.out.println(tr.NormalizedDose+"\tError normalizing");
+//				ex.printStackTrace();
 			}			
+		} else if (strippedReportedDose.contains("M")) {
+			String strM=strippedReportedDose.substring(strippedReportedDose.lastIndexOf("/")+1,strippedReportedDose.length()-1);
+			try {
+				double h=Double.parseDouble(strM)/60.0;
+				//use haber's rule that C*t=k (see DOI: 10.1093/toxsci/kfg213 that shows this might not be great approx)	
+				if (h!=4.0) {
+					er.property_value_point_estimate_original*=h/4.0;
+					er.note="Duration: "+TextUtilities.formatDouble(h)+" H, adjusted to 4 H using Haber's law (conc*time=constant)";
+				}
+			} catch (Exception ex) {
+				System.out.println(tr.NormalizedDose+"\tError normalizing");
+//				ex.printStackTrace();
+			}			
+			
 		}
+
+		
+		if(!foundNumeric)
+			System.out.println(propertyValue+"\t"+unitsIndex);
+
 
 		return foundNumeric;
 	}
