@@ -32,8 +32,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_CreateTable;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.eChemPortalAPI.Processing.FinalRecord;
-import gov.epa.eChemPortalAPI.Processing.FinalRecords;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.FinalRecord;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.FinalRecords;
 
 public class DataFetcher {
 	

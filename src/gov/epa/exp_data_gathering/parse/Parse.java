@@ -13,7 +13,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.eChemPortalAPI.Processing.FinalRecords;
 import gov.epa.exp_data_gathering.parse.ADDoPT.ParseADDoPT;
 import gov.epa.exp_data_gathering.parse.AqSolDB.ParseAqSolDB;
 import gov.epa.exp_data_gathering.parse.Bagley.ParseBagley;
@@ -27,6 +26,7 @@ import gov.epa.exp_data_gathering.parse.DRD.ParseDRD;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortal;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ParseEChemPortalAPI;
 import gov.epa.exp_data_gathering.parse.EChemPortal.ToxParseEChemPortalAPI;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.FinalRecords;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteISIS;
 import gov.epa.exp_data_gathering.parse.EPISUITE.ParseEpisuiteOriginal;
 import gov.epa.exp_data_gathering.parse.Hayashi.ParseHayashi;

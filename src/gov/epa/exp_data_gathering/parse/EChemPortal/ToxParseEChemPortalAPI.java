@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Vector;
 
 import gov.epa.api.ExperimentalConstants;
-import gov.epa.eChemPortalAPI.eChemPortalAPI;
-import gov.epa.eChemPortalAPI.Processing.FinalRecords;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
-import gov.epa.eChemPortalAPI.Processing.FinalRecord;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.FinalRecord;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.FinalRecords;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.eChemPortalAPI.eChemPortalAPI;
 
 public class ToxParseEChemPortalAPI extends ParseEChemPortalAPI {
 	boolean downloadNew;

@@ -41,8 +41,8 @@ import com.google.gson.JsonElement;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
-import gov.epa.eChemPortalAPI.Processing.FinalRecord;
-import gov.epa.eChemPortalAPI.Query.APIConstants;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.FinalRecord;
+import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Query.APIConstants;
 import gov.epa.ghs_data_gathering.Parse.Parse;
 
 
