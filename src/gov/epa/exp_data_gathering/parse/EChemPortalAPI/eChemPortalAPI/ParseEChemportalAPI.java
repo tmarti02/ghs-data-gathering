@@ -55,7 +55,6 @@ public class ParseEChemportalAPI extends Parse {
 			Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues().create();
 //			System.out.println(gson.toJson(options));
 					
-			UtilitiesUnirest.configUnirest(true);
 			
 			options.runDownload(databasePath, true, maxSize);
 			

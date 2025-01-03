@@ -9,6 +9,8 @@ import java.util.ListIterator;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.exp_data_gathering.parse.UtilitiesUnirest;
+
 /**
  * Defines options for an eChemPortal API query specific to toxicity properties
  * @author GSINCL01 (Gabriel Sinclair)
@@ -389,6 +391,10 @@ public class ToxQueryOptions extends QueryOptions {
 	 */
 	@Override
 	public void runDownload(String databaseName,boolean startFresh, int maxSize) {
+		
+		UtilitiesUnirest.configUnirest(true);
+
+		
 		List<ToxQueryOptions> splitOptions = resize(maxSize);
 		QueryHandler handler = new QueryHandler(1000,10);
 		int counter = 0;
