@@ -82,6 +82,8 @@ public class ExperimentalConstants {
 	
 	public static final String str_g_m3="g/m^3";
 	public static final String str_mL_m3="mL/m^3";
+	public static final String str_uL_m3="uL/m^3";
+	
 	public static final String str_mL_L="mL/L";
 	public static final String str_mg_mL="mg/mL";
 	public static final String str_g_L="g/L";
@@ -107,9 +109,12 @@ public class ExperimentalConstants {
 	public static final String str_pctWt="%w";
 	public static final String str_pctVol="%v";
 	public static final String str_pct="%";
+	
+	public static final String str_pph="pph";
 	public static final String str_ppm="ppm";
 	public static final String str_ppb="ppb";
 	public static final String str_ppt = "ppt";
+	
 	public static final String str_atm_m3_mol="atm-m3/mol";
 	public static final String str_atm_cm3_mol="atm-cm3/mol";
 	public static final String str_mol_m3_atm = "mol/m3-Pa";
@@ -161,10 +166,13 @@ public class ExperimentalConstants {
 	public static final String str_LOG_UL_MIN_1MM_CELLS="log10(ul/min/10^6 cells)";//for clint
 	public static final String str_UL_MIN_1MM_CELLS="ul/min/10^6 cells";//for clint
 
-
+	public static final String str_ng_kg="ng/kg";
+	public static final String str_ug_kg="ug/kg";
 	public static final String str_mg_kg="mg/kg";
 	public static final String str_g_kg="g/kg";
+	
 	public static final String str_mL_kg="mL/kg";
+	public static final String str_uL_kg="uL/kg";
 	public static final String str_iu_kg="iu/kg";
 	public static final String str_L_KG = "L/kg";
 	public static final String str_L_g = "L/g";
@@ -234,6 +242,7 @@ public class ExperimentalConstants {
 	public static final String strSourceAqSolDB="AqSolDB";
 	public static final String strSourceChemBL="ChemBL";
 	public static final String strSourceChemidplus="ChemIDplus";
+	public static final String strSourceChemidplus2024_12_04="ChemIDplus_2024_12_04";
 	public static final String strSourceOPERA="OPERA";
 	public static final String strSourceOPERA29="OPERA2.9";
 	public static final String strSourceEpisuiteOriginal="EpisuiteOriginal";
