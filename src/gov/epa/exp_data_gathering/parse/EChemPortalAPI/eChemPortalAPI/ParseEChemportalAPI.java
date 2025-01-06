@@ -71,8 +71,6 @@ public class ParseEChemportalAPI extends Parse {
 
 		Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues().create();		
 
-		
-		
 		String jsonPath=folderNameExcel+File.separator+"eChemPortalAPI_"+this.endpointKind+"_FinalRecords.json";
 		System.out.println(folderNameExcel);
 		ExperimentalRecords experimentalRecords=new ExperimentalRecords();
@@ -80,10 +78,28 @@ public class ParseEChemportalAPI extends Parse {
 		try {
 			FinalRecord[] tempRecords = gson.fromJson(new FileReader(jsonPath), FinalRecord[].class);
 			for (FinalRecord fr:tempRecords) {
+				
+
+				
+				//If there are multiple exp values:
+//				for (String experimentalValue:fr.experimentalValues) {
+//					
+//					ExperimentalRecord er=fr.toExperimentalRecord();
+//					System.out.println(gson.toJson(fr)+"\n");
+//					System.out.println(gson.toJson(er)+"\n******************");
+//					experimentalRecords.add(er);
+//					
+//				}
+				
+				//if not:
 				ExperimentalRecord er=fr.toExperimentalRecord();
 				System.out.println(gson.toJson(fr)+"\n");
 				System.out.println(gson.toJson(er)+"\n******************");
 				experimentalRecords.add(er);
+
+
+				
+				
 				
 				if(true) break;
 				
