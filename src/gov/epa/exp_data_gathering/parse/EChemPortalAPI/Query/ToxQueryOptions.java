@@ -9,6 +9,8 @@ import java.util.ListIterator;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.exp_data_gathering.parse.UtilitiesUnirest;
+
 /**
  * Defines options for an eChemPortal API query specific to toxicity properties
  * @author GSINCL01 (Gabriel Sinclair)
@@ -263,7 +265,7 @@ public class ToxQueryOptions extends QueryOptions {
 	}
 	
 	/**
-	 * Recursively splits a vector of ToxQueryOptions until all queries have size {@literal <} 10000
+	 * Recursively splits a vector of ToxQueryOptions until all queries have size {@literal <} maxSize
 	 * @param options	Vector of ToxQueryOptions to be resized
 	 * @return			Vector of ToxQueryOptions of permitted size
 	 */
@@ -389,9 +391,14 @@ public class ToxQueryOptions extends QueryOptions {
 	 */
 	@Override
 	public void runDownload(String databaseName,boolean startFresh, int maxSize) {
+		
+		UtilitiesUnirest.configUnirest(true);
+
+		
 		List<ToxQueryOptions> splitOptions = resize(maxSize);
 		QueryHandler handler = new QueryHandler(1000,10);
 		int counter = 0;
+						
 		for (ToxQueryOptions options:splitOptions) {
 			String after = options.afterYear==null ? "the beginning of time" : options.afterYear;
 			String before = options.beforeYear==null ? "present" : options.beforeYear;

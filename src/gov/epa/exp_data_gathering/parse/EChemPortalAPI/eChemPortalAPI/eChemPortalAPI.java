@@ -21,8 +21,7 @@ import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Query.ToxQueryOptions;
  */
 public class eChemPortalAPI {
 	
-	static int maxSize=2000;
-	
+	static int maxSize=5000;
 	
 	/**
 	 * Runs a single physicochemical endpoint query for AA Dashboard and stores the raw data as JSONs in a database

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -20,6 +21,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.PubChem.AnnotationQuery.Annotation;
 import gov.epa.ghs_data_gathering.Utilities.FileUtilities;
 
 /**
@@ -44,7 +46,7 @@ public class GetCIDsFromProperty {
 	//List of headings:
 //	https://pubchem.ncbi.nlm.nih.gov/rest/pug/annotations/headings/JSON
 	
-	//Note: Annotation jsons dont store the name/cas from original reference
+	//Note: Annotation jsons store the chemical name from original reference, get cas from cas json using ANID
 	
 	void getAnnotationJsons(String heading,String folder) {
 		
@@ -55,6 +57,7 @@ public class GetCIDsFromProperty {
 		}
 		
 		int page=1;
+		
 		String url="https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/annotations/heading/JSON?heading="+heading.replace(" ", "+")+"&page="+page+"&heading_type=Compound";
 		String json=FileUtilities.getText(url);
 		writeFile(folder, heading, page, json);
@@ -419,7 +422,7 @@ public class GetCIDsFromProperty {
 	public static void main(String[] args) {
 		GetCIDsFromProperty g=new GetCIDsFromProperty();
 		
-		String folder="data\\experimental\\PubChem_2024_11_27\\json\\physchem\\";
+//		String folder="data\\experimental\\PubChem_2024_11_27\\json\\physchem\\";
 		
 //		g.renameFilesFolder(folder);
 //		g.getAnnotationJsons("Henry's Law Constant", folder);
@@ -438,7 +441,7 @@ public class GetCIDsFromProperty {
 //		HashSet<Long>cidsNew=g.getCidsFromFolder(folder);
 //		System.out.println(cidsNew.size());
 
-//		String folder="data\\experimental\\PubChem_2024_11_27\\json\\toxicity\\";
+		String folder="data\\experimental\\PubChem_2024_11_27\\json\\toxicity\\";
 //		g.renameFilesFolder(folder);
 //		g.getAnnotationJsons("Toxicity+Data", folder);//		
 //		g.getAnnotationJsons("Acute+Effects", folder);
@@ -450,18 +453,83 @@ public class GetCIDsFromProperty {
 //		String collection ="niosh";
 //		g.downloadCollectionData(collection, folder,1000);
 //		g.compileCollectionFromFolder(collection,folder);
-//		
+		
 //		g.compareCids(folder);
 		
 //		compareOldToNew(g, folder);
 		
 		
+//		goThroughAnnotationJsons();
+		
+		
+		
 	}
+	
+	
+	private static void goThroughAnnotationJsons() {
+		String collection="Acute Effects";
+		String folder="data\\experimental\\PubChem_2024_11_27\\json\\toxicity\\"+collection;
+		
+		File Folder=new File(folder);
+		
+		Gson gson=new Gson();
+		
+		
+		Hashtable<Long,String>htCIDtoSourceID=new Hashtable<>();
+		
+		
+		for(File file:Folder.listFiles()) {
+			
+			try {
+				AnnotationQuery aq=gson.fromJson(new FileReader(file), AnnotationQuery.class);
+				
+				for (Annotation annotation:aq.Annotations.Annotation) {
+
+					if(annotation.linkedRecords==null || annotation.linkedRecords.cids==null) continue;
+					
+					for (Long cid:annotation.linkedRecords.cids) {
+						
+						if(htCIDtoSourceID.containsKey(cid)) {
+							
+							if (annotation.SourceID!=htCIDtoSourceID.get(cid)) {
+								System.out.println(file.getName()+"\t"+cid+"\t"+annotation.SourceID+"\t"+htCIDtoSourceID.get(cid));	
+							}
+						} else {
+							htCIDtoSourceID.put(cid, annotation.SourceID);
+						}
+					}
+				}
+				
+					
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			} 
+			
+		}
+		
+		
+
+		
+	}
+
+
+	void lookAtChemIDplusRecords() {
+		
+		String folder="data\\experimental\\PubChem_2024_11_27\\json\\toxicity\\";
+		
+		String filepath=folder+"chemidplus.json";
+		
+		
+		
+		
+	}
+	
 
 
 	private void compareCids( String folder) {
 		
-		HashSet<Long> cidsChemidplus=getCidOralRatLD50RecordsChemidplus(folder+"chemidplus.json");
+		HashSet<Long> cidsChemidplus=RecordChemidplus.getCidOralRatLD50RecordsChemidplus(folder+"chemidplus.json");
 		System.out.println("Cids in chemidplus:"+cidsChemidplus.size());
 		
 //		HashSet<Long> cidsSmallSource=getToxicityDataOralRatLD50FromFolder(folder);
@@ -480,17 +548,7 @@ public class GetCIDsFromProperty {
 		System.out.println("New cids in small source:"+countNew);
 	}
 
-	class RecordChemidplus {
-		String cid;
-		String sid;
-		String sourceid;
-		String organism;
-		String testtype;
-		String route;
-		String dose;
-		String effect;
-		String reference;
-	}
+	
 	
 	class RecordNiosh {
 		
@@ -589,8 +647,7 @@ public class GetCIDsFromProperty {
 				String line=br.readLine();
 				if(line==null) break;
 				RecordChemidplus rc=gson.fromJson(line,RecordChemidplus.class);
-				sids.add(Long.parseLong(rc.sid));
-				
+				sids.add(rc.sid);
 			}
 			
 		} catch (Exception ex) {
@@ -600,41 +657,7 @@ public class GetCIDsFromProperty {
 		
 	}
 	
-	private HashSet<Long> getCidOralRatLD50RecordsChemidplus(String filepath) {
-		
-		try {
-			
-			BufferedReader br=new BufferedReader(new FileReader(filepath));
-		
-			int count=0;
-			
-			HashSet<Long>cids=new HashSet<>();
-			
-			while (true) {
-				String line=br.readLine();
-				if(line==null) break;
-				RecordChemidplus rc=gson.fromJson(line,RecordChemidplus.class);
-				
-				if(rc.organism.contentEquals("rat") && rc.testtype.contentEquals("LD50") && rc.route.contentEquals("oral")) {
-					count++;
-					
-					if(rc.cid==null) continue;
-					
-					cids.add(Long.parseLong(rc.cid));
-				}
-				
-			}
-			
-//			System.out.println(count);
-			
-			
-			return cids;
-			
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			return null;
-		}
-	}
+
 	
 	private HashSet<Long> getCidOralRatLD50RecordsNiosh(String filepath) {
 		

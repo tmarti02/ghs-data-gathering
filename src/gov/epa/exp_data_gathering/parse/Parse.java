@@ -3,10 +3,8 @@ package gov.epa.exp_data_gathering.parse;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Vector;
 
 import com.google.gson.Gson;
@@ -137,6 +135,7 @@ public class Parse {
 		return null;
 	}
 	
+	
 	/**
 	 * the method called by every parse class to create the json and excel files that are saved to source specific main folder
 	 * duplicate records are removed according to identical property_value_strings, original_source_name and property_name.
@@ -164,6 +163,9 @@ public class Parse {
 
 		System.out.println("Going through original records...");
 		ExperimentalRecords records=goThroughOriginalRecords();
+		
+		
+		System.out.println("Number of records = "+records.size());
 		
 		records.addSourceBasedIDNumbers();
 

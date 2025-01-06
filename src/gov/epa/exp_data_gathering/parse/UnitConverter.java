@@ -29,7 +29,7 @@ public class UnitConverter {
 	public static final double mN_cm_to_dyn_cm=100.0;
 	
 	
-	public boolean debug = false;
+	public boolean debug = true;
 
 	public static double F_to_C(double F) {
 		return (F - 32.0) * 5.0 / 9.0;
@@ -274,7 +274,7 @@ public class UnitConverter {
 				er.property_value_units_final = ExperimentalConstants.str_g_L;
 				er.updateNote("Converted using density: " + density + " g/mL");
 			}
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_L)) {
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_L) || er.property_value_units_original.equals(ExperimentalConstants.str_uL_m3)) {
 
 			if (er.casrn == null || htDensity.get(er.casrn) == null) {
 				er.flag = true;
@@ -298,6 +298,9 @@ public class UnitConverter {
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL)
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)) {
 			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_m3)) {
+			convertAndAssignFinalFields(er, 1e-3);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_m3)) {
 			// Added by TMM
@@ -335,10 +338,18 @@ public class UnitConverter {
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
-		
+
+			
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_pph)) {
+			convertAndAssignFinalFields(er, 1e4);
+			er.property_value_units_final = ExperimentalConstants.str_ppm;
+			er.flag = true;
+			er.updateNote("Conversion to g/L not possible (need MW)");
+			
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppm)
 				|| er.property_value_units_original.equals("AI ppm")) {
 			er.property_value_units_final = ExperimentalConstants.str_ppm;
+			assignFinalFieldsWithoutConverting(er);
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
 //			https://www.ccohs.ca/oshanswers/chemicals/convert.html
@@ -584,10 +595,30 @@ public class UnitConverter {
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_kg)) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_mg_kg;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ng_kg)) {
+			convertAndAssignFinalFields(er, 1e-6);
+			er.property_value_units_final = ExperimentalConstants.str_mg_kg;
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_kg)) {
+			convertAndAssignFinalFields(er, 1e-3);
+			er.property_value_units_final = ExperimentalConstants.str_mg_kg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_kg)) {
-			convertAndAssignFinalFields(er, 1000.0);
+			convertAndAssignFinalFields(er, 1e3);
 			er.property_value_units_final = ExperimentalConstants.str_mg_kg;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_kg)) {
+			if (er.casrn == null || htDensity.get(er.casrn) == null) {
+				er.flag = true;
+				er.updateNote("Conversion to mg/kg not possible (missing density)");
+				convertAndAssignFinalFields(er, 1e3);
+				er.property_value_units_final = ExperimentalConstants.str_uL_kg;
+				return false;
+			} else {
+				double density = htDensity.get(er.casrn);
+				convertAndAssignFinalFields(er, density * 1000.0);
+				er.property_value_units_final = ExperimentalConstants.str_mg_kg;
+				er.updateNote("Converted using density: " + density + " g/mL");
+			}
+
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_uL_kg)) {
 			if (er.casrn == null || htDensity.get(er.casrn) == null) {
 				er.flag = true;
 				er.updateNote("Conversion to mg/kg not possible (missing density)");
@@ -596,10 +627,11 @@ public class UnitConverter {
 				return false;
 			} else {
 				double density = htDensity.get(er.casrn);
-				convertAndAssignFinalFields(er, density * 1000.0);
+				convertAndAssignFinalFields(er, density);
 				er.property_value_units_final = ExperimentalConstants.str_mg_kg;
 				er.updateNote("Converted using density: " + density + " g/mL");
 			}
+
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg)) {
 			er.flag = true;
 			er.updateNote("Conversion to mg/kg not possible (dimensions differ)");

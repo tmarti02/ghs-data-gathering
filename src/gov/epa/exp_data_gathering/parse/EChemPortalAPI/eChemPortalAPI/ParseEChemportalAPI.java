@@ -15,9 +15,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
+import gov.epa.eChemPortalAPI.Query.APIConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
+import gov.epa.exp_data_gathering.parse.UtilitiesUnirest;
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.FinalRecord;
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.FinalRecords;
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Query.ToxQueryOptions;
@@ -26,21 +28,21 @@ import gov.epa.exp_data_gathering.parse.PubChem.RecordPubChem;
 
 public class ParseEChemportalAPI extends Parse {
 	
-	String endpointKind="AcuteToxicityOral";	
-	int maxSize=2000;
+	String endpointKind=APIConstants.acuteToxicityOral;
 	
 	public ParseEChemportalAPI () {
 		sourceName = "eChemPortalAPI";
 		this.init();
 		folderNameWebpages=null;
 	}
-
 	
 	/**
 	 * Parses JSON entries in database to RecordPubChem objects, then saves them to a JSON file
 	 */
 	@Override
 	protected void createRecords() {
+		
+		int maxSize=5000;//max number of records in api call
 		
 		if(generateOriginalJSONRecords) {
 			
@@ -52,6 +54,7 @@ public class ParseEChemportalAPI extends Parse {
 			
 			Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues().create();
 //			System.out.println(gson.toJson(options));
+					
 			
 			options.runDownload(databasePath, true, maxSize);
 			
@@ -116,7 +119,7 @@ public class ParseEChemportalAPI extends Parse {
 	public static void main(String[] args) {
 		ParseEChemportalAPI p = new ParseEChemportalAPI();
 		
-		p.generateOriginalJSONRecords=false;
+		p.generateOriginalJSONRecords=true;
 
 		p.removeDuplicates=true;
 		p.writeJsonExperimentalRecordsFile=false;

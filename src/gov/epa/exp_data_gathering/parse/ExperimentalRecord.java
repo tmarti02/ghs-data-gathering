@@ -52,6 +52,7 @@ public class ExperimentalRecord {
 	public String reliability;
 
 	public Hashtable <String,Object> experimental_parameters=new Hashtable <String,Object>();//TODO do we want to move temp, pres, pH to this hashtable?
+	//TODO could use more complicated objects as in hibernate project to store value with units, then convert to a list of parameters instead of hashtable
 	
 	public Object recordOriginal;
 	

@@ -1479,146 +1479,39 @@ public class ParseUtilities extends Parse {
 
 	public static boolean getToxicity(ExperimentalRecord er,String propertyValue) {
 		if (propertyValue==null) { return false; }
-		boolean badUnits = true;
-		int unitsIndex = -1;
 
-		if (propertyValue.toLowerCase().contains("mg/l")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/m^3") || propertyValue.toLowerCase().contains("mg/cu m")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_m3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/m^3") || propertyValue.toLowerCase().contains("g/m³") || propertyValue.toLowerCase().contains("g/m3") ||
-				propertyValue.toLowerCase().contains("g/cubic meter")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_m3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ml/m3")) {
-			er.property_value_units_original = ExperimentalConstants.str_mL_m3;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ml/");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("ppm")) {
-			er.property_value_units_original = ExperimentalConstants.str_ppm;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ppm");
-			badUnits = false;
-
-		} else if (propertyValue.toLowerCase().contains("ug/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_ug_kg;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ug");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("mg/kg") || propertyValue.toLowerCase().contains("mg /kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg");
-			badUnits = false;
-		} else if (propertyValue.toLowerCase().contains("g/kg") || propertyValue.toLowerCase().contains("gm/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_kg;
-			unitsIndex = propertyValue.toLowerCase().indexOf("g");
-			badUnits = false;
-
-
-		} else if (propertyValue.toLowerCase().contains("ml/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_mL_kg;
-			unitsIndex = propertyValue.toLowerCase().indexOf("ml/");
-			badUnits = false;
-		} else {
-			badUnits = true;
-			er.keep = false;
-			er.reason = "Unhandled units";
-		}
-
+		ResultUnitsFinding r=getToxUnits(er, propertyValue);
+		
 		if (propertyValue.toLowerCase().contains("nominal")) {
 			er.updateNote("nominal units");
 		} else if (propertyValue.toLowerCase().contains("analytical")) {
 			er.updateNote("analytical units");
 		}
 		
-		
-		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
-		
-		
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,r.unitsIndex,r.badUnits);
 		return foundNumeric;
 	}
 
+	
+	private static class ResultUnitsFinding {
+		boolean badUnits=true;
+		int unitsIndex=-1;
+	}
+	
+	/**
+	 * Old style chemidplus records from webpage scraping has 2 different doses
+	 * 
+	 * @param er
+	 * @param tr
+	 * @return
+	 */
 	public static boolean getToxicity(ExperimentalRecord er,ToxicityRecord tr) {
 		String propertyValue = tr.NormalizedDose;
 		if (propertyValue == null) { return false; }
-		boolean badUnits = true;
-		int unitsIndex = -1;
 		
-		String pvlc=propertyValue.toLowerCase();
 		
-		if (pvlc.contains("mg/l")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_L;
-			unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
-			badUnits = false;
-		} else if (pvlc.contains("mg/m^3") || pvlc.contains("mg/cu m") || pvlc.contains("mg/m3")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_m3;
-			unitsIndex = pvlc.indexOf("mg/");
-			badUnits = false;
-		} else if (pvlc.contains("g/m^3") || pvlc.contains("g/m³") || pvlc.contains("g/m3") ||
-				pvlc.contains("g/cubic meter") || pvlc.contains("gm/m3")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_m3;
-			unitsIndex = pvlc.indexOf("g");
-			badUnits = false;
-		} else if (pvlc.contains("ml/m3")) {
-			er.property_value_units_original = ExperimentalConstants.str_mL_m3;
-			unitsIndex = pvlc.indexOf("ml/");
-			badUnits = false;
-
-		} else if (pvlc.contains("ul/m3")) {
-			er.property_value_units_original = ExperimentalConstants.str_uL_m3;
-			unitsIndex = pvlc.indexOf("ul/");
-			badUnits = false;
-
-			
-		} else if (pvlc.contains("pph")) {
-			er.property_value_units_original = ExperimentalConstants.str_pph;
-			unitsIndex = pvlc.indexOf("pph");
-			badUnits = false;
-
-			
-		} else if (pvlc.contains("ppm")) {
-			er.property_value_units_original = ExperimentalConstants.str_ppm;
-			unitsIndex = pvlc.indexOf("ppm");
-			badUnits = false;
-
-		} else if (pvlc.contains("ppb")) {
-			er.property_value_units_original = ExperimentalConstants.str_ppb;
-			unitsIndex = pvlc.indexOf("ppb");
-			badUnits = false;
-
-		} else if (pvlc.contains("mg/kg") || pvlc.contains("mg /kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
-			unitsIndex = pvlc.indexOf("mg");
-			badUnits = false;
-		} else if (pvlc.contains("g/kg") || pvlc.contains("gm/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_g_kg;
-			unitsIndex = pvlc.indexOf("g");
-			badUnits = false;
-		} else if (pvlc.contains("ml/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_mL_kg;
-			unitsIndex = pvlc.indexOf("ml/");
-			badUnits = false;
-
-		} else if (pvlc.contains("ul/kg")) {
-			er.property_value_units_original = ExperimentalConstants.str_uL_kg;
-			unitsIndex = pvlc.indexOf("ul/");
-			badUnits = false;
-
-		} else {
-			badUnits = true;
-			er.keep = false;
-			er.reason = "Unhandled units";
-		}
-		
-//		if(tr.NormalizedDose.contains("mg/m3")) {
-//			System.out.println(tr.NormalizedDose+"\t"+er.property_value_units_original);
-//		}
-		
-
-		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,unitsIndex,badUnits);
+		ResultUnitsFinding r=getToxUnits(er, propertyValue);
+		boolean foundNumeric = TextUtilities.getNumericalValue(er,propertyValue,r.unitsIndex,r.badUnits);
 
 		String strippedReportedDose = tr.ReportedDose.replaceAll("\\s","");
 		Matcher m = Pattern.compile("\\d").matcher(strippedReportedDose);
@@ -1657,11 +1550,94 @@ public class ParseUtilities extends Parse {
 
 		
 		if(!foundNumeric)
-			System.out.println(propertyValue+"\t"+unitsIndex);
+			System.out.println(propertyValue+"\t"+r.unitsIndex);
 
 
 		return foundNumeric;
 	}
+	
+	private static ResultUnitsFinding getToxUnits (ExperimentalRecord er, String propertyValue) {
+		
+		
+		ResultUnitsFinding r=new ResultUnitsFinding();
+		
+		String pvlc=propertyValue.toLowerCase();
+		
+		if (pvlc.contains("mg/l")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_L;
+			r.unitsIndex = propertyValue.toLowerCase().indexOf("mg/");
+			r.badUnits = false;
+		} else if (pvlc.contains("mg/m^3") || pvlc.contains("mg/cu m") || pvlc.contains("mg/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_m3;
+			r.unitsIndex = pvlc.indexOf("mg/");
+			r.badUnits = false;
+		} else if (pvlc.contains("g/m^3") || pvlc.contains("g/m³") || pvlc.contains("g/m3") ||
+				pvlc.contains("g/cubic meter") || pvlc.contains("gm/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_m3;
+			r.unitsIndex = pvlc.indexOf("g");
+			r.badUnits = false;
+		} else if (pvlc.contains("ml/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_mL_m3;
+			r.unitsIndex = pvlc.indexOf("ml/");
+			r.badUnits = false;
+
+		} else if (pvlc.contains("ul/m3")) {
+			er.property_value_units_original = ExperimentalConstants.str_uL_m3;
+			r.unitsIndex = pvlc.indexOf("ul/");
+			r.badUnits = false;
+		} else if (pvlc.contains("pph")) {
+			er.property_value_units_original = ExperimentalConstants.str_pph;
+			r.unitsIndex = pvlc.indexOf("pph");
+			r.badUnits = false;
+		} else if (pvlc.contains("ppm")) {
+			er.property_value_units_original = ExperimentalConstants.str_ppm;
+			r.unitsIndex = pvlc.indexOf("ppm");
+			r.badUnits = false;
+
+		} else if (pvlc.contains("ppb")) {
+			er.property_value_units_original = ExperimentalConstants.str_ppb;
+			r.unitsIndex = pvlc.indexOf("ppb");
+			r.badUnits = false;
+
+			
+		} else if (pvlc.contains("ng/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_ng_kg;
+			r.unitsIndex = pvlc.indexOf("ng");
+			r.badUnits = false;
+
+			
+		} else if (pvlc.contains("ug/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_ug_kg;
+			r.unitsIndex = pvlc.indexOf("ug");
+			r.badUnits = false;
+
+		} else if (pvlc.contains("mg/kg") || pvlc.contains("mg /kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mg_kg;
+			r.unitsIndex = pvlc.indexOf("mg");
+			r.badUnits = false;
+		} else if (pvlc.contains("g/kg") || pvlc.contains("gm/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_g_kg;
+			r.unitsIndex = pvlc.indexOf("g");
+			r.badUnits = false;
+		} else if (pvlc.contains("ml/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_mL_kg;
+			r.unitsIndex = pvlc.indexOf("ml/");
+			r.badUnits = false;
+
+		} else if (pvlc.contains("ul/kg")) {
+			er.property_value_units_original = ExperimentalConstants.str_uL_kg;
+			r.unitsIndex = pvlc.indexOf("ul/");
+			r.badUnits = false;
+
+		} else {
+			r.badUnits = true;
+			er.keep = false;
+			er.reason = "Unhandled units";
+		}
+		
+		return r;
+	}
+	
 
 	// Applicable for LogKow and pKa
 	public static boolean getLogProperty(ExperimentalRecord er,String propertyValue) {

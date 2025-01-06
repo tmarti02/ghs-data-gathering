@@ -70,7 +70,7 @@ public class RecordChemidplus {
 		String Source;
 	}
 	
-	public class ToxicityRecord {
+	public static class ToxicityRecord {
 		String Organism;
 		String TestType;
 		String Route;
@@ -360,7 +360,7 @@ public class RecordChemidplus {
 				Element tableRow = toxicityTable.get(i);
 				Elements tableColumnCells = tableRow.select("td");
 		
-				ToxicityRecord tr = cr.new ToxicityRecord();
+				ToxicityRecord tr = new ToxicityRecord();
 		
 				tr.Organism = tableColumnCells.get(0).text().trim();
 				tr.TestType = tableColumnCells.get(1).text().trim();

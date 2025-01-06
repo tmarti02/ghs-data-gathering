@@ -13,12 +13,17 @@ import ch.qos.logback.classic.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
+
+import gov.epa.exp_data_gathering.parse.UtilitiesUnirest;
+
+//import com.mashape.unirest.http.HttpResponse;
+//import com.mashape.unirest.http.Unirest;
 
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.RawDataRecord;
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Query.APIJSONs.ResultsPage;
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Utility.SQLiteDatabase;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
 
 /**
  * Runs queries on the eChemPortal API
@@ -42,11 +47,12 @@ public class QueryHandler {
 		this.retryLimit = retryLimit;
 		gson = new GsonBuilder().create();
 		prettyGson = new GsonBuilder().setPrettyPrinting().create();
-		logger = (Logger) LoggerFactory.getLogger("org.apache.http");
-		// org.apache.http generates a huge amount of debug logging output if level is not set to WARN or below
-    	logger.setLevel(Level.WARN);
-    	logger.setAdditive(false);
-    	Unirest.setTimeouts(0, 0);
+			
+//		logger = (Logger) LoggerFactory.getLogger("org.apache.http");
+//		// org.apache.http generates a huge amount of debug logging output if level is not set to WARN or below
+//    	logger.setLevel(Level.WARN);
+//    	logger.setAdditive(false);
+//    	Unirest.setTimeouts(0, 0);
 	}
 	
 	/**
@@ -63,20 +69,21 @@ public class QueryHandler {
 			int retryCount = 0;
 			while (retryCount < retryLimit && (!downloaded || response==null)) {
 				try {
-				response = Unirest.post("https://www.echemportal.org/echemportal/api/property-search")
-						.header("Accept", "application/json")
-						.header("Accept-Encoding", "gzip, deflate, br")
-						.header("Accept-Language", "en-US,en;q=0.9")
-						.header("Connection", "keep-alive")
-						.header("Content-Type", "application/json")
-						.header("Host", "www.echemportal.org")
-						.header("Origin", "https://www.echemportal.org")
-						.header("Referer", "https://www.echemportal.org/echemportal/property-search")
-						.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
-						.body(bodyString)
-						.asString();
-				downloaded = true;
-				Thread.sleep(wait);
+					response = Unirest.post("https://www.echemportal.org/echemportal/api/property-search")
+							.header("Accept", "application/json")
+							.header("Accept-Encoding", "gzip, deflate, br")
+							.header("Accept-Language", "en-US,en;q=0.9")
+							.header("Connection", "keep-alive")
+							.header("Content-Type", "application/json")
+							.header("Host", "www.echemportal.org")
+							.header("Origin", "https://www.echemportal.org")
+							.header("Referer", "https://www.echemportal.org/echemportal/property-search")
+							.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
+							.body(bodyString)
+							.asString();
+					downloaded = true;
+					Thread.sleep(wait);
+
 				} catch (Exception ex) {
 					wait += wait; // Increments default wait time every time a download fails
 					System.out.println("Download failed! Waiting "+wait+" ms to try again...");
@@ -124,7 +131,7 @@ public class QueryHandler {
 			
 			String strQuery = prettyGson.toJson(query);
 			
-			System.out.println(strQuery);
+//			System.out.println(strQuery);
 			
 			
 			ResultsPage page = getResultsPage(query);
