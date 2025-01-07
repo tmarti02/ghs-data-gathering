@@ -3,6 +3,7 @@ package gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -11,7 +12,10 @@ import org.apache.commons.text.StringEscapeUtils;
 
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
+import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Utility.TextProcessing;
+
 
 /**
  * Stores downloaded data from eChemPortal in parsable format
@@ -44,7 +48,7 @@ public class FinalRecord {
 	 * Dossier URL
 	 */
 	public String url;
-	
+
 	/**
 	 * Type of information, filtered to "experimental study" only by default
 	 */
@@ -145,7 +149,7 @@ public class FinalRecord {
 	 * Presence or absence of non-genetic cytotoxicity for genotoxicity experiments
 	 */
 	public List<String> cytotoxicity;
-	
+
 	/**
 	 * Date downloaded
 	 */
@@ -158,7 +162,7 @@ public class FinalRecord {
 	 * Internal ID to match to ExperimentalRecords for dashboard processing
 	 */
 	public String id;
-	
+
 	public static String[] headers = {"Name","Name Type","Number","Number Type","Member of Category","Participant","URL","Info Type","Reliability","Endpoint Type",
 			"Years","Guidelines & Qualifiers","GLP Compliance","Test Type","Species","Strain","Metabolic Activation","Route of Administration/Exposure",
 			"Inhalation Exposure Type","Coverage Type","Water Media Type","Value Type","Experimental Value","Histopathological Findings: Neoplastic","Duration/Sampling Time","Basis",
@@ -171,7 +175,12 @@ public class FinalRecord {
 			"years","guidelineQualifiers","guidelines","glpCompliance","testType","species","strain","metabolicActivation","routeOfAdministration","inhalationExposureType",
 			"coverageType","waterMediaType","valueTypes","experimentalValues","histoFindings","durations","basis","interpretationOfResults",
 			"oxygenConditions","genotoxicity","toxicity","cytotoxicity","dateAccessed","propertyName"};
-	
+
+
+
+	private static final transient UnitConverter unitConverter = new UnitConverter("data/density.txt");
+
+
 	public FinalRecord() {
 		years = new HashSet<String>();
 		guidelineQualifiers = new ArrayList<String>();
@@ -186,7 +195,7 @@ public class FinalRecord {
 		toxicity = new ArrayList<String>();
 		cytotoxicity = new ArrayList<String>();
 	}
-	
+
 	/**
 	 * Checks equivalence of contents of two records, ignoring source and date accessed
 	 * @param o		The object to check equality with
@@ -196,11 +205,11 @@ public class FinalRecord {
 		if (o==this) {
 			return true;
 		}
-		
+
 		if (!(o instanceof FinalRecord)) {
 			return false;
 		}
-		
+
 		FinalRecord r = (FinalRecord) o;
 		if (!Objects.equals(name,r.name) ||
 				!Objects.equals(nameType, r.nameType) ||
@@ -237,7 +246,7 @@ public class FinalRecord {
 			return true;
 		}
 	}
-	
+
 	public String [] toStringArray(String [] fieldNames) {
 
 		String Line = "";
@@ -252,7 +261,7 @@ public class FinalRecord {
 				String val=null;
 				String type=myField.getType().getName();
 
-				
+
 				switch (type) {
 				case "java.util.Set":
 					Set<String> set = (Set<String>) myField.get(this);
@@ -302,15 +311,115 @@ public class FinalRecord {
 
 		return array;
 	}
-	
-	public ExperimentalRecord toExperimentalRecord() {
+
+	public ExperimentalRecord toExperimentalRecord(String experimentalValue, String valueType) {
+
+		System.out.println(this.propertyName);
+		
 		ExperimentalRecord er=new ExperimentalRecord();
-		
+		er.source_name="eChemPortalAPI";
+		er.original_source_name=this.participant;
+		er.date_accessed = this.dateAccessed;
+		er.url=this.url;
+
 		er.chemical_name=this.name;
-		
-		//TODO
+		if(this.number!=null && !this.number.contentEquals("unknown")) {
+			er.casrn=this.number;	
+		}
+
+		er.experimental_parameters = new Hashtable<>();
+		er.experimental_parameters.put("Reliability", this.reliability);
+
+		String strGuidelinesQualifiers = "";
+		for (int g = 0; g < this.guidelines.size(); g++) {
+			if (g > 0) { strGuidelinesQualifiers = strGuidelinesQualifiers + "; "; }
+			strGuidelinesQualifiers = strGuidelinesQualifiers + this.guidelineQualifiers.get(g) + " " + this.guidelines.get(g);
+		}
+		er.experimental_parameters.put("Guidelines", strGuidelinesQualifiers);
+		er.experimental_parameters.put("GLP Compliance", this.glpCompliance);
+		er.experimental_parameters.put("Test Type", this.testType);
+		er.experimental_parameters.put("Value Type", valueType);
+		er.experimental_parameters.put("Original ID", this.id);
+		er.experimental_parameters.put("Route of Administration", this.routeOfAdministration);
+		er.experimental_parameters.put("Strain", this.strain);
+
+		boolean isRat=false;		
+		if(this.species.get(0).equals("rat") || species.get(0).equals("other: rat, albino") )isRat=true;
+
+		if(this.propertyName.equals("AcuteToxicityOral") && valueType.contentEquals("LD50") && isRat) {
+			er.property_name="Oral rat LD50";
+			er.property_category="acute oral toxicity";
+		} else {
+//			System.out.println(propertyName+"\t"+valueType+"\t"+url);
+			System.out.println(propertyName+"\t"+valueType);
+		}
+		//		System.out.println(er.property_name+"\t"+er.property_category);
+
+		er.property_value_string=experimentalValue;
+
+		if(er.property_name==null) return er;
+
+		boolean foundNumeric=ParseUtilities.getToxicity(er,experimentalValue);
+		if(foundNumeric)unitConverter.convertRecord(er);
+
 		return er;
 	}
+
 	
+	public ExperimentalRecord toExperimentalRecord() {
+
+		System.out.println(this.propertyName);
+		
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.source_name="eChemPortalAPI";
+		er.original_source_name=this.participant;
+		er.date_accessed = this.dateAccessed;
+		er.url=this.url;
+
+		er.chemical_name=this.name;
+		if(this.number!=null && !this.number.contentEquals("unknown")) {
+			er.casrn=this.number;	
+		}
+
+		er.experimental_parameters = new Hashtable<>();
+		er.experimental_parameters.put("Reliability", this.reliability);
+
+		String strGuidelinesQualifiers = "";
+		for (int g = 0; g < this.guidelines.size(); g++) {
+			if (g > 0) { strGuidelinesQualifiers = strGuidelinesQualifiers + "; "; }
+			strGuidelinesQualifiers = strGuidelinesQualifiers + this.guidelineQualifiers.get(g) + " " + this.guidelines.get(g);
+		}
+		er.experimental_parameters.put("Guidelines", strGuidelinesQualifiers);
+		er.experimental_parameters.put("GLP Compliance", this.glpCompliance);
+		er.experimental_parameters.put("Test Type", this.testType);
+//		er.experimental_parameters.put("Value Type", valueType);
+		er.experimental_parameters.put("Original ID", this.id);
+//		er.experimental_parameters.put("Route of Administration", this.routeOfAdministration);
+		er.experimental_parameters.put("Strain", this.strain);
+
+		boolean isRat=false;		
+		if(this.species.get(0).equals("rat") || species.get(0).equals("other: rat, albino") )isRat=true;
+
+//		if(this.propertyName.equals("AcuteToxicityOral") && valueType.contentEquals("LD50") && isRat) {
+//			er.property_name="Oral rat LD50";
+//			er.property_category="acute oral toxicity";
+//		} else {
+////			System.out.println(propertyName+"\t"+valueType+"\t"+url);
+//			System.out.println(propertyName+"\t"+valueType);
+//		}
+		//		System.out.println(er.property_name+"\t"+er.property_category);
+
+		er.property_value_string=this.interpretationOfResults;
+
+		
 	
+		
+		if(er.property_name==null) return er;
+
+//		boolean foundNumeric=ParseUtilities.getToxicity(er,experimentalValue);
+//		if(foundNumeric)unitConverter.convertRecord(er);
+
+		return er;
+	}
+
 }

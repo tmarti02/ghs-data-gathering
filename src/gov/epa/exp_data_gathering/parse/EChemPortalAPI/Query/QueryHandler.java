@@ -14,6 +14,7 @@ import ch.qos.logback.classic.Logger;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.database.SqlUtilities;
 import gov.epa.exp_data_gathering.parse.UtilitiesUnirest;
 
 //import com.mashape.unirest.http.HttpResponse;
@@ -133,8 +134,8 @@ public class QueryHandler {
 			
 //			System.out.println(strQuery);
 			
-			
 			ResultsPage page = getResultsPage(query);
+			
 			String strPage = prettyGson.toJson(page).replaceAll("—","-");
 			
 			RawDataRecord data = new RawDataRecord(strDate,strQuery,strPage);
@@ -157,6 +158,11 @@ public class QueryHandler {
 		File db = new File(databasePath);
 		if(!db.getParentFile().exists()) { db.getParentFile().mkdirs(); }
 		java.sql.Connection conn = SQLiteDatabase.createTable(databasePath, tableName, RawDataRecord.fieldNames, startFresh);
+		
+		
+		
+		System.out.println(SqlUtilities.runSQL(conn, "select sqlite_version();"));
+		
 		
 		try {
 			int totalResults = getQuerySize(query);
