@@ -2,6 +2,7 @@ package gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -10,6 +11,10 @@ import java.util.Set;
 
 import org.apache.commons.text.StringEscapeUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
@@ -179,6 +184,7 @@ public class FinalRecord {
 
 
 	private static final transient UnitConverter unitConverter = new UnitConverter("data/density.txt");
+	public static Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues().create();		
 
 
 	public FinalRecord() {
@@ -314,7 +320,10 @@ public class FinalRecord {
 
 	public ExperimentalRecord toExperimentalRecord(String experimentalValue, String valueType) {
 
-		System.out.println(this.propertyName);
+		experimentalValue=experimentalValue.replace("gm/ Kg", ExperimentalConstants.str_g_kg);
+		
+		
+//		System.out.println(this.propertyName);
 		
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.source_name="eChemPortalAPI";
@@ -329,6 +338,14 @@ public class FinalRecord {
 
 		er.experimental_parameters = new Hashtable<>();
 		er.experimental_parameters.put("Reliability", this.reliability);
+		
+		
+		if(this.reliability.contains("3") || this.reliability.contains("4")) {
+			er.keep=false;
+			er.reason="Insufficient reliability";
+//			System.out.println(er.casrn+"\t"+er.keep+"\t"+reliability);
+		}
+
 
 		String strGuidelinesQualifiers = "";
 		for (int g = 0; g < this.guidelines.size(); g++) {
@@ -351,13 +368,16 @@ public class FinalRecord {
 			er.property_category="acute oral toxicity";
 		} else {
 //			System.out.println(propertyName+"\t"+valueType+"\t"+url);
-			System.out.println(propertyName+"\t"+valueType);
+//			System.out.println(propertyName+"\t"+valueType);
 		}
 		//		System.out.println(er.property_name+"\t"+er.property_category);
 
 		er.property_value_string=experimentalValue;
 
-		if(er.property_name==null) return er;
+		if(er.property_name==null) {
+			er.property_name="Not set";
+			return er;
+		}
 
 		boolean foundNumeric=ParseUtilities.getToxicity(er,experimentalValue);
 		if(foundNumeric)unitConverter.convertRecord(er);
@@ -368,7 +388,7 @@ public class FinalRecord {
 	
 	public ExperimentalRecord toExperimentalRecord() {
 
-		System.out.println(this.propertyName);
+//		System.out.println(this.propertyName);
 		
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.source_name="eChemPortalAPI";
@@ -383,6 +403,21 @@ public class FinalRecord {
 
 		er.experimental_parameters = new Hashtable<>();
 		er.experimental_parameters.put("Reliability", this.reliability);
+		
+		if(this.reliability.contains("3") || this.reliability.contains("4")) {
+			er.keep=false;
+			er.reason="Insufficient reliability";
+//			System.out.println(er.casrn+"\t"+er.keep+"\t"+reliability);
+		}
+		
+		if(er.casrn!=null && er.casrn.equals("127-51-5")) {
+			System.out.println("Here1\t"+er.keep+"\t"+this.reliability);
+		}
+		
+		
+		
+//		System.out.println(this.reliability);
+		
 
 		String strGuidelinesQualifiers = "";
 		for (int g = 0; g < this.guidelines.size(); g++) {
@@ -396,9 +431,8 @@ public class FinalRecord {
 		er.experimental_parameters.put("Original ID", this.id);
 //		er.experimental_parameters.put("Route of Administration", this.routeOfAdministration);
 		er.experimental_parameters.put("Strain", this.strain);
+		er.experimental_parameters.put("Species", this.species.get(0));
 
-		boolean isRat=false;		
-		if(this.species.get(0).equals("rat") || species.get(0).equals("other: rat, albino") )isRat=true;
 
 //		if(this.propertyName.equals("AcuteToxicityOral") && valueType.contentEquals("LD50") && isRat) {
 //			er.property_name="Oral rat LD50";
@@ -407,19 +441,159 @@ public class FinalRecord {
 ////			System.out.println(propertyName+"\t"+valueType+"\t"+url);
 //			System.out.println(propertyName+"\t"+valueType);
 //		}
-		//		System.out.println(er.property_name+"\t"+er.property_category);
+		//		System.out.println(er.property_name+"\t"+er.property_category);		
 
 		er.property_value_string=this.interpretationOfResults;
+		
+		
+		if(er.keep) {
+			er.property_value_units_final=ExperimentalConstants.str_binary;
+			er.property_value_units_original=ExperimentalConstants.str_binary;
+		}
+		
+		double nonSensitizing = 0;
+		double sensitizing = 1;
+		String PVLC=er.property_value_string.toLowerCase();
+		
+		
+//		boolean isRat=false;		
+//		if(this.species.get(0).equals("rat") || species.get(0).equals("other: rat, albino") )isRat=true;
 
 		
-	
+		if(er.casrn!=null && er.casrn.equals("127-51-5")) {
+			System.out.println("here2\t"+er.casrn+"\t"+er.keep+"\t"+this.reliability);
+		}
+
 		
-		if(er.property_name==null) return er;
+		if(this.testType.contains("LLNA") && this.species.get(0).contains("mouse")) {
+//			System.out.println(this.testType+"\t"+this.species.get(0));
+			er.property_name=ExperimentalConstants.strSkinSensitizationLLNA;
+			
+			//TODO add code to set keep to false if has a guideline that we cant match back to leora OECD ones. Some EPA ones have matching OECD guidelines
+			checkLLNA_Guideline(er,strGuidelinesQualifiers);
+			
+			
+		} else {
+			er.keep=false;
+			er.reason="";
+			er.property_name="not set";
+			return er;
+		}
+		
+		
+		List<String> nonSensitizers = Arrays.asList("not sensitizer", "not sensitizing", "not sensitising", "non skin sensitizing",
+				"non sensitizing", "non-sensitizer", "not irritant or sensitising", "not senstiizing",
+				"non-sensitizing", "no sensitizing potential", "does not elicit a skin sensitizing reaction",
+				"not sensitsing", "not sensiting", "not considered to be", "no sensitization",
+				"no sensitizing or irritating potential", "no sensitization", "not a skin sensitiser",
+				"not skin sensitising", "non sensitising", "non-sensitiser", "no skin sensitising potential",
+				"not a skin sensitizer", "no indication", "non sensibilisant", "not a sensitizer",
+				"not a skin sensitiser", "not irritating", "not skin sentising", "no skin sensitization potential",
+				"not skin sensitizing", "not sensitoxing", "non-sensitising", "not skin sensitizer",
+				"no skin sensitiser", "not-sensitising", "not skin sensitization", "negative",
+				"no skin sensitising effects", "no skin sensitization", "non sensitising", 
+				"no sensitising effects", "no or minimal reactivity", 
+				"not skin sensitisng", "not sensiting", "no skin sensitization potencial",
+				"not have a sensitization potential", "not show any skin sensitization", "not a sensitizer",
+				"noit sensitizing", "not  sensitizing", "not sensitisting", "unlikely to be","other: not sensitizing in LLNA, sensisitizing in MEST");
+		
+		List<String> criteriaNotMet = Arrays.asList("criteria not met", "criteria are not met", "not classified",
+				"no evidence", "shall not be classified", "are not met", "no category", "not need to be classified",
+				"not required to be classified", "not fulfil the requirements",
+				"criteria for classification as a skin sensitiser not met", "does not meet the criteria",
+				"not considered a", "not be classified", "not likely to be", "not considered as a",
+				"does not need to be classified", "no classification is required", "not considered to be sensitizing");
+				
+		List<String> sensitizers = Arrays.asList("sensitizer", "category", "sensitising", "skin sens. 1", "criteria met",
+				"sensitizing", "skin sensitation potential is indicated", "sensitiser", "skin sens cat 1",
+				"sensitization potential", "irritant", "classified", "cause sensitization", "sentisizer", "sensitising",
+				"skin sens. 1", "skin sens", "reaction", "sentisization", "allergenic potency", "allergen", "positive",
+				"sub-category", "cat. 1", "skin sens 1", "potential to cause skin sensitization");
+	
+		List<String> badData = Arrays.asList("study cannot be used", "false positive", "inconclusive", "not reliable",
+				"doubtful relevance", "not a photosensitizer", "not photo-sensitising", "not photallergenic");
+		
+		List<String> ambiguous=Arrays.asList("ambiguous","ambigous","equivocal");
+		
+		if(hasString(badData, PVLC)) {
+			er.keep=false;
+			er.reason="Bad data or Study";
+//			System.out.println(PVLC+"\tbad data\t"+this.reliability);
+		} else if(hasString(ambiguous, PVLC)) {
+			er.keep=false;
+			er.reason="ambiguous results";
+//			System.out.println(PVLC+"\tambiguous");
+		} else if(hasString(nonSensitizers, PVLC)) {
+			er.property_value_point_estimate_original = nonSensitizing;
+//			System.out.println(PVLC+"\tnot sensitizing");
+		} else if(hasString(criteriaNotMet, PVLC)) {
+			er.property_value_point_estimate_original = nonSensitizing;
+						
+//			if(!PVLC.equals("GHS criteria not met")) {
+//				System.out.println(PVLC+"\tcriteria not met");	
+//			}
+			
+		} else if(hasString(sensitizers, PVLC)) {
+			er.property_value_point_estimate_original = sensitizing;
+//		System.out.println(PVLC+"\tsensitizing");
+		} else {
+			er.keep=false;
+			er.reason="Other bad data or Study";
+//			System.out.println(PVLC+"\tother bad data");
+		}
+		
+		er.property_value_point_estimate_final = er.property_value_point_estimate_original;
+		
 
 //		boolean foundNumeric=ParseUtilities.getToxicity(er,experimentalValue);
 //		if(foundNumeric)unitConverter.convertRecord(er);
 
 		return er;
 	}
+	
+	
+	private void checkLLNA_Guideline(ExperimentalRecord er, String strGuidelinesQualifiers) {
 
+		boolean hasGoodGuideline=false;
+		
+//		List<String> badGuidelines = Arrays.asList("according to guideline other:", "according to guideline other: as below", "according to guideline other: as per mentioned below",
+//				"according to guideline other: LLNA assay", "according to guideline other: The objective of the study was to evaluate the utility of the LLNA assay to determine the contact sensitization potential of the test chemical",
+//				"according to guideline other: Sensitive mouse lymph node assay (SLNA)", "according to guideline other: The objective of the study was to evaluate the utility of the LLNA assay to determine the contact sensitization potential of the test chemical",
+//				"equivalent or similar to guideline other: according to Ulrich, P. et al. 1998: Toxicology 125, 149-168", "equivalent or similar to guideline other: As mentioned below", " equivalent or similar to guideline other: Kimber et al., 1989");
+		
+		List<String> goodGuidelines = Arrays.asList("429", "870.2600", "B.42", "442A", "442B","442 B", "B.51", "406", "595.12", "B.6");
+
+		
+//		if(er.casrn!=null && er.casrn.equals("127-51-5")) {
+//			System.out.println(gson.toJson(this)+"\r\n");
+//			System.out.println(gson.toJson(er));
+//		}
+		
+		if(er.keep) {
+			if(!hasString(goodGuidelines, strGuidelinesQualifiers)){
+				
+				if(er.casrn!=null && er.casrn.equals("127-51-5")) {
+					System.out.println("here3\t"+er.casrn+"\t"+er.keep+"\t"+"Invalid guideline has reliability=" +er.experimental_parameters.get("Reliability"));
+				}
+				
+//				System.out.println(er.casrn+"\t"+er.keep+"\t"+"Invalid guideline has reliability=" +er.experimental_parameters.get("Reliability"));
+				er.keep=false;
+				er.reason="Invalid guideline";	
+			}
+		}
+		
+		
+		
+	}
+
+	boolean hasString(List<String>examples,String str) {
+		for(String example:examples ) {
+			if(str.contains(example)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+		
 }

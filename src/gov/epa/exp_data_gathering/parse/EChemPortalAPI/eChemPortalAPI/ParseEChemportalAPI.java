@@ -18,6 +18,7 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Query.APIConstants;
+import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
@@ -30,12 +31,24 @@ import gov.epa.exp_data_gathering.parse.PubChem.RecordPubChem;
 
 public class ParseEChemportalAPI extends Parse {
 	
-//	String endpointKind=APIConstants.acuteToxicityOral;
-	String endpointKind=APIConstants.skinSensitisation;
+	String endpointKind=APIConstants.acuteToxicityOral;
+//	String endpointKind=APIConstants.skinSensitisation;
 	
 	public ParseEChemportalAPI () {
 		sourceName = "eChemPortalAPI";
 		this.init();
+		
+		this.fileNameJsonExperimentalRecords=sourceName+" "+endpointKind+" Experimental Records.json";
+		this.fileNameJsonExperimentalRecordsBad=sourceName+" "+endpointKind+" Experimental Records-Bad.json";
+		
+//		if(endpointKind.equals(APIConstants.skinSensitisation)) {
+//			this.fileNameJsonExperimentalRecords=sourceName+" "+ExperimentalConstants.strSkinSensitizationLLNA+" Experimental Records.json";
+//		} else if(endpointKind.equals(APIConstants.acuteToxicityOral)) {
+//			this.fileNameJsonExperimentalRecords=sourceName+" "+ExperimentalConstants.strSkinSensitizationLLNA+" Experimental Records.json";
+//		}
+		
+		
+		
 		folderNameWebpages=null;
 	}
 	
@@ -128,11 +141,17 @@ public class ParseEChemportalAPI extends Parse {
 					
 				if(fr.experimentalValues.size()==0) {
 					ExperimentalRecord er=fr.toExperimentalRecord();
-					System.out.println(gson.toJson(fr)+"\n");
-					System.out.println(gson.toJson(er)+"\n******************");
-					experimentalRecords.add(er);
+//					System.out.println(gson.toJson(fr)+"\n");
+//					System.out.println(gson.toJson(er)+"\n******************");
 					
-					 if(true)break;
+					if (er.property_name==null) {
+						System.out.println(gson.toJson(er));
+					}
+					
+					
+					
+					experimentalRecords.add(er);
+//					if(true)break;
 
 				} else {
 					for (int i=0;i<fr.experimentalValues.size();i++) {	
@@ -158,8 +177,6 @@ public class ParseEChemportalAPI extends Parse {
 				
 				
 				
-				
-				
 				//if not:
 //				ExperimentalRecord er=fr.toExperimentalRecord();
 //				System.out.println(gson.toJson(fr)+"\n");
@@ -170,11 +187,11 @@ public class ParseEChemportalAPI extends Parse {
 				
 			}
 			
-			for(String valueType:valueTypes.keySet()) {
-				if(valueType.contains("LD50")) {
-					System.out.println(valueType+"\t"+valueTypes.get(valueType));	
-				}
-			}
+//			for(String valueType:valueTypes.keySet()) {
+//				if(valueType.contains("LD50")) {
+//					System.out.println(valueType+"\t"+valueTypes.get(valueType));	
+//				}
+//			}
 			
 //			for (String species:speciesList.keySet()) {
 //				
@@ -200,13 +217,20 @@ public class ParseEChemportalAPI extends Parse {
 		
 		p.generateOriginalJSONRecords=false;
 
-		p.removeDuplicates=true;
-		p.writeJsonExperimentalRecordsFile=false;
+		
+		if(p.endpointKind.equals(APIConstants.skinSensitisation) || p.endpointKind.equals(APIConstants.skinIrritationCorrosion)) {
+			p.removeDuplicates=false;
+		} else {
+			p.removeDuplicates=true;
+		}
+		
+		
+		p.writeJsonExperimentalRecordsFile=true;
 		p.writeExcelExperimentalRecordsFile=true;
 		p.writeExcelFileByProperty=true;		
 		p.writeCheckingExcelFile=false;//creates random sample spreadsheet
 		p.createFiles();
-
+		
 	}
 
 }
