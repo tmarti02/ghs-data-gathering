@@ -718,7 +718,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		
 		if (size() <= maxRows) {
 			System.out.println(size()+"<="+maxRows+" records,"+fileNameExcelExperimentalRecords);
-			this.toExcel_File(filePath);
+			this.toExcel_FileDetailed(filePath);
 		} else {
 			System.out.println(size()+" records,"+fileNameExcelExperimentalRecords);
 			
@@ -732,13 +732,13 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 				if (i!=0 && i%65000==0) {
 					batch++;
 					String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".xlsx")) + " " + batch + ".xlsx";
-					temp.toExcel_File(mainFolder+File.separator+batchFileName);
+					temp.toExcel_FileDetailed(mainFolder+File.separator+batchFileName);
 					temp.clear();
 				}
 			}
 			batch++;
 			String batchFileName = fileNameExcelExperimentalRecords.substring(0,fileNameExcelExperimentalRecords.indexOf(".xlsx")) + " " + batch + ".xlsx";
-			temp.toExcel_File(mainFolder+File.separator+batchFileName);
+			temp.toExcel_FileDetailed(mainFolder+File.separator+batchFileName);
 			
 			
 		}
