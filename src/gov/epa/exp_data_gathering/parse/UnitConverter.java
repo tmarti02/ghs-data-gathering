@@ -132,11 +132,12 @@ public class UnitConverter {
 			
 			if (er.property_category.toLowerCase().contains("bioconcentration")) {
 				convertBCF(er);
-			} else	if (er.property_category.toLowerCase().contains("acute oral toxicity") || er.property_category.toLowerCase().contains("acute dermal toxicity")) {
+			} else if ( er.property_category.contentEquals(ExperimentalConstants.strAcuteOralToxicity) ||  
+					er.property_category.contentEquals(ExperimentalConstants.strAcuteDermalToxicity)) {
 				convertOralMammalianToxicity(er);			
 			}else if (er.property_category.toLowerCase().contains("acute aquatic toxicity")) {
 				convertSolubility(er);
-			} else if (er.property_category.toLowerCase().contains("acute inhalation toxicity")) {
+			} else if (er.property_category.contentEquals(ExperimentalConstants.strAcuteInhalationToxicity)) {
 				convertInhalationMammalianToxicity(er);
 			} else {
 				System.out.println("UnitConverter: Unknown property category:\t"+er.property_category);
@@ -274,7 +275,7 @@ public class UnitConverter {
 				er.property_value_units_final = ExperimentalConstants.str_g_L;
 				er.updateNote("Converted using density: " + density + " g/mL");
 			}
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_L) || er.property_value_units_original.equals(ExperimentalConstants.str_uL_m3)) {
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_L) || er.property_value_units_original.equals(ExperimentalConstants.str_uL_m3) || er.property_value_units_original.equals(ExperimentalConstants.str_uL_L)) {
 
 			if (er.casrn == null || htDensity.get(er.casrn) == null) {
 				er.flag = true;
@@ -290,7 +291,14 @@ public class UnitConverter {
 
 //					System.out.println(er.casrn+"\tConversion to mg/L using density="+density);
 
-				convertAndAssignFinalFields(er, density);
+				if(er.property_value_units_original.equals(ExperimentalConstants.str_mL_L)) {
+					convertAndAssignFinalFields(er, density);	
+				} else if (er.property_value_units_original.equals(ExperimentalConstants.str_uL_m3)) {
+					convertAndAssignFinalFields(er, density*1e-6);//this is really low value. Possible someone made a units error
+				}  else if (er.property_value_units_original.equals(ExperimentalConstants.str_uL_L)) {
+					convertAndAssignFinalFields(er, density*1e-3);
+				}
+				
 				er.property_value_units_final = ExperimentalConstants.str_g_L;
 				er.updateNote("Converted using density: " + density + " g/mL");
 			}
@@ -458,7 +466,7 @@ public class UnitConverter {
 			er.property_value_units_final = er.property_value_units_original;
 			if (debug)
 				System.out.println(
-						"Unrecognized units for " + er.property_name + ": " + er.property_value_units_original);
+						"Unrecognized inhalation tox units for " + er.property_name + ": " + er.property_value_units_original);
 		}
 
 		return !er.flag;
@@ -644,7 +652,7 @@ public class UnitConverter {
 			er.property_value_units_final = er.property_value_units_original;
 			if (debug)
 				System.out.println(
-						"Unrecognized units for " + er.property_name + ": " + er.property_value_units_original);
+						"Unrecognized oral/dermal units for " + er.property_name + ": " + er.property_value_units_original);
 		}
 
 		return !er.flag;

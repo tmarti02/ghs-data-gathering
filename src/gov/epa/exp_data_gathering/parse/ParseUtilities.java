@@ -1549,8 +1549,8 @@ public class ParseUtilities extends Parse {
 		}
 
 		
-		if(!foundNumeric)
-			System.out.println(propertyValue+"\t"+r.unitsIndex);
+//		if(!foundNumeric)
+//			System.out.println(propertyValue+"\t"+r.unitsIndex);
 
 
 		return foundNumeric;

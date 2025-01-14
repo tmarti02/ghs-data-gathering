@@ -360,18 +360,42 @@ public class FinalRecord {
 		er.experimental_parameters.put("Route of Administration", this.routeOfAdministration);
 		er.experimental_parameters.put("Strain", this.strain);
 
-		boolean isRat=false;		
-		if(this.species.get(0).equals("rat") || species.get(0).equals("other: rat, albino") )isRat=true;
-
-		if(this.propertyName.equals("AcuteToxicityOral") && valueType.contentEquals("LD50") && isRat) {
-			er.property_name="Oral rat LD50";
-			er.property_category="acute oral toxicity";
-		} else {
-//			System.out.println(propertyName+"\t"+valueType+"\t"+url);
-//			System.out.println(propertyName+"\t"+valueType);
+//		boolean isRat=false;		
+//		if(this.species.get(0).equals("rat") || species.get(0).equals("other: rat, albino") )isRat=true;
+//
+//		boolean isMouse=false;
+//		if(this.species.get(0).equals("mouse"))isMouse=true;
+//		
+//		boolean isRabbit=false;
+//		if(this.species.get(0).equals("rabbit"))isRabbit=true;
+		
+		
+		String species=this.species.get(0).toLowerCase();
+		
+		if(species.equals("other: rat, albino") || species.equals("other: albino rat")) species="rat, albino";
+		if(species.equals("other: rat (sprague-dawley)")) species="rat, sprague-dawley";
+		if(species.equals("other: rat, wistar crl:wi br (spf)")) species="rat, wistar crl:wi br (spf)";
+						
+		if(this.propertyName.equals("AcuteToxicityOral") && valueType.contains("LD50")) {
+			er.property_category=ExperimentalConstants.strAcuteOralToxicity;
+			
+			if(isSpecies("rat",species,valueType)) {
+				er.property_name=ExperimentalConstants.strORAL_RAT_LD50;
+			} else if(isSpecies("mouse",species,valueType))  {
+				er.property_name=ExperimentalConstants.strORAL_MOUSE_LD50;
+			} else if(isSpecies("rabbit",species, valueType)) { 
+				er.property_name=ExperimentalConstants.strORAL_RABBIT_LD50;
+			} else if(isSpecies("guinea pig",species, valueType)) {
+				er.property_name=ExperimentalConstants.strORAL_GUINEA_PIG_LD50;
+			} else {
+				er.keep=false;
+				er.experimental_parameters.put("Species", species);
+				er.reason="Cant determine species from valueType="+valueType+" and species="+species;
+//				System.out.println(er.reason);
+			}
 		}
+				
 		//		System.out.println(er.property_name+"\t"+er.property_category);
-
 		er.property_value_string=experimentalValue;
 
 		if(er.property_name==null) {
@@ -385,6 +409,28 @@ public class FinalRecord {
 		return er;
 	}
 
+	boolean isSpecies(String name,String species, String valueType) {
+		
+		if(!species.contains(name)) {
+//			System.out.println(name+"\t"+species+"\t"+valueType+"\t"+false);
+			return false;
+		}
+			
+		if(species.contains("other")) {
+			if(valueType.contains(name)) {
+//				System.out.println(name+"\t"+species+"\t"+valueType+"\t"+true);		
+				return true;
+			} else {
+//				System.out.println(name+"\t"+species+"\t"+valueType+"\t"+false);
+				return false;
+			}
+		} else {
+//			System.out.println(name+"\t"+species+"\t"+valueType+"\t"+true);
+			return true;	
+		}
+		
+	}
+	
 	
 	public ExperimentalRecord toExperimentalRecord() {
 
@@ -410,11 +456,10 @@ public class FinalRecord {
 //			System.out.println(er.casrn+"\t"+er.keep+"\t"+reliability);
 		}
 		
-		if(er.casrn!=null && er.casrn.equals("127-51-5")) {
-			System.out.println("Here1\t"+er.keep+"\t"+this.reliability);
-		}
-		
-		
+//		if(er.casrn!=null && er.casrn.equals("127-51-5")) {
+//			System.out.println("Here1\t"+er.keep+"\t"+this.reliability);
+//		}
+				
 		
 //		System.out.println(this.reliability);
 		
@@ -460,9 +505,9 @@ public class FinalRecord {
 //		if(this.species.get(0).equals("rat") || species.get(0).equals("other: rat, albino") )isRat=true;
 
 		
-		if(er.casrn!=null && er.casrn.equals("127-51-5")) {
-			System.out.println("here2\t"+er.casrn+"\t"+er.keep+"\t"+this.reliability);
-		}
+//		if(er.casrn!=null && er.casrn.equals("127-51-5")) {
+//			System.out.println("here2\t"+er.casrn+"\t"+er.keep+"\t"+this.reliability);
+//		}
 
 		
 		if(this.testType.contains("LLNA") && this.species.get(0).contains("mouse")) {
@@ -554,8 +599,6 @@ public class FinalRecord {
 	
 	private void checkLLNA_Guideline(ExperimentalRecord er, String strGuidelinesQualifiers) {
 
-		boolean hasGoodGuideline=false;
-		
 //		List<String> badGuidelines = Arrays.asList("according to guideline other:", "according to guideline other: as below", "according to guideline other: as per mentioned below",
 //				"according to guideline other: LLNA assay", "according to guideline other: The objective of the study was to evaluate the utility of the LLNA assay to determine the contact sensitization potential of the test chemical",
 //				"according to guideline other: Sensitive mouse lymph node assay (SLNA)", "according to guideline other: The objective of the study was to evaluate the utility of the LLNA assay to determine the contact sensitization potential of the test chemical",

@@ -36,10 +36,10 @@ public class ParseEChemportalAPI extends Parse {
 	
 	public ParseEChemportalAPI () {
 		sourceName = "eChemPortalAPI";
-		this.init();
+		this.init(endpointKind);
 		
-		this.fileNameJsonExperimentalRecords=sourceName+" "+endpointKind+" Experimental Records.json";
-		this.fileNameJsonExperimentalRecordsBad=sourceName+" "+endpointKind+" Experimental Records-Bad.json";
+//		this.fileNameJsonExperimentalRecords=sourceName+" "+endpointKind+" Experimental Records.json";
+//		this.fileNameJsonExperimentalRecordsBad=sourceName+" "+endpointKind+" Experimental Records-Bad.json";
 		
 //		if(endpointKind.equals(APIConstants.skinSensitisation)) {
 //			this.fileNameJsonExperimentalRecords=sourceName+" "+ExperimentalConstants.strSkinSensitizationLLNA+" Experimental Records.json";

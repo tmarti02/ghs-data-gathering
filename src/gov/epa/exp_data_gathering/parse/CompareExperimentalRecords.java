@@ -1,0 +1,401 @@
+package gov.epa.exp_data_gathering.parse;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.TreeMap;
+
+import gov.epa.api.ExperimentalConstants;
+
+/**
+* @author TMARTI02
+*/
+public class CompareExperimentalRecords {
+
+	static class Source {
+		String sourceName;
+		String subfolder;
+		
+		Source(String sourceName,String subfolder) {
+			this.sourceName=sourceName;
+			this.subfolder=subfolder;
+		}
+	}
+	
+	
+	
+	void compare(String sourceName1,String sourceName2,String propertyName,String units) {
+		TreeMap<String,ExperimentalRecords> tm1 = getHashtable(sourceName1,null, propertyName,units);
+		TreeMap<String,ExperimentalRecords> tm2 = getHashtable(sourceName2,null, propertyName,units);
+				
+		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,true));
+		compareChemicalsInCommon(tm1, tm2);
+		
+	}
+	
+	void compare(String sourceName1,String sourceName2,String subfolder1,String subfolder2, String propertyName,String units) {
+		TreeMap<String,ExperimentalRecords> tm1 = getHashtable(sourceName1,subfolder1,propertyName,units);
+		TreeMap<String,ExperimentalRecords> tm2 = getHashtable(sourceName2,subfolder2, propertyName,units);
+				
+		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
+		compareChemicalsInCommon(tm1, tm2);
+		
+	}
+	
+	
+	
+	void compare(List<Source>sources1, List<Source>sources2, String propertyName,String units) {
+		
+		ExperimentalRecords recs1=getAllExperimentalRecords(sources1);
+		ExperimentalRecords recs2=getAllExperimentalRecords(sources2);
+		
+		TreeMap<String, ExperimentalRecords> tm1 = getTreeMapByCAS(propertyName, units, recs1);
+		TreeMap<String, ExperimentalRecords> tm2 = getTreeMapByCAS(propertyName, units, recs2);
+
+				
+		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,true));
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,true));
+		compareChemicalsInCommon(tm1, tm2);
+		
+	}
+
+	private ExperimentalRecords getAllExperimentalRecords(List<Source> sources) {
+		ExperimentalRecords recsAll=new ExperimentalRecords();
+		for(Source source:sources) {
+			ExperimentalRecords recs=getExperimentalRecords(source.sourceName, source.subfolder);
+			recsAll.addAll(recs);
+		}
+		return recsAll;
+	}
+
+	
+
+
+	/**
+	 * Get counts of chemicals special to the first source
+	 * 
+	 * @param tm1
+	 * @param tm2
+	 * @return
+	 */
+	int getNewChemicalCount(TreeMap<String,ExperimentalRecords>tm1,TreeMap<String,ExperimentalRecords>tm2,boolean printValues) {
+		
+		int countIn1Not2=0;
+		
+		Hashtable<String,Integer>htCountBySource=new Hashtable<>();
+		
+		for (String casrn:tm1.keySet()) {
+			ExperimentalRecords recs1=tm1.get(casrn);
+			
+			if(!tm2.containsKey(casrn) && recs1.medianValue!=null) {
+				countIn1Not2++;
+				
+				HashSet<String>sources=updateCountBySourceHashtable(htCountBySource, recs1);
+				
+//				if(printValues) System.out.println(casrn+"\t"+(recs1.medianValue)+"\t"+sources);
+				
+//				if(printValues && sources.contains("Unknown")) {
+//					System.out.println(casrn+"\tHas Unknown"+"\t"+recs1.medianValue);
+//				}
+				
+				continue;
+			}
+			
+			ExperimentalRecords recs2=tm2.get(casrn);
+			
+			if(recs1.medianValue!=null && recs2.medianValue==null) {
+//				if(printValues) System.out.println(casrn+"\t"+(recs1.medianValue));
+				countIn1Not2++;
+				HashSet<String>sources=updateCountBySourceHashtable(htCountBySource, recs1);
+				
+//				if(printValues) System.out.println(casrn+"\t"+(recs1.medianValue)+"\t"+sources);
+				
+//				if(printValues && sources.contains("Unknown")) {
+//					System.out.println(casrn+"\tHas Unknown"+"\t"+recs1.medianValue);
+//				}
+
+			}
+		}
+		
+		if(printValues) {
+			System.out.println("\nCounts by original source that arent in other set");
+			for(String source:htCountBySource.keySet()) {
+				System.out.println(source+"\t"+htCountBySource.get(source));
+			}
+			System.out.println("");
+		}
+		
+		return countIn1Not2;
+		
+	}
+
+	private HashSet<String> updateCountBySourceHashtable(Hashtable<String, Integer> htCountBySource, ExperimentalRecords recs) {
+		
+		
+		HashSet<String>sources=new HashSet<>();
+		
+		for(ExperimentalRecord er:recs) {
+			String sourceName=null;
+			if(getOriginalSourceName(er)==null) sourceName="Unknown";
+			else sourceName=getOriginalSourceName(er);
+			sources.add(sourceName);
+		}
+		
+
+		for (String sourceName:sources) {
+			if(htCountBySource.containsKey(sourceName)) {
+				int oldVal=htCountBySource.get(sourceName);
+				htCountBySource.put(sourceName,oldVal+1);
+			} else {
+				htCountBySource.put(sourceName,1);
+			}
+		}
+		
+		return sources;
+		
+	}
+
+	private String getOriginalSourceName(ExperimentalRecord er) {
+		String originalSource;
+		if(er.publicSourceOriginal!=null) {
+			originalSource=er.publicSourceOriginal.name;
+		} else {
+			originalSource=er.original_source_name;
+		}
+		return originalSource;
+	}
+	
+	
+
+	double compareChemicalsInCommon(TreeMap<String,ExperimentalRecords>tm1,TreeMap<String,ExperimentalRecords>tm2) {
+		
+		int countInCommon=0;
+		double MAE=0;
+
+		DecimalFormat df=new DecimalFormat("0.00");
+
+
+		boolean printValues=false;
+		
+		if(printValues) System.out.println("casrn\tLog10median_1\tLog10median_2\tdiff");
+
+		
+		for (String casrn:tm1.keySet()) {
+			ExperimentalRecords recs1=tm1.get(casrn);
+			
+			if(!tm2.containsKey(casrn))continue;
+			
+			ExperimentalRecords recs2=tm2.get(casrn);
+			
+			if(recs1.medianValue!=null && recs2.medianValue!=null) {
+//				System.out.println(casrn+"\t"+recs1.medianValue+"\t"+recs2.medianValue);	
+				
+				double error=Math.abs(Math.log10(recs1.medianValue)-Math.log10(recs2.medianValue));
+				
+//				if(error>0) {
+//					System.out.println(casrn+"\t"+df.format(Math.log10(recs1.medianValue))+"\t"+df.format(Math.log10(recs2.medianValue))+"\t"+df.format(error));
+//				}
+				
+				if(printValues) {
+					System.out.println(casrn+"\t"+df.format(Math.log10(recs1.medianValue))+"\t"+df.format(Math.log10(recs2.medianValue))+"\t"+df.format(error));					
+				}
+				
+				
+				MAE+=error;
+//				if(printValues)
+				
+				
+
+				countInCommon++;
+				
+			} 
+		}
+		
+		MAE/=countInCommon;
+		
+		System.out.println("Count in common="+countInCommon);
+		System.out.println("MAE="+MAE);
+
+		return MAE;
+		
+	}
+	int getCountWithMedian(TreeMap<String,ExperimentalRecords>tm) {
+		
+		int countWithMedian=0;
+		for (String casrn:tm.keySet()) {
+			ExperimentalRecords recs1=tm.get(casrn);
+			
+			if(recs1.medianValue!=null) countWithMedian++;
+		}
+		return countWithMedian;
+
+	}
+	
+	void setMedianValues(TreeMap<String,ExperimentalRecords> tm, String units) {
+		int count=0;
+		
+		for (String casrn:tm.keySet()) {
+			ExperimentalRecords recs=tm.get(casrn);
+			setMedianValue(recs,units);
+			count+=recs.size();
+		}
+
+	}
+	
+	
+	
+
+	private void setMedianValue(ExperimentalRecords recs,String units) {
+
+		List<Double>vals=new ArrayList<>();
+		
+		for (ExperimentalRecord er:recs) {
+			
+			if(!er.property_value_units_final.equals(units)) continue;
+
+			if(er.property_value_numeric_qualifier!=null) {
+				if (er.property_value_numeric_qualifier.equals("<") || er.property_value_numeric_qualifier.equals(">")) continue;
+			}
+
+			Double val=null;
+				
+			if(er.property_value_max_final!=null && er.property_value_min_final!=null) {
+				val=(er.property_value_max_final+er.property_value_min_final)/2.0;
+			} else if(er.property_value_point_estimate_final!=null) {
+				val=er.property_value_point_estimate_final;
+			} else continue;
+			
+			vals.add(val);
+							
+//			System.out.println(er.property_value_string+"\t"+val);
+		}
+		
+		if (vals.size()>0) {
+			Collections.sort(vals);
+			setMedianValue(recs,vals);
+		}
+	}
+
+	private void setMedianValue(ExperimentalRecords recs, List<Double> vals) {
+		
+//		System.out.println(recs.get(0).casrn+"\t"+vals.size());
+		
+		if(vals.size()%2==0) {// even
+			
+			int middleVal2=vals.size()/2;
+			int middleVal1=middleVal2-1;
+			recs.medianValue=(vals.get(middleVal1)+vals.get(middleVal2))/2.0;
+			
+		} else {//odd
+			int middleVal=vals.size()/2;
+			recs.medianValue=vals.get(middleVal);
+		}
+		
+//		int counter=0;
+//		for (Double val:vals) {
+//			System.out.println(val+"\t"+counter++);
+//		}
+//		System.out.println(recs.get(0).casrn+"\t"+vals.size()+"\t"+recs.medianValue+"\n");
+		
+		
+	}
+
+	private TreeMap<String,ExperimentalRecords> getHashtable(String sourceName,String subfolder, String propertyName,String units) {
+		
+		
+		ExperimentalRecords experimentalRecords = getExperimentalRecords(sourceName, subfolder);
+
+		int totalCount=experimentalRecords.size();
+
+		
+		TreeMap<String, ExperimentalRecords> ht = getTreeMapByCAS(propertyName, units, experimentalRecords);
+		
+		System.out.println(sourceName+"\t"+ht.size()+"\t"+totalCount);
+		
+		return ht;
+	}
+
+	private TreeMap<String, ExperimentalRecords> getTreeMapByCAS(String propertyName, String units,
+			ExperimentalRecords experimentalRecords) {
+		TreeMap<String,ExperimentalRecords>ht=new TreeMap<>();
+		for(ExperimentalRecord er:experimentalRecords) {
+			if(er.casrn==null) continue;
+			if(!er.property_name.contentEquals(propertyName)) continue;
+			if(ht.containsKey(er.casrn)) {
+				ExperimentalRecords recsCAS=ht.get(er.casrn);
+				recsCAS.add(er);
+			} else {
+				ExperimentalRecords recsCAS=new ExperimentalRecords();
+				recsCAS.add(er);
+				ht.put(er.casrn, recsCAS);
+			}
+		}
+		setMedianValues(ht,units);
+		return ht;
+	}
+
+	private ExperimentalRecords getExperimentalRecords(String sourceName, String subfolder) {
+		String folder="data\\experimental\\"+sourceName+"\\";
+		if(subfolder!=null) folder+=subfolder+"\\";
+		String filepath1=folder+sourceName+" Experimental Records.json";
+		ExperimentalRecords experimentalRecords=ExperimentalRecords.loadFromJSON(filepath1);
+		return experimentalRecords;
+	}
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		CompareExperimentalRecords c=new CompareExperimentalRecords();
+//		c.compare("QSAR_Toolbox_ECHA_Reach_Acute_Toxicity", "QSAR_Toolbox_Acute_Toxicity", ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
+		
+//		c.compare("ChemIDplus_2024_12_04", "QSAR_Toolbox_ECHA_Reach_Acute_Toxicity", ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
+		
+		
+//		c.compare("ChemIDplus_2024_12_04", "ChemIDplus", ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
+		
+		
+		c.compareToNIEHS_OralRatLD50();
+//		c.compareREACH_Sources();
+		
+		
+		
+//		c.compare("ChemIDplus_2024_12_04", "NIEHS_ICE_2024_08",null, "Acute oral", ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
+		
+	}
+
+	private void compareToNIEHS_OralRatLD50() {
+		List<Source>sources1=new ArrayList<>();
+		sources1.add(new Source("ChemIDplus_2024_12_04",null));
+//		sources1.add(new Source("QSAR_Toolbox","Acute toxicity ECHA Reach"));
+		sources1.add(new Source("eChemPortalAPI","AcuteToxicityOral"));
+		
+		List<Source>sources2=new ArrayList<>();
+		sources2.add(new Source("NIEHS_ICE_2024_08","Acute oral"));
+		
+		compare(sources1, sources2, ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
+	}
+	
+	private void compareREACH_Sources() {
+		List<Source>sources1=new ArrayList<>();
+		sources1.add(new Source("QSAR_Toolbox","Acute toxicity ECHA Reach"));
+	
+		List<Source>sources2=new ArrayList<>();
+		sources2.add(new Source("eChemPortalAPI","AcuteToxicityOral"));
+		
+		compare(sources1, sources2, ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
+	}
+
+	
+	
+
+}
