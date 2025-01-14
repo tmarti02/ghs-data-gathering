@@ -54,7 +54,6 @@ public class ExperimentalConstants {
 
 
 	
-	public static final String strSkinSensitizationLLNA="SkinSensitizationLLNA";
 	public static final String strEyeIrritation="EyeIrritation";
 	public static final String strEyeCorrosion="EyeCorrosion";
 	public static final String strSkinIrritationPII="SkinIrritationPII";
@@ -67,11 +66,6 @@ public class ExperimentalConstants {
 	public static final String strCACO2 = "Caco-2 permeability (Papp)";//OPERA
 	public static final String strRBIODEG = "Ready biodegradability";//OPERA
 
-	public static final String strORAL_RAT_LD50="Oral rat LD50";//OPERA
-	public static final String strRatOralLD50="rat_oral_LD50";
-	public static final String strInhalationLC50="inhalation_LC50";
-	
-	public static final String strFOUR_HOUR_INHALATION_RAT_LC50="4 hour Inhalation rat LC50";
 	
 
 	
@@ -83,6 +77,7 @@ public class ExperimentalConstants {
 	public static final String str_g_m3="g/m^3";
 	public static final String str_mL_m3="mL/m^3";
 	public static final String str_uL_m3="uL/m^3";
+	public static final String str_uL_L="uL/L";
 	
 	public static final String str_mL_L="mL/L";
 	public static final String str_mg_mL="mg/mL";
@@ -300,8 +295,38 @@ public class ExperimentalConstants {
 	public static final String strViscosity="Viscosity";
 	public static final String strSurfaceTension = "Surface tension";
 	
-	public static final String strAcuteAquaticToxicity = "Acute aquatic toxicity";
 	
+	public static final String strDERMAL_RAT_LD50="Dermal rat LD50";
+	public static final String strDERMAL_MOUSE_LD50="Dermal mouse LD50";
+	public static final String strDERMAL_RABBIT_LD50="Dermal rabbit LD50";
+	
+	public static final String strINTRADERMAL_RABBIT_LD50="Intradermal rabbit LD50";
+	
+	
+	public static final String strORAL_RAT_LD50="Oral rat LD50";
+	public static final String strORAL_MOUSE_LD50="Oral mouse LD50";
+	public static final String strORAL_RABBIT_LD50="Oral rabbit LD50";
+	public static final String strORAL_GUINEA_PIG_LD50="Oral guinea pig";
+	public static final String strRatOralLD50="rat_oral_LD50";
+	
+	public static final String strInhalationLC50="inhalation_LC50";	
+	public static final String strInhalationRatLC50="Inhalation rat LC50";
+	public static final String strInhalationMouseLC50="Inhalation mouse LC50";
+	public static final String strInhalationRabbitLC50="Inhalation rabbit LC50";
+	
+	public static final String strFOUR_HOUR_INHALATION_RAT_LC50="4 hour Inhalation rat LC50";
+
+	
+	public static final String strAcuteAquaticToxicity = "Acute aquatic toxicity";
+	public static final String strAcuteOralToxicity = "Acute oral toxicity";
+	public static final String strAcuteDermalToxicity = "Acute dermal toxicity";
+	public static final String strAcuteInhalationToxicity = "Acute inhalation toxicity";
+	
+	public static final String strSkinSensitizationLLNA="SkinSensitizationLLNA";
+	public static final String strSkinSensitizationLLNA_EC3="SkinSensitizationLLNA EC3";
+	public static final String strSkinSensitizationLLNA_SI="SkinSensitizationLLNA SI";
+	
+
 	
 	
 

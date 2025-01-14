@@ -45,8 +45,9 @@ public class DataRemoveDuplicateExperimentalValues {
 	
 	public void removeDuplicates(ExperimentalRecords records,String sourceName) {		
 		
-		if (sourceName.equals(ExperimentalConstants.strSourceEChemPortal) || sourceName.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
-        	eChemPortalRemoveAllDuplicates(records);
+//		if (sourceName.equals(ExperimentalConstants.strSourceEChemPortal) || sourceName.equals(ExperimentalConstants.strSourceEChemPortalAPI)) {
+		if (sourceName.equals(ExperimentalConstants.strSourceEChemPortal)) {
+			eChemPortalRemoveAllDuplicates(records);
         } else {
         	basicRemoveAllDuplicates(records);
         }
@@ -265,8 +266,14 @@ public class DataRemoveDuplicateExperimentalValues {
 				
 				if(recj.property_value_string_parsed!=null) pvj=recj.property_value_string_parsed;
 				else pvj=recj.property_value_string;
+								
+				boolean matchPropertyValueString=false;
 				
-				boolean matchPropertyValueString=pvi.contentEquals(pvj);
+				if(pvi!=null && pvj!=null) {
+					matchPropertyValueString=pvi.contentEquals(pvj);	
+				}
+				
+				
 				boolean matchPointEstimate = getMatchPointEstimate(print, reci, recj);
 
 				boolean matchUnits=reci.property_value_units_final!=null && recj.property_value_units_final!=null && reci.property_value_units_final==recj.property_value_units_final;
@@ -422,6 +429,16 @@ public class DataRemoveDuplicateExperimentalValues {
 				}
 			}
 		}
+		
+		String q1=reci.property_value_numeric_qualifier+"";
+		String q2=reci.property_value_numeric_qualifier+"";
+		
+		if(!q1.equals(q2)) {
+			System.out.println("Mismatch on qualifier:\t"+q1+"\t"+q2+"\t"+reci.comboID);
+			return false;
+		} 
+		
+		
 		return matchPointEstimate;
 	}
 

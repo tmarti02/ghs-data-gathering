@@ -230,4 +230,23 @@ public class APIConstants {
 	public static final String h="h";
 	public static final String d="d";
 	public static final String wk="wk";
+	
+	
+	// Accepts all participants 
+//	//CCR=101
+	//CHEM=140
+	//IUCLID=580
+	//J-CHECK=60
+	//REACH=1
+//	Integer[] participantsArray = {101,140,580,60,1};//TMM doesnt work anymore
+	
+	
+	//2025-01-14 from https://www.echemportal.org/echemportal/property-search
+	//ECHA REACH=761
+	//OECD SIDS IUCLID=1
+	//J-CHECK=60
+//	//CCR=101
+	// Accepts all participants (CCR, J-CHECK, REACH)
+	public static final Integer[] participantsArray = {60, 101,761,1};
+	
 }

@@ -115,6 +115,38 @@ public class Parse {
 		uc = new UnitConverter("Data" + File.separator + "density.txt");
 	}
 	
+	
+	public void init(String subfolder) {
+		fileNameJSON_Records = sourceName +" Original Records.json";
+		fileNameFlatExperimentalRecords = sourceName +" Experimental Records.txt";
+		fileNameFlatExperimentalRecordsBad = sourceName +" Experimental Records-Bad.txt";
+		fileNameJsonExperimentalRecords = sourceName +" Experimental Records.json";
+		fileNameJsonExperimentalRecordsBad = sourceName +" Experimental Records-Bad.json";
+		fileNameExcelExperimentalRecords = sourceName +" Experimental Records.xlsx";
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HHmm");
+		String timestamp = sdf.format(new Date());
+		fileNameExcelExperimentalRecordsCheck = sourceName +" Experimental Records Check " + timestamp + ".xlsx";
+		
+		String mainFolder2 = "Data" + File.separator + "Experimental" + File.separator + sourceName;
+		webpageFolder = mainFolder2 + File.separator + "web pages";
+		folderNameExcel=mainFolder2 + File.separator + "excel files";
+		databaseFolder = mainFolder2;
+		
+		mainFolder=mainFolder2+File.separator+subfolder;
+		
+		new File(mainFolder).mkdirs();
+		
+		jsonFolder=mainFolder;
+		
+		
+		GsonBuilder builder = new GsonBuilder();
+		builder.setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues();
+		gson = builder.create();
+		
+		uc = new UnitConverter("Data" + File.separator + "density.txt");
+	}
+	
 	/**
 	 * Loads original records from source files and stores as json file in original format
 	 * 

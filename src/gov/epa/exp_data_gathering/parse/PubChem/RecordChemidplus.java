@@ -78,7 +78,7 @@ public class RecordChemidplus {
 			}
 			
 			System.out.println("CIDs to load:"+CIDsToLoad.size());
-			DB_Identifier.loadIdentifiers(100, 10, conn, CIDsToLoad);
+			DB_Identifier.loadIdentifiers(200, 10, conn, CIDsToLoad);
 			
 		} catch (Exception ex) {
 			ex.printStackTrace();

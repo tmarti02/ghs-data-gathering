@@ -29,17 +29,22 @@ public class ParseChemidplus extends Parse {
 		sourceName = ExperimentalConstants.strSourceChemidplus;
 		this.recordTypeToParse = recordTypeToParse;
 		super.init();
-		fileNameSourceExcel=null;
-		folderNameWebpages=null;
-		folderNameExcel=null;
-		String toxNote = recordTypeToParse.toLowerCase().contains("tox") ? " Toxicity" : "";
-		fileNameJSON_Records = sourceName +toxNote + " Original Records.json";
-		fileNameFlatExperimentalRecords = sourceName +toxNote + " Experimental Records.txt";
-		fileNameFlatExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.txt";
-		fileNameJsonExperimentalRecords = sourceName +toxNote + " Experimental Records.json";
-		fileNameJsonExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.json";
-		fileNameExcelExperimentalRecords = sourceName +toxNote + " Experimental Records.xlsx";
+
+		//TMM 2024-01-14 we dont need the physchem predictions so just store tox
+		
+//		fileNameSourceExcel=null;
+//		folderNameWebpages=null;
+//		folderNameExcel=null;
+//		String toxNote = recordTypeToParse.toLowerCase().contains("tox") ? " Toxicity" : "";
+//		
+//		fileNameJSON_Records = sourceName +toxNote + " Original Records.json";
+//		fileNameFlatExperimentalRecords = sourceName +toxNote + " Experimental Records.txt";
+//		fileNameFlatExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.txt";
+//		fileNameJsonExperimentalRecords = sourceName +toxNote + " Experimental Records.json";
+//		fileNameJsonExperimentalRecordsBad = sourceName +toxNote + " Experimental Records-Bad.json";
+//		fileNameExcelExperimentalRecords = sourceName +toxNote + " Experimental Records.xlsx";
 	}
+	
 
 	class UniqueValues {
 		ArrayList<String> needDensity = new ArrayList<>();
@@ -158,11 +163,11 @@ public class ParseChemidplus extends Parse {
 //				System.out.println(er.property_name);
 								
 				if(route.equals("Oral")) {
-					er.property_category="acute oral toxicity";
+					er.property_category=ExperimentalConstants.strAcuteOralToxicity;
 				} if(route.equals("Dermal")) {
-					er.property_category="acute dermal toxicity";
+					er.property_category=ExperimentalConstants.strAcuteDermalToxicity;
 				} else if(route.equals("Inhalation")) {
-					er.property_category="acute inhalation toxicity";
+					er.property_category=ExperimentalConstants.strAcuteInhalationToxicity;
 				}
 
 				
@@ -463,8 +468,13 @@ public class ParseChemidplus extends Parse {
 	public static void main(String[] args) {
 //		ParseChemidplus p = new ParseChemidplus("physchem");
 		ParseChemidplus p = new ParseChemidplus("tox");
+		
+		
 		p.generateOriginalJSONRecords=false;
+		p.howManyOriginalRecordsFiles=1;
+		
 		p.writeExcelExperimentalRecordsFile=true;
+		p.writeExcelFileByProperty=true;
 		p.writeCheckingExcelFile=false;
 		p.createFiles();
 	}

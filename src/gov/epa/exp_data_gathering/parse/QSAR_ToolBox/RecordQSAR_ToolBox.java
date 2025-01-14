@@ -1,0 +1,612 @@
+package gov.epa.exp_data_gathering.parse.QSAR_ToolBox;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Vector;
+import com.google.gson.JsonObject;
+
+import gov.epa.api.ExperimentalConstants;
+import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.UnitConverter;
+
+public class RecordQSAR_ToolBox {
+	
+	public String field0;
+	public String CAS_Number;
+	public String Chemical_name_s;
+	public String SMILES;
+	public String Molecular_formula;
+	public String Predefined_substance_type;
+	public String Additional_Ids;
+	public String Identity;
+	public String CAS_SMILES_relation;
+	public String Comment;
+	public String EndpointPath;
+	public String Database;
+	public String URL;
+	public String Strain;
+	
+	public String Endpoint;
+	public String Endpoint_other;
+
+	public String Test_type;
+	public String Conclusions;
+	public String Reliability;
+	public String Purpose_flag;
+	public String GLP_compliance;
+	public String Test_guideline;
+	public String Study_result_type;
+	public String Applied_transforms;
+	public String Harmonized_Template;
+	public String Qualifier_of_guideline;
+	public String Route_of_administration;
+	public String Test_organisms_species;
+	public String Substance_Test_material_equality;
+	public String APPLICANT_S_SUMMARY_AND_CONCLUSION_executive_summary;
+	public String Assigned_SMILES;
+	
+
+	public String Year;
+	public String Year_0;
+	public String Year_1;
+	public String Year_2;
+	public String Year_3;
+	public String Year_4;
+	public String Year_5;
+	public String Year_6;
+	public String Year_7;
+	public String Year_8;
+	public String Year_9;
+	public String Year_10;
+	public String Year_11;
+	public String Year_12;
+	public String Year_13;
+	public String Year_14;
+	public String Year_15;
+	public String Year_16;
+	public String Year_17;
+	public String Year_18;
+	public String Year_19;
+	
+	public String Title;
+	public String Title_0;
+	public String Title_1;
+	public String Title_2;
+	public String Title_3;
+	public String Title_4;
+	public String Title_5;
+	public String Title_6;
+	public String Title_7;
+	public String Title_8;
+	public String Title_9;
+	public String Title_10;
+	public String Title_11;
+	public String Title_12;
+	public String Title_13;
+	public String Title_14;
+	public String Title_15;
+	public String Title_16;
+	public String Title_17;
+	public String Title_18;
+	public String Title_19;
+
+	public String Strain_other;
+	public String Test_type_other;
+	public String Test_guideline_other;
+
+	public String Bibliographic_source;
+	public String Bibliographic_source_2;
+	public String Bibliographic_source_5;
+	public String Author_s_or_transferred_reference_5;
+
+	
+	public String Author_s_or_transferred_reference_2;
+	public String Type_of_inhalation_exposure;
+	public String Route_of_administration_original;
+	public String Type_of_coverage;
+	public String Author_s_or_transferred_reference;
+	
+	public String Test_guideline_0;
+	public String Test_guideline_1;
+	public String Test_guideline_2;
+	public String Test_guideline_3;
+	public String Test_guideline_4;
+	public String Test_guideline_5;
+
+	public String Test_guideline_other_0;
+	public String Test_guideline_other_1;
+	public String Test_guideline_other_2;
+	public String Test_guideline_other_3;
+	public String Test_guideline_other_4;
+	public String Test_guideline_other_5;
+	public String Test_guideline_6;
+	public String Test_guideline_7;
+		
+	public String Qualifier_of_guideline_0;
+	public String Qualifier_of_guideline_1;
+	public String Qualifier_of_guideline_2;
+	public String Qualifier_of_guideline_3;
+	public String Qualifier_of_guideline_4;
+	public String Qualifier_of_guideline_5;
+	public String Qualifier_of_guideline_6;
+	public String Qualifier_of_guideline_7;
+
+
+	public String TestMaterialIsNull;
+
+	public String Any_other_information_on_results_incl_tables;
+	public String Test_organisms_species_other;
+	public String Type_of_inhalation_exposure_other;
+	public String Route_of_administration_other;
+	public String Type_of_coverage_other;
+	public String Route_of_administration_other_original;
+	
+	public String Duration_MaxQualifier;
+	public String Duration;
+	
+	public String Unit_details;
+	public String Qualifier;
+	public String Value_MeanValue;
+	public String Value_Qualifier;
+	public String Value_Unit;
+	public String Value_Scale;
+	public String Value_MinValue;
+	public String Value_MinQualifier;
+	public String Value_MaxValue;
+	public String Value_MaxQualifier;
+	public String Original_value_MeanValue;
+	public String Original_value_Qualifier;
+	public String Original_value_Unit;
+	public String Original_value_Scale;
+	public String Original_value_MinValue;
+	public String Original_value_MinQualifier;
+	public String Original_value_MaxValue;
+	public String Original_value_MaxQualifier;
+	
+	public String Organ;
+	public String Type_of_method;
+	public String Assay;
+	public String Assay_original;
+	public String Interpretation_Of_Results;
+	public String Interpretation_Of_Results_other;
+	public String Route_Of_Challenge_Exposure;
+	public String Route_Of_Induction_Exposure;
+	public String Assay_other;
+	public String Route_Of_Challenge_Exposure_other;
+	public String Route_Of_Induction_Exposure_other;
+	public String Test_guideline_other_6;
+	public String Test_guideline_other_7;
+	
+	public static final String[] fieldNames = {"field0","CAS_Number","Chemical_name_s","SMILES","Molecular_formula","Predefined_substance_type","Additional_Ids","Identity","CAS_SMILES_relation","Comment","EndpointPath","Database","URL","Strain","Year_0","Year_1","Endpoint","Title_0","Title_1","Test_type","Conclusions","Reliability","Purpose_flag","Strain_other","GLP_compliance","Test_guideline","Test_type_other","Study_result_type","Applied_transforms","Harmonized_Template","Test_guideline_other","Qualifier_of_guideline","Bibliographic_source_0","Bibliographic_source_1","Route_of_administration","Test_organisms_species","Interpretation_of_results","Author_s_or_transferred_reference_0","Author_s_or_transferred_reference_1","Substance_Test_material_equality","Principles_of_method_if_other_than_guideline","Assigned_SMILES","Qualifier","Year","Title","Bibliographic_source","Type_of_inhalation_exposure","Route_of_administration_original","Author_s_or_transferred_reference","Interpretation_of_results_other","Year_2","Title_2","Bibliographic_source_2","Author_s_or_transferred_reference_2","Test_guideline_0","Test_guideline_1","Test_guideline_2","Qualifier_of_guideline_0","Qualifier_of_guideline_1","Qualifier_of_guideline_2","Type_of_coverage","Unit_details","Endpoint_other","Any_other_information_on_results_incl_tables","Test_organisms_species_other","APPLICANT_S_SUMMARY_AND_CONCLUSION_executive_summary","Test_guideline_other_2","Test_guideline_3","Qualifier_of_guideline_3","Type_of_inhalation_exposure_other","Route_of_administration_other","Type_of_coverage_other","TestMaterialIsNull","Route_of_administration_other_original","Year_3","Title_3","Test_guideline_other_1","Bibliographic_source_3","Author_s_or_transferred_reference_3","Test_guideline_other_0","Year_4","Title_4","Bibliographic_source_4","Author_s_or_transferred_reference_4","Year_5","Title_5","Bibliographic_source_5","Author_s_or_transferred_reference_5","Test_guideline_other_3","Year_6","Title_6","Bibliographic_source_6","Author_s_or_transferred_reference_6","Year_7","Year_8","Year_9","Title_7","Title_8","Title_9","Year_10","Title_10","Bibliographic_source_7","Bibliographic_source_8","Bibliographic_source_9","Bibliographic_source_10","Author_s_or_transferred_reference_7","Author_s_or_transferred_reference_8","Author_s_or_transferred_reference_9","Author_s_or_transferred_reference_10","Year_11","Title_11","Bibliographic_source_11","Author_s_or_transferred_reference_11","Year_12","Year_13","Year_14","Year_15","Year_16","Year_17","Year_18","Year_19","Title_12","Title_13","Title_14","Title_15","Title_16","Title_17","Title_18","Title_19","Bibliographic_source_12","Bibliographic_source_13","Bibliographic_source_14","Bibliographic_source_15","Bibliographic_source_16","Bibliographic_source_17","Bibliographic_source_18","Bibliographic_source_19","Author_s_or_transferred_reference_12","Author_s_or_transferred_reference_13","Author_s_or_transferred_reference_14","Author_s_or_transferred_reference_15","Author_s_or_transferred_reference_16","Author_s_or_transferred_reference_17","Author_s_or_transferred_reference_18","Author_s_or_transferred_reference_19","Test_guideline_4","Test_guideline_5","Test_guideline_other_4","Test_guideline_other_5","Qualifier_of_guideline_4","Qualifier_of_guideline_5","Duration_MeanValue","Duration_Qualifier","Duration_Unit","Duration_Scale","Duration_MinValue","Duration_MinQualifier","Duration_MaxValue","Duration_MaxQualifier","Duration","Value_MeanValue","Value_Qualifier","Value_Unit","Value_Scale","Value_MinValue","Value_MinQualifier","Value_MaxValue","Value_MaxQualifier","Original_value_MeanValue","Original_value_Qualifier","Original_value_Unit","Original_value_Scale","Original_value_MinValue","Original_value_MinQualifier","Original_value_MaxValue","Original_value_MaxQualifier","Organ","Type_of_method","Assay","Assay_original","Interpretation_Of_Results","Interpretation_Of_Results_other","Route_Of_Challenge_Exposure","Route_Of_Induction_Exposure","Assay_other","Route_Of_Challenge_Exposure_other","Route_Of_Induction_Exposure_other","Test_guideline_6","Test_guideline_7","Test_guideline_other_6","Test_guideline_other_7","Qualifier_of_guideline_6","Qualifier_of_guideline_7"};
+
+	
+	
+	public String lastUpdated;
+
+//	public static final String[] fieldNames = {"field0","CAS_Number","Chemical_name_s","SMILES","Molecular_formula","Predefined_substance_type","Additional_Ids","Identity","CAS_SMILES_relation","Comment","EndpointPath","Database","URL","Year","Title","Strain","Endpoint","Test_type","Conclusions","Reliability","Purpose_flag","GLP_compliance","Test_guideline","Study_result_type","Applied_transforms","Harmonized_Template","Qualifier_of_guideline","Route_of_administration","Test_organisms_species","Substance_Test_material_equality","APPLICANT_S_SUMMARY_AND_CONCLUSION_executive_summary","Assigned_SMILES","Qualifier","Year_0","Year_1","Title_0","Title_1","Strain_other","Test_type_other","Test_guideline_other","Year_2","Title_2","Bibliographic_source_2","Author_s_or_transferred_reference_2","Type_of_inhalation_exposure","Route_of_administration_original","Type_of_coverage","Bibliographic_source","Author_s_or_transferred_reference","Unit_details","Test_guideline_0","Test_guideline_1","Test_guideline_2","Test_guideline_other_2","Qualifier_of_guideline_0","Qualifier_of_guideline_1","Qualifier_of_guideline_2","TestMaterialIsNull","Test_guideline_3","Qualifier_of_guideline_3","Any_other_information_on_results_incl_tables","Test_organisms_species_other","Endpoint_other","Test_guideline_other_3","Type_of_inhalation_exposure_other","Route_of_administration_other","Type_of_coverage_other","Route_of_administration_other_original","Year_3","Year_4","Title_3","Title_4","Year_5","Title_5","Bibliographic_source_5","Author_s_or_transferred_reference_5","Test_guideline_other_1","Test_guideline_other_0","Year_6","Title_6","Year_7","Year_8","Year_9","Title_7","Title_8","Title_9","Year_10","Title_10","Year_11","Title_11","Year_12","Year_13","Year_14","Year_15","Year_16","Year_17","Year_18","Year_19","Title_12","Title_13","Title_14","Title_15","Title_16","Title_17","Title_18","Title_19","Test_guideline_4","Test_guideline_5","Test_guideline_other_4","Test_guideline_other_5","Qualifier_of_guideline_4","Qualifier_of_guideline_5","Duration_MaxQualifier","Duration","Value_MeanValue","Value_Qualifier","Value_Unit","Value_Scale","Value_MinValue","Value_MinQualifier","Value_MaxValue","Value_MaxQualifier","Original_value_MeanValue","Original_value_Qualifier","Original_value_Unit","Original_value_Scale","Original_value_MinValue","Original_value_MinQualifier","Original_value_MaxValue","Original_value_MaxQualifier"};
+
+
+	public static String sourceName = "QSAR_ToolBox";
+	
+	private static final transient UnitConverter unitConverter = new UnitConverter("data/density.txt");
+
+	
+	
+	private void setIdentifiers(ExperimentalRecord er) {
+		if(this.CAS_Number!=null && !this.CAS_Number.contentEquals("No CAS number") && !this.CAS_Number.contains("Missing")) {
+			er.casrn=this.CAS_Number;	
+		}
+		
+		er.chemical_name=this.Chemical_name_s;
+		
+		if(er.chemical_name!=null && er.chemical_name.contains("Missing")) {
+			er.chemical_name=null;
+		}
+		
+		er.synonyms=this.Chemical_name_s;
+		if(er.chemical_name!=null && er.chemical_name.contains(";")) {
+			String []names=er.chemical_name.split(";");
+			er.chemical_name=names[0];//use first name otherwise we wont have chemreg match
+		}
+		
+		
+		if (this.Additional_Ids!=null && this.Additional_Ids.contains("DTXSID :")) {
+			
+			String [] ids=this.Additional_Ids.split(";");
+			
+			for (String id:ids) {
+				if(id.contains("DTXSID")) {
+					er.dsstox_substance_id="DTXSID"+id.substring(id.indexOf(":")+1,id.length());
+//					System.out.println(er.chemical_name+"\t"+id+"\t"+er.dsstox_substance_id);
+				}
+			}
+			
+		}
+		
+		if(er.casrn==null && er.chemical_name==null) {
+			er.keep=false;
+			er.reason="No chemical identifiers";
+		}
+	}
+	
+	public ExperimentalRecord toExperimentalRecord(String originalSourceName) {
+		ExperimentalRecord er=new ExperimentalRecord();
+		
+		er.source_name="QSAR_Toolbox";
+		er.original_source_name=originalSourceName;
+		
+//		if(sourceName.equals("QSAR_Toolbox_ECHA_Reach_Acute_Toxicity") && Database!=null && !Database.equals("ECHA REACH")) {
+//			System.out.println("Database="+Database);
+//		}
+//		if(sourceName.equals("QSAR_Toolbox_Acute_Toxicity") && Database!=null && !Database.equals("ECHA REACH")) {
+//			System.out.println("Database="+Database);
+//		}
+
+				
+		setPropertyName(er); 
+		setIdentifiers(er);
+//			System.out.println(this.Harmonized_Template+"\t"+this.Test_organisms_species+"\t"+this.Test_organisms_species_other);
+		
+		setUnits(er);
+		setPropertyValues(er);
+		
+		
+		
+//		if(er.url!=null && !er.url.contains("http")) {
+//			System.out.println("url:\t"+URL);
+//		}
+		
+		er.experimental_parameters=new Hashtable<>();
+		
+		
+//		er.experimental_parameters.put("Guidelines", this.Qualifier_of_guideline+" "+this.gui);
+
+		
+		if (Test_organisms_species!=null)
+			er.experimental_parameters.put("species", this.Test_organisms_species);
+		
+		if(this.Reliability==null || this.Reliability.contains("3") || this.Reliability.contains("4")) {
+			er.keep=false;
+			er.reason="Insufficient reliability";
+		}
+		
+		
+		if(this.Strain!=null) er.experimental_parameters.put("Strain",this.Strain);
+
+		setGuidelines(er);
+		
+		er.url=this.URL;
+		
+		if(er.property_category!=null) {
+			unitConverter.convertRecord(er);
+		}
+		
+		er.date_accessed=lastUpdated;
+		
+		// TODO Auto-generated method stub
+		return er;
+	}
+
+	private void setGuidelines(ExperimentalRecord er) {
+		List<String>guidelines=new ArrayList<>();
+		List<String>guidelineQualifiers=new ArrayList<>();
+		
+		
+		if(this.Test_guideline!=null) {
+			guidelines.add(this.Test_guideline);
+			guidelineQualifiers.add(this.Qualifier_of_guideline);
+		}
+		if(this.Test_guideline_0!=null) {
+			guidelines.add(this.Test_guideline_0);
+			guidelineQualifiers.add(this.Qualifier_of_guideline_0);
+		}
+		if(this.Test_guideline_1!=null) {
+			guidelines.add(this.Test_guideline_1);
+			guidelineQualifiers.add(this.Qualifier_of_guideline_1);
+		}
+		if(this.Test_guideline_2!=null) {
+			guidelines.add(this.Test_guideline_2);
+			guidelineQualifiers.add(this.Qualifier_of_guideline_2);
+		}
+		if(this.Test_guideline_3!=null) {
+			guidelines.add(this.Test_guideline_3);
+			guidelineQualifiers.add(this.Qualifier_of_guideline_3);
+		}
+		if(this.Test_guideline_4!=null) {
+			guidelines.add(this.Test_guideline_4);
+			guidelineQualifiers.add(this.Qualifier_of_guideline_4);
+		}
+		
+		if(this.Test_guideline_5!=null) {
+			guidelines.add(this.Test_guideline_5);
+			guidelineQualifiers.add(this.Qualifier_of_guideline_5);
+		}
+		
+		if(this.Test_guideline_6!=null) {
+			guidelines.add(this.Test_guideline_6);
+			guidelineQualifiers.add(this.Qualifier_of_guideline_6);
+		}
+		
+		if(this.Test_guideline_7!=null) {
+			guidelines.add(this.Test_guideline_7);
+			guidelineQualifiers.add(this.Qualifier_of_guideline_7);
+		}
+
+		
+		
+		//TODO use all the various guideline and qualifier fields to assemble all the guidelines into one string...
+		//TODO set keep = false if none of the guidelines are a good guideline
+				
+		String strGuidelinesQualifiers = "";
+		for (int g = 0; g < guidelines.size(); g++) {
+			if (g > 0) strGuidelinesQualifiers += "; "; 
+			if(guidelineQualifiers.get(g)!=null && guidelineQualifiers.get(g).trim().length()>0) {
+				strGuidelinesQualifiers += guidelineQualifiers.get(g) + " ";
+			}
+			strGuidelinesQualifiers +=guidelines.get(g);
+		}
+				
+//		if(strGuidelinesQualifiers.contains(";")) {
+//			System.out.println(strGuidelinesQualifiers);
+//		}
+		
+		if(strGuidelinesQualifiers!=null && strGuidelinesQualifiers.length()>0) {
+			er.experimental_parameters.put("Guideline", strGuidelinesQualifiers);
+		}
+		checkLLNA_Guideline(er, strGuidelinesQualifiers);
+		
+	}
+	
+	
+	private void checkLLNA_Guideline(ExperimentalRecord er, String strGuidelinesQualifiers) {
+
+//		List<String> badGuidelines = Arrays.asList("according to guideline other:", "according to guideline other: as below", "according to guideline other: as per mentioned below",
+//				"according to guideline other: LLNA assay", "according to guideline other: The objective of the study was to evaluate the utility of the LLNA assay to determine the contact sensitization potential of the test chemical",
+//				"according to guideline other: Sensitive mouse lymph node assay (SLNA)", "according to guideline other: The objective of the study was to evaluate the utility of the LLNA assay to determine the contact sensitization potential of the test chemical",
+//				"equivalent or similar to guideline other: according to Ulrich, P. et al. 1998: Toxicology 125, 149-168", "equivalent or similar to guideline other: As mentioned below", " equivalent or similar to guideline other: Kimber et al., 1989");
+		
+		List<String> goodGuidelines = Arrays.asList("429", "870.2600", "B.42", "442A", "442B","442 B", "B.51", "406", "595.12", "B.6");
+
+		
+//		if(er.casrn!=null && er.casrn.equals("127-51-5")) {
+//			System.out.println(gson.toJson(this)+"\r\n");
+//			System.out.println(gson.toJson(er));
+//		}
+		
+		if(er.keep) {
+			if(!hasString(goodGuidelines, strGuidelinesQualifiers)){
+				
+				if(er.casrn!=null && er.casrn.equals("127-51-5")) {
+					System.out.println("here3\t"+er.casrn+"\t"+er.keep+"\t"+"Invalid guideline has reliability=" +er.experimental_parameters.get("Reliability"));
+				}
+				
+//				System.out.println(er.casrn+"\t"+er.keep+"\t"+"Invalid guideline has reliability=" +er.experimental_parameters.get("Reliability"));
+				
+				System.out.println(er.property_name+"\t"+strGuidelinesQualifiers);
+				er.keep=false;
+				er.reason="Invalid guideline";	
+			}
+		}
+		
+	}
+	
+	boolean hasString(List<String>examples,String str) {
+		for(String example:examples ) {
+			if(str.contains(example)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
+	private void setPropertyValues(ExperimentalRecord er) {
+		
+		
+		if(this.Value_MinValue!=null && this.Original_value_MaxValue!=null) {
+			er.property_value_min_original=Double.parseDouble(this.Value_MinValue);
+			er.property_value_max_original=Double.parseDouble(this.Value_MaxValue);
+			
+			er.property_value_string=er.property_value_min_original+" - "+er.property_value_max_original;
+			
+//			System.out.println(er.property_value_min_original+"\t"+er.property_value_max_original);
+			
+		} else if(this.Value_MinValue!=null) {
+			er.property_value_min_original=Double.parseDouble(this.Value_MinValue);
+			er.property_value_string="> "+er.property_value_min_original;
+//			System.out.println(er.property_value_min_original);
+			
+		} else if(this.Value_MaxValue!=null) {
+			er.property_value_max_original=Double.parseDouble(this.Value_MaxValue);
+//			System.out.println(er.property_value_max_original);
+			er.property_value_string="< "+er.property_value_max_original;
+			
+		} else if(this.Value_MeanValue!=null) {
+
+			er.property_value_point_estimate_original=Double.parseDouble(this.Value_MeanValue);
+			
+			er.property_value_string="";
+			
+			if(this.Qualifier!=null) {
+				
+				if (Qualifier.contentEquals("No qualifier")) {
+					er.property_value_numeric_qualifier="";
+				} else if(Qualifier.equals("ca.")) {
+					er.property_value_numeric_qualifier="~";
+//					System.out.println("here:"+er.property_value_numeric_qualifier.length());
+				} else if (Qualifier.contentEquals("?")) {
+					er.property_value_numeric_qualifier="?";
+					er.keep=false;
+					er.reason="Unknown numeric qualifier";
+				} else if (Qualifier.contentEquals(">")) {
+					er.property_value_numeric_qualifier=">";
+				} else if (Qualifier.contentEquals("<")) {
+					er.property_value_numeric_qualifier="<";
+				} else {
+					System.out.println("Unhandled qualifier:\t"+this.Qualifier);	
+				}
+				
+//					System.out.println("here:"+er.property_value_numeric_qualifier);				
+				if(er.property_value_numeric_qualifier.length()>0)
+					er.property_value_string+=er.property_value_numeric_qualifier+ " ";
+				 
+			}
+			er.property_value_string+=er.property_value_point_estimate_original;
+		} 
+			
+			
+				
+		if(er.property_value_string!=null && er.property_value_units_original!=null) {
+			er.property_value_string+=" "+er.property_value_units_original;
+		}
+		
+		if(er.property_value_string==null) {
+			er.keep=false;
+			er.reason="No property_value_string";
+		}
+		
+	}
+
+	private void setUnits(ExperimentalRecord er) {
+		if (this.Value_Unit!=null) {
+			
+			String units=this.Value_Unit;
+			units=units.replace(", (5.8 mg/L air)", "");
+			units=units.replace("(22,948 mg/m3, 23 mg/L nominal)", "");
+			units=units.replace("(5300 mg/m3, 5.3 mg/L)", "");
+			units=units.replace("(4500 mg/kg bw)", "");
+			 			
+			units=units.replace("(analytical)", "");
+			units=units.replace("(nominal)", "");
+			
+			units=units.replace("mg/Kg", ExperimentalConstants.str_mg_kg);
+			
+			units=units.replace("mL/kg bw", ExperimentalConstants.str_mL_kg);
+			units=units.replace("ul/kg bw", ExperimentalConstants.str_uL_kg);
+			units=units.replace("µl/kg bw", ExperimentalConstants.str_uL_kg);
+						
+			units=units.replace("cm3/kg bw", ExperimentalConstants.str_mL_kg);
+			units=units.replace("cc/kg", ExperimentalConstants.str_mL_kg);
+			
+			units=units.replace("mg/L air", ExperimentalConstants.str_mg_L);
+			units=units.replace("mg/L in drinking water", ExperimentalConstants.str_mg_L);
+
+			units=units.replace("µl/L air", ExperimentalConstants.str_uL_L);
+			
+			units=units.replace("mg/m^3 air", ExperimentalConstants.str_mg_m3);
+			units=units.replace("mg/m3", ExperimentalConstants.str_mg_m3);			
+
+			units=units.replace("gm/kg bw", ExperimentalConstants.str_g_kg);			
+			units=units.replace("g/kg/ bw", ExperimentalConstants.str_g_kg);			
+			units=units.replace("g/Kg", ExperimentalConstants.str_g_kg);
+			units=units.replace("g/kg bw.", ExperimentalConstants.str_g_kg);
+			units=units.replace("g/kg/bw", ExperimentalConstants.str_g_kg);
+						
+			units=units.replace("g/m3 air", ExperimentalConstants.str_g_m3);
+									
+			er.property_value_units_original=units.trim();
+			
+		} else {
+			er.keep=false;
+			er.reason="Missing units";
+		}
+	}
+
+	private void setPropertyName(ExperimentalRecord er) {
+		
+		
+		if (this.Harmonized_Template==null) {
+			er.property_name="Not set";
+			er.keep=false;
+			er.reason="Missing Harmonized_Template";
+		} else if(this.Harmonized_Template.equals("SkinSensitisation")) {
+
+			if(this.Endpoint!=null && this.Endpoint.equals("EC3")) {
+				er.property_name=ExperimentalConstants.strSkinSensitizationLLNA_EC3;
+			} if(this.Endpoint_other!=null && this.Endpoint_other.equals("stimulation index")) {
+				er.property_name=ExperimentalConstants.strSkinSensitizationLLNA_SI;
+			}
+			
+//			System.out.println(this.CAS_Number+"\tSkinSensitization\t"+this.Endpoint_other);
+			
+		
+		
+		} else if (this.Test_organisms_species==null) {
+			er.property_name="Not set";
+			er.keep=false;
+			er.reason="Missing Test_organisms_species";
+
+		} else if (this.Endpoint_other!=null && !this.Harmonized_Template.equals("SkinSensitisation")) {
+			er.keep=false;
+			er.reason="Property not handled";
+			er.property_name=Harmonized_Template.replace("AcuteToxicity", "")+" "+Test_organisms_species+" "+this.Endpoint_other;
+
+		} else if(this.Harmonized_Template.equals("AcuteToxicityOral")) {
+
+			if(this.Test_organisms_species.equals("rat")) {
+				er.property_name=ExperimentalConstants.strORAL_RAT_LD50;
+			} else if(this.Test_organisms_species.equals("mouse")) {
+				er.property_name=ExperimentalConstants.strORAL_MOUSE_LD50;
+			} else if(this.Test_organisms_species.equals("rabbit")) {
+				er.property_name=ExperimentalConstants.strORAL_RABBIT_LD50;
+			} else {
+//				System.out.println("oral\t"+this.Harmonized_Template+"\t"+this.Test_organisms_species+"\t"+this.Test_organisms_species_other);
+			}
+			
+			er.property_category=ExperimentalConstants.strAcuteOralToxicity;
+			
+
+		} else if(this.Harmonized_Template.equals("AcuteToxicityInhalation")) {
+			if(this.Test_organisms_species.equals("rat")) {
+				er.property_name=ExperimentalConstants.strInhalationRatLC50;
+			} else if(this.Test_organisms_species.equals("mouse")) {
+				er.property_name=ExperimentalConstants.strInhalationMouseLC50;
+			} else if(this.Test_organisms_species.equals("rabbit")) {
+				er.property_name=ExperimentalConstants.strInhalationRabbitLC50;
+			} else {
+//				System.out.println("inhalation\t"+this.Harmonized_Template+"\t"+this.Test_organisms_species+"\t"+this.Test_organisms_species_other);
+			}
+			
+			er.property_category=ExperimentalConstants.strAcuteInhalationToxicity;
+			
+		} else if(this.Harmonized_Template.equals("AcuteToxicityDermal")) {
+			if (this.Test_organisms_species.equals("rat")) {
+				er.property_name=ExperimentalConstants.strDERMAL_RAT_LD50;
+			} else if(this.Test_organisms_species.equals("mouse")) {
+				er.property_name=ExperimentalConstants.strDERMAL_MOUSE_LD50;
+			} else if(this.Test_organisms_species.equals("rabbit")) {
+				er.property_name=ExperimentalConstants.strDERMAL_RABBIT_LD50;
+			} else {
+//				System.out.println("dermal\t"+this.Harmonized_Template+"\t"+this.Test_organisms_species+"\t"+this.Test_organisms_species_other);
+				
+			}
+			er.property_category=ExperimentalConstants.strAcuteDermalToxicity;
+		}
+
+		if(er.property_name==null) {
+			er.property_name="Not set";
+			er.keep=false;
+			er.reason="Property name not set";
+		}
+		
+		
+//		if(this.Endpoint_other!=null && this.Endpoint_other.equals("stimulation index")) {
+//			System.out.println(er.property_name);
+//		}
+		
+	}
+	
+	public static Vector<JsonObject> parseQSAR_ToolBoxRecordsFromExcel(String fileName,String sourceName) {
+		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
+		esr.headerRowNum=2;
+		
+		
+		Vector<JsonObject> records = esr.parseRecordsFromExcel(2); // TODO Chemical name index guessed from header. Is this accurate?
+		return records;
+	}
+
+}

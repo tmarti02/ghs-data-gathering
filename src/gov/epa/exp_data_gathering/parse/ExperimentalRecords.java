@@ -57,6 +57,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	
 	public static final String tableName = "ExperimentalRecords";
 
+	public Double medianValue=null;
 
 	public ExperimentalRecords() { }
 	
@@ -542,14 +543,24 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 					
 					if (headers.get(i).contentEquals("url")) {
 						String strValue = (String) value;
+						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
+
+						
 						Cell cell = row.createCell(i);     						
 						Hyperlink href = wb.getCreationHelper().createHyperlink(HyperlinkType.URL);
-						href.setAddress(strValue);
-						cell.setHyperlink(href);
-						cell.setCellStyle(styleURL);
 						
-						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
+//						System.out.println(strValue);
+						
 						cell.setCellValue(strValue);
+						
+						try {
+							href.setAddress(strValue);
+							cell.setHyperlink(href);
+							cell.setCellStyle(styleURL);
+						} catch (Exception ex) {
+//							System.out.println("Invalid url:\t"+strValue);
+						}
+						
 
 					} else if (!(value instanceof Double)) { 
 
@@ -605,7 +616,9 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		Collections.sort(params);
 		
 		for (String param:params) {
-			fieldNames.add("exp_param_"+param);
+			if(!fieldNames.contains("exp_param_"+param)) {
+				fieldNames.add("exp_param_"+param);	
+			}
 //			System.out.println(fieldNames.get(fieldNames.size()-1));
 		}
 		

@@ -829,6 +829,8 @@ public class RecordPubChem {
 
 		er.property_name = standardizePropertyName(propertyName);
 		
+//		System.out.println(er.property_name);
+		
 		er.property_value_string = propertyValue;
 		er.source_name = RecordPubChem.sourceName;
 
@@ -1015,11 +1017,20 @@ public class RecordPubChem {
 		} else if (er.property_name.contains("LD50") || er.property_name.contains("LC50")) {
 			
 			if(er.property_name.contains("Oral")) {
-				er.property_category="acute oral toxicity";
+//				er.property_category="acute oral toxicity";
+				er.property_category=ExperimentalConstants.strAcuteOralToxicity;
 //				System.out.println(er.property_name+"\t"+er.property_category);
 				foundNumeric=ParseUtilities.getToxicity(er,this.propertyValue);
+			
+			} else if(er.property_name.contains("Dermal")) {
+
+				er.property_category=ExperimentalConstants.strAcuteDermalToxicity;
+//				System.out.println(er.property_name+"\t"+er.property_category);
+				foundNumeric=ParseUtilities.getToxicity(er,this.propertyValue);
+
+			
 			} else if(er.property_name.contains("Inhalation")) {
-				er.property_category="acute inhalation toxicity";
+				er.property_category=ExperimentalConstants.strAcuteInhalationToxicity;
 //				System.out.println(er.property_name+"\t"+er.property_category);
 				ToxicityRecord tr=new ToxicityRecord();			
 				tr.NormalizedDose=this.propertyValue;

@@ -89,18 +89,22 @@ public class ParseChemidplus extends Parse {
 	public static void main(String[] args) {
 		ParseChemidplus p = new ParseChemidplus();
 		
-		p.generateOriginalJSONRecords=false;
+		p.generateOriginalJSONRecords=true;
 		p.removeDuplicates=true;
 
-		p.writeJsonExperimentalRecordsFile=false;
+		p.writeJsonExperimentalRecordsFile=true;
 		p.writeExcelExperimentalRecordsFile=true;
 		p.writeExcelFileByProperty=true;		
 		p.writeCheckingExcelFile=false;//creates random sample spreadsheet
 		
-//		p.selectedHeadings=null;
-		p.selectedPropertyNames=Arrays.asList("Oral rat LD50");
-//		p.selectedPropertyNames=Arrays.asList("Inhalation rat LC50");
-
+		p.selectedPropertyNames=Arrays.asList(
+				ExperimentalConstants.strINTRADERMAL_RABBIT_LD50,ExperimentalConstants.strDERMAL_RAT_LD50, 
+				ExperimentalConstants.strInhalationMouseLC50,ExperimentalConstants.strInhalationRatLC50, 
+				ExperimentalConstants.strORAL_MOUSE_LD50, ExperimentalConstants.strORAL_RAT_LD50);
+		
+		
+//		p.selectedPropertyNames=Arrays.asList(ExperimentalConstants.strORAL_RAT_LD50);
+		
 		p.createFiles();
 
 	}
