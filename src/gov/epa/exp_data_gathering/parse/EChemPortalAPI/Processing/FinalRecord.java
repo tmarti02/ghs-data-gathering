@@ -378,7 +378,7 @@ public class FinalRecord {
 						
 		if(this.propertyName.equals("AcuteToxicityOral") && valueType.contains("LD50")) {
 			er.property_category=ExperimentalConstants.strAcuteOralToxicity;
-			
+			checkLD50_Guideline(er,strGuidelinesQualifiers);
 			if(isSpecies("rat",species,valueType)) {
 				er.property_name=ExperimentalConstants.strORAL_RAT_LD50;
 			} else if(isSpecies("mouse",species,valueType))  {
@@ -516,8 +516,6 @@ public class FinalRecord {
 			
 			//TODO add code to set keep to false if has a guideline that we cant match back to leora OECD ones. Some EPA ones have matching OECD guidelines
 			checkLLNA_Guideline(er,strGuidelinesQualifiers);
-			
-			
 		} else {
 			er.keep=false;
 			er.reason="";
@@ -596,7 +594,13 @@ public class FinalRecord {
 		return er;
 	}
 	
-	
+
+	/**
+	 * Checks the guidelines for SkinSensitization-LLNA to ensure the data was tested properly. OECD guidelines 429 (equivalent to EPPA OPPTS 870.2600/EU Method B.42/SPL Standard Test Method 595.12) and 442B (equivalent to EU Method B.51) were used in the STopTox paper (Borba et al.) along with 442A.
+	 * 
+	 * @param er
+	 * @param strGuidelinesQualifiers
+	 */
 	private void checkLLNA_Guideline(ExperimentalRecord er, String strGuidelinesQualifiers) {
 
 //		List<String> badGuidelines = Arrays.asList("according to guideline other:", "according to guideline other: as below", "according to guideline other: as per mentioned below",
@@ -604,7 +608,7 @@ public class FinalRecord {
 //				"according to guideline other: Sensitive mouse lymph node assay (SLNA)", "according to guideline other: The objective of the study was to evaluate the utility of the LLNA assay to determine the contact sensitization potential of the test chemical",
 //				"equivalent or similar to guideline other: according to Ulrich, P. et al. 1998: Toxicology 125, 149-168", "equivalent or similar to guideline other: As mentioned below", " equivalent or similar to guideline other: Kimber et al., 1989");
 		
-		List<String> goodGuidelines = Arrays.asList("429", "870.2600", "B.42", "442A", "442B","442 B", "B.51", "406", "595.12", "B.6");
+		List<String> goodGuidelines = Arrays.asList("429", "870.2600", "B.42", "442A", "442B","442 B", "B.51", "595.12");
 
 		
 //		if(er.casrn!=null && er.casrn.equals("127-51-5")) {
@@ -623,10 +627,29 @@ public class FinalRecord {
 				er.keep=false;
 				er.reason="Invalid guideline";	
 			}
-		}
+		}	
+	}
+	
+	
+	/**
+	 * Checks the guidelines for oral rat LD50 to ensure the data was tested properly. OECD guidelines 420,423,425 were used in the CATMOS project and are equivalent to EPA OPPTS 870.1100 which was built from EPA OPPTS 798.1175/EPA 81-1. OECD 401/EU Method B.1 were not used in the CATMOS paper, but were found to be useful as well.
+	 * 
+	 * @param er
+	 * @param strGuidelinesQualifiers
+	 */
+	private void checkLD50_Guideline(ExperimentalRecord er, String strGuidelinesQualifiers) {
 		
+		List<String> goodGuidelines = Arrays.asList("423","420", "425", "870.1100", "798.1175", "81-1", "401", "B.1", "B1");
 		
-		
+		if(er.keep) {
+			if(!hasString(goodGuidelines, strGuidelinesQualifiers)){
+				er.keep=false;
+				er.reason="Invalid guideline";	
+			} else if(strGuidelinesQualifiers.contains("no guideline")){
+				er.keep=false;
+				er.reason="Invalid guideline";
+			}
+		}	
 	}
 
 	boolean hasString(List<String>examples,String str) {
