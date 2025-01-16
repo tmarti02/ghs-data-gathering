@@ -96,7 +96,13 @@ public class RecordNIEHS_ICE_2024_08 {
 			er.property_value_point_estimate_original=Double.parseDouble(Response);
 			er.property_value_units_original=Response_Unit;
 			er.property_value_numeric_qualifier=Response_Modifier;
+			
+			if(er.property_value_point_estimate_original!=null)
+				unitConverter.convertRecord(er);
+
 		}
+		
+
 	}
 	
 	
@@ -123,8 +129,29 @@ public class RecordNIEHS_ICE_2024_08 {
 		er.source_name=sourceName;
 		er.synonyms=this.Synonyms;
 		er.dsstox_substance_id=this.DTXSID;
+
+		if(this.Mixture.equals("Mixture")) {
+			er.keep=false;
+			er.reason="Mixture";
+		} else {
+//			System.out.println(Mixture);
+		}
+				
+		setSources(er);
+		setPropertyName(er);
+		setPropertyValues(er);
+				
+		er.date_accessed=this.lastUpdated;
 		
 		
+		if(this.Sex!=null) er.experimental_parameters.put("Sex",this.Sex);
+		
+		//TODO Auto-generated method stub
+		return er;
+	}
+
+
+	private void setSources(ExperimentalRecord er) {
 		if(this.Reference!=null) {
 			
 			if (URL!=null) {
@@ -133,7 +160,7 @@ public class RecordNIEHS_ICE_2024_08 {
 				er.publicSourceOriginal.url=this.URL;
 			}
 			
-			if(Reference.contains(";")) {
+			if(Reference.contains(";")) {//TODO it can also have a | delimiter and have 2 sets of values
 				//For skin sens, Reference is usually a literature source:
 //				Arfsen et al. 2006; 16980244; 10.1080/15569520600860306    (brief citation; pubmedid ; doi)
 				
@@ -145,27 +172,6 @@ public class RecordNIEHS_ICE_2024_08 {
 			
 			
 		}
-		
-		
-		er.date_accessed=this.lastUpdated;
-		
-		if(this.Mixture.equals("Mixture")) {
-			er.keep=false;
-			er.reason="Mixture";
-		} else {
-//			System.out.println(Mixture);
-		}
-		setPropertyName(er);
-		setPropertyValues(er);
-		
-		if(er.property_value_point_estimate_original!=null)
-			unitConverter.convertRecord(er);
-
-		
-		if(this.Sex!=null) er.experimental_parameters.put("Sex",this.Sex);
-		
-		//TODO Auto-generated method stub
-		return er;
 	}
 
 }
