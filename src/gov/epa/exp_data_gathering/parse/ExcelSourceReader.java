@@ -404,9 +404,10 @@ public class ExcelSourceReader {
 						content = getContent(setBlankToNull, evaluator, cell);
 					}
 					
-					if(content.contentEquals("filtered out")) content=null;
+					if(content!=null && content.contentEquals("filtered out")) content=null;
 
 				} catch (Exception ex) {
+					ex.printStackTrace();
 					System.out.println("Error parsing for col " + k + "\tfor row " + i);
 				}
 
@@ -459,6 +460,8 @@ public class ExcelSourceReader {
 				if (setBlankToNull)
 					content = null;
 			}
+		} else {
+			System.out.println(type);
 		}
 		return content;
 	}
