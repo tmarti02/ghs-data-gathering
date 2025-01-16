@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 
 public class RecordNICEATM {
@@ -62,6 +63,10 @@ public class RecordNICEATM {
 			er.casrn=this.CASRN;	
 		}
 		
+		er.chemical_name=Chemical_Name;
+		er.property_name=ExperimentalConstants.strSkinSensitizationLLNA;
+		er.source_name=RecordNICEATM.sourceName;
+		
 		er.experimental_parameters = new Hashtable<>();
 		er.experimental_parameters.put("LLNA Vehicle", this.LLNA_Vehicle);
 		er.experimental_parameters.put("EC3 Value", this.EC3);
@@ -79,6 +84,7 @@ public class RecordNICEATM {
 			er.property_value_point_estimate_final=nonSensitizing;
 		}
 		
+		er.literatureSource=new LiteratureSource();
 		er.literatureSource.name=this.Brief_Citation;
 		er.literatureSource.citation=this.Citation;
 		
