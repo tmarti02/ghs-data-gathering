@@ -1,31 +1,64 @@
 package gov.epa.exp_data_gathering.parse.NICEATM;
 
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.Vector;
-
 import com.google.gson.JsonObject;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
+import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.UnitConverter;
 
 public class RecordNICEATM {
-	public String Compound_name;
+	public String Chemical_Name;
 	public String CASRN;
-	public String SMILES;
-	public String Activity;
-	public String Class;
-	public String EC3;
-	public String MW;
+	public String Molecular_Weight_g_mol;
 	public String Chemical_Class;
-	public static final String[] fieldNames = {"Compound_name","CASRN","SMILES","Activity","Class","EC3","MW","Chemical_Class"};
+	public String LLNA_Vehicle;
+	
+	public String One_Conc;
+	public String One_SI;
+	public String Two_Conc;
+	public String Two_SI;
+	public String Three_Conc;
+	public String Three_SI;
+	public String Four_Conc;
+	public String Four_SI;
+	public String Five_Conc;
+	public String Five_SI;
+	public String Six_Conc;
+	public String Six_SI;
+	public String Seven_Conc;
+	public String Seven_SI;
+	public String Eight_Conc;
+	public String Eight_SI;
+	
+	public String EC3;
+	public String LLNA_Result;
+	public String Brief_Citation;
+	public String Citation;
+	public static final String[] fieldNames = {"Chemical_Name","CASRN","Molecular_Weight_g_mol","Chemical_Class","LLNA_Vehicle","1_Conc","1_SI","2_Conc","2_SI","3_Conc","3_SI","4_Conc","4_SI","5_Conc","5_SI","6_Conc","6_SI","7_Conc","7_SI","8_Conc","8_SI","EC3","LLNA_Result","Brief_Citation","Citation"};
 
-	public static final String lastUpdated = "02/08/2021";
-	public static final String sourceName = ExperimentalConstants.strSourceNICEATM;
+	public static final String lastUpdated = "12/23/2013";
+	public static final String sourceName = "NICEATM"; // TODO Consider creating ExperimentalConstants.strSourceNICEATM instead.
 
-	private static final String fileName = "NICEATM LLNA DB_original.xlsx";
+	private static final String fileName = "niceatm-llnadatabase-23dec2013.xlsx";
+
+	private static final transient UnitConverter unitConverter = new UnitConverter("data/density.txt");
 
 	public static Vector<JsonObject> parseNICEATMRecordsFromExcel() {
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, sourceName);
-		Vector<JsonObject> records = esr.parseRecordsFromExcel(0);
+		esr.headerRowNum=2;
+		Vector<JsonObject> records = esr.parseRecordsFromExcel(0,true); // TODO Chemical name index guessed from header. Is this accurate?
 		return records;
 	}
+
+	public ExperimentalRecord toExperimentalRecord() {
+		ExperimentalRecord er=new ExperimentalRecord();
+		//TODO Auto-generated method stub
+		return er;
+	}
+
 }

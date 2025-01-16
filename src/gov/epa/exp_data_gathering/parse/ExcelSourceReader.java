@@ -546,6 +546,21 @@ public class ExcelSourceReader {
 				break;
 			}
 			
+			if(headerContent.equals("#")) {
+				headerContent="RecordNumber";
+			}
+			
+			if(headerContent.substring(0, 1).equals("1")) headerContent="One"+headerContent.substring(1, headerContent.length());
+			if(headerContent.substring(0, 1).equals("2")) headerContent="Two"+headerContent.substring(1, headerContent.length());
+			if(headerContent.substring(0, 1).equals("3")) headerContent="Three"+headerContent.substring(1, headerContent.length());
+			if(headerContent.substring(0, 1).equals("4")) headerContent="Four"+headerContent.substring(1, headerContent.length());
+			if(headerContent.substring(0, 1).equals("5")) headerContent="Five"+headerContent.substring(1, headerContent.length());
+			if(headerContent.substring(0, 1).equals("6")) headerContent="Six"+headerContent.substring(1, headerContent.length());
+			if(headerContent.substring(0, 1).equals("7")) headerContent="Seven"+headerContent.substring(1, headerContent.length());
+			if(headerContent.substring(0, 1).equals("8")) headerContent="Eight"+headerContent.substring(1, headerContent.length());
+			if(headerContent.substring(0, 1).equals("9")) headerContent="Nine"+headerContent.substring(1, headerContent.length());
+			if(headerContent.substring(0, 1).equals("0")) headerContent="Zero"+headerContent.substring(1, headerContent.length());
+			
 			headerContent=headerContent.trim().replaceAll("[^\\p{Alnum}]+", "_")
 					.replaceAll("^_", "").replaceAll("_$", "");
 			
