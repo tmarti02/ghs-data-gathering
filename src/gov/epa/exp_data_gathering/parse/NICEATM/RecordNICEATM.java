@@ -57,7 +57,31 @@ public class RecordNICEATM {
 
 	public ExperimentalRecord toExperimentalRecord() {
 		ExperimentalRecord er=new ExperimentalRecord();
-		//TODO Auto-generated method stub
+		
+		if(this.CASRN!=null && !this.CASRN.contentEquals("NA")) {
+			er.casrn=this.CASRN;	
+		}
+		
+		er.experimental_parameters = new Hashtable<>();
+		er.experimental_parameters.put("LLNA Vehicle", this.LLNA_Vehicle);
+		er.experimental_parameters.put("EC3 Value", this.EC3);
+		
+		if(er.keep) {
+			er.property_value_units_final=ExperimentalConstants.str_binary;
+			er.property_value_units_original=ExperimentalConstants.str_binary;
+		}
+		double nonSensitizing = 0;
+		double sensitizing = 1;
+		er.property_value_string=this.LLNA_Result;		
+		if(this.LLNA_Result.equals("POS")) {
+			er.property_value_point_estimate_final=sensitizing;
+		} else if(this.LLNA_Result.equals("NEG")) {
+			er.property_value_point_estimate_final=nonSensitizing;
+		}
+		
+		er.literatureSource.name=this.Brief_Citation;
+		er.literatureSource.citation=this.Citation;
+		
 		return er;
 	}
 
