@@ -20,7 +20,8 @@ public class ParseNIEHS_ICE_2024_08 extends Parse {
 	String fileNameAcuteOral="acute_oral.xlsx";
 	String fileNameSensitization="skin_sensitization.xlsx";
 	
-	String fileName=fileNameAcuteOral;
+//	String fileName=fileNameAcuteOral;
+	String fileName=fileNameSensitization;
 	String sheetName;
 	
 	
@@ -29,10 +30,11 @@ public class ParseNIEHS_ICE_2024_08 extends Parse {
 		sourceName = "NIEHS_ICE_2024_08"; // TODO Consider creating ExperimentalConstants.strSourceNIEHS_ICE_2024_08 instead.
 				
 		if(fileName.equals(fileNameAcuteOral)) {
-			init("Acute oral");
+			init("acute oral");
 			sheetName="Data";
 		} else if (fileName.equals(fileNameSensitization)) {
-			init("Skin sensitization");
+			init("skin sensitization");
+			sheetName="Data_invivo";
 		} 
 		
 	}
@@ -85,7 +87,7 @@ public class ParseNIEHS_ICE_2024_08 extends Parse {
 	public static void main(String[] args) {
 		ParseNIEHS_ICE_2024_08 p = new ParseNIEHS_ICE_2024_08();
 		
-		p.generateOriginalJSONRecords=false;
+		p.generateOriginalJSONRecords=true;
 		
 		p.removeDuplicates=false;
 		

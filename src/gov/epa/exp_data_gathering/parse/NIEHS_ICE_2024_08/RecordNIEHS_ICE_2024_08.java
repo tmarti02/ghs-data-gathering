@@ -104,7 +104,12 @@ public class RecordNIEHS_ICE_2024_08 {
 		if(this.Assay.equals("Rat Acute Oral Toxicity") && this.Endpoint.equals("LD50")) {
 			er.property_name=ExperimentalConstants.strORAL_RAT_LD50;
 			er.property_category=ExperimentalConstants.strAcuteOralToxicity;
+		
+		} else if(this.Assay.equals("LLNA")) {
+			er.property_name=ExperimentalConstants.strSkinSensitizationLLNA;		
+			
 		} else {
+			
 			er.property_name="Not set";
 			er.keep=false;
 			er.reason="Property name not set";
@@ -121,10 +126,26 @@ public class RecordNIEHS_ICE_2024_08 {
 		
 		
 		if(this.Reference!=null) {
-			er.publicSourceOriginal=new PublicSource();
-			er.publicSourceOriginal.name=this.Reference.replace(" (undated)","");
-			er.publicSourceOriginal.url=this.URL;
+			
+			if (URL!=null) {
+				er.publicSourceOriginal=new PublicSource();
+				er.publicSourceOriginal.name=this.Reference.replace(" (undated)","");
+				er.publicSourceOriginal.url=this.URL;
+			}
+			
+			if(Reference.contains(";")) {
+				//For skin sens, Reference is usually a literature source:
+//				Arfsen et al. 2006; 16980244; 10.1080/15569520600860306    (brief citation; pubmedid ; doi)
+				
+//				For example that pubmed id => literatureSource.url="https://pubmed.ncbi.nlm.nih.gov/16980244/"
+				
+				System.out.println(Reference);//TODO parse into citation, pubmed url, doi 
+			}
+					
+			
+			
 		}
+		
 		
 		er.date_accessed=this.lastUpdated;
 		
