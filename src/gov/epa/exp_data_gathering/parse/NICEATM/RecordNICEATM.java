@@ -87,6 +87,7 @@ public class RecordNICEATM {
 		er.literatureSource=new LiteratureSource();
 		er.literatureSource.name=this.Brief_Citation;
 		er.literatureSource.citation=this.Citation;
+		er.reference=this.Citation;
 		
 		return er;
 	}

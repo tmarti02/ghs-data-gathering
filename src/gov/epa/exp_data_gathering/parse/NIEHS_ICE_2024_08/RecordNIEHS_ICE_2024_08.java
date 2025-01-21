@@ -1,5 +1,6 @@
 package gov.epa.exp_data_gathering.parse.NIEHS_ICE_2024_08;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -9,6 +10,7 @@ import com.google.gson.JsonObject;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
+import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.PublicSource;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
@@ -92,6 +94,7 @@ public class RecordNIEHS_ICE_2024_08 {
 
 	
 	private void setPropertyValues(ExperimentalRecord er) {
+		DecimalFormat df=new DecimalFormat("0.0");
 		if(Endpoint.equals("LD50")) {
 			er.property_value_point_estimate_original=Double.parseDouble(Response);
 			er.property_value_units_original=Response_Unit;
@@ -100,9 +103,83 @@ public class RecordNIEHS_ICE_2024_08 {
 			if(er.property_value_point_estimate_original!=null)
 				unitConverter.convertRecord(er);
 
+		} 
+		
+		if(this.Endpoint.equals("EC3")) {
+			double value = Double.parseDouble(Response);
+			double nonSensitizing = 0;
+			double sensitizing = 1;
+			er.property_value_string = "EC3 = "+df.format(value) + "%";
+			if(Response_Unit.equals("nmol")) {
+				er.keep=false;
+				er.reason="Bad units";
+			}
+			er.property_value_units_original=Response_Unit;
+			er.property_value_point_estimate_original=value;
+			er.property_value_numeric_qualifier=Response_Modifier;
+			if (Response_Modifier != null) {
+				er.property_value_string = Response_Modifier + er.property_value_string;
+			}
+			if (Response_Modifier != null && Response_Modifier.equals(">")) {
+
+				if (value >= 100) {
+					er.property_value_units_final=ExperimentalConstants.str_binary;
+					er.property_value_qualitative = "Not sensitizing";
+					er.property_value_point_estimate_final=nonSensitizing;
+					er.updateNote("EC3 (>" + value+ "%) was greater than 100%");
+				} else {
+					er.keep = false;
+					er.property_value_qualitative = "Ambiguous";
+					er.updateNote("unknown if EC3 (>"+ value + "%) is > 100%");
+				}
+		} else {
+			er.property_value_qualitative = "Sensitizing";
+			er.property_value_units_final=ExperimentalConstants.str_binary;
+			er.property_value_point_estimate_final=sensitizing;
+			er.updateNote("0% < EC3 (" + df.format(value) + "%) < 100%");
+			// System.out.println(er.note);
+			} 
+		}
+			
+		if(this.Endpoint.equals("Max stimulation index")){
+			double value = Double.parseDouble(Response);
+			double nonSensitizing = 0;
+			double sensitizing = 1;
+			er.property_value_string = "SI = "+df.format(value);
+			er.property_value_units_original=Response_Unit;
+			er.property_value_point_estimate_original=value;
+			if(value<3) {
+				er.property_value_units_final=ExperimentalConstants.str_binary;
+				er.property_value_qualitative = "Not sensitizing";
+				er.property_value_point_estimate_final=nonSensitizing;
+				er.updateNote("SI (" + df.format(value) + ") was less than 3.0");
+			} else {
+				er.property_value_qualitative = "Sensitizing";
+				er.property_value_units_final=ExperimentalConstants.str_binary;
+				er.property_value_point_estimate_final=sensitizing;
+				er.updateNote("SI (" + df.format(value) + ") was greater than 3.0");
+			}
 		}
 		
-
+		if(this.Endpoint.equals("GHS classification") || this.Endpoint.equals("EPA classification") || this.Endpoint.equals("Call")) {
+			if(this.Response!=null) {
+				er.property_value_units_final=ExperimentalConstants.str_binary;
+				er.property_value_units_original=ExperimentalConstants.str_binary;
+				double nonSensitizing = 0;
+				double sensitizing = 1;
+				er.property_value_string=this.Response;
+				if(this.Response.equals("Sensitizer") || this.Response.equals("Active")) {
+					er.property_value_point_estimate_final=sensitizing;
+					er.property_value_qualitative = "Sensitizing";
+				} else if(this.Response.equals("Non-sensitizer") || this.Response.equals("Inactive")) {
+					er.property_value_point_estimate_final=nonSensitizing;
+					er.property_value_qualitative = "Not sensitizing";
+				} 
+			} else {
+					er.keep=false;
+					er.reason="No response";
+			}
+		}
 	}
 	
 	
@@ -165,9 +242,21 @@ public class RecordNIEHS_ICE_2024_08 {
 //				Arfsen et al. 2006; 16980244; 10.1080/15569520600860306    (brief citation; pubmedid ; doi)
 				
 //				For example that pubmed id => literatureSource.url="https://pubmed.ncbi.nlm.nih.gov/16980244/"
-				
-				System.out.println(Reference);//TODO parse into citation, pubmed url, doi 
-			}
+				if(this.Assay.equals("LLNA")) {
+					er.literatureSource=new LiteratureSource();
+					String[] ref = this.Reference.split("; ");
+					er.literatureSource.name=ref[0];
+					if(!ref[1].equals("Not available")) {
+						er.literatureSource.url="https://pubmed.ncbi.nlm.nih.gov/" + ref[1] + "/";
+						er.url=er.literatureSource.url;
+					}
+					er.reference=er.literatureSource.name;
+					if(!ref[2].equals("Not available")) {
+						er.literatureSource.doi=ref[2];
+					}
+				}
+//				System.out.println(Reference);//TODO parse into citation, pubmed url, doi 
+			} 
 					
 			
 			
