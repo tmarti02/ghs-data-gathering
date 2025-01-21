@@ -19,10 +19,12 @@ public class ParseQSAR_ToolBox extends Parse {
 	String fileNameAcuteToxicityDB="acute oral toxicity db.xlsx";
 	String fileNameAcuteToxicityEchaReach="echa reach acute toxicity by test material.xlsx";
 	String fileNameSensitizationEchaReach="echa reach sensitization by test material.xlsx";
+	String fileNameSensitization="skin sensitization.xlsx";
 	
 //	String fileName=fileNameAcuteToxicityEchaReach;
 //	String fileName=fileNameAcuteToxicityDB;
-	String fileName=fileNameSensitizationEchaReach;
+//	String fileName=fileNameSensitizationEchaReach;
+	String fileName=fileNameSensitization;
 	
 	String original_source_name;
 	List<String>selectedEndpoints;
@@ -31,6 +33,8 @@ public class ParseQSAR_ToolBox extends Parse {
 		sourceName = RecordQSAR_ToolBox.sourceName; // TODO Consider creating ExperimentalConstants.strSourceQSAR_ToolBox instead.
 		
 		if(fileName.equals(fileNameAcuteToxicityEchaReach)) {
+			removeDuplicates=true;
+			
 			original_source_name="ECHA Reach";
 			selectedEndpoints = Arrays.asList("Dermal rabbit LD50", "Dermal rat LD50", "Inhalation mouse LC50",
 					"Inhalation rat LC50", "Oral mouse LD50", "Oral rat LD50");
@@ -38,18 +42,29 @@ public class ParseQSAR_ToolBox extends Parse {
 			
 
 		} else if (fileName.equals(fileNameAcuteToxicityDB)) {
+			removeDuplicates=true;
 			original_source_name="Acute oral toxicity db";
 			selectedEndpoints = Arrays.asList("Dermal rabbit LD50", "Dermal rat LD50", "Inhalation mouse LC50",
 					"Inhalation rat LC50", "Oral mouse LD50", "Oral rat LD50");
 			init("Acute toxicity oral toxicity db");
 
 		} else if (fileName.equals(fileNameSensitizationEchaReach)) {
-
+			removeDuplicates=false;
 			original_source_name="ECHA Reach";
-			selectedEndpoints = Arrays.asList(ExperimentalConstants.strSkinSensitizationLLNA_EC3,
-					ExperimentalConstants.strSkinSensitizationLLNA_SI);
+			
+			selectedEndpoints = Arrays.asList(ExperimentalConstants.strSkinSensitizationLLNA);
+			
+//			selectedEndpoints = Arrays.asList(ExperimentalConstants.strSkinSensitizationLLNA_EC3,
+//					ExperimentalConstants.strSkinSensitizationLLNA_SI);
+			
+			
 			init("Sensitization ECHA Reach");
 			
+		} else if (fileName.equals(fileNameSensitization)) {
+			removeDuplicates=false;
+//			original_source_name="ECHA Reach";
+			selectedEndpoints = Arrays.asList(ExperimentalConstants.strSkinSensitizationLLNA);
+			init("Sensitization");
 		}
 		
 	}
@@ -105,8 +120,6 @@ public class ParseQSAR_ToolBox extends Parse {
 		ParseQSAR_ToolBox p = new ParseQSAR_ToolBox();
 		
 		p.generateOriginalJSONRecords=false;
-		//p.howManyOriginalRecordsFiles=2;
-		
 		p.removeDuplicates=false;
 		
 		p.writeJsonExperimentalRecordsFile=true;
