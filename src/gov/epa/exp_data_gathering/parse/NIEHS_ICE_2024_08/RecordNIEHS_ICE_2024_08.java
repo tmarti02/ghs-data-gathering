@@ -229,42 +229,39 @@ public class RecordNIEHS_ICE_2024_08 {
 
 
 	private void setSources(ExperimentalRecord er) {
-		if(this.Reference!=null) {
-			
-			if (URL!=null) {
-				er.publicSourceOriginal=new PublicSource();
-				er.publicSourceOriginal.name=this.Reference.replace(" (undated)","");
-				er.publicSourceOriginal.url=this.URL;
-				er.url=this.URL;
-			} 
-			
-			if(Reference.contains(";")) {
-				if(this.Assay.equals("LLNA")) {
-					er.literatureSource=new LiteratureSource();
-					String[] ref = this.Reference.split("; ");
-					er.literatureSource.name=ref[0];
-					if(!ref[1].equals("Not available")) {
-						er.literatureSource.url="https://pubmed.ncbi.nlm.nih.gov/" + ref[1] + "/";
-					} else {
-						er.literatureSource.url=null;
-					}
-					er.reference=er.literatureSource.name;
-					if(!ref[2].equals("Not available")) {
-						er.literatureSource.doi= "https://doi.org/" + ref[2];
-					} else {
-						er.literatureSource.doi=null;
-					}
+
+		if(Reference==null) return;
+
+		er.reference=Reference;
+
+		if(Reference.contains(";")) {
+			if(this.Assay.equals("LLNA")) {
+				er.literatureSource=new LiteratureSource();
+				String[] ref = this.Reference.split("; ");
+				er.literatureSource.name=ref[0];
+				
+				er.literatureSource.citation=ref[0]+" (NIEHS ICE)";
+				
+				if(!ref[1].equals("Not available")) {
+					er.literatureSource.url="https://pubmed.ncbi.nlm.nih.gov/" + ref[1] + "/";
+				} else {
+					er.literatureSource.url=null;
 				}
-//				System.out.println(Reference);//TODO parse into citation, pubmed url, doi 
-			} else if(Reference!=null) {
-				er.publicSourceOriginal=new PublicSource();
-				er.publicSourceOriginal.name=this.Reference.replace(" (undated)","");
-				er.reference=this.Reference.replace(" (undated)","");
+				
+				
+				if(!ref[2].equals("Not available")) {
+					er.literatureSource.doi= "https://doi.org/" + ref[2];
+				} else {
+					er.literatureSource.doi=null;
+				}
 			}
-					
-			
-			
+			//				System.out.println(Reference);//TODO parse into citation, pubmed url, doi 
+		} else if(Reference!=null) {
+			er.publicSourceOriginal=new PublicSource();
+			er.publicSourceOriginal.name=this.Reference.replace(" (undated)","");
+			er.publicSourceOriginal.url=this.URL;
 		}
+
 	}
 
 }

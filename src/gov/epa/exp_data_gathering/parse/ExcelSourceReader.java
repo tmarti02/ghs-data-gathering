@@ -405,6 +405,9 @@ public class ExcelSourceReader {
 					}
 					
 					if(content!=null && content.contentEquals("filtered out")) content=null;
+					
+					
+					
 
 				} catch (Exception ex) {
 					ex.printStackTrace();
@@ -418,6 +421,9 @@ public class ExcelSourceReader {
 					hasAnyFields = true;
 					content=content.trim();
 				}
+				
+				if(content!=null && content.isBlank() && setBlankToNull) content=null;
+				
 				jo.addProperty(hmFieldNames.get(k), content);
 				
 			}

@@ -380,7 +380,7 @@ public class Parse {
 			p = new ParseEpisuiteOriginal();
 			break;
 		case ExperimentalConstants.strSourceNICEATM:
-			p = new ParseNICEATM(recordTypeToParse);
+			p = new ParseNICEATM();
 			break;
 		case ExperimentalConstants.strSourceOECD_Toolbox:
 			p = new ParseOECD_Toolbox(recordTypeToParse);

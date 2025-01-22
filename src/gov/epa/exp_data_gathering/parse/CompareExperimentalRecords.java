@@ -64,7 +64,7 @@ public class CompareExperimentalRecords {
 				
 		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
 		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
-		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,true));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
 		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,true));
 		compareChemicalsInCommon(tm1, tm2);
 		
@@ -103,7 +103,7 @@ public class CompareExperimentalRecords {
 				
 				HashSet<String>sources=updateCountBySourceHashtable(htCountBySource, recs1);
 				
-//				if(printValues) System.out.println(casrn+"\t"+(recs1.medianValue)+"\t"+sources);
+				if(printValues) System.out.println(casrn+"\t"+(recs1.medianValue)+"\t"+sources);
 				
 //				if(printValues && sources.contains("Unknown")) {
 //					System.out.println(casrn+"\tHas Unknown"+"\t"+recs1.medianValue);
@@ -119,7 +119,7 @@ public class CompareExperimentalRecords {
 				countIn1Not2++;
 				HashSet<String>sources=updateCountBySourceHashtable(htCountBySource, recs1);
 				
-//				if(printValues) System.out.println(casrn+"\t"+(recs1.medianValue)+"\t"+sources);
+				if(printValues) System.out.println(casrn+"\t"+(recs1.medianValue)+"\t"+sources);
 				
 //				if(printValues && sources.contains("Unknown")) {
 //					System.out.println(casrn+"\tHas Unknown"+"\t"+recs1.medianValue);
@@ -265,7 +265,7 @@ public class CompareExperimentalRecords {
 			if(!er.property_value_units_final.equals(units)) continue;
 
 			if(er.property_value_numeric_qualifier!=null) {
-				if (er.property_value_numeric_qualifier.equals("<") || er.property_value_numeric_qualifier.equals(">")) continue;
+				if (er.property_value_numeric_qualifier.contains("<") || er.property_value_numeric_qualifier.contains(">")) continue;
 			}
 
 			Double val=null;
@@ -353,37 +353,212 @@ public class CompareExperimentalRecords {
 		return experimentalRecords;
 	}
 	
+	
+	void compareQSAR_Toolbox_eChemportalAPI() {
+		List<Source>sources1=new ArrayList<>();
+		sources1.add(new Source("QSAR_Toolbox","Acute toxicity ECHA Reach"));
+				
+		List<Source>sources2=new ArrayList<>();
+		sources2.add(new Source("eChemPortalAPI","AcuteToxicityOral"));
+		
+		compare(sources1, sources2, ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
+	}
+	
+	
+	
+	void lookAtEchemportalLD50_Guidelines() {
+		List<Source>sources1=new ArrayList<>();
+		sources1.add(new Source("eChemportalAPI","AcuteToxicityOral"));
+
+		
+		ExperimentalRecords recs=getAllExperimentalRecords(sources1);
+		
+//		System.out.println(recs.size());
+		
+		ExperimentalRecords recs401=new ExperimentalRecords();
+		ExperimentalRecords recsNot401=new ExperimentalRecords();
+		
+		for (ExperimentalRecord er:recs) {
+			
+			if(er.experimental_parameters.containsKey("Guidelines")) {
+				String guidelines=er.experimental_parameters.get("Guidelines")+"";
+				
+				if(guidelines.contains("401")) recs401.add(er);
+				else recsNot401.add(er);
+			}
+			
+		}
+		
+		String propertyName=ExperimentalConstants.strORAL_RAT_LD50;
+		String units=ExperimentalConstants.str_mg_kg;
+		
+		TreeMap<String, ExperimentalRecords> tm1 = getTreeMapByCAS(propertyName, units, recs401);
+		TreeMap<String, ExperimentalRecords> tm2 = getTreeMapByCAS(propertyName, units, recsNot401);
+
+//		System.out.println(tm1.size());
+//		System.out.println(tm2.size());
+		
+		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
+		
+		compareChemicalsInCommon(tm1, tm2);
+		
+	}
+	
+	void lookAtEchemportalLD50_Guidelines2() {
+		List<Source>sources1=new ArrayList<>();
+		sources1.add(new Source("eChemportalAPI","AcuteToxicityOral"));
+
+		
+		ExperimentalRecords recs=getAllExperimentalRecords(sources1);
+		
+//		System.out.println(recs.size());
+		
+		ExperimentalRecords recs423=new ExperimentalRecords();
+		ExperimentalRecords recs420=new ExperimentalRecords();
+		
+		for (ExperimentalRecord er:recs) {
+			
+			if(er.experimental_parameters.containsKey("Guidelines")) {
+				String guidelines=er.experimental_parameters.get("Guidelines")+"";
+				
+				if(guidelines.contains("423")) recs423.add(er);
+				else if(guidelines.contains("420")) recs420.add(er);
+				
+			}
+			
+		}
+		
+		String propertyName=ExperimentalConstants.strORAL_RAT_LD50;
+		String units=ExperimentalConstants.str_mg_kg;
+		
+		TreeMap<String, ExperimentalRecords> tm1 = getTreeMapByCAS(propertyName, units, recs423);
+		TreeMap<String, ExperimentalRecords> tm2 = getTreeMapByCAS(propertyName, units, recs420);
+
+		
+		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
+
+		
+		compareChemicalsInCommon(tm1, tm2);
+		
+		System.out.println(tm1.size());
+		System.out.println(tm2.size());
+	}
+	
+	void lookAtEchemportalLD50_Guidelines3() {
+		List<Source>sources1=new ArrayList<>();
+		sources1.add(new Source("eChemportalAPI","AcuteToxicityOral"));
+
+		
+		ExperimentalRecords recs=getAllExperimentalRecords(sources1);
+		
+//		System.out.println(recs.size());
+		
+		ExperimentalRecords recs423=new ExperimentalRecords();
+		ExperimentalRecords recs425=new ExperimentalRecords();
+		
+		for (ExperimentalRecord er:recs) {
+			
+			if(er.experimental_parameters.containsKey("Guidelines")) {
+				String guidelines=er.experimental_parameters.get("Guidelines")+"";
+				
+				if(guidelines.contains("423")) recs423.add(er);
+				else if(guidelines.contains("425")) recs425.add(er);
+				
+			}
+			
+		}
+		
+		String propertyName=ExperimentalConstants.strORAL_RAT_LD50;
+		String units=ExperimentalConstants.str_mg_kg;
+		
+		TreeMap<String, ExperimentalRecords> tm1 = getTreeMapByCAS(propertyName, units, recs423);
+		TreeMap<String, ExperimentalRecords> tm2 = getTreeMapByCAS(propertyName, units, recs425);
+
+		
+		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
+
+		
+		compareChemicalsInCommon(tm1, tm2);
+		
+		System.out.println(tm1.size());
+		System.out.println(tm2.size());
+	}
+	
+	
+	
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		CompareExperimentalRecords c=new CompareExperimentalRecords();
+		
 //		c.compare("QSAR_Toolbox_ECHA_Reach_Acute_Toxicity", "QSAR_Toolbox_Acute_Toxicity", ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
-		
-//		c.compare("ChemIDplus_2024_12_04", "QSAR_Toolbox_ECHA_Reach_Acute_Toxicity", ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
-		
 		
 //		c.compare("ChemIDplus_2024_12_04", "ChemIDplus", ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
 		
+//		c.compareToChemidplusToEcha();
 		
-		c.compareToNIEHS_OralRatLD50();
+		c.lookAtEchemportalLD50_Guidelines();
+//		c.lookAtEchemportalLD50_Guidelines2();
+//		c.lookAtEchemportalLD50_Guidelines3();
+		
+//		c.compareToNIEHS_OralRatLD50();
+//		c.compareToNIEHS_Sensitization();
+//		
 //		c.compareREACH_Sources();
 		
+//		c.compareQSAR_Toolbox_eChemportalAPI();
 		
 		
 //		c.compare("ChemIDplus_2024_12_04", "NIEHS_ICE_2024_08",null, "Acute oral", ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
 		
 	}
 
+	private void compareToNIEHS_Sensitization() {
+		List<Source>sources1=new ArrayList<>();
+		
+//		sources1.add(new Source("eChemPortalAPI","AcuteToxicityOral"));
+		sources1.add(new Source("QSAR_Toolbox","Sensitization"));//mostly done
+		
+		List<Source>sources2=new ArrayList<>();
+		sources2.add(new Source("NIEHS_ICE_2024_08","skin sensitization"));
+		
+		compare(sources1, sources2, ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
+		
+	}
+
 	private void compareToNIEHS_OralRatLD50() {
 		List<Source>sources1=new ArrayList<>();
 		sources1.add(new Source("ChemIDplus_2024_12_04",null));
-//		sources1.add(new Source("QSAR_Toolbox","Acute toxicity ECHA Reach"));
 		sources1.add(new Source("eChemPortalAPI","AcuteToxicityOral"));
+//		sources1.add(new Source("QSAR_Toolbox","Acute toxicity ECHA Reach"));
 		
 		List<Source>sources2=new ArrayList<>();
 		sources2.add(new Source("NIEHS_ICE_2024_08","Acute oral"));
 		
 		compare(sources1, sources2, ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
 	}
+	
+	
+	private void compareToChemidplusToEcha() {
+		List<Source>sources1=new ArrayList<>();
+		sources1.add(new Source("ChemIDplus_2024_12_04",null));
+				
+		List<Source>sources2=new ArrayList<>();
+//		sources2.add(new Source("QSAR_Toolbox","Acute toxicity ECHA Reach"));
+		sources2.add(new Source("eChemPortalAPI","AcuteToxicityOral"));
+		
+		compare(sources1, sources2, ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
+	}
+
 	
 	private void compareREACH_Sources() {
 		List<Source>sources1=new ArrayList<>();

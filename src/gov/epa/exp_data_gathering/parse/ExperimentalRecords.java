@@ -513,75 +513,95 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		int recCurrentRow = 2;
 		for (ExperimentalRecord er:this) {
 			if (!er.keep==keep) continue;
-			
-			Class erClass = er.getClass();			
-			Class htClass = er.experimental_parameters.getClass();
-			
-			Object value = null;
-			try {
-				Row row = recSheet.createRow(recCurrentRow);
-				recCurrentRow++;
-				 
-				for (int i = 0; i < headers.size(); i++) {
-					
+
+			//			Class erClass = er.getClass();			
+			//			Class htClass = er.experimental_parameters.getClass();
+			//			Class lsClass=  er.literatureSource.getClass();
+
+
+
+			Row row = recSheet.createRow(recCurrentRow);
+			recCurrentRow++;
+
+			for (int i = 0; i < headers.size(); i++) {
+
+				Object value = null;
+
+				try {
 					if(headers.get(i).contains("exp_param_")) {
-						String fieldName=headers.get(i).substring(headers.get(i).indexOf("exp_param_")+"exp_param_".length(),headers.get(i).length());
+
+						String fieldName=headers.get(i).replace("exp_param_","");
 						value = er.experimental_parameters.get(fieldName);
-//					} else if(headers.get(i).equals("lit_source_citation")) {
-//						if(er.literatureSource!=null) {
-//							value = er.literatureSource.citation;
-//						} else {
-//							continue;
-//						}
-//
+
+					} else if(headers.get(i).contains("literature_source_")) {
+						String fieldName=headers.get(i).replace("literature_source_","");
+
+						if(er.literatureSource!=null) {
+							Field field = er.literatureSource.getClass().getDeclaredField(fieldName);
+							value = field.get(er.literatureSource);
+
+//							System.out.println("ls: "+fieldName+"\t"+value);
+
+						}
+					} else if(headers.get(i).contains("public_source_original_")) {
+						String fieldName=headers.get(i).replace("public_source_original_","");
+						if(er.publicSourceOriginal!=null) {
+							Field field = er.publicSourceOriginal.getClass().getDeclaredField(fieldName);
+							value = field.get(er.publicSourceOriginal);
+						}
+
 					} else {
-						Field field = erClass.getDeclaredField(headers.get(i));
+						Field field = er.getClass().getDeclaredField(headers.get(i));
 						value = field.get(er);
 					}
-					
+
 					if (value==null) continue;
 					
-					if (headers.get(i).contentEquals("url")) {
+					
+					if (headers.get(i).contains("url") || headers.get(i).contains("doi")) {
 						String strValue = (String) value;
 						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
 
-						
+
 						Cell cell = row.createCell(i);     						
 						Hyperlink href = wb.getCreationHelper().createHyperlink(HyperlinkType.URL);
-						
-//						System.out.println(strValue);
-						
+						//						System.out.println(strValue);
 						cell.setCellValue(strValue);
-						
+
 						try {
 							href.setAddress(strValue);
 							cell.setHyperlink(href);
 							cell.setCellStyle(styleURL);
+//							System.out.println(href);
+							
 						} catch (Exception ex) {
-//							System.out.println("Invalid url:\t"+strValue);
+							System.out.println("Invalid url:\t"+strValue);
 						}
-						
+
 
 					} else if (!(value instanceof Double)) { 
 
 						String strValue=null;
-						
+
 						if(headers.get(i).equals("chemical_name")) {//TODO is this the only one?
 							strValue= TextUtilities.reverseFixChars(StringEscapeUtils.unescapeHtml4(value.toString()));
 						} else {
 							strValue= StringEscapeUtils.unescapeHtml4(value.toString());
 						}
-						
+
 						if (strValue.length() > 32767) { strValue = strValue.substring(0,32767); }
 						row.createCell(i).setCellValue(strValue);
 					} else { 
 						row.createCell(i).setCellValue((double) value); 
 					}
+
+
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					System.out.println(value.toString());
 				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-				System.out.println(value.toString());
 			}
+
 		}
 		
 		String lastCol = CellReference.convertNumToColString(headers.size()-1);
@@ -621,6 +641,21 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			}
 //			System.out.println(fieldNames.get(fieldNames.size()-1));
 		}
+		
+		String []ls_fields= {"name","citation","url","doi"};
+		
+		for (String ls_field:ls_fields) {
+			if(!fieldNames.contains("literature_source_"+ls_field))
+				fieldNames.add("literature_source_"+ls_field);			
+		}
+		
+		String []ps_fields= {"name","url"};
+		
+		for (String ps_field:ps_fields) {
+			if(!fieldNames.contains("public_source_original_"+ps_field))
+				fieldNames.add("public_source_original_"+ps_field);			
+		}
+
 		
 //		fieldNames.add("lit_source_citation");
 		
