@@ -245,13 +245,12 @@ public class RecordNIEHS_ICE_2024_08 {
 					er.literatureSource.name=ref[0];
 					if(!ref[1].equals("Not available")) {
 						er.literatureSource.url="https://pubmed.ncbi.nlm.nih.gov/" + ref[1] + "/";
-						er.url=er.literatureSource.url;
 					} else {
 						er.literatureSource.url=null;
 					}
 					er.reference=er.literatureSource.name;
 					if(!ref[2].equals("Not available")) {
-						er.literatureSource.doi=ref[2];
+						er.literatureSource.doi= "https://doi.org/" + ref[2];
 					} else {
 						er.literatureSource.doi=null;
 					}
