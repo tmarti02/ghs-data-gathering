@@ -132,6 +132,9 @@ public class RecordNIEHS_ICE_2024_08 {
 					er.property_value_qualitative = "Ambiguous";
 					er.updateNote("unknown if EC3 (>"+ value + "%) is > 100%");
 				}
+		} else if (value >= 100) {
+			er.property_value_qualitative = "Not sensitizing";
+			er.updateNote("EC3 (" + value+ "%) was greater than 100%");
 		} else {
 			er.property_value_qualitative = "Sensitizing";
 			er.property_value_units_final=ExperimentalConstants.str_binary;
