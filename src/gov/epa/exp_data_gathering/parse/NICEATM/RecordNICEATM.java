@@ -77,7 +77,7 @@ public class RecordNICEATM {
 			if(this.LLNA_Result.equals("POS")) {
 				er.property_value_qualitative = "Sensitizing";
 				er.property_value_point_estimate_final=sensitizing;
-				er.updateNote("IDR (EC3 not available but sensitizing");
+				er.updateNote("IDR (EC3 not available but sensitizing)");
 			}
 //			System.out.println("CAS="+er.casrn+"\tVS="+er.property_value_string+"\tPEF="+er.property_value_point_estimate_final);
 		} else {
@@ -116,6 +116,7 @@ public class RecordNICEATM {
 				if(this.LLNA_Result.equals("NEG")) {
 					er.property_value_qualitative = "Not sensitizing";
 					er.property_value_point_estimate_final=nonSensitizing;
+					er.updateNote("NC (EC3 not available but not sensitizing)");
 				} else {
 					System.out.println("*** Handle not NEG");
 				}
