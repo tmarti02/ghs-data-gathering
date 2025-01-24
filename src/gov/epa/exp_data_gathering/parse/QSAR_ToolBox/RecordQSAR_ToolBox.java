@@ -346,6 +346,8 @@ public class RecordQSAR_ToolBox {
 	private void setPropertyValuesLLNA(ExperimentalRecord er) {
 
 		DecimalFormat df=new DecimalFormat("0.0");
+		double nonSensitizing = 0;
+		double sensitizing = 1;
 		
 		if (Database.equals("Skin Sensitization")) {
 			if (Assay.equals("LLNA")) {
@@ -355,6 +357,9 @@ public class RecordQSAR_ToolBox {
 					double value = Double.parseDouble(Value_MeanValue);
 					
 					er.property_value_string = "EC3 = "+df.format(value) + "%";
+					er.property_value_point_estimate_original=value;
+					er.property_value_units_original="%";
+					er.property_value_numeric_qualifier=Value_Qualifier;
 					
 					if (Value_Qualifier != null)
 						er.property_value_string = Value_Qualifier + er.property_value_string;
@@ -374,8 +379,10 @@ public class RecordQSAR_ToolBox {
 						er.updateNote("EC3 (" + Value_Qualifier + " "+ df.format(value) + "%) < 100%");
 						
 						// System.out.println(er.note);
-					} else if (value > 100) {
-						System.out.println("Need to handle EC3>100: " + Value_MeanValue + " " + Value_Unit);
+					} else if (value >= 100) {
+						er.property_value_qualitative = "Not sensitizing";
+						er.updateNote("EC3 (" + value+ "%) was greater than 100%");
+//						System.out.println("Need to handle EC3>100: " + Value_MeanValue + " " + Value_Unit);
 						// er.updateNote("Negative because the EC3
 						// ("+er.property_value_point_estimate_original+"%)+ was greater than 100%");
 						// Doesnt happen
@@ -391,9 +398,13 @@ public class RecordQSAR_ToolBox {
 
 					if(Value_MeanValue.equals("Negative") || Value_MeanValue.equals("Not sensitising")) {
 						er.property_value_qualitative="Not sensitizing";
+						er.property_value_point_estimate_original=nonSensitizing;
+						er.property_value_units_original=ExperimentalConstants.str_binary;
 						er.updateNote("call = "+Value_MeanValue);
 					} else if(Value_MeanValue.equals("Strongly positive") || Value_MeanValue.equals("Weakly positive")) {
 						er.property_value_qualitative="Sensitizing";
+						er.property_value_point_estimate_original=sensitizing;
+						er.property_value_units_original=ExperimentalConstants.str_binary;
 						er.updateNote("call = "+Value_MeanValue);
 					} else { 
 						System.out.println("Need to handle Value_MeanValue="+Value_MeanValue);
@@ -409,14 +420,12 @@ public class RecordQSAR_ToolBox {
 			
 			if (er.property_value_qualitative!=null) {
 				if (er.property_value_qualitative.contains("Not sensitizing")) {
-					er.property_value_point_estimate_original=0.0;
+					er.property_value_point_estimate_final=nonSensitizing;
 
 				} else if (er.property_value_qualitative.contains("Sensitizing")) {
-					er.property_value_point_estimate_original=1.0;
+					er.property_value_point_estimate_final=sensitizing;
 				}
-				er.property_value_point_estimate_final=er.property_value_point_estimate_original;
-				er.property_value_units_original=ExperimentalConstants.str_binary;
-				er.property_value_units_final=er.property_value_units_original;
+				er.property_value_units_final=ExperimentalConstants.str_binary;
 				
 //				System.out.println(er.property_value_qualitative);
 			}

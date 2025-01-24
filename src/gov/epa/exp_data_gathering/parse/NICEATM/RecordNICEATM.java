@@ -1,5 +1,6 @@
 package gov.epa.exp_data_gathering.parse.NICEATM;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -55,6 +56,53 @@ public class RecordNICEATM {
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(0,true); // TODO Chemical name index guessed from header. Is this accurate?
 		return records;
 	}
+	
+	private void setPropertyValues(ExperimentalRecord er) {
+		DecimalFormat df=new DecimalFormat("0.0");
+		double nonSensitizing = 0;
+		double sensitizing = 1;
+		
+		if(this.EC3.contains("nmol")) {
+			er.keep=false;
+			er.reason="Bad units";
+		}
+		
+		if(er.keep) {
+			er.property_value_units_final=ExperimentalConstants.str_binary;
+		}
+		
+		if(er.keep) {
+			if(!this.EC3.equals("NC") && !this.EC3.equals("IDR")) {
+				er.property_value_units_final=ExperimentalConstants.str_binary;
+				double value = Double.parseDouble(EC3);
+				er.property_value_units_original="%";
+				er.property_value_point_estimate_original=value;
+				er.property_value_string=this.LLNA_Result + ": " + "EC3 = " + df.format(value) + "%";
+			
+				if (value < 100) {
+					er.property_value_qualitative = "Sensitizing";
+					er.property_value_point_estimate_final=sensitizing;
+					er.updateNote("0% < EC3 (" + df.format(value) + "%) < 100%");
+				} else {
+					er.property_value_point_estimate_final=nonSensitizing;
+					er.property_value_qualitative = "Not sensitizing";
+					er.updateNote("EC3 (" + df.format(value)+ "%) was greater than 100%");
+				}
+			} else if(this.EC3.equals("NC") || this.EC3.equals("IDR")){
+					er.property_value_units_original=ExperimentalConstants.str_binary;
+					er.property_value_string=this.LLNA_Result  + ": " + "EC3 = " + this.EC3;
+					if(this.LLNA_Result.equals("POS")) {
+						er.property_value_qualitative = "Sensitizing";
+						er.property_value_point_estimate_final=sensitizing;
+						er.updateNote("IDR");
+					} else if(this.LLNA_Result.equals("NEG")) {
+						er.property_value_qualitative = "Not sensitizing";
+						er.property_value_point_estimate_final=nonSensitizing;
+						er.updateNote("NC");
+					}
+				}
+			}
+		}
 
 	public ExperimentalRecord toExperimentalRecord() {
 		ExperimentalRecord er=new ExperimentalRecord();
@@ -71,23 +119,11 @@ public class RecordNICEATM {
 		er.experimental_parameters.put("LLNA Vehicle", this.LLNA_Vehicle);
 		er.experimental_parameters.put("EC3 Value", this.EC3);
 		
-		if(er.keep) {
-			er.property_value_units_final=ExperimentalConstants.str_binary;
-			er.property_value_units_original=ExperimentalConstants.str_binary;
-		}
-		double nonSensitizing = 0;
-		double sensitizing = 1;
-		er.property_value_string=this.LLNA_Result;		
-		if(this.LLNA_Result.equals("POS")) {
-			er.property_value_point_estimate_final=sensitizing;
-		} else if(this.LLNA_Result.equals("NEG")) {
-			er.property_value_point_estimate_final=nonSensitizing;
-		}
+		setPropertyValues(er);
 		
 		er.literatureSource=new LiteratureSource();
 		er.literatureSource.name=this.Brief_Citation;
 		er.literatureSource.citation=this.Citation;
-		er.reference=this.Citation;
 		
 		return er;
 	}
