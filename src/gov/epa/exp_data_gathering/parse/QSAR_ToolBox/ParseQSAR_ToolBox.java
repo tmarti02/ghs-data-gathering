@@ -16,15 +16,15 @@ import gov.epa.exp_data_gathering.parse.Parse;
 
 public class ParseQSAR_ToolBox extends Parse {
 
-	String fileNameAcuteToxicityDB="acute oral toxicity db.xlsx";
-	String fileNameAcuteToxicityEchaReach="echa reach acute toxicity by test material.xlsx";
-	String fileNameSensitizationEchaReach="echa reach sensitization by test material.xlsx";
-	String fileNameSensitization="skin sensitization.xlsx";
+	public static String fileNameAcuteToxicityDB="acute oral toxicity db.xlsx";
+	public static String fileNameAcuteToxicityEchaReach="echa reach acute toxicity by test material.xlsx";
+	public static String fileNameSensitizationEchaReach="echa reach sensitization by test material.xlsx";
+	public static String fileNameSensitization="skin sensitization.xlsx";
 	
 //	String fileName=fileNameAcuteToxicityEchaReach;
 //	String fileName=fileNameAcuteToxicityDB;
 //	String fileName=fileNameSensitizationEchaReach;
-	String fileName=fileNameSensitization;
+	public String fileName=fileNameSensitization;
 	
 	String original_source_name;
 	List<String>selectedEndpoints;
