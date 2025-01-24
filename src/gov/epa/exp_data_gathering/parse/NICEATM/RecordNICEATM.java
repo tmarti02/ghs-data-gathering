@@ -58,51 +58,76 @@ public class RecordNICEATM {
 	}
 	
 	private void setPropertyValues(ExperimentalRecord er) {
-		DecimalFormat df=new DecimalFormat("0.0");
+		DecimalFormat df=new DecimalFormat("0.00");
 		double nonSensitizing = 0;
 		double sensitizing = 1;
-		
+
 		if(this.EC3.contains("nmol")) {
 			er.keep=false;
 			er.reason="Bad units";
+			return;
 		}
-		
-		if(er.keep) {
-			er.property_value_units_final=ExperimentalConstants.str_binary;
-		}
-		
-		if(er.keep) {
-			if(!this.EC3.equals("NC") && !this.EC3.equals("IDR")) {
-				er.property_value_units_final=ExperimentalConstants.str_binary;
+
+		er.property_value_units_final=ExperimentalConstants.str_binary;
+
+		if(this.EC3.equals("IDR")) {
+			er.property_value_units_original=ExperimentalConstants.str_binary;
+			er.property_value_string=this.LLNA_Result  + ": " + "EC3=" + this.EC3;
+
+			if(this.LLNA_Result.equals("POS")) {
+				er.property_value_qualitative = "Sensitizing";
+				er.property_value_point_estimate_final=sensitizing;
+				er.updateNote("IDR (EC3 not available but sensitizing");
+			}
+//			System.out.println("CAS="+er.casrn+"\tVS="+er.property_value_string+"\tPEF="+er.property_value_point_estimate_final);
+		} else {
+
+			if(!EC3.equals("NC")) {
 				double value = Double.parseDouble(EC3);
-				er.property_value_units_original="%";
-				er.property_value_point_estimate_original=value;
-				er.property_value_string=this.LLNA_Result + ": " + "EC3 = " + df.format(value) + "%";
-			
+				
 				if (value < 100) {
 					er.property_value_qualitative = "Sensitizing";
 					er.property_value_point_estimate_final=sensitizing;
 					er.updateNote("0% < EC3 (" + df.format(value) + "%) < 100%");
-				} else {
+				} else {//this may not happen
 					er.property_value_point_estimate_final=nonSensitizing;
 					er.property_value_qualitative = "Not sensitizing";
 					er.updateNote("EC3 (" + df.format(value)+ "%) was greater than 100%");
+					
+					System.out.println("*** EC3>=100\t"+er.casrn);
 				}
-			} else if(this.EC3.equals("NC") || this.EC3.equals("IDR")){
-					er.property_value_units_original=ExperimentalConstants.str_binary;
-					er.property_value_string=this.LLNA_Result  + ": " + "EC3 = " + this.EC3;
-					if(this.LLNA_Result.equals("POS")) {
-						er.property_value_qualitative = "Sensitizing";
-						er.property_value_point_estimate_final=sensitizing;
-						er.updateNote("IDR");
-					} else if(this.LLNA_Result.equals("NEG")) {
-						er.property_value_qualitative = "Not sensitizing";
-						er.property_value_point_estimate_final=nonSensitizing;
-						er.updateNote("NC");
-					}
+				
+				er.property_value_units_original="%";
+				er.property_value_point_estimate_original=value;
+				
+				try {
+					er.property_value_string=LLNA_Result+": EC3="+df.format(value)+"%";
+				} catch(Exception ex) {
+					System.out.println("error formatting EC3="+EC3);
 				}
+				
+//				System.out.println("CAS="+er.casrn+"\tVS="+er.property_value_string+"\tPEF="+er.property_value_point_estimate_final+"\tUO="+er.property_value_units_original);
+
+			} else {
+				
+				er.property_value_units_original=ExperimentalConstants.str_binary;
+				er.property_value_string=this.LLNA_Result  + ": " + "EC3=" + this.EC3;
+
+				if(this.LLNA_Result.equals("NEG")) {
+					er.property_value_qualitative = "Not sensitizing";
+					er.property_value_point_estimate_final=nonSensitizing;
+				} else {
+					System.out.println("*** Handle not NEG");
+				}
+				
+				System.out.println("CAS="+er.casrn+"\tVS="+er.property_value_string+"\tPEF="+er.property_value_point_estimate_final);
+
 			}
 		}
+		
+//		System.out.println("CAS="+er.casrn+"\tVS="+er.property_value_string+"\tPEF="+er.property_value_point_estimate_final);
+
+	}
 
 	public ExperimentalRecord toExperimentalRecord() {
 		ExperimentalRecord er=new ExperimentalRecord();

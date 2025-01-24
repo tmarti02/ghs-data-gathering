@@ -71,7 +71,7 @@ public class ParseNICEATM extends Parse {
 	public static void main(String[] args) {
 		ParseNICEATM p = new ParseNICEATM();
 		
-		p.generateOriginalJSONRecords=true;
+		p.generateOriginalJSONRecords=false;
 		//p.howManyOriginalRecordsFiles=2;
 		
 		p.removeDuplicates=false;
