@@ -273,7 +273,7 @@ public class RecordQSAR_ToolBox {
 				
 			} else if(EndpointPath.equals("Human Health Hazards#Acute Toxicity")) {
 //				System.out.println("Assay="+Assay);
-				System.out.println("Assay="+Assay);
+//				System.out.println("Assay="+Assay);
 
 				setUnitsAcute(er);
 				setPropertyValuesAcuteToxicity(er);
@@ -312,7 +312,7 @@ public class RecordQSAR_ToolBox {
 				
 				
 				
-				System.out.println(er.literatureSource.citation);
+//				System.out.println(er.literatureSource.citation);
 				
 			}				
 			
