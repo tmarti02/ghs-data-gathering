@@ -309,7 +309,8 @@ public class RecordQSAR_ToolBox {
 				if (this.Reference_source!=null) er.literatureSource.citation+=Reference_source+" ";
 				
 				er.literatureSource.citation=er.literatureSource.citation.trim();
-				
+				er.literatureSource.citation=er.literatureSource.citation.replace("?", "-");
+				er.literatureSource.citation=er.literatureSource.citation.replace("û", "-");
 				
 				
 //				System.out.println(er.literatureSource.citation);
@@ -371,6 +372,7 @@ public class RecordQSAR_ToolBox {
 							er.updateNote("EC3 (>" + value+ "%) was greater than 100%");
 						} else {
 							er.keep = false;
+							er.reason="Ambiguous";
 							er.property_value_qualitative = "Ambiguous";
 							er.updateNote("unknown if EC3 (>"+ value + "%) is > 100%");
 						}
