@@ -129,6 +129,7 @@ public class RecordNIEHS_ICE_2024_08 {
 					er.updateNote("EC3 (>" + value+ "%) was greater than 100%");
 				} else {
 					er.keep = false;
+					er.reason="Ambiguous";
 					er.property_value_qualitative = "Ambiguous";
 					er.updateNote("unknown if EC3 (>"+ value + "%) is > 100%");
 				}
