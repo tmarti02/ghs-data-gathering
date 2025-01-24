@@ -352,7 +352,6 @@ public class RecordQSAR_ToolBox {
 
 				if(Value_Scale.equals("Skin sensitization EC3(ratio)")) {
 					
-				
 					double value = Double.parseDouble(Value_MeanValue);
 					
 					er.property_value_string = "EC3 = "+df.format(value) + "%";
@@ -386,8 +385,6 @@ public class RecordQSAR_ToolBox {
 						// System.out.println(er.note);
 					}		
 					
-					
-					
 				} else if (Value_Scale.equals("Skin sensitisation I (Oasis)")) {
 
 					er.property_value_string=Value_MeanValue;
@@ -409,7 +406,6 @@ public class RecordQSAR_ToolBox {
 			} else {
 //				System.out.println("Need to handle Value_Scale="+Value_Scale+" for Assay="+Assay);
 			}
-
 			
 			if (er.property_value_qualitative!=null) {
 				if (er.property_value_qualitative.contains("Not sensitizing")) {
@@ -424,9 +420,6 @@ public class RecordQSAR_ToolBox {
 				
 //				System.out.println(er.property_value_qualitative);
 			}
-			
-			
-			
 
 		} else if(Database.equals("ECHA REACH")) {
 			System.out.println("Handle ECHA REACH");
