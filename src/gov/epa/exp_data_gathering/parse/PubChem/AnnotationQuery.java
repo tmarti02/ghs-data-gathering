@@ -25,9 +25,9 @@ import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.database.SqlUtilities;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Value;
-import gov.epa.exp_data_gathering.parse.PubChem.ParseNewDatabase.DB_Annotation;
-import gov.epa.exp_data_gathering.parse.PubChem.ParseNewDatabase.DB_Annotation_CID;
-import gov.epa.exp_data_gathering.parse.PubChem.ParseNewDatabase.DB_Identifier;
+import gov.epa.exp_data_gathering.parse.PubChem.ParseDatabaseAnnotation.DB_Annotation;
+import gov.epa.exp_data_gathering.parse.PubChem.ParseDatabaseAnnotation.DB_Annotation_CID;
+import gov.epa.exp_data_gathering.parse.PubChem.ParseDatabaseAnnotation.DB_Identifier;
 
 
 public class AnnotationQuery {
@@ -116,8 +116,8 @@ public class AnnotationQuery {
 		}
 
 		Statement stat=SQLite_Utilities.getStatement(conn);
-		HashSet<Long> CIDsAnnotationCIDs = ParseNewDatabase.getCIDsInDB(stat,"annotation_cids");
-		HashSet<Long> CIDsInIdentifiers = ParseNewDatabase.getCIDsInDB(stat,"identifiers");
+		HashSet<Long> CIDsAnnotationCIDs = ParseDatabaseAnnotation.getCIDsInDB(stat,"annotation_cids");
+		HashSet<Long> CIDsInIdentifiers = ParseDatabaseAnnotation.getCIDsInDB(stat,"identifiers");
 
 		HashSet<Long> CIDsToLoad=new HashSet<>();
 

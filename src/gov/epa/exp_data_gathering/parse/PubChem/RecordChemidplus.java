@@ -18,7 +18,7 @@ import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.PublicSource;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.Data;
 import gov.epa.exp_data_gathering.parse.PubChem.JSONsForPubChem.IdentifierData;
-import gov.epa.exp_data_gathering.parse.PubChem.ParseNewDatabase.DB_Identifier;
+import gov.epa.exp_data_gathering.parse.PubChem.ParseDatabaseAnnotation.DB_Identifier;
 
 /**
 * @author TMARTI02
@@ -51,7 +51,7 @@ public class RecordChemidplus {
 		Connection conn= SQLite_Utilities.getConnection(databasePath);
 		Statement stat=SQLite_Utilities.getStatement(conn);
 
-		HashSet<Long> CIDsInIdentifiers = ParseNewDatabase.getCIDsInDB(stat,"identifiers");
+		HashSet<Long> CIDsInIdentifiers = ParseDatabaseAnnotation.getCIDsInDB(stat,"identifiers");
 		
 		System.out.println("CIDs in identifiers table:"+CIDsInIdentifiers.size());
 		

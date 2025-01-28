@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
-
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -89,14 +88,19 @@ public class ParsePubChem extends Parse {
 	@Override
 	protected void createRecords() {
 		
+		System.out.println("Enter createRecords");
+		
 		if(generateOriginalJSONRecords) {
 			
 			if(databaseFormat.equals(databaseFormatCompound)) {
-				Vector<RecordPubChem> records = RecordPubChem.parseJSONsInDatabase();
+				
+				ParseDatabaseCompound p=new ParseDatabaseCompound();
+				
+				Vector<RecordPubChem> records = p.parseJSONsInDatabase();
 				System.out.println("Added "+records.size()+" records");
 				writeOriginalRecordsToFile(records);
 			} else if(databaseFormat.equals(databaseFormatAnnotation)) {
-				ParseNewDatabase p=new ParseNewDatabase();
+				ParseDatabaseAnnotation p=new ParseDatabaseAnnotation();
 				p.parseJSONsInDatabase();
 			}
 		}
@@ -505,7 +509,10 @@ public class ParsePubChem extends Parse {
 			RecordPubChem[] tempRecords;
 			try {
 				tempRecords = gson.fromJson(new FileReader(file), RecordPubChem[].class);
-				for(RecordPubChem record:tempRecords) recordsPubChem.add(record);
+				for(RecordPubChem record:tempRecords) {
+					record.originalJsonFile=file.getName();
+					recordsPubChem.add(record);
+				}
 				System.out.println(heading+"\t"+tempRecords.length);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -890,57 +897,54 @@ public class ParsePubChem extends Parse {
 	}
 	
 	public static Hashtable<String, String> getCID_HT() {
-		Hashtable<String,String>ht=new Hashtable<>();
-
-		Type listType = new TypeToken<ArrayList<JsonObject>>(){}.getType();
-		
-		List<JsonObject> jaMolWeight=null;
-		try {
-			Gson gson=new Gson();
-			jaMolWeight = gson.fromJson(new FileReader("C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\0 java\\0 model_management\\hibernate_qsar_model_building\\data\\dsstox\\pubchem cids to dtxcids.json"), listType);
-			
-			for (JsonObject jo:jaMolWeight) {
-				String pubchemCID=jo.get("pubchem_cid").getAsString();
-				
-				if(jo.get("dsstox_compound_id").isJsonNull()) continue;
-				
-				String dtxcid=jo.get("dsstox_compound_id").getAsString();
-				ht.put(pubchemCID,dtxcid);
-//				System.out.println(pubchemCID+"\t"+dtxcid);
-			}
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return ht;
-	}
-
+			Hashtable<String,String>ht=new Hashtable<>();
 	
+			Type listType = new TypeToken<ArrayList<JsonObject>>(){}.getType();
+			
+			List<JsonObject> jaMolWeight=null;
+			try {
+				Gson gson=new Gson();
+				jaMolWeight = gson.fromJson(new FileReader("C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\0 java\\0 model_management\\hibernate_qsar_model_building\\data\\dsstox\\pubchem cids to dtxcids.json"), listType);
+				
+				for (JsonObject jo:jaMolWeight) {
+					String pubchemCID=jo.get("pubchem_cid").getAsString();
+					
+					if(jo.get("dsstox_compound_id").isJsonNull()) continue;
+					
+					String dtxcid=jo.get("dsstox_compound_id").getAsString();
+					ht.put(pubchemCID,dtxcid);
+	//				System.out.println(pubchemCID+"\t"+dtxcid);
+				}
+	
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return ht;
+		}
+
 	public static void main(String[] args) {
 		ParsePubChem p = new ParsePubChem();
 		
 		p.storeDTXCIDs=false;//if true it stores dtxcid based on the lookup from the compounds table in dsstox
+//		p.generateOriginalJSONRecords=true;
 		p.generateOriginalJSONRecords=false;
-//		p.howManyOriginalRecordsFiles=3;
 
 //		p.databaseFormat=p.databaseFormatCompound;//old format
 		p.databaseFormat=p.databaseFormatAnnotation;//new format based on annotation queries of pubchem
 		
 		storeDTXCIDs=false;//if true it stores dtxcid based on the lookup from the compounds table in dsstox
 
-		p.generateOriginalJSONRecords=false;
-		p.howManyOriginalRecordsFiles=3;//used for old format which doesnt store original jsons by heading
 
 		p.removeDuplicates=true;
 
-		p.writeJsonExperimentalRecordsFile=false;
+		p.writeJsonExperimentalRecordsFile=true;
 		p.writeExcelExperimentalRecordsFile=true;
 		p.writeExcelFileByProperty=true;		
 		p.writeCheckingExcelFile=false;//creates random sample spreadsheet
 		
-//		p.selectedHeadings=null;
-		p.selectedHeadings=Arrays.asList("Solubility");								
+		p.selectedHeadings=null;
+//		p.selectedHeadings=Arrays.asList("Solubility");								
 //		p.selectedHeadings=Arrays.asList("Density");
 //		p.selectedHeadings=Arrays.asList("Vapor Density");
 //		p.selectedHeadings=Arrays.asList("Density", "Vapor Density");

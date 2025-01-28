@@ -703,7 +703,7 @@ public class GetCIDsFromProperty {
 
 	private static void compareOldToNew(GetCIDsFromProperty g, String folder) {
 		HashSet<Long>cidsNew=g.getCidsFromFolder(folder);
-		HashSet<Long> cidsOld = RecordPubChem.getCidsInDatabase2("Pubchem_2024_03_20");// old ones from 2020
+		HashSet<Long> cidsOld = ParseDatabaseCompound.getCidsInDatabase2("Pubchem_2024_03_20");// old ones from 2020
 		
 		HashSet<Long> cidsOnlyInOld=new HashSet<>();
 		HashSet<Long> cidsOnlyInNew=new HashSet<>();

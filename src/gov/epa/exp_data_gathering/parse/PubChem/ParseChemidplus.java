@@ -13,7 +13,7 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SqlUtilities;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
-import gov.epa.exp_data_gathering.parse.PubChem.ParseNewDatabase.DB_Identifier;
+import gov.epa.exp_data_gathering.parse.PubChem.ParseDatabaseAnnotation.DB_Identifier;
 
 /**
 * @author TMARTI02

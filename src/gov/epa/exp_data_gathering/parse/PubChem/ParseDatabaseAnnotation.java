@@ -53,7 +53,7 @@ order by TOCHeading;
  * 
  * @author TMARTI02
  */
-public class ParseNewDatabase {
+public class ParseDatabaseAnnotation {
 
 
 	static Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues()
@@ -204,7 +204,27 @@ public class ParseNewDatabase {
 
 	private void addSourceMetadata(Annotation annotation, AnnotationData data, RecordPubChem pcr, Hashtable<Long, String> htCASByANID) {
 
+		
 		pcr.chemicalNameReference=annotation.Name;
+		
+		// For water solubility there are records where the chemicalNameReference is just a pubchem SID 
+		//    "ANID": 698775,
+		//    "cid": 849145,
+
+		
+		boolean hasSIDName=false;
+		for(int i=1;i<=9;i++) {
+			if(annotation.Name.indexOf("SID"+i)==0) {
+				hasSIDName=true;
+				break;
+			}
+		}
+		
+		if(hasSIDName) {
+			pcr.chemicalNameReference=null;//dont store it because it wont map in chemreg	
+//			System.out.println(annotation.Name);
+		}
+		
 		pcr.casReference=htCASByANID.get(annotation.ANID);
 		//		System.out.println(annotation.ANID+"\t"+htCASByANID.get(annotation.ANID));
 
@@ -616,7 +636,7 @@ public class ParseNewDatabase {
 	
 	
 	public static void main(String[] args) {
-		ParseNewDatabase r=new ParseNewDatabase();						
+		ParseDatabaseAnnotation r=new ParseDatabaseAnnotation();						
 //		r.deleteBadIdentifiers();
 		//r.testParseFromAnnotation();//		
 //		r.testParseRecordsInDatabase();
