@@ -139,26 +139,26 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return json;
 	}
 	
-	public Hashtable<String, List<ExperimentalRecord>> createExpRecordHashtableBySID(String desiredUnits) {
+	public Hashtable<String, ExperimentalRecords> createExpRecordHashtableBySID(String desiredUnits) {
 		
-		Hashtable<String,List<ExperimentalRecord>>htER=new Hashtable<>();
+		Hashtable<String,ExperimentalRecords>htER=new Hashtable<>();
 		
 		for (ExperimentalRecord er:this)  {
 			
 			if(!er.keep) continue;
 			
 			//Only use the ones with g/L in the stats calcs:
-			if(er.property_value_units_final.equals(desiredUnits)) {
+			if(er.property_value_units_final.equals(desiredUnits) || desiredUnits==null) {
 //				System.out.println(er.casrn+"\t"+er.property_value_point_estimate_final);
 				
 				if(er.dsstox_substance_id==null) continue;
 				
 				if(htER.containsKey(er.dsstox_substance_id) ) {
-					List<ExperimentalRecord>recs=htER.get(er.dsstox_substance_id);
+					ExperimentalRecords recs=htER.get(er.dsstox_substance_id);
 					recs.add(er);	
 					
 				} else {
-					List<ExperimentalRecord>recs=new ArrayList<>();
+					ExperimentalRecords recs=new ExperimentalRecords();
 					recs.add(er);
 					htER.put(er.dsstox_substance_id, recs);
 				}
@@ -236,7 +236,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		
 	}
 	
-	public static void calculateStdDev(Hashtable<String, List<ExperimentalRecord>> htER, boolean convertToLog) {
+	public static void calculateStdDev(Hashtable<String, ExperimentalRecords> htER, boolean convertToLog) {
 		double avgSD=0;
 		int count=0;
 		int countOverall=0;
@@ -261,7 +261,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		System.out.println("Kept records with correct units\t"+countOverall);
 	}
 	
-	public static Hashtable<String,Double> calculateMedian(Hashtable<String, List<ExperimentalRecord>> htER, boolean convertToLog) {
+	public static Hashtable<String,Double> calculateMedian(Hashtable<String, ExperimentalRecords> htER, boolean convertToLog) {
 		Hashtable<String,Double> htMedian=new Hashtable<>();
 		for (String dtxsid:htER.keySet()) {
 			

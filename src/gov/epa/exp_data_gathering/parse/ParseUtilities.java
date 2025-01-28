@@ -601,7 +601,15 @@ public class ParseUtilities extends Parse {
 		for (String badProp:badProps) {
 
 			if(PVLC.contains(badProp) && !PVLC.contains("nfpa")) {
+				
+				if(badProp.equals("mp") && PVLC.contains("decomp")) continue;
+				
+				if(er.property_name.equals(ExperimentalConstants.strAutoIgnitionTemperature)) {
+					if(PVLC.contains("ignition temp") && PVLC.contains("mp"))continue;
+				}
 
+//				System.out.println("Incorrect property:"+PVLC+"\t"+badProp+"\t"+er.property_name);
+				
 				er.keep=false;
 				er.reason="Incorrect property";
 				//				er.updateNote("parsed propertyValue: "+propertyValue);
@@ -1197,8 +1205,6 @@ public class ParseUtilities extends Parse {
 			er.property_value_qualitative = "autoignition";
 			gotQualitativeSolubility = true;
 		}
-
-
 
 		String[] qualifiers = {"none","very poor","poor","low","negligible","slight","significant","complete"};
 		for (String qual:qualifiers) {

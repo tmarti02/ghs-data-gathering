@@ -8,6 +8,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.TreeMap;
 
+import com.google.gson.Gson;
+
 import gov.epa.api.ExperimentalConstants;
 
 /**
@@ -35,7 +37,7 @@ public class CompareExperimentalRecords {
 		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
 		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
 		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,true));
-		compareChemicalsInCommon(tm1, tm2);
+		compareChemicalsInCommon(tm1, tm2, units);
 		
 	}
 	
@@ -47,7 +49,7 @@ public class CompareExperimentalRecords {
 		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
 		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
 		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
-		compareChemicalsInCommon(tm1, tm2);
+		compareChemicalsInCommon(tm1, tm2,units);
 		
 	}
 	
@@ -65,8 +67,8 @@ public class CompareExperimentalRecords {
 		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
 		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
 		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
-		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,true));
-		compareChemicalsInCommon(tm1, tm2);
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
+		compareChemicalsInCommon(tm1, tm2, units);
 		
 	}
 
@@ -78,7 +80,19 @@ public class CompareExperimentalRecords {
 		}
 		return recsAll;
 	}
-
+	private ExperimentalRecords getAllExperimentalRecords(List<Source> sources,boolean isbad) {
+		ExperimentalRecords recsAll=new ExperimentalRecords();
+		for(Source source:sources) {
+			if(isbad) {
+				ExperimentalRecords recs=getExperimentalRecordsBad(source.sourceName, source.subfolder);
+				recsAll.addAll(recs);
+			} else {
+				ExperimentalRecords recs=getExperimentalRecords(source.sourceName, source.subfolder);
+				recsAll.addAll(recs);
+			}
+		}
+		return recsAll;
+	}
 	
 
 
@@ -139,6 +153,20 @@ public class CompareExperimentalRecords {
 		return countIn1Not2;
 		
 	}
+	
+
+	int getCountInEither(TreeMap<String,ExperimentalRecords>tm1,TreeMap<String,ExperimentalRecords>tm2,boolean printValues) {
+		
+		HashSet<String>keys=new HashSet<>();
+		
+		Hashtable<String,Integer>htCountBySource=new Hashtable<>();
+		
+		for (String key:tm1.keySet()) keys.add(key);
+		for (String key:tm2.keySet()) keys.add(key);
+		
+		return keys.size();
+		
+	}
 
 	private HashSet<String> updateCountBySourceHashtable(Hashtable<String, Integer> htCountBySource, ExperimentalRecords recs) {
 		
@@ -178,38 +206,54 @@ public class CompareExperimentalRecords {
 	
 	
 
-	double compareChemicalsInCommon(TreeMap<String,ExperimentalRecords>tm1,TreeMap<String,ExperimentalRecords>tm2) {
+	double compareChemicalsInCommon(TreeMap<String,ExperimentalRecords>tm1,TreeMap<String,ExperimentalRecords>tm2, String units) {
+
+		if(!units.toLowerCase().contains("log")) {
+			System.out.println("Need to handle units");
+		}
 		
 		int countInCommon=0;
 		double MAE=0;
 
 		DecimalFormat df=new DecimalFormat("0.00");
 
-
-		boolean printValues=false;
+		boolean printValues=true;
+//		boolean printValues=false;
 		
-		if(printValues) System.out.println("casrn\tLog10median_1\tLog10median_2\tdiff");
+		if(printValues) System.out.println("\nkey\tLog10median_1\tLog10median_2\tdiff");
 
-		
-		for (String casrn:tm1.keySet()) {
-			ExperimentalRecords recs1=tm1.get(casrn);
+		for (String key:tm1.keySet()) {
+			ExperimentalRecords recs1=tm1.get(key);
 			
-			if(!tm2.containsKey(casrn))continue;
+//			System.out.println(key);
 			
-			ExperimentalRecords recs2=tm2.get(casrn);
+			if(!tm2.containsKey(key))continue;
+			
+			ExperimentalRecords recs2=tm2.get(key);
 			
 			if(recs1.medianValue!=null && recs2.medianValue!=null) {
 //				System.out.println(casrn+"\t"+recs1.medianValue+"\t"+recs2.medianValue);	
 				
-				double error=Math.abs(Math.log10(recs1.medianValue)-Math.log10(recs2.medianValue));
+				Double error=null;
+				
+				if(units.toLowerCase().contains("log")) {
+					error=Math.abs(recs1.medianValue-recs2.medianValue);
+					if(printValues) {
+						
+						System.out.println("already log\t"+key+"\t"+df.format(recs1.medianValue)+"\t"+df.format(recs2.medianValue)+"\t"+df.format(error));					
+					}
+				} else {
+					error=Math.abs(Math.log10(recs1.medianValue)-Math.log10(recs2.medianValue));
+					if(printValues) {
+						System.out.println("took log\t"+key+"\t"+df.format(Math.log10(recs1.medianValue))+"\t"+df.format(Math.log10(recs2.medianValue))+"\t"+df.format(error));					
+					}
+				}
+				
 				
 //				if(error>0) {
 //					System.out.println(casrn+"\t"+df.format(Math.log10(recs1.medianValue))+"\t"+df.format(Math.log10(recs2.medianValue))+"\t"+df.format(error));
 //				}
 				
-				if(printValues) {
-					System.out.println(casrn+"\t"+df.format(Math.log10(recs1.medianValue))+"\t"+df.format(Math.log10(recs2.medianValue))+"\t"+df.format(error));					
-				}
 				
 				
 				MAE+=error;
@@ -229,6 +273,68 @@ public class CompareExperimentalRecords {
 
 		return MAE;
 		
+	}
+	
+	
+	void compareChemicalsInCommonConcordance(List<Source>sources1, List<Source>sources2, String propertyName,String units) {
+
+		ExperimentalRecords recs1=getAllExperimentalRecords(sources1);
+		ExperimentalRecords recs2=getAllExperimentalRecords(sources2);
+		
+		TreeMap<String, ExperimentalRecords> tm1 = getTreeMapByCAS(propertyName, units, recs1);
+		TreeMap<String, ExperimentalRecords> tm2 = getTreeMapByCAS(propertyName, units, recs2);
+		
+		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
+		
+		compareConcordance(tm1, tm2);
+		
+	}
+
+	private double compareConcordance(TreeMap<String, ExperimentalRecords> tm1,
+			TreeMap<String, ExperimentalRecords> tm2) {
+		int countInCommon=0;
+		double Concordance=0;
+
+		DecimalFormat df=new DecimalFormat("0.00");
+
+//		boolean printValues=true;
+		boolean printValues=false;
+		
+		if(printValues) System.out.println("casrn\tBinary_1\tBinary_2");
+		
+		for (String casrn:tm1.keySet()) {
+			ExperimentalRecords recs1=tm1.get(casrn);
+			
+			if(!tm2.containsKey(casrn))continue;
+			
+			ExperimentalRecords recs2=tm2.get(casrn);
+			
+			if(recs1.medianValue!=null && recs2.medianValue!=null) {
+//				System.out.println(casrn+"\t"+recs1.medianValue+"\t"+recs2.medianValue);	
+				
+				double diff=Math.abs(recs1.medianValue-recs2.medianValue);
+				
+				if(diff<0.0001) {
+					Concordance++;
+				}
+
+				countInCommon++;
+
+				if(printValues) {
+					System.out.println(casrn+"\t"+recs1.medianValue+"\t"+recs2.medianValue);					
+				}
+			} 
+		}
+		
+		Concordance/=countInCommon;
+		
+		System.out.println("Count in common="+countInCommon);
+		System.out.println("Concordance="+df.format(Concordance));
+
+		return Concordance;
 	}
 	int getCountWithMedian(TreeMap<String,ExperimentalRecords>tm) {
 		
@@ -262,6 +368,9 @@ public class CompareExperimentalRecords {
 		
 		for (ExperimentalRecord er:recs) {
 			
+//			System.out.println(er.property_value_units_final+"\t"+units);
+			
+			if(er.property_value_units_final==null) continue;
 			if(!er.property_value_units_final.equals(units)) continue;
 
 			if(er.property_value_numeric_qualifier!=null) {
@@ -283,8 +392,35 @@ public class CompareExperimentalRecords {
 		
 		if (vals.size()>0) {
 			Collections.sort(vals);
-			setMedianValue(recs,vals);
+			
+			if(units.equals(ExperimentalConstants.str_binary)) {
+				setBinaryScore(recs,vals);
+				
+				if(recs.medianValue!=null) {
+//					System.out.println("\t"+recs.get(0).casrn+"\t"+recs.medianValue);
+				}
+				
+			} else {
+				setMedianValue(recs,vals);	
+			}
+			
 		}
+	}
+
+	private void setBinaryScore(ExperimentalRecords recs, List<Double> vals) {
+
+		if(vals.size()==0) return;
+		
+		double avg=0;
+		for(Double val:vals) avg+=val;
+		avg/=vals.size();
+		
+		if(avg<=0.2) recs.medianValue=0.0;
+		else if (avg>=0.8) recs.medianValue=1.0;
+		else return;
+		
+//		System.out.println(recs.get(0).casrn+"\t"+avg);
+		
 	}
 
 	private void setMedianValue(ExperimentalRecords recs, List<Double> vals) {
@@ -344,11 +480,44 @@ public class CompareExperimentalRecords {
 		setMedianValues(ht,units);
 		return ht;
 	}
+	
+	
+	private TreeMap<String, ExperimentalRecords> getTreeMapByDTXSID(String propertyName, String units,
+			ExperimentalRecords experimentalRecords) {
+		TreeMap<String,ExperimentalRecords>ht=new TreeMap<>();
+		for(ExperimentalRecord er:experimentalRecords) {
+			if(er.dsstox_substance_id==null) continue;
+			if(!er.property_name.contentEquals(propertyName)) continue;
+			if(ht.containsKey(er.dsstox_substance_id)) {
+				ExperimentalRecords recsCAS=ht.get(er.dsstox_substance_id);
+				recsCAS.add(er);
+			} else {
+				ExperimentalRecords recsCAS=new ExperimentalRecords();
+				recsCAS.add(er);
+				ht.put(er.dsstox_substance_id, recsCAS);
+			}
+		}
+		setMedianValues(ht,units);
+		return ht;
+	}
+
 
 	private ExperimentalRecords getExperimentalRecords(String sourceName, String subfolder) {
 		String folder="data\\experimental\\"+sourceName+"\\";
 		if(subfolder!=null) folder+=subfolder+"\\";
 		String filepath1=folder+sourceName+" Experimental Records.json";
+		
+		ExperimentalRecords experimentalRecords=ExperimentalRecords.loadFromJSON(filepath1);
+		
+		System.out.println(filepath1+"\t"+experimentalRecords.size());
+		
+		return experimentalRecords;
+	}
+	
+	private ExperimentalRecords getExperimentalRecordsBad(String sourceName, String subfolder) {
+		String folder="data\\experimental\\"+sourceName+"\\";
+		if(subfolder!=null) folder+=subfolder+"\\";
+		String filepath1=folder+sourceName+" Experimental Records-Bad.json";
 		ExperimentalRecords experimentalRecords=ExperimentalRecords.loadFromJSON(filepath1);
 		return experimentalRecords;
 	}
@@ -403,7 +572,41 @@ public class CompareExperimentalRecords {
 		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
 		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
 		
-		compareChemicalsInCommon(tm1, tm2);
+		compareChemicalsInCommon(tm1, tm2, units);
+		
+	}
+	
+	void lookAtLLNA_MixtureVsNonMixtureNIEHS_ICE() {
+		List<Source>sources1=new ArrayList<>();
+		sources1.add(new Source("NIEHS_ICE_2024_08","skin sensitization"));
+
+		ExperimentalRecords recs=getAllExperimentalRecords(sources1);
+		ExperimentalRecords recsBad=getAllExperimentalRecords(sources1,true);
+		
+//		System.out.println(recs.size());
+//		System.out.println(recsBad.size());
+		
+//		if(true)return;
+		
+		String propertyName=ExperimentalConstants.strSkinSensitizationLLNA;
+		String units=ExperimentalConstants.str_binary;
+		
+		TreeMap<String, ExperimentalRecords> tm1 = getTreeMapByCAS(propertyName, units, recs);
+		System.out.println("good\t"+recs.size()+"\t"+tm1.size());
+		
+		
+		TreeMap<String, ExperimentalRecords> tm2 = getTreeMapByCAS(propertyName, units, recsBad);
+		System.out.println("bad\t"+recsBad.size()+"\t"+tm2.size());
+		
+//		System.out.println(tm1.size());
+//		System.out.println(tm2.size());
+		
+		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
+		
+		compareConcordance(tm1, tm2);
 		
 	}
 	
@@ -444,7 +647,7 @@ public class CompareExperimentalRecords {
 		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
 
 		
-		compareChemicalsInCommon(tm1, tm2);
+		compareChemicalsInCommon(tm1, tm2, units);
 		
 		System.out.println(tm1.size());
 		System.out.println(tm2.size());
@@ -487,7 +690,7 @@ public class CompareExperimentalRecords {
 		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
 
 		
-		compareChemicalsInCommon(tm1, tm2);
+		compareChemicalsInCommon(tm1, tm2, units);
 		
 		System.out.println(tm1.size());
 		System.out.println(tm2.size());
@@ -506,12 +709,16 @@ public class CompareExperimentalRecords {
 		
 //		c.compareToChemidplusToEcha();
 		
-		c.lookAtEchemportalLD50_Guidelines();
+//		c.lookAtLLNA_MixtureVsNonMixtureNIEHS_ICE();
+//		c.compareSensitization();
+		c.compareBCF();
+		
+//		c.lookAtEchemportalLD50_Guidelines();
 //		c.lookAtEchemportalLD50_Guidelines2();
 //		c.lookAtEchemportalLD50_Guidelines3();
 		
 //		c.compareToNIEHS_OralRatLD50();
-//		c.compareToNIEHS_Sensitization();
+
 //		
 //		c.compareREACH_Sources();
 		
@@ -522,18 +729,98 @@ public class CompareExperimentalRecords {
 		
 	}
 
-	private void compareToNIEHS_Sensitization() {
+	private void compareSensitization() {
 		List<Source>sources1=new ArrayList<>();
-		
-//		sources1.add(new Source("eChemPortalAPI","AcuteToxicityOral"));
-		sources1.add(new Source("QSAR_Toolbox","Sensitization"));//mostly done
-		
 		List<Source>sources2=new ArrayList<>();
-		sources2.add(new Source("NIEHS_ICE_2024_08","skin sensitization"));
+
+		//Compare 2 NIEHS data sources:
+//		sources1.add(new Source("NICEATM",null));
+//		sources2.add(new Source("NIEHS_ICE_2024_08","skin sensitization"));
+
+//				countWithMedian1=547
+//				countWithMedian2=385
+//				countIn1Not2=229
+//				countIn2Not1=67
+//				Count in common=318
+//				Concordance=1.00
+//				Conclusion: keep NICEATM version
 		
-		compare(sources1, sources2, ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
 		
+//		sources1.add(new Source("NICEATM",null));
+//		sources2.add(new Source("QSAR_Toolbox","Sensitization"));
+
+//				countWithMedian1=547
+//				countWithMedian2=530
+//				countIn1Not2=184
+//				countIn2Not1=167
+//				Count in common=363
+//				Concordance=0.99
+//				Conclusion: keep both
+	
+		
+		sources1.add(new Source("NICEATM",null));
+		sources2.add(new Source("eChemPortalAPI","SkinSensitisation"));
+		
+//				countWithMedian1=547
+//				countWithMedian2=3984
+//				countIn1Not2=444
+//				countIn2Not1=3881
+//				Count in common=103
+//				Concordance=0.94
+//				Conclusion: keep both
+		
+		System.out.println("Source1="+sources1.get(0).sourceName);
+		System.out.println("Source2="+sources2.get(0).sourceName+"\n");
+		compareChemicalsInCommonConcordance(sources1, sources2,ExperimentalConstants.strSkinSensitizationLLNA,ExperimentalConstants.str_binary);
+	
+
+	
 	}
+	
+	
+	private void compareBCF() {
+		
+		List<Source>sources1=new ArrayList<>();
+		List<Source>sources2=new ArrayList<>();
+
+		String propertyName=ExperimentalConstants.strFishBCF;
+//		String propertyName=ExperimentalConstants.strFishBCFWholeBody;
+
+//		sources1.add(new Source("ECOTOX_2023_12_14",propertyName));
+//		sources2.add(new Source("ToxVal_prod",propertyName));
+
+		sources1.add(new Source("ECOTOX_2023_12_14",propertyName));
+		sources1.add(new Source("ToxVal_prod",propertyName));
+		sources2.add(new Source("Burkhard",propertyName));
+
+		
+		String units="L/kg";
+		
+		ExperimentalRecords recs1=getAllExperimentalRecords(sources1);
+		ExperimentalRecords recs2=getAllExperimentalRecords(sources2);
+		
+		TreeMap<String, ExperimentalRecords> tm1 = getTreeMapByDTXSID(propertyName, units, recs1);
+		TreeMap<String, ExperimentalRecords> tm2 = getTreeMapByDTXSID(propertyName, units, recs2);
+		
+		Gson gson=new Gson();
+		
+		System.out.println("Source1="+gson.toJson(sources1)+"\t"+tm1.size());
+		System.out.println("Source2="+gson.toJson(sources2)+"\t"+tm2.size()+"\n");
+
+		System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+		System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+		System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
+		System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
+		System.out.println("countInEither="+getCountInEither(tm2, tm1,false));
+
+		this.compareChemicalsInCommon(tm1, tm2, units);
+	
+	
+	}
+	
+	
+	
+
 
 	private void compareToNIEHS_OralRatLD50() {
 		List<Source>sources1=new ArrayList<>();
@@ -546,6 +833,8 @@ public class CompareExperimentalRecords {
 		
 		compare(sources1, sources2, ExperimentalConstants.strORAL_RAT_LD50,ExperimentalConstants.str_mg_kg);
 	}
+	
+
 	
 	
 	private void compareToChemidplusToEcha() {

@@ -6,13 +6,13 @@ public class LiteratureSource {
 	public String name;
 	
 	//to be consistent with ToxVal
-	public String citation;	
+	public String citation;	//used as key
 	public String title;
 	public String author;
 	public String journal;
 	public String volume;
 	public String year;
-	public String url;
+	public String url;//e.g. pubmed or publisher url for the article
 	public String doi;
 	public String notes;
 //	public String createdBy;

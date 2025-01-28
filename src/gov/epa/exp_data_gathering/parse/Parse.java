@@ -175,7 +175,7 @@ public class Parse {
 	 */
 	public void createFiles() {
 
-		System.out.println(folderNameExcel);
+//		System.out.println(folderNameExcel);
 
 		if (generateOriginalJSONRecords) {
 			System.out.println("Creating " + sourceName + " json files...");

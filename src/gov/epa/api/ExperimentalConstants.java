@@ -39,6 +39,7 @@ public class ExperimentalConstants {
 	public static final String strFishBCF = "Fish bioconcentration factor";
 	public static final String strFishBCFWholeBody = "Whole body fish bioconcentration factor";
 	public static final String strStandardFishBCF = "Standard test species fish bioconcentration factor";
+	public static final String strStandardFishBCFWholeBody = "Whole body Standard test species fish bioconcentration factor";
 //	public static final String strLogBCF_Fish_Whole_Body="LogBCF_Fish_Whole_Body";
 
 	

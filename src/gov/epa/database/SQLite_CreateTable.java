@@ -22,7 +22,7 @@ public class SQLite_CreateTable {
 		return s;
 	}
 	
-	public static String create_sql_insert_with_field_names(String[] fields, String table) {
+	public static String create_sql_insert_with_field_names(Object[] fields, String table) {
 		String s = "insert into "+table+"("; 
 
 		for (int i = 0; i < fields.length; i++) {
