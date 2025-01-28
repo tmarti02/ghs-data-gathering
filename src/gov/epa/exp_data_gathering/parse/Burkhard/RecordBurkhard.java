@@ -312,7 +312,7 @@ public class RecordBurkhard {
 			
 			
 			if(Log_BCF_min!=null && Log_BCF_min.contains("<")) {
-				System.out.println("min value has <");
+//				System.out.println("min value has <");
 				return null;
 			}
 			

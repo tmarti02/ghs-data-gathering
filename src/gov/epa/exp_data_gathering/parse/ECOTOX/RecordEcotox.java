@@ -941,6 +941,12 @@ public class RecordEcotox {
 			er.experimental_parameters.put("Response site", response_site);
 		}
 		
+		if(media_type.contains("Salt")) {
+			er.keep=false;
+			er.reason="Salt water";
+		}
+		
+		
 		String wc=null;
 		
 		if(conc1_mean!=null) {

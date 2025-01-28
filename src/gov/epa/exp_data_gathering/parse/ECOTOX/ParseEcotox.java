@@ -88,7 +88,7 @@ public class ParseEcotox {
 		
 		if(excludeByExposureType) excludeByExposureType(experimentalRecords);
 
-		Hashtable<String, List<ExperimentalRecord>> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_g_L);
+		Hashtable<String, ExperimentalRecords> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_g_L);
 		ExperimentalRecords.calculateStdDev(htER, true);
 		
 //		compareExposureTypeFactors(experimentalRecords);
@@ -171,7 +171,7 @@ public class ParseEcotox {
 		
 		if(excludeByExposureType) excludeByExposureType(experimentalRecords);
 		
-		Hashtable<String, List<ExperimentalRecord>> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_L_KG);
+		Hashtable<String,ExperimentalRecords> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_L_KG);
 		ExperimentalRecords.calculateStdDev(htER, true);
 
 		Hashtable<String,Double>htMedian=ExperimentalRecords.calculateMedian(htER, true);
@@ -193,17 +193,17 @@ public class ParseEcotox {
 		//Writer experimental records to Json file:
 		
 		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + source;
-
-//		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + source+File.separator+propertyName;
-//		File f=new File(mainFolder);
-//		f.mkdirs();
+		mainFolder+=File.separator+propertyName;
+		new File(mainFolder).mkdirs();
 		
-		String fileNameJsonExperimentalRecords = source+"_"+propertyName+" Experimental Records.json";
-		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
-		
-		//Write experimental records to excel file:
+		String fileNameJsonExperimentalRecords = source+" Experimental Records.json";
+		String fileNameJsonExperimentalRecordsBad = source+" Experimental Records-Bad.json";
 		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
-		experimentalRecords.toExcel_FileDetailed(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("Records", "Records_Detailed").replace("json", "xlsx"));
+		
+		ExperimentalRecords experimentalRecordsBad = experimentalRecords.dumpBadRecords();
+
+		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
+		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
 
 		
 	}
@@ -758,9 +758,6 @@ public class ParseEcotox {
 	}
 	
 	
-	
-	
-	
 	public static void main(String[] args) {
 		ParseEcotox p = new ParseEcotox();
 
@@ -770,18 +767,17 @@ public class ParseEcotox {
 //		p.getRainbowTroutData();
 //		p.getScudData();
 //		p.getFatheadMinnowData();
-		p.getBluegillData();		
-		
-		
+//		p.getBluegillData();		
 		
 //		/************************************************************************
 		
-		
-		
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF,false);
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCF);
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);
+		
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF,false);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody,false);
+		
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCF,false);
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCFWholeBody,false);
 		
 //		p.compareEcotoxToToxval();
 		

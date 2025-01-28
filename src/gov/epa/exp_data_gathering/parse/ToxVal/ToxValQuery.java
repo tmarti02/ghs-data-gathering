@@ -107,16 +107,24 @@ public class ToxValQuery {
 			+ "where s.ecotox_group like '%fish%' and b.logbcf is not null and b.tissue='Whole body'\r\n"
 			+ "order by dtxsid, logbcf;";
 
-	public static final String TOXVAL_FILTERED_QUERY_LOG_BCF_FISH_WHOLE_BODY_PROD ="select distinct b.bcfbaf_id, casrn,c.name, b.dtxsid, logbcf, units, tissue, calc_method, comments, b.water_conc, exposure_type, exposure_duration,  media, temperature, pH, b.species_common, author,title, b.year,b.journal from bcfbaf b\r\n"
+
+//	public static final String TOXVAL_FILTERED_QUERY_LOG_BCF_FISH_WHOLE_BODY_PROD ="select distinct b.bcfbaf_id, casrn,c.name, b.dtxsid, logbcf, units, tissue, calc_method, comments, b.water_conc, exposure_type, exposure_duration,  media, temperature, pH, b.species_common, author,title, b.year,b.journal from bcfbaf b\r\n"
+//			+ "join chemical c on c.dtxsid=b.dtxsid\r\n"
+//			+ "join species s on s.species_common=b.species_common\r\n"
+//			+ "where s.species_supercategory like '%fish%' and b.logbcf is not null and b.tissue='Whole body'\r\n"
+//			+ "order by dtxsid, logbcf;";
+	
+	
+	public static final String TOXVAL_FILTERED_QUERY_LOG_BCF ="select distinct b.bcfbaf_id, casrn,c.name, b.dtxsid, logbcf, units, tissue, calc_method, comments, b.water_conc, exposure_type, exposure_duration,  media, temperature, pH, b.species_common,b.species_scientific, author,title, b.year,b.journal from bcfbaf b\r\n"
 			+ "join chemical c on c.dtxsid=b.dtxsid\r\n"
-			+ "join species s on s.species_common=b.species_common\r\n"
-			+ "where s.species_supercategory like '%fish%' and b.logbcf is not null and b.tissue='Whole body'\r\n"
+			+ "where b.logbcf is not null\r\n"
 			+ "order by dtxsid, logbcf;";
+
 	
 	//V2: Dont filter by species_supercategory yet:
-	public static final String TOXVAL_FILTERED_QUERY_LOG_BCF ="select casrn,c.name, b.dtxsid, logbcf, units, tissue, calc_method, comments, b.water_conc, exposure_type, exposure_duration, media, temperature, pH, b.species_common, b.species_scientific as 'species_latin', tissue, author,title, b.year,b.journal from bcfbaf b\r\n"
-			+ "join chemical c on c.dtxsid=b.dtxsid\r\n"
-			+ "where logbcf is not null;";
+//	public static final String TOXVAL_FILTERED_QUERY_LOG_BCF ="select distinct casrn,c.name, b.dtxsid, logbcf, units, tissue, calc_method, comments, b.water_conc, exposure_type, exposure_duration, media, temperature, pH, b.species_common, b.species_scientific as 'species_latin', tissue, author,title, b.year,b.journal from bcfbaf b\r\n"
+//			+ "join chemical c on c.dtxsid=b.dtxsid\r\n"
+//			+ "where logbcf is not null;";
 
 
 //	public static final String TOXVAL_FILTERED_QUERY_LOG_BCF_PROD ="select casrn,c.name, b.dtxsid, logbcf, units, tissue, calc_method, comments, b.water_conc, exposure_type, exposure_duration, media, temperature, pH, b.species_common, author,title, b.year,b.journal from bcfbaf b\r\n"
@@ -192,6 +200,7 @@ public class ToxValQuery {
 			setConnection("prod_toxval_v93");
 		} else if (version.equals(ParseToxVal.versionV94)) {
 			setConnection("20230419_toxval_v94");
+			System.out.println("20230419_toxval_v94");
 		} else if (version.equals(ParseToxVal.versionProd)) {
 			setConnection("prod_toxval");	
 		} else {

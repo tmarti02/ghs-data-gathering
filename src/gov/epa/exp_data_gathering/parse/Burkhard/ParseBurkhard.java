@@ -70,12 +70,12 @@ public class ParseBurkhard  {
 				RecordBurkhard rb=gson.fromJson(json, RecordBurkhard.class);
 				recordsOriginal.add(rb);
 			}
-			System.out.println(records.size());
+//			System.out.println(records.size());
 		} else {
 			try {
 				RecordBurkhard[]records2 = gson.fromJson(new FileReader(jsonPath), RecordBurkhard[].class);
 				recordsOriginal=Arrays.asList(records2);
-				System.out.println(recordsOriginal.size());
+//				System.out.println(recordsOriginal.size());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -99,31 +99,34 @@ public class ParseBurkhard  {
 
 		}
 
-		System.out.println(counter);
+//		System.out.println(counter);
 
-		
 
-		Hashtable<String, List<ExperimentalRecord>> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_L_KG);
+		Hashtable<String, ExperimentalRecords> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_L_KG);
 		ExperimentalRecords.calculateStdDev(htER, true);
 		
 		Hashtable<String,Double>htMedian=ExperimentalRecords.calculateMedian(htER, true);
 		
-		
+		System.out.println("property="+propertyName);
 		System.out.println("originalRecords.size()="+recordsOriginal.size());
 		System.out.println("experimentalRecords.size()="+experimentalRecords.size());
 		//		
 
 		//Writer experimental records to Json file:
 		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + source;
-
-
-		String fileNameJsonExperimentalRecords = source+"_"+propertyName+" Experimental Records.json";
-		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
-
-		//Write experimental records to excel file:
+		mainFolder+=File.separator+propertyName;
+		new File(mainFolder).mkdirs();
+		
+		String fileNameJsonExperimentalRecords = source+" Experimental Records.json";
+		String fileNameJsonExperimentalRecordsBad = source+" Experimental Records-Bad.json";
 		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
-		experimentalRecords.toExcel_FileDetailed(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("Records", "Records_Detailed").replace("json", "xlsx"));
+		
+		ExperimentalRecords experimentalRecordsBad = experimentalRecords.dumpBadRecords();
 
+		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
+		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
+
+		System.out.println("");
 
 	}
 
@@ -135,8 +138,8 @@ public class ParseBurkhard  {
 		//		p.createFiles();
 
 		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF);
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
-		//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);
 	}
 
 }

@@ -68,6 +68,7 @@ public class ToxValRecord {
 	
 	public String species_common="";//otherwise it causes problems when doing Collectors.toList()	
 	public String species_latin="";//otherwise it causes problems when doing Collectors.toList()
+	public String species_scientific="";
 	public String species_supercategory;
 
 	public String common_name;//toxvalv93 field renamed species_common
@@ -272,9 +273,13 @@ public class ToxValRecord {
 	 * 
 	 * @param version
 	 * @param propertyCategory
+	 * @param limitToWholeBody 
+	 * @param htSuperCategory 
 	 * @return
 	 */
-	public ExperimentalRecord toxvalBCF_to_ExperimentalRecord(String version,String propertyName, String propertyCategory) {
+	public ExperimentalRecord toxvalBCF_to_ExperimentalRecord(String version,String propertyName, 
+			String propertyCategory, boolean limitToFish, boolean limitToWholeBody,
+			Hashtable<String,String> htSuperCategory) {
 		ExperimentalRecord er = new ExperimentalRecord();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
@@ -298,15 +303,22 @@ public class ToxValRecord {
 		er.experimental_parameters=new Hashtable<>();
 //		rec.experimental_parameters.put("tissue",tissue);//already have whole body in property name
 		er.experimental_parameters.put("Species common",species_common);
-		er.experimental_parameters.put("Species latin",species_latin);
+		
+//		System.out.println(species_latin+"\t"+species_scientific);
+				
+		if(!species_scientific.isBlank())		
+			er.experimental_parameters.put("Species latin",species_scientific);
+		else if(!species_latin.isBlank())		
+			er.experimental_parameters.put("Species latin",species_latin);
+		
 		
 		if(tissue!=null)
 			er.experimental_parameters.put("Response site",tissue);
 
 //		rec.experimental_parameters.put("water_concentration",water_conc);
-//		rec.experimental_parameters.put("media",media);
+		er.experimental_parameters.put("media",media);
 //		System.out.println(media);
-//		rec.experimental_parameters.put("exposure_type",exposure_type);
+		er.experimental_parameters.put("exposure_type",exposure_type);
 //		rec.experimental_parameters.put("exposure_duration",exposure_duration);		
 //		if(temperature!=null) rec.experimental_parameters.put("Temperature",temperature);
 		
@@ -344,6 +356,48 @@ public class ToxValRecord {
 		unitConverter.convertRecord(er);
 		
 //		System.out.println(er.property_value_units_original+"\t"+er.property_value_units_final);
+
+//		if (er.dsstox_substance_id==null || !er.dsstox_substance_id.contains("DTXSID")) {
+//			er.keep=false;
+//			er.reason="No DTXSID";
+//		}
+
+		if (limitToWholeBody && !tissue.equals("Whole body")) {
+			er.keep=false;
+			er.reason="Not whole body";
+		}
+		
+		species_common=species_common.toLowerCase();
+		String supercategory=htSuperCategory.get(species_common);
+
+		if(limitToFish && supercategory==null || !supercategory.contains("fish")) {
+//			System.out.println(t.species_common+"\t"+supercategory);
+			er.keep=false;
+			er.reason="Not fish";
+		}
+		
+		if(media.contains("SW")) {
+			er.keep=false;
+			er.reason="Not fresh water";
+		}
+		
+//		System.out.println(media);
+		
+//		if (!er.experimental_parameters.get("media").equals("FW")) {
+//		er.keep=false;
+//		er.reason="Not FW";
+//	}
+
+//	if (!er.experimental_parameters.get("exposure_type").equals("FT")) {
+//		er.keep=false;
+//		er.reason="Not FT";
+//	}
+	
+//	if (er.experimental_parameters.get("method")==null || 
+//			!er.experimental_parameters.get("method").equals("Steady state")) {
+//		er.keep=false;
+//		er.reason="Not Steady state";
+//	} 
 
 		
 		return er;
