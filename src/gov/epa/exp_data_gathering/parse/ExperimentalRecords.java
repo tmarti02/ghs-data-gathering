@@ -977,6 +977,28 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return records;
 	}
 	
+	
+	public static ExperimentalRecords getExperimentalRecords(String sourceName, String subfolder) {
+		String folder="data\\experimental\\"+sourceName+"\\";
+		if(subfolder!=null) folder+=subfolder+"\\";
+		String filepath1=folder+sourceName+" Experimental Records.json";
+		
+		ExperimentalRecords experimentalRecords=ExperimentalRecords.loadFromJSON(filepath1);
+		
+		System.out.println(filepath1+"\t"+experimentalRecords.size());
+		
+		return experimentalRecords;
+	}
+	
+	public static ExperimentalRecords getExperimentalRecordsBad(String sourceName, String subfolder) {
+		String folder="data\\experimental\\"+sourceName+"\\";
+		if(subfolder!=null) folder+=subfolder+"\\";
+		String filepath1=folder+sourceName+" Experimental Records-Bad.json";
+		ExperimentalRecords experimentalRecords=ExperimentalRecords.loadFromJSON(filepath1);
+		return experimentalRecords;
+	}
+
+	
 	public static ExperimentalRecords getAllExperimentalRecordsFromDBKeepEchemportal(String expRecordsDBPath, boolean useKeep) {
 
 		ExperimentalRecords records = new ExperimentalRecords();

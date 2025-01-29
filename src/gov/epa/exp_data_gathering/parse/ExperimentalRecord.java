@@ -563,6 +563,16 @@ public class ExperimentalRecord {
 			return false;
 		}
 	}
+	
+	public String getOriginalSourceName() {
+		String originalSource;
+		if(publicSourceOriginal!=null) {
+			originalSource=publicSourceOriginal.name;
+		} else {
+			originalSource=original_source_name;
+		}
+		return originalSource;
+	}
 
 //	public String[] getValuesForDatabase() {
 //		String name = chemical_name==null ? "" : chemical_name.replaceAll("(?<!\\\\)'", "\'");
