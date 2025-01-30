@@ -30,7 +30,7 @@ public class ParseToxVal {
 
 	static String versionV93 ="v93";
 	static String versionV94 ="v94";
-	static String versionProd ="prod";
+	public static String versionProd ="prod";
 	
 	void getAcuteAquaticExperimentalRecords(String toxvalVersion, String commonName,double duration,String type,String criticalEffect,String propertyType) {
 
@@ -233,7 +233,7 @@ public class ParseToxVal {
 	 * @param tvq
 	 * @return
 	 */
-	private Hashtable<String, String> createSupercategoryHashtable(ToxValQuery tvq) {
+	public static Hashtable<String, String> createSupercategoryHashtable(ToxValQuery tvq) {
 		Hashtable<String,String>ht=new Hashtable<>();
 		
 		String sql="select species_common, species_supercategory from species";

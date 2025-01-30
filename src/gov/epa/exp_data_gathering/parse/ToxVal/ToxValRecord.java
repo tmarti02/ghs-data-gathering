@@ -10,6 +10,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.formula.functions.T;
+
 import com.google.gson.Gson;
 
 import gov.epa.api.ExperimentalConstants;
@@ -311,13 +313,41 @@ public class ToxValRecord {
 		else if(!species_latin.isBlank())		
 			er.experimental_parameters.put("Species latin",species_latin);
 		
+		if(tissue.equals("Whole body")) {
+			tissue=tissue.replace("Whole body", "Whole organism");
+		} else if(tissue.equals("Uncertain")) {
+			tissue=tissue.replace("Uncertain", "Not reported");
+		} else if(tissue.equals("Gills")) {
+			tissue=tissue.replace("Gills", "Gill(s)");
+		} else if(tissue.equals("Gonads")) {
+			tissue=tissue.replace("Gonads", "Gonad(s)");
+		}//TODO: Gastrointestinal tract vs intestinal tract?; Lipid, fat vs Lipid?
+		
 		
 		if(tissue!=null)
 			er.experimental_parameters.put("Response site",tissue);
 
 //		rec.experimental_parameters.put("water_concentration",water_conc);
-		er.experimental_parameters.put("media",media);
-//		System.out.println(media);
+		if(media.contains("FW")) {
+			media=media.replace("FW","Fresh water");
+		} else if(media.contains("SW")) {
+			media=media.replace("SW","Salt water");
+		} else if(media.equals("-")) {
+			media=media.replace("-","Not reported");
+		}
+		er.experimental_parameters.put("Media type",media);
+//		System.out.print(exposure_type);
+		if(exposure_type.equals("FT")) {
+			exposure_type=exposure_type.replace("FT","Flow-through");
+		} else if(exposure_type.equals("R")) {
+			exposure_type=exposure_type.replace("R","Renewed");
+		} else if(exposure_type.equals("S")) {
+			exposure_type=exposure_type.replace("S","Static");
+		} else if(exposure_type.equals("Semi-S")) {
+			exposure_type=exposure_type.replace("Semi-S","Semi-Static");
+		} else if(exposure_type.equals("-")) {
+			exposure_type=exposure_type.replace("-","Not reported");
+		}			
 		er.experimental_parameters.put("exposure_type",exposure_type);
 //		rec.experimental_parameters.put("exposure_duration",exposure_duration);		
 //		if(temperature!=null) rec.experimental_parameters.put("Temperature",temperature);
