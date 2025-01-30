@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -213,12 +214,17 @@ public class RecordArnot2006 {
 			//TODO google search to find missing info
 		}
 		
-		er.experimental_parameters=new Hashtable<>();
-		er.experimental_parameters.put("Water concentration (ug/L)", water_concentration_mean_ug_L);
-		er.experimental_parameters.put("Response site", tissue_analyzed);
-		er.experimental_parameters.put("Organism Classification", organism_classification);
+		String supercategory=getSpeciesSupercategory(htSpecies);
+		
+		er.experimental_parameters=new LinkedHashMap<>();//keeps insertion order
+
 		er.experimental_parameters.put("Species latin", scientific_name);
 		er.experimental_parameters.put("Species common", common_name);
+		er.experimental_parameters.put("Organism Classification", organism_classification);
+		if(supercategory!=null)	er.experimental_parameters.put("Species supercategory", supercategory);
+
+		er.experimental_parameters.put("Water concentration (ug/L)", water_concentration_mean_ug_L);
+		er.experimental_parameters.put("Response site", tissue_analyzed);
 		er.experimental_parameters.put("Exposure Duration (days, L=lifetime)", exposure_duration_days);
 		
 		er.experimental_parameters.put("Criterion 1- Water Concentration", criterion_water_concentration_measured); //1=Measured, 2=Uncertain, 3=Not measured/Nominal
@@ -231,6 +237,9 @@ public class RecordArnot2006 {
 		}
 
 
+//		System.out.println(exposure_duration_days);
+		
+		
 		if(overall_score.equals("1.0")) {
 			overall_score="1: Acceptable BCF";
 		} else if(overall_score.equals("2.0")) {
@@ -245,10 +254,7 @@ public class RecordArnot2006 {
 		
 		
 		
-		String supercategory=getSpeciesSupercategory(htSpecies);
 		
-		if(supercategory!=null)	
-			er.experimental_parameters.put("Species supercategory", supercategory);
 
 		
 		if(exposure_type.equals("FT")) {
