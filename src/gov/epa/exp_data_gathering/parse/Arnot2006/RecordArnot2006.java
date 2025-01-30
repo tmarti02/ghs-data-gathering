@@ -72,7 +72,7 @@ public class RecordArnot2006 {
 	String comments;
 
 	String source_author;
-	int source_year;
+	Integer source_year;
 	String source_title;
 	String source_journal;
 
@@ -197,6 +197,12 @@ public class RecordArnot2006 {
 		ls.citation=source_author+" ("+source_year+"). "+source_title+"."+source_journal;
 		er.reference=ls.citation;
 
+		if(source_author==null || source_year==null || source_title==null || source_journal==null) {
+			System.out.println("\nHandle missing source field:\t"+gson.toJson(ls));
+			
+			//TODO google search to find missing info
+		}
+		
 		er.experimental_parameters=new Hashtable<>();
 		er.experimental_parameters.put("Water concentration (ug/L)", water_concentration_mean_ug_L);
 		er.experimental_parameters.put("Response site", tissue_analyzed);
@@ -213,17 +219,43 @@ public class RecordArnot2006 {
 		if(criterion_other_major_source!=null) {
 			er.experimental_parameters.put("Criterion 6- Other Major Source", criterion_other_major_source);
 		}
+
+
+		if(overall_score.equals("1.0")) {
+			overall_score="1: Acceptable BCF";
+		} else if(overall_score.equals("2.0")) {
+			overall_score="2: No phys-chem";//we can estimate these if have water concentration, how often does this happen?
+		} else if(overall_score.equals("3.0")) {
+			overall_score="3: Low BCF";
+		} else {
+			overall_score=null;
+			System.out.println("No overall score");
+		}
 		er.experimental_parameters.put("Overall Score", overall_score);//1=acceptable, 2=no physchem, 3=low
+		
+		
+		
+		String supercategory=getSpeciesSupercategory(htSpecies);
+		
+		if(supercategory!=null)	
+			er.experimental_parameters.put("Species supercategory", supercategory);
 
-		setSpeciesSupercategory(htSpecies, er);
-
+		
 		if(exposure_type.equals("FT")) {
 			exposure_type=exposure_type.replace("FT","Flow-through");
 		} else if(exposure_type.equals("R")) {
 			exposure_type=exposure_type.replace("R","Renewed");
 		} else if(exposure_type.equals("S")) {
 			exposure_type=exposure_type.replace("S","Static");
+		} else if(exposure_type.equals("Lentic")) {
+			exposure_type="Lentic";
+		} else if(exposure_type.equals("N/A")) {
+			//leave null
+		} else {
+			System.out.println("Handle exposure_type="+exposure_type);
 		}
+		
+		
 		er.experimental_parameters.put("exposure_type", exposure_type);
 
 		if(!temperature_mean_C.equals("N/A")) {
@@ -240,15 +272,14 @@ public class RecordArnot2006 {
 			} else if(exposure_media.contains("SW")) {
 				exposure_media=exposure_media.replace("SW","Salt water");
 			} else if(exposure_media.contains("N/A")) {
-				exposure_media=exposure_media.replace("N/A","");
+				exposure_media=null;
+			} else if(exposure_media.contains("Synthetic")) {
+				exposure_media="Synthetic";
 			} else {
-//				System.out.println("Handle exposure_media="+exposure_media);
+				System.out.println("Handle exposure_media="+exposure_media);
 			}
-
-			er.experimental_parameters.put("Media type",exposure_media);
-
 		}
-
+		if(exposure_media!=null) er.experimental_parameters.put("Media type",exposure_media);
 
 		er.property_value_units_original=ExperimentalConstants.str_LOG_L_KG;
 		er.property_value_string=LogBCF_WW_L_kg + " "+er.property_value_units_original;
@@ -262,15 +293,6 @@ public class RecordArnot2006 {
 			//			System.out.println(gson.toJson(this));
 		}
 
-		if(overall_score.equals("1.0")) {
-			er.note="Overall Score=1: Acceptable BCF";
-		} else if(overall_score.equals("2.0")) {
-			er.note="Overall Score=2: No phys-chem";
-		} else if(overall_score.equals("3.0")) {
-			er.note="Overall Score=3: Low BCF";
-		} else {
-			System.out.println("No overall score");
-		}
 		
 		if(comments!=null) {
 			er.note=er.note + "; " + comments;
@@ -323,6 +345,52 @@ public class RecordArnot2006 {
 		} else {
 			System.out.println("missing in hashtable:\t"+"*"+common_name.toLowerCase()+"*");
 		}
+	}
+	
+	private String getSpeciesSupercategory(Hashtable<String, List<Species>> htSpecies) {
+		
+		if(htSpecies.containsKey(common_name.toLowerCase())) {
+			
+			List<Species>speciesList=htSpecies.get(common_name.toLowerCase());
+		
+			for(Species species:speciesList) {
+				
+				
+//				if(species.species_scientific!=null) {
+//					if (!species.species_scientific.toLowerCase().equals(this.scientific_name.toLowerCase())) {
+//						System.out.println(this.scientific_name+"\t"+species.species_scientific+"\tmismatch");
+//					}
+//				} else {
+////					System.out.println(common_name+"\tspecies has null scientific");
+//				}
+				
+				if(species.species_supercategory.contains("fish")) {
+					return "fish";
+				} else if(species.species_supercategory.contains("algae")) {
+					return "algae";
+				} else if(species.species_supercategory.contains("crustaceans")) {
+					return "crustaceans";
+				} else if(species.species_supercategory.contains("insects/spiders")) {
+					return "insects/spiders";
+				} else if(species.species_supercategory.contains("molluscs")) {
+					return "molluscs";
+				} else if(species.species_supercategory.contains("worms")) {
+					return "worms";
+				} else if(species.species_supercategory.contains("invertebrates")) {
+					return "invertebrates";
+				} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
+					return "flowers, trees, shrubs, ferns";
+				} else if(species.species_supercategory.equals("omit")) {
+					return "omit";
+				} else {
+					System.out.println("Handle\t"+common_name+"\t"+species.species_supercategory);	
+				}
+			}
+		} else {
+			System.out.println("missing in hashtable:\t"+"*"+common_name.toLowerCase()+"*");
+		}
+		
+		return null;
 	}
 
 
