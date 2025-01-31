@@ -17,6 +17,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import gov.epa.QSAR.utilities.JsonUtilities;
+import gov.epa.QSAR.utilities.CASUtilities;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SqlUtilities;
 import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
@@ -187,12 +188,9 @@ public class RecordArnot2006 {
 
 		er.property_name=ExperimentalConstants.strBCF;
 
-		String CAS1=Integer.toString(casrn).substring(0,Integer.toString(casrn).length()-3);
-		String CAS2=Integer.toString(casrn).substring(Integer.toString(casrn).length()-3,Integer.toString(casrn).length()-1);
-		String CAS3=Integer.toString(casrn).substring(Integer.toString(casrn).length()-1,Integer.toString(casrn).length());
-		String CAS=CAS1+"-"+CAS2+"-"+CAS3;
-		if(isCAS_OK(CAS)) {
-			er.casrn=CAS1+"-"+CAS2+"-"+CAS3;
+		String CAS=CASUtilities.fixIntegerCAS(casrn);
+		if(CASUtilities.isCAS_OK(CAS)) {
+			er.casrn=CAS;
 		} else {
 			System.out.println("Invalid CAS from database: " + casrn + " 	Invalid cas: " + CAS);
 		}
@@ -205,6 +203,13 @@ public class RecordArnot2006 {
 		ls.name=source_author+" ("+source_year+")";
 		ls.author=source_author;
 		ls.title=source_title;
+		if(source_journal==null) {
+			if(source_author.equals("Kitano, M.")) {
+				source_journal="OECD Tokyo Meeting. Reference Book TSU-No. 3";
+			} else {
+				source_journal="";
+			}
+		}
 		ls.citation=source_author+" ("+source_year+"). "+source_title+"."+source_journal;
 		er.reference=ls.citation;
 
@@ -263,6 +268,8 @@ public class RecordArnot2006 {
 			exposure_type=exposure_type.replace("R","Renewed");
 		} else if(exposure_type.equals("S")) {
 			exposure_type=exposure_type.replace("S","Static");
+		} else if(exposure_type.equals("Semi-S")) {
+			exposure_type=exposure_type.replace("Semi-S","Semi-Static");
 		} else if(exposure_type.equals("Lentic")) {
 			exposure_type="Lentic";
 		} else if(exposure_type.equals("N/A")) {
@@ -285,6 +292,8 @@ public class RecordArnot2006 {
 		if(exposure_media!=null) {
 			if(exposure_media.contains("FW")) {
 				exposure_media=exposure_media.replace("FW","Fresh water");
+			} else if(exposure_media.contains("Fresh")) {
+				exposure_media=exposure_media.replace("Fresh","Fresh water");
 			} else if(exposure_media.contains("SW")) {
 				exposure_media=exposure_media.replace("SW","Salt water");
 			} else if(exposure_media.contains("N/A")) {
@@ -311,11 +320,8 @@ public class RecordArnot2006 {
 
 		
 		if(comments!=null) {
-			er.note=er.note + "; " + comments;
+			er.note= comments;
 		}
-//		if(tissue_analyzed.equals("Whole body")) {
-//			boolean limittoWholeBody=true;
-//		}
 		
 		uc.convertRecord(er);
 
@@ -484,62 +490,6 @@ public class RecordArnot2006 {
 
 
 	}
-
-	/**
-     * Checks to see if have valid cas number with check sum method
-     * 
-      * @param CAS
-     * @return
-     */
-     public static boolean isCAS_OK(String CAS) {
-                    
-                    if (CAS.indexOf(" ")>-1) {
-//                               System.out.println("Space!");
-                                  return false;
-                    }
-                    
-                    String [] part=CAS.split("-");
-                    
-                    if (part.length!=3) return false;
-                    
-                    String part1=part[0];
-                    String part2=part[1];
-                    String part3=part[2];
-                    
-                    int sum=0;
-                    
-                    for (int i=0;i<part1.length();i++) {
-                                  String s=part1.substring(i, i+1);
-                                  if (!Character.isDigit(s.charAt(0))) return false;
-                                  sum+=(part1.length()+2-i)*Integer.parseInt(s);
-                    }
-                    
-                    String s1=part2.substring(0, 1);
-                    String s2=part2.substring(1, 2);
-                    
-                    if (!Character.isDigit(s1.charAt(0)) || !Character.isDigit(s2.charAt(0))) {
-                                  return false;
-                    }
-                    
-                    int N2=Integer.parseInt(s1);
-                    int N1=Integer.parseInt(s2);
-                    int R=Integer.parseInt(part3);
-                    
-                    sum+=2*N2+N1;
-                    
-                    double bob=((double)sum)/10.0;
-                    double bob2=Math.floor(bob);
-                    double bob3=(bob-bob2)*10.0;
-                    
-                    int R2=(int)Math.round(bob3);
-                    
-//                 System.out.println(bob3);
-//                 System.out.println(R+"\t"+R2);
-                    
-                    return R2==R;
-                    
-                    
-     }
 
 
 
