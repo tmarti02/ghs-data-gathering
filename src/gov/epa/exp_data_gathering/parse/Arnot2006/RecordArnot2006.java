@@ -229,6 +229,13 @@ public class RecordArnot2006 {
 		if(supercategory!=null)	er.experimental_parameters.put("Species supercategory", supercategory);
 
 		er.experimental_parameters.put("Water concentration (ug/L)", water_concentration_mean_ug_L);
+		if(tissue_analyzed.equals("Gills")) {
+			tissue_analyzed=tissue_analyzed.replace("Gills", "Gill(s)");
+		} else if(tissue_analyzed.equals("Gill")) {
+			tissue_analyzed=tissue_analyzed.replace("Gill", "Gill(s)");
+		} else if(tissue_analyzed.equals("Gonad")) {
+			tissue_analyzed=tissue_analyzed.replace("Gonad", "Gonad(s)");
+		}
 		er.experimental_parameters.put("Response site", tissue_analyzed);
 		er.experimental_parameters.put("Exposure Duration (days, L=lifetime)", exposure_duration_days);
 		
@@ -265,7 +272,7 @@ public class RecordArnot2006 {
 		if(exposure_type.equals("FT")) {
 			exposure_type=exposure_type.replace("FT","Flow-through");
 		} else if(exposure_type.equals("R")) {
-			exposure_type=exposure_type.replace("R","Renewed");
+			exposure_type=exposure_type.replace("R","Renewal");
 		} else if(exposure_type.equals("S")) {
 			exposure_type=exposure_type.replace("S","Static");
 		} else if(exposure_type.equals("Semi-S")) {
