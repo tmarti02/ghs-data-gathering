@@ -108,7 +108,7 @@ public class ParseToxVal {
 		
 		String propertyName=experimentalRecords.get(0).property_name;
 		Hashtable<String, ExperimentalRecords> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_g_L);
-		ExperimentalRecords.calculateStdDev(htER, true);
+		ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, true);
 
 //		assignLiteratureSourceNames(experimentalRecords);
 //		System.out.println(gson.toJson(experimentalRecords));		
@@ -193,7 +193,7 @@ public class ParseToxVal {
 		
 		Hashtable<String,ExperimentalRecords>htSid=experimentalRecords.createExpRecordHashtableBySID(null);
 		
-		ExperimentalRecords.calculateStdDev(htSid, true);
+		ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htSid, true);
 
 		System.out.println("originalRecords.size()="+toxValRecords.size());
 		System.out.println("experimentalRecords.size()="+experimentalRecords.size());

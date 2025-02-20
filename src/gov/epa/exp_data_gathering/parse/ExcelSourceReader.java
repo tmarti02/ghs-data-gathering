@@ -525,6 +525,11 @@ public class ExcelSourceReader {
 		return parseRecordsFromExcel(hm, chemicalNameIndex, setBlankToNull);
 	}
 
+	
+	public List<String> getHeaders() {
+		return getHeaders(sheet,0);
+	}
+	
 	/**
 	 * Gets column headers in appropriate format for field naming (alphanumeric and
 	 * _ only)
@@ -653,10 +658,14 @@ public class ExcelSourceReader {
 	public static  List<String> getAllHeadersFromExcelFilesInFolder(List<String>sheetNames,int headerRowNum, File Folder) {
 		List<String>allHeaders=new ArrayList<>();
 				
+		System.out.println("getAllHeadersFromExcelFilesInFolder()");
+		
 		for (File file:Folder.listFiles()) {
 			if(!file.getName().contains(".xls")) continue;
 			ExcelSourceReader esr=new ExcelSourceReader();
 			
+			
+			System.out.println("\n"+file.getName());
 			try {
 				FileInputStream fis = new FileInputStream(file);
 				Workbook wb = WorkbookFactory.create(fis);

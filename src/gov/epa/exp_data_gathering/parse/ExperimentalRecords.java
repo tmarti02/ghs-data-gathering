@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
 import java.util.*;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -168,6 +169,38 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return htER;
 	}
 	
+	public Hashtable<String, ExperimentalRecords> createExpRecordHashtableByCAS(String desiredUnits) {
+		
+		Hashtable<String,ExperimentalRecords>htER=new Hashtable<>();
+		
+		for (ExperimentalRecord er:this)  {
+			
+			if(!er.keep) continue;
+			
+			//Only use the ones with desiredUnits in the stats calcs:
+			if(er.property_value_units_final.equals(desiredUnits) || desiredUnits==null) {
+//				System.out.println(er.casrn+"\t"+er.property_value_point_estimate_final);
+				
+				String key=er.casrn;
+				if(key==null)key=er.chemical_name;
+				if(key==null)continue;
+				
+				if(htER.containsKey(key)) {
+					ExperimentalRecords recs=htER.get(key);
+					recs.add(er);	
+					
+				} else {
+					ExperimentalRecords recs=new ExperimentalRecords();
+					recs.add(er);
+					htER.put(key, recs);
+				}
+				
+			}
+		}
+		return htER;
+	}
+
+	
 
 	/**
 	 * 
@@ -236,17 +269,24 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		
 	}
 	
-	public static void calculateStdDev(Hashtable<String, ExperimentalRecords> htER, boolean convertToLog) {
+	public static void calculateAvgStdDevOverAllChemicals(Hashtable<String, ExperimentalRecords> htER, boolean convertToLog) {
+		calculateAvgStdDevOverAllChemicals(htER, convertToLog,false);
+	}
+	
+	public static void calculateAvgStdDevOverAllChemicals(Hashtable<String, ExperimentalRecords> htER, boolean convertToLog,boolean omitSingleton) {
 		double avgSD=0;
 		int count=0;
 		int countOverall=0;
 
 		for (String dtxsid:htER.keySet()) {
 			List<ExperimentalRecord> records=htER.get(dtxsid);
+						
+			if(omitSingleton)
+				if(records.size()<=1)continue;//dont include ones with only 1 value
+			
 			Double SD=ExperimentalRecords.calculateSD(records,convertToLog);//TODO need to determine SD when converted to log values
 			
 			if(SD==null) continue;
-			
 //			System.out.println(count+"\t"+SD);
 			
 			avgSD+=SD;
@@ -254,11 +294,12 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			countOverall+=records.size();
 		}
 		
-		
 		avgSD/=(double)count;
-		System.out.println("Avg SD\t"+avgSD);
-		System.out.println("Unique SIDs\t"+htER.size());
-		System.out.println("Kept records with correct units\t"+countOverall);
+		
+		DecimalFormat df=new DecimalFormat("0.00");
+		System.out.println("\nAvg SD\t"+df.format(avgSD));
+		System.out.println("Unique chemicals\t"+htER.size());
+		System.out.println("Kept records with correct units\t"+countOverall+"\n");
 	}
 	
 	public static Hashtable<String,Double> calculateMedian(Hashtable<String, ExperimentalRecords> htER, boolean convertToLog) {

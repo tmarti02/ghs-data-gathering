@@ -4,9 +4,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.lang.reflect.Type;
 import com.google.gson.reflect.TypeToken;
+
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
+
+import org.xmlcml.cml.element.AbstractAtomType;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -26,12 +30,21 @@ import gov.epa.exp_data_gathering.parse.QSAR_ToolBox.RecordQSAR_ToolBox;
 */
 public class ParseArnot2006 extends Parse {
 	
-	String propertyName=ExperimentalConstants.strBCF;
+	String propertyName;
 	
-	
-	public ParseArnot2006() {
+	public ParseArnot2006(String propertyName) {
+		
+		this.propertyName=propertyName;
 		sourceName = RecordArnot2006.sourceName; 
 		this.init();
+		
+		mainFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
+		jsonFolder= mainFolder;
+		
+		mainFolder+=File.separator+propertyName;//output json/excel in subfolder
+
+		new File(mainFolder).mkdirs();
+
 	}
 	
 	@Override
@@ -53,10 +66,8 @@ public class ParseArnot2006 extends Parse {
 			Type type = new TypeToken<Hashtable<String, List<RecordArnot2006.Species>>>(){}.getType();
 			Hashtable<String, List<Species>>htSpecies=JsonUtilities.gsonPretty.fromJson(new FileReader("data\\experimental\\Arnot 2006\\htSuperCategory.json"), type);
 			
-			System.out.println(htSpecies.get("bluegill sunfish").size());
-			
+//			System.out.println(htSpecies.get("bluegill sunfish").size());
 //			System.out.println(JsonUtilities.gsonPretty.toJson(htSpecies));
-			
 			
 			File Folder=new File(jsonFolder);
 			
@@ -75,15 +86,24 @@ public class ParseArnot2006 extends Parse {
 
 				for (RecordArnot2006 recordArnot2006:tempRecords) {
 
-					if(propertyName.equals(ExperimentalConstants.strBCF)) {
-						ExperimentalRecord er=recordArnot2006.toExperimentalRecordBCF(htSpecies);	
-						
-						if(er!=null)						
-							recordsExperimental.add(er);
-					}
+					ExperimentalRecord er=recordArnot2006.toExperimentalRecordBCF(propertyName, htSpecies);	
+					
+					if(er!=null)						
+						recordsExperimental.add(er);
+
 				}
 			}
 			
+//			System.out.println("Count failing duration calc:\t"+RecordArnot2006.countDurationNotOK);
+//			System.out.println("Count passing duration calc:\t"+RecordArnot2006.countDurationOK);
+
+			Hashtable<String,ExperimentalRecords> htER = recordsExperimental.createExpRecordHashtableByCAS(ExperimentalConstants.str_L_KG);
+			
+			boolean omitSingleton=true;
+			ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, true,omitSingleton);
+
+//			Hashtable<String,Double>htMedian=ExperimentalRecords.calculateMedian(htER, true);
+
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -120,17 +140,26 @@ public class ParseArnot2006 extends Parse {
 	
 	
 	public static void main(String[] args) {
-		ParseArnot2006 p = new ParseArnot2006();
 		
-		p.generateOriginalJSONRecords=false;
-		p.removeDuplicates=true;
-		
-		p.writeJsonExperimentalRecordsFile=true;
-		p.writeExcelExperimentalRecordsFile=true;
-		p.writeExcelFileByProperty=true;		
-		p.writeCheckingExcelFile=false;		
-		p.createFiles();
+		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBCF,
+				ExperimentalConstants.strFishBCF,
+				ExperimentalConstants.strFishBCFWholeBody,
+				ExperimentalConstants.strFishBCFWholeBody+"_OverallScore_1_or_2",
+				ExperimentalConstants.strFishBCFWholeBody+"_OverallScore_1");		
 
+		for (String propertyName:propertyNames) {
+			
+			System.out.println("\n**********************\n"+propertyName);
+			
+			ParseArnot2006 p = new ParseArnot2006(propertyName);
+			p.generateOriginalJSONRecords=false;
+			p.writeCheckingExcelFile=false;
+			p.removeDuplicates=false;
 
+//			p.writeJsonExperimentalRecordsFile=true;
+//			p.writeExcelExperimentalRecordsFile=true;
+//			p.writeExcelFileByProperty=true;		
+			p.createFiles();
+		}
 	}
 }

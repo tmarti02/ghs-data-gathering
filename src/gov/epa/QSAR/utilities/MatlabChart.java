@@ -56,10 +56,10 @@ public class MatlabChart {
     public void RenderPlot() {
         // Create chart
         JFreeChart chart = null;
-        if (dataset != null && dataset.getSeriesCount() > 0)
-            chart = ChartFactory.createXYLineChart(null,null,null,dataset,PlotOrientation.VERTICAL,true, false, false);
-        
-        else
+        if (dataset != null && dataset.getSeriesCount() > 0) {
+            //XYLineChart can have symbols and lines:
+        	chart = ChartFactory.createXYLineChart(null,null,null,dataset,PlotOrientation.VERTICAL,true, false, false);
+        }else
             System.out.println(" [!] First create a chart and add data to it. The plot is empty now!");
         // Add customization options to chart
         XYPlot plot = chart.getXYPlot();

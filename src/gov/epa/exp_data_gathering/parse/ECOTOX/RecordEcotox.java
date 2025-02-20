@@ -5,7 +5,9 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -19,6 +21,7 @@ import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
+import gov.epa.exp_data_gathering.parse.ParameterValue;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.ToxVal.ToxValRecord;
 
@@ -312,6 +315,7 @@ public class RecordEcotox {
 	
 	transient Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
+	transient static HashSet<String>conc1_units=new HashSet<>();
 	
 	static transient UnitConverter uc = new UnitConverter("Data" + File.separator + "density.txt");
 
@@ -474,6 +478,10 @@ public class RecordEcotox {
 	public static List<RecordEcotox> get_BCF_Records_From_DB(String propertyName) {
 		List<RecordEcotox>records=new ArrayList<>();
 		
+		//TODO also get the following:
+//		t.test_radiolabel: whether concentrations are imprecise radiolabel measurements (need metabolite correction?)
+//		r.additional_comments: kinetic vs conc method for BCF
+//		r.obs_duration_mean_op, r.obs_duration_mean, r.obs_duration_unit
 		
 		String sql="select  t.test_id, dtxsid, cas_number, chemical_name, bcf1_mean ,bcf1_unit,\r\n"
 				+ " conc1_mean_op, conc1_mean, conc1_unit, conc1_min, conc1_max, conc1_min_op, conc1_max_op,"
@@ -498,6 +506,7 @@ public class RecordEcotox {
 ////				+ " and media_type like '%FW%' and test_location like '%LAB%'"				
 //				+ "	order by cas_number";
 
+//		System.out.println(sql);
 		
 		try {
 			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
@@ -846,10 +855,68 @@ public class RecordEcotox {
 		RecordEcotox r = new RecordEcotox();
 		 List<RecordEcotox>records=r.get_Acute_Tox_Records_From_DB(1,ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50);
 	}
+	
+	
+	private String getSpeciesSupercategory() {
 
-
-	public ExperimentalRecord toExperimentalRecordBCF(boolean limitToFish, boolean limitToWholeBody, boolean limitToStandardTestSpecies) {
+		String egLC=ecotox_group.toLowerCase();
 		
+		if(egLC.contains("fish")) {
+			return "Fish";
+		} else if(egLC.contains("algae")) {
+			return "Algae";
+		} else if(egLC.contains("amphibians")) {
+			return "Amphibians";
+		} else if(egLC.contains("crustaceans")) {
+			return "Crustaceans";
+		} else if(egLC.contains("insects/spiders")) {
+			return "Insects/spiders";
+		} else if(egLC.contains("molluscs")) {
+			return "Molluscs";
+		} else if(egLC.contains("moss, hornworts")) {
+			return "Moss, hornworts";
+		} else if(egLC.contains("reptiles")) {
+			return "Reptiles";
+		} else if(egLC.contains("birds")) {
+			return "Birds";
+		} else if(egLC.contains("fungi")) {
+			return "Fungi";
+		} else if(egLC.contains("miscellaneous")) {
+			return "Miscellaneous";
+		} else if(egLC.contains("mammals")) {
+			return "Mammals";
+		} else if(egLC.contains("worms")) {
+			return "Worms";
+		} else if(egLC.contains("invertebrates")) {
+			return "Invertebrates";
+		} else if(egLC.contains("flowers, trees, shrubs, ferns")) {
+			return "Flowers, trees, shrubs, ferns";
+		} else if(egLC.equals("omit")) {
+			return "Omit";
+		} else {
+			System.out.println("Handle\t"+ecotox_group);	
+		}
+
+		return null;
+	}
+
+
+	public ExperimentalRecord toExperimentalRecordBCF(String propertyName) {
+		
+		boolean limitToFish=false;
+		if(propertyName.toLowerCase().contains("fish")) {
+			limitToFish=true;
+		}
+		
+		boolean limitToWholeBody=false;
+		if(propertyName.toLowerCase().contains("whole")) {
+			limitToWholeBody=true;
+		}
+
+		boolean limitToStandardTestSpecies=false;
+		if(propertyName.toLowerCase().contains("standard")) {
+			limitToStandardTestSpecies=true;
+		}
 
 		ExperimentalRecord er=new ExperimentalRecord();
 		
@@ -908,73 +975,160 @@ public class RecordEcotox {
 			System.out.println(er.reason);
 
 		
-		
-		if(limitToFish && ecotox_group!=null && !ecotox_group.toLowerCase().contains("fish")) {
-			er.keep=false;
-			er.reason="Not a fish species";
-		}
-		
-		if(limitToStandardTestSpecies && ecotox_group!=null && !ecotox_group.toLowerCase().contains("standard")) {
-			er.keep=false;
-			er.reason="Not a standard test species";
-		}
-
-		
-		if(limitToWholeBody && response_site!=null && !response_site.toLowerCase().equals("whole organism")) {
-			er.keep=false;
-			er.reason="Not whole body";
-		}
-			
 //			System.out.println(r.conc1_max_op+"\t"+r.conc1_min_op+"\t"+r.conc1_mean_op);
-		er.experimental_parameters=new Hashtable<>();
+		er.experimental_parameters=new LinkedHashMap<>();
 		er.experimental_parameters.put("test_id", test_id);
 		er.experimental_parameters.put("Species latin", latin_name);
 		er.experimental_parameters.put("Species common", common_name);
 		
+		String supercategory=getSpeciesSupercategory();
+		if(supercategory!=null) {
+			er.experimental_parameters.put("Species supercategory",supercategory);	
+		} 
+		if(limitToFish && ecotox_group!=null && !ecotox_group.toLowerCase().contains("fish")) {
+			er.keep=false;
+			er.reason="Not a fish species";
+		}
+
+		if(limitToWholeBody && (response_site==null || !response_site.toLowerCase().equals("whole organism"))) {
+			er.keep=false;
+			er.reason="Not whole body";
+		}
+
+		if(limitToStandardTestSpecies && ecotox_group!=null && !ecotox_group.toLowerCase().contains("standard")) {
+			er.keep=false;
+			er.reason="Not a standard test species";
+		}
+		
 		er.experimental_parameters.put("Media type", media_type);
+		
+		
+		if (media_type.contains("water")) {
+			setWaterConcentration(er);
+			if (media_type.equals("Salt water")) {
+				er.keep=false;
+				er.reason="Salt water";
+			}
+		} else {
+			er.keep=false;
+			er.reason="Not in water";
+		}
+		
+		
 		er.experimental_parameters.put("Test location", test_location);
 		er.experimental_parameters.put("exposure_type", exposure_type);
-
+		er.experimental_parameters.put("chem_analysis_method", chem_analysis_method);
+		
 		if(response_site==null) {
 //			System.out.println(gson.toJson(this));
 		} else {
-			er.experimental_parameters.put("Response site", response_site);
+			if(response_site.contains("Whole organism")) {
+				er.experimental_parameters.put("Response site", "Whole body");	
+			} else {
+				er.experimental_parameters.put("Response site", response_site);
+			} 
 		}
 		
-		if(media_type.contains("Salt")) {
-			er.keep=false;
-			er.reason="Salt water";
-		}
+		//TODO store t.test_radiolabel, r.additional_comments => calculation method = kinetic or conc
+		//Maybe omit radiolabeled ones since have no way to know if they corrected for metabolites when
+		//determining concentrations
 		
 		
-		String wc=null;
-		
-		if(conc1_mean!=null) {
-			String conc1=conc1_mean+" "+conc1_unit;
-			if(conc1_mean_op!=null) conc1=conc1_mean_op+" "+conc1;
-			wc=conc1;
-//			System.out.println(wc);
-		} else if(conc1_min!=null && conc1_max!=null) {
-			wc=conc1_min_op+" "+conc1_min+" to "+conc1_max_op+conc1_max+" "+conc1_unit; 
-			wc=wc.replace("null", "").trim();
-//			System.out.println(wc);
-		} else if(conc1_max!=null) {
-//			System.out.println(conc1_mean+"\t"+conc1_min+"\t"+conc1_max);
-			wc="> "+conc1_max+" "+conc1_unit; 
-//			System.out.println(wc);
-		} else {
-//			System.out.println("no water conc");
-		}
-		
-		if(wc!=null) {
-			er.experimental_parameters.put("Exposure concentration",wc);
-//			System.out.println(wc);
-		}
 //		System.out.println(wc);
 		er.property_value_string=er.property_value_point_estimate_original+" "+bcf1_unit;//TODO
 		uc.convertRecord(er);
 		
 		return er;
+	}
+
+
+	private void setWaterConcentration(ExperimentalRecord er) {
+		
+//		String wc=null;
+//		if(conc1_mean!=null) {
+//			String conc1=conc1_mean+" "+conc1_unit;
+//			if(conc1_mean_op!=null) conc1=conc1_mean_op+" "+conc1;
+//			wc=conc1;
+////			System.out.println(wc);
+//		} else if(conc1_min!=null && conc1_max!=null) {
+//			wc=conc1_min_op+" "+conc1_min+" to "+conc1_max_op+conc1_max+" "+conc1_unit; 
+//			wc=wc.replace("null", "").trim();
+////			System.out.println(wc);
+//		} else if(conc1_max!=null) {
+////			System.out.println(conc1_mean+"\t"+conc1_min+"\t"+conc1_max);
+//			wc="> "+conc1_max+" "+conc1_unit; 
+////			System.out.println(wc);
+//		} else {
+////			System.out.println("no water conc");
+//		}
+//		if(wc!=null) {
+//		er.experimental_parameters.put("Exposure concentration",wc);
+////		System.out.println(wc);
+//	}
+
+		conc1_unit=conc1_unit.replace("ug/ml", ExperimentalConstants.str_ug_mL);
+		conc1_unit=conc1_unit.replace("ng/ml", ExperimentalConstants.str_ug_L);
+		conc1_unit=conc1_unit.replace("nmol/L",ExperimentalConstants.str_nM);
+		conc1_unit=conc1_unit.replace("nmol/ml",ExperimentalConstants.str_uM);
+		conc1_unit=conc1_unit.replace("pmol/ml",ExperimentalConstants.str_nM);
+		conc1_unit=conc1_unit.replace("AI ug/mL",ExperimentalConstants.str_mg_L);
+		
+		
+		//if the units are in mass/mass these are probably organism concentration
+		// and not actually the water concentration:
+		if(conc1_unit.contains("ug/g") || conc1_unit.contains("ng/g") || 
+				conc1_unit.contains("ug/kg") || conc1_unit.contains("mg/kg")) 
+			return;//not water concentration
+		
+		if(conc1_unit.equals("ug") || conc1_unit.equals("ng")) {
+			return;//not water concentration
+		}
+		
+		ExperimentalRecord erWC=new ExperimentalRecord();
+		erWC.property_name=ExperimentalConstants.strWaterSolubility;
+		erWC.property_value_units_original=conc1_unit;
+		if(conc1_mean!=null) erWC.property_value_point_estimate_original=Double.parseDouble(conc1_mean);
+		if(conc1_min!=null) erWC.property_value_min_original=Double.parseDouble(conc1_min);
+		if(conc1_max!=null) erWC.property_value_max_original=Double.parseDouble(conc1_max);
+		erWC.property_value_numeric_qualifier=conc1_mean_op;
+		uc.convertRecord(erWC);
+		
+		
+		if(er.keep) {			
+			if(erWC.property_value_units_final==null || (!erWC.property_value_units_final.equals("g/L") && !erWC.property_value_units_final.equals("M"))) {
+				conc1_units.add(conc1_unit);	
+//				System.out.println(gson.toJson(this));
+//				System.out.println(gson.toJson(erWC)+"\r\n");	
+			}
+		}
+				
+//		if(!erWC.property_value_units_final.equals("g/L") && !erWC.property_value_units_final.equals("M")) {
+//			if(er.keep)
+//				System.out.println(gson.toJson(erWC));	
+//		}
+ 		
+		//TODO instead store "Water concentration (ug/L)"
+				
+		ParameterValue pv=new ParameterValue();
+		pv.parameter.name="Water concentration";
+		pv.unit.abbreviation=erWC.property_value_units_final;
+		
+		pv.valuePointEstimate=erWC.property_value_point_estimate_final;
+		pv.valueMin=erWC.property_value_min_final;
+		pv.valueMax=erWC.property_value_max_final;
+		
+		if(conc1_mean_op!=null) {
+			if(!conc1_mean_op.equals("~")) 			
+				pv.valueQualifier=this.conc1_mean_op;	
+		}
+				
+		er.parameter_values=new ArrayList<>();
+		er.parameter_values.add(pv);
+		
+//		System.out.println(er.property_value_units_original+"\t"+pv.unit.abbreviation);
+				
+//		er.experimental_parameters.put("Exposure concentration", pv);
+		
 	}
 
 

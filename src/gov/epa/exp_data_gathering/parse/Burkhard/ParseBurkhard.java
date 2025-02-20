@@ -103,7 +103,7 @@ public class ParseBurkhard  {
 
 
 		Hashtable<String, ExperimentalRecords> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_L_KG);
-		ExperimentalRecords.calculateStdDev(htER, true);
+		ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, true);
 		
 		Hashtable<String,Double>htMedian=ExperimentalRecords.calculateMedian(htER, true);
 		

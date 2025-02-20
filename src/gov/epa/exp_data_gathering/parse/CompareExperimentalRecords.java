@@ -205,6 +205,10 @@ public class CompareExperimentalRecords {
 					val=er.property_value_point_estimate_final;
 				} else continue;
 		
+				if(!units.toLowerCase().contains("log")) {
+					val=Math.log10(val);
+				}
+				
 				vals.add(val);
 		
 				//			System.out.println(er.property_value_string+"\t"+val);
@@ -230,12 +234,23 @@ public class CompareExperimentalRecords {
 		void setMedianValues(TreeMap<String,ExperimentalRecords> tm, String units) {
 			int count=0;
 		
-			for (String casrn:tm.keySet()) {
-				ExperimentalRecords recs=tm.get(casrn);
+			for (String key:tm.keySet()) {
+				ExperimentalRecords recs=tm.get(key);
 				setMedianValue(recs,units);
 				count+=recs.size();
 			}
 		
+		}
+
+		private void removeByParameter(String parameterName, String parameterValue, ExperimentalRecords recs1) {
+			for (int i=0;i<recs1.size();i++) {
+				ExperimentalRecord rec=recs1.get(i);
+				
+				if(rec.experimental_parameters.get(parameterName)==null || 
+						!rec.experimental_parameters.get(parameterName).equals(parameterValue)) {
+					recs1.remove(i--);
+				}
+			}
 		}
 
 	}
@@ -519,11 +534,25 @@ public class CompareExperimentalRecords {
 			List<Source>sources1=new ArrayList<>();
 			List<Source>sources2=new ArrayList<>();
 
-			String propertyName=ExperimentalConstants.strFishBCF;
-			//		String propertyName=ExperimentalConstants.strFishBCFWholeBody;
+//			String propertyName=ExperimentalConstants.strBCF;
+//			String propertyName=ExperimentalConstants.strFishBCF;
+			String propertyName=ExperimentalConstants.strFishBCFWholeBody;
 
-			sources1.add(new Source("ECOTOX_2023_12_14",propertyName));
-			sources2.add(new Source("ToxVal_prod",propertyName));
+//			sources1.add(new Source("Burkhard",propertyName));
+//			sources1.add(new Source("ECOTOX_2023_12_14",propertyName));
+////			sources2.add(new Source("ToxVal_prod",propertyName));
+////			sources2.add(new Source("Arnot 2006",null));
+//			sources2.add(new Source("Arnot 2006",propertyName));
+			
+//			sources2.add(new Source("ECOTOX_2023_12_14",propertyName));
+			
+			
+			sources1.add(new Source("Arnot 2006",propertyName));
+			
+			sources2.add(new Source("ECOTOX_2023_12_14",propertyName));
+//			sources2.add(new Source("Arnot 2006",null));
+			
+//			
 
 			//		sources1.add(new Source("ECOTOX_2023_12_14",propertyName));
 			//		sources1.add(new Source("ToxVal_prod",propertyName));
@@ -531,7 +560,9 @@ public class CompareExperimentalRecords {
 
 
 			String units="L/kg";
-			cm.compare(sources1, sources2, propertyName, units,"sid");
+			cm.compare(sources1, sources2, propertyName, units,"cas");
+//			cm.compare(sources1, sources2, propertyName, units,"cas","Species supercategory","Fish");
+			
 			
 			//We get more records if we use both even though they overlap a bit
 			
@@ -574,7 +605,6 @@ public class CompareExperimentalRecords {
 			ExperimentalRecords recs1=rm.getAllExperimentalRecords(sources1);
 			ExperimentalRecords recs2=rm.getAllExperimentalRecords(sources2);
 
-
 			TreeMap<String, ExperimentalRecords> tm1=null;
 			TreeMap<String, ExperimentalRecords> tm2=null;
 
@@ -586,6 +616,36 @@ public class CompareExperimentalRecords {
 				tm2 = rm.getTreeMapByDTXSID(propertyName, units, recs2);
 			}
 
+
+			System.out.println("countWithMedian1="+getCountWithMedian(tm1));
+			System.out.println("countWithMedian2="+getCountWithMedian(tm2));
+			System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
+			System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
+			System.out.println("countInEither="+getCountInEither(tm2, tm1,false));
+
+			compareChemicalsInCommon(tm1, tm2, units);
+
+		}
+		
+		void compare(List<Source>sources1, List<Source>sources2, String propertyName,String units,String idType,String parameterName,String parameterValue) {
+
+			ExperimentalRecords recs1=rm.getAllExperimentalRecords(sources1);
+			ExperimentalRecords recs2=rm.getAllExperimentalRecords(sources2);
+			
+			rm.removeByParameter(parameterName, parameterValue, recs1);
+			rm.removeByParameter(parameterName, parameterValue, recs2);
+
+
+			TreeMap<String, ExperimentalRecords> tm1=null;
+			TreeMap<String, ExperimentalRecords> tm2=null;
+
+			if(idType.equals("cas")) {
+				tm1 = rm.getTreeMapByCAS(propertyName, units, recs1);
+				tm2 = rm.getTreeMapByCAS(propertyName, units, recs2);
+			} else if(idType.equals("sid")) {
+				tm1 = rm.getTreeMapByDTXSID(propertyName, units, recs1);
+				tm2 = rm.getTreeMapByDTXSID(propertyName, units, recs2);
+			}
 
 			System.out.println("countWithMedian1="+getCountWithMedian(tm1));
 			System.out.println("countWithMedian2="+getCountWithMedian(tm2));
@@ -624,7 +684,7 @@ public class CompareExperimentalRecords {
 		double compareChemicalsInCommon(TreeMap<String,ExperimentalRecords>tm1,TreeMap<String,ExperimentalRecords>tm2, String units) {
 
 			if(!units.toLowerCase().contains("log")) {
-				System.out.println("Need to handle units");
+				System.out.println("Need to handle units="+units);
 			}
 
 			int countInCommon=0;
@@ -651,44 +711,45 @@ public class CompareExperimentalRecords {
 				ExperimentalRecords recs2=tm2.get(key);
 
 				if(recs1.medianValue!=null && recs2.medianValue!=null) {
-					//				System.out.println(casrn+"\t"+recs1.medianValue+"\t"+recs2.medianValue);	
-
-					Double error=null;
-
-					if(units.toLowerCase().contains("log")) {
-						error=Math.abs(recs1.medianValue-recs2.medianValue);
-						if(printValues) {
-
-							System.out.println("already log\t"+key+"\t"+df.format(recs1.medianValue)+"\t"+df.format(recs2.medianValue)+"\t"+df.format(error));					
-						}
-					} else {
-
-						Double val1=Math.log10(recs1.medianValue);
-						Double val2=Math.log10(recs2.medianValue);
-						error=Math.abs(val1-val2);
-
-						vals1.add(val1);
-						vals2.add(val2);
-
-						if(printValues) {
-							System.out.println("took log\t"+key+"\t"+df.format(val1)+"\t"+df.format(val2)+"\t"+df.format(error));					
-						}
+					
+					Double error=Math.abs(recs1.medianValue-recs2.medianValue);
+					vals1.add(recs1.medianValue);
+					vals2.add(recs2.medianValue);
+					if(printValues) {
+						System.out.println("took log\t"+key+"\t"+df.format(recs1.medianValue)+"\t"+df.format(recs2.medianValue)+"\t"+df.format(error));					
 					}
 
-
+					
+					//				System.out.println(casrn+"\t"+recs1.medianValue+"\t"+recs2.medianValue);	
+//					Double error=null;
+//					if(units.toLowerCase().contains("log")) {
+//						error=Math.abs(recs1.medianValue-recs2.medianValue);
+//						if(printValues) {
+//
+//							System.out.println("already log\t"+key+"\t"+df.format(recs1.medianValue)+"\t"+df.format(recs2.medianValue)+"\t"+df.format(error));					
+//						}
+//					} else {
+//						error=Math.abs(recs1.medianValue-recs2.medianValue);
+//						vals1.add(recs1.medianValue);
+//						vals2.add(recs2.medianValue);
+//						if(printValues) {
+//							System.out.println("took log\t"+key+"\t"+df.format(recs1.medianValue)+"\t"+df.format(recs2.medianValue)+"\t"+df.format(error));					
+//						}
+//					}
+					
 					//				if(error>0) {
 					//					System.out.println(casrn+"\t"+df.format(Math.log10(recs1.medianValue))+"\t"+df.format(Math.log10(recs2.medianValue))+"\t"+df.format(error));
 					//				}
 
-
-
 					MAE+=error;
-					//				if(printValues)
-
 					countInCommon++;
 
 				} 
 			}
+			
+			
+			if(!units.contains("log"))units="log10("+units+")";
+			
 
 			createPlot(units, vals1, vals2);
 
@@ -782,8 +843,8 @@ public class CompareExperimentalRecords {
 		int getCountWithMedian(TreeMap<String,ExperimentalRecords>tm) {
 
 			int countWithMedian=0;
-			for (String casrn:tm.keySet()) {
-				ExperimentalRecords recs1=tm.get(casrn);
+			for (String key:tm.keySet()) {
+				ExperimentalRecords recs1=tm.get(key);
 
 				if(recs1.medianValue!=null) countWithMedian++;
 			}
@@ -920,10 +981,10 @@ public class CompareExperimentalRecords {
 		// TODO Auto-generated method stub
 		CompareExperimentalRecords c=new CompareExperimentalRecords();
 
-		//		c.c.compareOralRat();
+//		c.c.compareOralRat();
 
-		//		c.c.lookAtLLNA_MixtureVsNonMixtureNIEHS_ICE();//only 8?
-		//		c.c.compareSensitization();
+//		c.c.lookAtLLNA_MixtureVsNonMixtureNIEHS_ICE();//only 8?
+//		c.c.compareSensitization();
 
 		c.c.compareBCF();
 

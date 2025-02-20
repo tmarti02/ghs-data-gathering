@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Vector;
 
 import com.google.gson.Gson;
@@ -290,6 +291,18 @@ public class Parse {
 		}
 	}
 	
+	
+	protected void writeOriginalRecordsToFile(List<?> records) {
+		try {
+			String jsonPath = jsonFolder + File.separator + fileNameJSON_Records;
+			
+//			System.out.println(records.size());
+			
+			howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(records,jsonPath);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
 	/**
 	 * Parses multiple sources, calls the classes that parse their data into the experimentalrecords json and excel files
 	 * @param sourceName a string with the source name matching those found in the ExperimentalConstants dictionary
