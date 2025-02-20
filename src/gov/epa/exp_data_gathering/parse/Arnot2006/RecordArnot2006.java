@@ -259,41 +259,18 @@ public class RecordArnot2006 {
 		setLiteratureSource(er);
 
 		er.experimental_parameters=new LinkedHashMap<>();//keeps insertion order
-		
+
 		setSpeciesParameters(htSpecies, limitToFish, er);
-//		System.out.println(limitToFish+"\t"+supercategory);
-
-		er.experimental_parameters.put("Response site", tissue_analyzed);
-		if(limitToWholeBody && (tissue_analyzed==null || !tissue_analyzed.equals("Whole body"))) {
-			er.keep=false;
-			er.reason="Not whole body";
-		}
-
-		//		er.experimental_parameters.put("Water concentration (ug/L)", water_concentration_mean_ug_L);
-		setWaterConcentration(er);
-
-		//TODO store like water conc?
-		
-		if(exposure_duration_days.contains("L")) {
-			er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", "Lifetime");
-		} else {
-			er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", exposure_duration_days);
-		}
-
-		compareT80_To_Exposure_Duration();
-				
+		setResponseSite(limitToWholeBody, er);//Criterion 5
+		setWaterConcentration(er);//Criterion 3
+		setExposureDuration(er);//Criterion 4
 		setChemAnalysisMethod(er);//Criterion 1
 		setExposureType(er);
 		setExposureMedia(er);
 		setCriteria(er);
 		
-		
-		if(!temperature_mean_C.equals("N/A")) {
-			er.temperature_C=Double.parseDouble(temperature_mean_C);
-		}
-		if(!ph_mean.equals("N/A")) {
-			er.pH=ph_mean;
-		}
+		if(!temperature_mean_C.equals("N/A")) er.temperature_C=Double.parseDouble(temperature_mean_C);
+		if(!ph_mean.equals("N/A")) er.pH=ph_mean;
 		
 		er.property_value_units_original=ExperimentalConstants.str_LOG_L_KG;
 		er.property_value_string=LogBCF_WW_L_kg + " "+er.property_value_units_original;
@@ -315,9 +292,40 @@ public class RecordArnot2006 {
 	}
 
 
+	private void setExposureDuration(ExperimentalRecord er) {
+		
+		//TODO store like water conc?
+
+		if(exposure_duration_days.contains("L")) {
+			er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", "Lifetime");
+		} else {
+			er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", exposure_duration_days);
+		}
+		compareT80_To_Exposure_Duration();
+	}
+
+
+	private void setResponseSite(boolean limitToWholeBody, ExperimentalRecord er) {
+		
+		if(tissue_analyzed.equals("Gills")) {
+			tissue_analyzed=tissue_analyzed.replace("Gills", "Gill(s)");
+		} else if(tissue_analyzed.equals("Gill")) {
+			tissue_analyzed=tissue_analyzed.replace("Gill", "Gill(s)");
+		} else if(tissue_analyzed.equals("Gonad")) {
+			tissue_analyzed=tissue_analyzed.replace("Gonad", "Gonad(s)");
+		}
+
+		er.experimental_parameters.put("Response site", tissue_analyzed);
+		
+		if(limitToWholeBody && (tissue_analyzed==null || !tissue_analyzed.equals("Whole body"))) {
+			er.keep=false;
+			er.reason="Not whole body";
+		}
+	}
+
+
 	private void setSpeciesParameters(Hashtable<String, List<Species>> htSpecies, boolean limitToFish,
 			ExperimentalRecord er) {
-		
 		
 		er.experimental_parameters.put("Species latin", scientific_name);
 		er.experimental_parameters.put("Species common", common_name);
@@ -376,6 +384,11 @@ public class RecordArnot2006 {
 	}
 
 
+	/**
+	 * Store water concentration as separate ParameterValue object so can keep units separate
+	 * 
+	 * @param er
+	 */
 	private void setWaterConcentration(ExperimentalRecord er) {
 
 		if(water_concentration_mean_ug_L==null)return;
@@ -414,7 +427,7 @@ public class RecordArnot2006 {
 				}
 			}
 
-			if(pv.unit.abbreviation==null) {
+			if(pv.unit.abbreviation==null) {//the g/L ones
 				pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 				double wc=Double.parseDouble(water_concentration_mean_ug_L);					
 				pv.valuePointEstimate=wc*1e-6;
@@ -489,8 +502,10 @@ public class RecordArnot2006 {
 		}
 	}
 
-
 	private void setCriteria(ExperimentalRecord er) {
+
+		//TODO also store comment fields for these
+		
 		er.experimental_parameters.put("Criterion 1- Water Concentration", criterion_water_concentration_measured); //1=Measured, 2=Uncertain, 3=Not measured/Nominal
 		er.experimental_parameters.put("Criterion 2- Radiolabel", criterion_radiolabel);//1=Not used or corrected for parent, 3=total radioactivity/uncertain
 		er.experimental_parameters.put("Criterion 3- Aqueous Solubility", criterion_aqueous_solubility);//1=below by a factor of 5, 2=within a factor of 5 or uncertain exposure concentration, 3=above by a factor of 5
@@ -501,6 +516,7 @@ public class RecordArnot2006 {
 			er.experimental_parameters.put("Criterion 6- Other Major Source", criterion_other_major_source);
 		}
 		//		System.out.println(exposure_duration_days);
+		
 		if(overall_score.equals("1.0")) {
 			overall_score="1: Acceptable BCF";
 		} else if(overall_score.equals("2.0")) {
@@ -528,9 +544,7 @@ public class RecordArnot2006 {
 				er.keep=false;
 				er.reason="overall_score="+overall_score;
 			}
-			
-		}
-		
+		}			
 	}
 
 
@@ -561,7 +575,7 @@ public class RecordArnot2006 {
 		if(exposure_type.equals("FT")) {
 			exposure_type=exposure_type.replace("FT","Flow-through");
 		} else if(exposure_type.equals("R")) {
-			exposure_type=exposure_type.replace("R","Renewed");
+			exposure_type=exposure_type.replace("R","Renewal");
 		} else if(exposure_type.equals("S")) {
 			exposure_type=exposure_type.replace("S","Static");
 		} else if(exposure_type.equals("Semi-S")) {
@@ -573,7 +587,7 @@ public class RecordArnot2006 {
 		} else {
 			System.out.println("Handle exposure_type="+exposure_type);
 		}
-
+		
 		if(exposure_type!=null) er.experimental_parameters.put("exposure_type", exposure_type);
 
 	}
