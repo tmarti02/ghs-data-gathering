@@ -1,10 +1,16 @@
 package gov.epa.exp_data_gathering.parse.QSAR_ToolBox;
 
+import java.io.File;
 import java.lang.ref.Reference;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -12,11 +18,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import gov.epa.QSAR.utilities.JsonUtilities;
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.database.SqlUtilities;
 import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
+import gov.epa.exp_data_gathering.parse.ToxVal.ParseToxVal;
 
 public class RecordQSAR_ToolBox {
 	
@@ -154,6 +163,7 @@ public class RecordQSAR_ToolBox {
 	
 	public String Duration_MaxQualifier;
 	public String Duration;
+	public String Duration_Unit;
 	
 	public String Unit_details;
 	public String Qualifier;
@@ -201,8 +211,24 @@ public class RecordQSAR_ToolBox {
 	public String Test_guideline_detail_if_other;
 	public String Test_guideline_qualifier_detail;
 	public String Test_organisms_species_detail_if_other;
+	
+	//BCF
+	public String Reliability_score;
+	public String pH;
+	public String Temperature;
+	public String Statistics;
+	public String Water_type;
+	public String Superclass;
+	public String Species_common_name;
+	public String BCFss_lipid_MeanValue;
+	public String BCFss_lipid_Unit;
+	public String Duration_MinValue;
+	public String Duration_MeanValue;
+	public String Duration_MaxValue;
+	
+	
 
-	public static final String[] fieldNames = {"RecordNumber","CAS_Number","Chemical_name_s","SMILES","Molecular_formula","Predefined_substance_type","Additional_Ids","Identity","CAS_SMILES_relation","Comment","EndpointPath","Database","URL","Strain","Year_0","Year_1","Endpoint","Title_0","Title_1","Test_type","Conclusions","Reliability","Purpose_flag","Strain_other","GLP_compliance","Test_guideline","Test_type_other","Study_result_type","Applied_transforms","Harmonized_Template","Test_guideline_other","Qualifier_of_guideline","Bibliographic_source_0","Bibliographic_source_1","Route_of_administration","Test_organisms_species","Interpretation_of_results","Author_s_or_transferred_reference_0","Author_s_or_transferred_reference_1","Substance_Test_material_equality","Principles_of_method_if_other_than_guideline","Assigned_SMILES","Qualifier","Year","Title","Bibliographic_source","Type_of_inhalation_exposure","Route_of_administration_original","Author_s_or_transferred_reference","Interpretation_of_results_other","Year_2","Title_2","Bibliographic_source_2","Author_s_or_transferred_reference_2","Test_guideline_0","Test_guideline_1","Test_guideline_2","Qualifier_of_guideline_0","Qualifier_of_guideline_1","Qualifier_of_guideline_2","Type_of_coverage","Unit_details","Endpoint_other","Any_other_information_on_results_incl_tables","Test_organisms_species_other","APPLICANT_S_SUMMARY_AND_CONCLUSION_executive_summary","Test_guideline_other_2","Test_guideline_3","Qualifier_of_guideline_3","Type_of_inhalation_exposure_other","Route_of_administration_other","Type_of_coverage_other","TestMaterialIsNull","Route_of_administration_other_original","Year_3","Title_3","Test_guideline_other_1","Bibliographic_source_3","Author_s_or_transferred_reference_3","Test_guideline_other_0","Year_4","Title_4","Bibliographic_source_4","Author_s_or_transferred_reference_4","Year_5","Title_5","Bibliographic_source_5","Author_s_or_transferred_reference_5","Test_guideline_other_3","Year_6","Title_6","Bibliographic_source_6","Author_s_or_transferred_reference_6","Year_7","Year_8","Year_9","Title_7","Title_8","Title_9","Year_10","Title_10","Bibliographic_source_7","Bibliographic_source_8","Bibliographic_source_9","Bibliographic_source_10","Author_s_or_transferred_reference_7","Author_s_or_transferred_reference_8","Author_s_or_transferred_reference_9","Author_s_or_transferred_reference_10","Year_11","Title_11","Bibliographic_source_11","Author_s_or_transferred_reference_11","Year_12","Year_13","Year_14","Year_15","Year_16","Year_17","Year_18","Year_19","Title_12","Title_13","Title_14","Title_15","Title_16","Title_17","Title_18","Title_19","Bibliographic_source_12","Bibliographic_source_13","Bibliographic_source_14","Bibliographic_source_15","Bibliographic_source_16","Bibliographic_source_17","Bibliographic_source_18","Bibliographic_source_19","Author_s_or_transferred_reference_12","Author_s_or_transferred_reference_13","Author_s_or_transferred_reference_14","Author_s_or_transferred_reference_15","Author_s_or_transferred_reference_16","Author_s_or_transferred_reference_17","Author_s_or_transferred_reference_18","Author_s_or_transferred_reference_19","Test_guideline_4","Test_guideline_5","Test_guideline_other_4","Test_guideline_other_5","Qualifier_of_guideline_4","Qualifier_of_guideline_5","Duration_MeanValue","Duration_Qualifier","Duration_Unit","Duration_Scale","Duration_MinValue","Duration_MinQualifier","Duration_MaxValue","Duration_MaxQualifier","Duration","Value_MeanValue","Value_Qualifier","Value_Unit","Value_Scale","Value_MinValue","Value_MinQualifier","Value_MaxValue","Value_MaxQualifier","Original_value_MeanValue","Original_value_Qualifier","Original_value_Unit","Original_value_Scale","Original_value_MinValue","Original_value_MinQualifier","Original_value_MaxValue","Original_value_MaxQualifier","Organ","Type_of_method","Assay","Assay_original","Interpretation_Of_Results","Interpretation_Of_Results_other","Route_Of_Challenge_Exposure","Route_Of_Induction_Exposure","Assay_other","Route_Of_Challenge_Exposure_other","Route_Of_Induction_Exposure_other","Test_guideline_6","Test_guideline_7","Test_guideline_other_6","Test_guideline_other_7","Qualifier_of_guideline_6","Qualifier_of_guideline_7","Author","Comments","Identity_in_file","Institution_and_country","Test_method_Data_source","Reference_source","Record_ID","Test_guideline_qualifier","Type_of_method_detail_if_other","Test_guideline_detail_if_other","Test_guideline_qualifier_detail","Test_organisms_species_detail_if_other"};
+	public static final String[] fieldNames = {"RecordNumber","CAS_Number","Chemical_name_s","SMILES","Molecular_formula","Predefined_substance_type","Additional_Ids","Identity","CAS_SMILES_relation","Comment","EndpointPath","Database","URL","Strain","Year_0","Year_1","Endpoint","Title_0","Title_1","Test_type","Conclusions","Reliability","Purpose_flag","Strain_other","GLP_compliance","Test_guideline","Test_type_other","Study_result_type","Applied_transforms","Harmonized_Template","Test_guideline_other","Qualifier_of_guideline","Bibliographic_source_0","Bibliographic_source_1","Route_of_administration","Test_organisms_species","Interpretation_of_results","Author_s_or_transferred_reference_0","Author_s_or_transferred_reference_1","Substance_Test_material_equality","Principles_of_method_if_other_than_guideline","Assigned_SMILES","Qualifier","Year","Title","Bibliographic_source","Type_of_inhalation_exposure","Route_of_administration_original","Author_s_or_transferred_reference","Interpretation_of_results_other","Year_2","Title_2","Bibliographic_source_2","Author_s_or_transferred_reference_2","Test_guideline_0","Test_guideline_1","Test_guideline_2","Qualifier_of_guideline_0","Qualifier_of_guideline_1","Qualifier_of_guideline_2","Type_of_coverage","Unit_details","Endpoint_other","Any_other_information_on_results_incl_tables","Test_organisms_species_other","APPLICANT_S_SUMMARY_AND_CONCLUSION_executive_summary","Test_guideline_other_2","Test_guideline_3","Qualifier_of_guideline_3","Type_of_inhalation_exposure_other","Route_of_administration_other","Type_of_coverage_other","TestMaterialIsNull","Route_of_administration_other_original","Year_3","Title_3","Test_guideline_other_1","Bibliographic_source_3","Author_s_or_transferred_reference_3","Test_guideline_other_0","Year_4","Title_4","Bibliographic_source_4","Author_s_or_transferred_reference_4","Year_5","Title_5","Bibliographic_source_5","Author_s_or_transferred_reference_5","Test_guideline_other_3","Year_6","Title_6","Bibliographic_source_6","Author_s_or_transferred_reference_6","Year_7","Year_8","Year_9","Title_7","Title_8","Title_9","Year_10","Title_10","Bibliographic_source_7","Bibliographic_source_8","Bibliographic_source_9","Bibliographic_source_10","Author_s_or_transferred_reference_7","Author_s_or_transferred_reference_8","Author_s_or_transferred_reference_9","Author_s_or_transferred_reference_10","Year_11","Title_11","Bibliographic_source_11","Author_s_or_transferred_reference_11","Year_12","Year_13","Year_14","Year_15","Year_16","Year_17","Year_18","Year_19","Title_12","Title_13","Title_14","Title_15","Title_16","Title_17","Title_18","Title_19","Bibliographic_source_12","Bibliographic_source_13","Bibliographic_source_14","Bibliographic_source_15","Bibliographic_source_16","Bibliographic_source_17","Bibliographic_source_18","Bibliographic_source_19","Author_s_or_transferred_reference_12","Author_s_or_transferred_reference_13","Author_s_or_transferred_reference_14","Author_s_or_transferred_reference_15","Author_s_or_transferred_reference_16","Author_s_or_transferred_reference_17","Author_s_or_transferred_reference_18","Author_s_or_transferred_reference_19","Test_guideline_4","Test_guideline_5","Test_guideline_other_4","Test_guideline_other_5","Qualifier_of_guideline_4","Qualifier_of_guideline_5","Duration_MeanValue","Duration_Qualifier","Duration_Unit","Duration_Scale","Duration_MinValue","Duration_MinQualifier","Duration_MaxValue","Duration_MaxQualifier","Duration","Value_MeanValue","Value_Qualifier","Value_Unit","Value_Scale","Value_MinValue","Value_MinQualifier","Value_MaxValue","Value_MaxQualifier","Original_value_MeanValue","Original_value_Qualifier","Original_value_Unit","Original_value_Scale","Original_value_MinValue","Original_value_MinQualifier","Original_value_MaxValue","Original_value_MaxQualifier","Organ","Type_of_method","Assay","Assay_original","Interpretation_Of_Results","Interpretation_Of_Results_other","Route_Of_Challenge_Exposure","Route_Of_Induction_Exposure","Assay_other","Route_Of_Challenge_Exposure_other","Route_Of_Induction_Exposure_other","Test_guideline_6","Test_guideline_7","Test_guideline_other_6","Test_guideline_other_7","Qualifier_of_guideline_6","Qualifier_of_guideline_7","Author","Comments","Identity_in_file","Institution_and_country","Test_method_Data_source","Reference_source","Record_ID","Test_guideline_qualifier","Type_of_method_detail_if_other","Test_guideline_detail_if_other","Test_guideline_qualifier_detail","Test_organisms_species_detail_if_other", "Reliability_score", "pH","Temperature", "Statistics", "Water_Type", "Species_common_name", "BCFss_lipid_MeanValue", "BCFss_lipid_Unit", "Duration_MinValue", "Duration_MeanValue", "Duration_MaxValue", "Superclass"};
 
 	
 	public String lastUpdated;
@@ -310,7 +336,7 @@ public class RecordQSAR_ToolBox {
 				
 				er.literatureSource.citation=er.literatureSource.citation.trim();
 				er.literatureSource.citation=er.literatureSource.citation.replace("?", "-");
-				er.literatureSource.citation=er.literatureSource.citation.replace("û", "-");
+				er.literatureSource.citation=er.literatureSource.citation.replace("Ã»", "-");
 				
 				
 //				System.out.println(er.literatureSource.citation);
@@ -323,9 +349,7 @@ public class RecordQSAR_ToolBox {
 				er.keep=false;
 				er.reason="Insufficient reliability";
 			}
-		}
-		
-		
+		}	
 		
 		
 		if (Test_organisms_species!=null) er.experimental_parameters.put("species", this.Test_organisms_species);
@@ -356,7 +380,7 @@ public class RecordQSAR_ToolBox {
 				if(Value_Scale.equals("Skin sensitization EC3(ratio)")) {
 					
 					double value = Double.parseDouble(Value_MeanValue);
-					
+	
 					er.property_value_string = "EC3 = "+df.format(value) + "%";
 					er.property_value_point_estimate_original=value;
 					er.property_value_units_original="%";
@@ -632,7 +656,7 @@ public class RecordQSAR_ToolBox {
 			
 			units=units.replace("mL/kg bw", ExperimentalConstants.str_mL_kg);
 			units=units.replace("ul/kg bw", ExperimentalConstants.str_uL_kg);
-			units=units.replace("µl/kg bw", ExperimentalConstants.str_uL_kg);
+			units=units.replace("Âµl/kg bw", ExperimentalConstants.str_uL_kg);
 						
 			units=units.replace("cm3/kg bw", ExperimentalConstants.str_mL_kg);
 			units=units.replace("cc/kg", ExperimentalConstants.str_mL_kg);
@@ -640,7 +664,7 @@ public class RecordQSAR_ToolBox {
 			units=units.replace("mg/L air", ExperimentalConstants.str_mg_L);
 			units=units.replace("mg/L in drinking water", ExperimentalConstants.str_mg_L);
 
-			units=units.replace("µl/L air", ExperimentalConstants.str_uL_L);
+			units=units.replace("Âµl/L air", ExperimentalConstants.str_uL_L);
 			
 			units=units.replace("mg/m^3 air", ExperimentalConstants.str_mg_m3);
 			units=units.replace("mg/m3", ExperimentalConstants.str_mg_m3);			
@@ -782,5 +806,378 @@ public class RecordQSAR_ToolBox {
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(2); // TODO Chemical name index guessed from header. Is this accurate?
 		return records;
 	}
+	
+	private ExperimentalRecord toExperimentalRecordBCF(String propertyName, String method, String BCF_units, String BCF_mean) {
+		
+		ExperimentalRecord er=new ExperimentalRecord();
+		setSourceInformation(er);		
+		setIdentifiers(er);
+		
+		er.property_name=propertyName;
+		er.experimental_parameters=new Hashtable<>();
+		er.experimental_parameters.put("Measurement method",method);		
+		er.property_name = propertyName;
 
+		try {
+			String property_value = BCF_mean;			
+			if(BCF_mean!=null) {
+				er.property_value_point_estimate_original = Double.parseDouble(BCF_mean);
+			}
+			er.property_value_units_original=BCF_units;
+			er.property_value_string = property_value + " "+er.property_value_units_original;				
+
+		} catch (Exception e) {
+			System.out.println("Parse error BCF:\n"+gson.toJson(this));
+			e.printStackTrace();
+		}
+		
+		er.property_category="bioconcentration";
+		addMetadata(er);
+		
+		unitConverter.convertRecord(er);
+		return er;
+	}
+
+	//Adds all metadata for each of BCF data sets
+	private void addMetadata(ExperimentalRecord er) {
+		if(Database==null) { 
+			er.keep=false;
+			er.reason="Database is missing";
+		} else if(Database.equals("Bioaccumulation fish CEFIC LRI")) {				
+			if(this.Reliability_score==null || this.Reliability_score.contains("3") || this.Reliability_score.contains("4")) {
+				er.keep=false;
+				er.reason="Insufficient reliability";
+			} else {
+				er.experimental_parameters.put("Reliability",Reliability_score);
+			}
+			er.reference=Reference_source;
+			er.experimental_parameters.put("Media type",Water_type);
+			er.experimental_parameters.put("Tissue", Organ);
+			er.experimental_parameters.put("Species latin",Test_organisms_species);
+			er.experimental_parameters.put("Species common",Species_common_name);
+			er.experimental_parameters.put("pH", pH);
+			er.experimental_parameters.put("Temperature", Temperature);
+			if(Statistics!=null) {
+				er.experimental_parameters.put("Formula", Statistics);
+			}
+			if(Duration_MinValue!=null) {
+				er.experimental_parameters.put("Duration_MinValue", Duration_MinValue);
+			}
+			if(Duration_MaxValue!=null) {
+				er.experimental_parameters.put("Duration_MaxValue", Duration_MaxValue);
+			}
+			if(Duration_Unit!=null) {
+				er.experimental_parameters.put("Duration Units", Duration_Unit);
+			}
+			
+			LiteratureSource ls=new LiteratureSource();
+			er.literatureSource=ls;
+			if(Author!=null) {
+				ls.name=Author + " (" + Year + ")";
+				ls.author=Author;
+				ls.title=Title;
+				ls.citation=Author+" ("+Year+"). "+ls.title+". "+Reference_source;
+			} else {
+				ls.citation=Reference_source + " (" + Year + ")";
+			}
+		} else if(Database.equals("Bioaccumulation Canada")) {
+			er.experimental_parameters.put("Species latin",Test_organisms_species);
+			if(Duration_MeanValue!=null) {
+				er.experimental_parameters.put("Duration_MeanValue", Duration_MeanValue);
+			}
+			if(Duration_MinValue!=null) {
+				er.experimental_parameters.put("Duration_MinValue", Duration_MinValue);
+			}
+			er.experimental_parameters.put("Duration Units", Duration_Unit);
+		} else if(Database.equals("Bioconcentration and logKow NITE")) {
+			if(Test_organisms_species!=null) {
+				er.experimental_parameters.put("Species latin",Test_organisms_species);
+			}
+			if(Duration_MeanValue!=null) {
+				er.experimental_parameters.put("Duration_MeanValue", Duration_MeanValue);
+			}
+			if(Duration_Unit!=null) {
+				er.experimental_parameters.put("Duration Units", Duration_Unit);
+			}
+		}
+	}
+	
+	//Selects kinetic values for CEFIC data set
+	ExperimentalRecord toExperimentalRecordBCF_Kinetic(String propertyName, boolean limitToWholeOrganism,boolean limitToFish) {
+		
+		String method="kinetic";
+		String BCF_units=ExperimentalConstants.str_L_KG;
+		String BCF_mean=Original_value_MeanValue;
+						
+		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, BCF_units, BCF_mean);
+		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+		return er;
+	}
+	//Selects steady state values for CEFIC data set
+	ExperimentalRecord toExperimentalRecordBCF_SS(String propertyName, boolean limitToWholeOrganism,boolean limitToFish) {
+
+		String method="steady state";
+		String BCF_mean=BCFss_lipid_MeanValue;
+		String BCF_units=ExperimentalConstants.str_LOG_L_KG;
+		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, BCF_units, BCF_mean);
+
+		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+		return er;
+	}
+	//Selects kinetic values for Canada data set
+	ExperimentalRecord toExperimentalRecordBCFCanada(String propertyName, boolean limitToWholeOrganism,boolean limitToFish) {
+
+		String method="kinetic";
+		String BCF_mean=Value_MeanValue;
+		String BCF_units=ExperimentalConstants.str_LOG_L_KG;
+		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, BCF_units, BCF_mean);
+
+		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+		return er;
+	}
+
+	//Directly separsates steady state and kinetic BCF values for NITE dataset and converts to experimental records different from other BCF data
+	public ExperimentalRecord toExperimentalRecordBCFNITE(String propertyName, boolean limitToWholeOrganism,boolean limitToFish) {
+		
+		ExperimentalRecord er=new ExperimentalRecord();
+		setSourceInformation(er);		
+		setIdentifiers(er);
+		
+		er.property_name=propertyName;
+		er.experimental_parameters=new Hashtable<>();
+		if(Endpoint!=null) {
+			if(Endpoint.equals("BCF") && Endpoint!=null) {
+				String method="kinetic";
+				er.experimental_parameters.put("Measurement method",method);
+			} else if(Endpoint.equals("BCFss") && Endpoint!=null) {
+				String method="steady state";
+				er.experimental_parameters.put("Measurement method",method);
+			} else if(Endpoint.equals("LogPow") && Endpoint!=null) {
+				er.keep=false;
+				er.reason="Incorrect property";
+			}
+		}
+//		er.experimental_parameters.put("Measurement method",method);
+		String BCF_mean=Original_value_MeanValue;
+		String BCF_units=ExperimentalConstants.str_L_KG;
+		try {
+			String property_value = BCF_mean;			
+			if(BCF_mean!=null) {
+				er.property_value_point_estimate_original = Double.parseDouble(BCF_mean);
+			}
+//			Value_Qualifier=Value_Qualifier.replace("â‰¤", "<=");
+			er.property_value_numeric_qualifier=Value_Qualifier;
+			er.property_value_units_original=BCF_units;
+			er.property_value_string = property_value + " "+er.property_value_units_original;				
+
+		} catch (Exception e) {
+			System.out.println("Parse error BCF:\n"+gson.toJson(this));
+			e.printStackTrace();
+		}
+		
+		er.property_category="bioconcentration";
+		
+		if(Test_organisms_species!=null) {
+			er.experimental_parameters.put("Species latin",Test_organisms_species);
+		}
+		if(Duration_MeanValue!=null) {
+			er.experimental_parameters.put("Duration_MeanValue", Duration_MeanValue);
+		}
+		if(Duration_Unit!=null) {
+			er.experimental_parameters.put("Duration Units", Duration_Unit);
+		}
+
+		
+		unitConverter.convertRecord(er);
+		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+		return er;
+	}
+	//Filters BCF values based on whole organism and fish
+	private void filterRecord(ExperimentalRecord er,boolean limitToWholeOrganism,boolean limitToFish) {
+
+		if (limitToWholeOrganism) {
+			if (Organ == null
+					|| !Organ.toLowerCase().equals("whole body")) {
+				er.keep = false;
+				er.reason = "Not whole body";
+			}
+		}
+
+		if (limitToFish) {
+			if (Superclass==null || !Superclass.toLowerCase().contains("actinopterygii") ) {
+//				|| !Test_organisms_species.equals("Gnathopogon coerulescens") || !Test_organisms_species.equals("Chasmichthys gulosus") || !Test_organisms_species.equals("Cyprinodontidae") || !Test_organisms_species.equals("Tilapia nilotica") || !Test_organisms_species.equals("Salmo gairdneri")
+				er.keep = false;
+				er.reason = "not a fish";
+			}
+		}
+	}
+	
+	private String getSpeciesSupercategory(Hashtable<String, List<Species>> htSpecies) {
+
+		if(htSpecies.containsKey(Species_common_name.toLowerCase())) {
+
+			List<Species>speciesList=htSpecies.get(Species_common_name.toLowerCase());
+
+			for(Species species:speciesList) {
+
+
+				//				if(species.species_scientific!=null) {
+				//					if (!species.species_scientific.toLowerCase().equals(this.scientific_name.toLowerCase())) {
+				//						System.out.println(this.scientific_name+"\t"+species.species_scientific+"\tmismatch");
+				//					}
+				//				} else {
+				////					System.out.println(common_name+"\tspecies has null scientific");
+				//				}
+
+				if(species.species_supercategory.contains("fish")) {
+					return "Fish";
+				} else if(species.species_supercategory.contains("algae")) {
+					return "Algae";
+				} else if(species.species_supercategory.contains("crustaceans")) {
+					return "Crustaceans";
+				} else if(species.species_supercategory.contains("insects/spiders")) {
+					return "Insects/spiders";
+				} else if(species.species_supercategory.contains("molluscs")) {
+					return "Molluscs";
+				} else if(species.species_supercategory.contains("worms")) {
+					return "Worms";
+				} else if(species.species_supercategory.contains("invertebrates")) {
+					return "Invertebrates";
+				} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
+					return "Flowers, trees, shrubs, ferns";
+				} else if(species.species_supercategory.equals("omit")) {
+					return "omit";
+				} else {
+					System.out.println("Handle\t"+Species_common_name+"\t"+species.species_supercategory);	
+				}
+			}
+		} else {
+			System.out.println("missing in hashtable:\t"+"*"+Species_common_name.toLowerCase()+"*");
+		}
+
+		return null;
+	}
+
+
+	static class Species {
+		Integer id;
+		String species_common;
+		String species_scientific;
+		String species_supercategory;
+		String habitat;
+	}
+
+
+	/**
+	 * this works for prod_dsstox- not v93 version since species table is different
+	 * 
+	 * @param tvq
+	 * @return
+	 */
+	public static Hashtable<String, List<Species>> createSupercategoryHashtable(Connection conn) {
+		Hashtable<String,List<Species>>htSpecies=new Hashtable<>();
+
+		String sql="select species_id, species_common, species_scientific, species_supercategory, habitat from species";
+
+		try {
+
+			Statement st = conn.createStatement();			
+			ResultSet rs = st.executeQuery(sql);
+
+			while (rs.next()) {
+
+				Species species=new Species();
+
+				species.id=rs.getInt(1);
+				species.species_common=rs.getString(2);
+				species.species_scientific=rs.getString(3);
+				species.species_supercategory=rs.getString(4);
+				species.habitat=rs.getString(5);
+
+				if(htSpecies.get(species.species_common)==null) {
+					List<Species>speciesList=new ArrayList<>();
+					speciesList.add(species);
+					htSpecies.put(species.species_common, speciesList);
+				} else {
+					List<Species>speciesList=htSpecies.get(species.species_common);
+					speciesList.add(species);
+				}
+			}
+
+
+			//			System.out.println(sql);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return htSpecies;
+	}
+
+	void putEntry(Hashtable<String, List<Species>> htSpecies,String species_common,String supercategory) {
+
+		if(htSpecies.get(species_common)==null) {
+			List<Species>speciesList=new ArrayList<>();
+			Species species=new Species();
+			species.species_common=species_common;
+			species.species_supercategory=supercategory;
+			speciesList.add(species);
+			htSpecies.put(species_common, speciesList);
+		} else {
+			List<Species>speciesList=htSpecies.get(species_common);
+
+			Species species=new Species();
+			species.species_common=species_common;
+			species.species_supercategory=supercategory;
+			speciesList.add(species);
+		}
+
+
+	}
+
+
+
+	void getSpeciesSuperCategoryHashtable() {
+
+		String toxvalVersion=ParseToxVal.versionProd;
+
+
+		Connection conn=SqlUtilities.getConnectionDSSTOX();
+
+		//Need to create a dictionary to map all fish by common name:
+		Hashtable<String, List<Species>> htSuperCategory = createSupercategoryHashtable(conn);
+
+		putEntry(htSuperCategory, "phytoplankton", "omit");
+		putEntry(htSuperCategory, "common shrimp", "omit");
+		putEntry(htSuperCategory, "baskettail dragonfly", "omit");
+		putEntry(htSuperCategory, "common bay mussel", "omit");
+		putEntry(htSuperCategory, "depressed river mussel", "omit");
+		putEntry(htSuperCategory, "clams", "omit");
+		putEntry(htSuperCategory, "tadpole", "omit");
+		putEntry(htSuperCategory, "algae, algal mat", "omit");
+		putEntry(htSuperCategory, "schizothrix calcicola", "omit");
+
+		putEntry(htSuperCategory, "biwi lake gudgeon, goby or willow shiner", "fish");
+		putEntry(htSuperCategory, "willow shiner", "fish");
+		putEntry(htSuperCategory, "golden ide", "fish");
+		putEntry(htSuperCategory, "gobi", "fish");
+		putEntry(htSuperCategory, "topmouth gudgeon", "fish");
+		putEntry(htSuperCategory, "shorthead redhorse", "fish");
+		putEntry(htSuperCategory, "golden redhorse", "fish");
+		putEntry(htSuperCategory, "medaka, high-eyes", "fish");
+		putEntry(htSuperCategory, "brook silverside", "fish");
+		putEntry(htSuperCategory, "coho salmon", "fish");
+		putEntry(htSuperCategory, "lemon shark", "fish");
+
+		System.out.println(gson.toJson(htSuperCategory));
+
+		JsonUtilities.savePrettyJson(htSuperCategory, "data\\experimental\\Arnot 2006\\htSuperCategory.json");
+
+	}
+	
+	public static void main(String[] args) {
+		RecordQSAR_ToolBox r=new RecordQSAR_ToolBox();
+		//		r.parseRecordsFromExcel();
+		r.getSpeciesSuperCategoryHashtable();
+		
+	}
 }
