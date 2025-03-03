@@ -807,7 +807,14 @@ public class RecordQSAR_ToolBox {
 		return records;
 	}
 	
-	private ExperimentalRecord toExperimentalRecordBCF(String propertyName, String method, String BCF_units, String BCF_mean) {
+	private ExperimentalRecord toExperimentalRecordBCF(String propertyName, String method, String BCF_units, String BCF_mean, Hashtable<String, List<Species>> htSpecies) {
+		
+		
+		boolean limitToFish=false;
+		if(propertyName.toLowerCase().contains("fish")) limitToFish=true;
+		
+		boolean limitToWholeBody=false;
+		if(propertyName.toLowerCase().contains("whole")) limitToWholeBody=true;
 		
 		ExperimentalRecord er=new ExperimentalRecord();
 		setSourceInformation(er);		
@@ -817,6 +824,13 @@ public class RecordQSAR_ToolBox {
 		er.experimental_parameters=new Hashtable<>();
 		er.experimental_parameters.put("Measurement method",method);		
 		er.property_name = propertyName;
+		
+		setSpeciesParameters(htSpecies, limitToFish, er);
+		
+		if(limitToWholeBody && (Organ==null || !Organ.equals("Whole body"))) {
+			er.keep=false;
+			er.reason="Not whole body";
+		}
 
 		try {
 			String property_value = BCF_mean;			
@@ -903,41 +917,45 @@ public class RecordQSAR_ToolBox {
 	}
 	
 	//Selects kinetic values for CEFIC data set
-	ExperimentalRecord toExperimentalRecordBCF_Kinetic(String propertyName, boolean limitToWholeOrganism,boolean limitToFish) {
+	ExperimentalRecord toExperimentalRecordBCF_Kinetic(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 		
 		String method="kinetic";
 		String BCF_units=ExperimentalConstants.str_L_KG;
 		String BCF_mean=Original_value_MeanValue;
-						
-		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, BCF_units, BCF_mean);
-		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+
+		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, BCF_units, BCF_mean, htSpecies);
+//		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
 		return er;
 	}
 	//Selects steady state values for CEFIC data set
-	ExperimentalRecord toExperimentalRecordBCF_SS(String propertyName, boolean limitToWholeOrganism,boolean limitToFish) {
+	ExperimentalRecord toExperimentalRecordBCF_SS(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 
 		String method="steady state";
 		String BCF_mean=BCFss_lipid_MeanValue;
 		String BCF_units=ExperimentalConstants.str_LOG_L_KG;
-		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, BCF_units, BCF_mean);
+		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, BCF_units, BCF_mean, htSpecies);
 
-		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+//		if(er!=null) filterRecord(er, propertyName);
 		return er;
 	}
 	//Selects kinetic values for Canada data set
-	ExperimentalRecord toExperimentalRecordBCFCanada(String propertyName, boolean limitToWholeOrganism,boolean limitToFish) {
+	ExperimentalRecord toExperimentalRecordBCFCanada(String propertyName) {
 
 		String method="kinetic";
 		String BCF_mean=Value_MeanValue;
 		String BCF_units=ExperimentalConstants.str_LOG_L_KG;
-		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, BCF_units, BCF_mean);
+		Hashtable<String, List<Species>> htSpecies = null;
+		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, BCF_units, BCF_mean, htSpecies);
 
-		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+		if(er!=null) filterRecord(er, propertyName);
 		return er;
 	}
 
-	//Directly separsates steady state and kinetic BCF values for NITE dataset and converts to experimental records different from other BCF data
-	public ExperimentalRecord toExperimentalRecordBCFNITE(String propertyName, boolean limitToWholeOrganism,boolean limitToFish) {
+	//Directly separates steady state and kinetic BCF values for NITE dataset and converts to experimental records different from other BCF data
+	public ExperimentalRecord toExperimentalRecordBCFNITE(String propertyName) {
+		
+		boolean limitToFish=false;
+		if(propertyName.toLowerCase().contains("fish")) limitToFish=true;
 		
 		ExperimentalRecord er=new ExperimentalRecord();
 		setSourceInformation(er);		
@@ -957,6 +975,8 @@ public class RecordQSAR_ToolBox {
 				er.reason="Incorrect property";
 			}
 		}
+		Hashtable<String, List<Species>> htSpecies = null;
+		setSpeciesParameters(htSpecies, limitToFish, er);
 //		er.experimental_parameters.put("Measurement method",method);
 		String BCF_mean=Original_value_MeanValue;
 		String BCF_units=ExperimentalConstants.str_L_KG;
@@ -977,9 +997,6 @@ public class RecordQSAR_ToolBox {
 		
 		er.property_category="bioconcentration";
 		
-		if(Test_organisms_species!=null) {
-			er.experimental_parameters.put("Species latin",Test_organisms_species);
-		}
 		if(Duration_MeanValue!=null) {
 			er.experimental_parameters.put("Duration_MeanValue", Duration_MeanValue);
 		}
@@ -989,13 +1006,19 @@ public class RecordQSAR_ToolBox {
 
 		
 		unitConverter.convertRecord(er);
-		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+		if(er!=null) filterRecord(er, propertyName);
 		return er;
 	}
 	//Filters BCF values based on whole organism and fish
-	private void filterRecord(ExperimentalRecord er,boolean limitToWholeOrganism,boolean limitToFish) {
+	private void filterRecord(ExperimentalRecord er, String propertyName) {
 
-		if (limitToWholeOrganism) {
+		boolean limitToFish=false;
+		if(propertyName.toLowerCase().contains("fish")) limitToFish=true;
+		
+		boolean limitToWholeBody=false;
+		if(propertyName.toLowerCase().contains("whole")) limitToWholeBody=true;
+		
+		if (limitToWholeBody) {
 			if (Organ == null
 					|| !Organ.toLowerCase().equals("whole body")) {
 				er.keep = false;
@@ -1004,57 +1027,76 @@ public class RecordQSAR_ToolBox {
 		}
 
 		if (limitToFish) {
-			if (Superclass==null || !Superclass.toLowerCase().contains("actinopterygii") ) {
-//				|| !Test_organisms_species.equals("Gnathopogon coerulescens") || !Test_organisms_species.equals("Chasmichthys gulosus") || !Test_organisms_species.equals("Cyprinodontidae") || !Test_organisms_species.equals("Tilapia nilotica") || !Test_organisms_species.equals("Salmo gairdneri")
-				er.keep = false;
-				er.reason = "not a fish";
+			if(Superclass!=null) {
+				if (!Superclass.toLowerCase().contains("actinopterygii")) {
+					er.keep = false;
+					er.reason = "not a fish";
+				} 
+			} else {
+				if(Test_organisms_species!=null) {
+					if(!Test_organisms_species.equals("Gnathopogon coerulescens") && !Test_organisms_species.equals("Chasmichthys gulosus") && !Test_organisms_species.equals("Cyprinodontidae") && !Test_organisms_species.equals("Tilapia nilotica") && !Test_organisms_species.equals("Salmo gairdneri")){
+						er.keep = false;
+						er.reason = "not a fish";
+					}
+				}
+			}
+		}
+	}
+	
+	private void setSpeciesParameters(Hashtable<String, List<Species>> htSpecies, boolean limitToFish,
+			ExperimentalRecord er) {
+		if(Test_organisms_species!=null) {
+			er.experimental_parameters.put("Species latin", Test_organisms_species);
+		}
+		if(Species_common_name!=null) {
+			er.experimental_parameters.put("Species common", Species_common_name);
+		}
+		String supercategory=getSpeciesSupercategory(htSpecies);
+		if(supercategory!=null)	er.experimental_parameters.put("Species supercategory", supercategory);
+
+		
+		if(limitToFish && supercategory!=null) {
+			if(!supercategory.equals("Fish")) {
+				er.keep=false;
+				er.reason="Not a fish species";
 			}
 		}
 	}
 	
 	private String getSpeciesSupercategory(Hashtable<String, List<Species>> htSpecies) {
+		if(htSpecies!=null) {
+			if(htSpecies.containsKey(Species_common_name.toLowerCase())) {
 
-		if(htSpecies.containsKey(Species_common_name.toLowerCase())) {
+				List<Species>speciesList=htSpecies.get(Species_common_name.toLowerCase());
 
-			List<Species>speciesList=htSpecies.get(Species_common_name.toLowerCase());
+				for(Species species:speciesList) {
 
-			for(Species species:speciesList) {
-
-
-				//				if(species.species_scientific!=null) {
-				//					if (!species.species_scientific.toLowerCase().equals(this.scientific_name.toLowerCase())) {
-				//						System.out.println(this.scientific_name+"\t"+species.species_scientific+"\tmismatch");
-				//					}
-				//				} else {
-				////					System.out.println(common_name+"\tspecies has null scientific");
-				//				}
-
-				if(species.species_supercategory.contains("fish")) {
-					return "Fish";
-				} else if(species.species_supercategory.contains("algae")) {
-					return "Algae";
-				} else if(species.species_supercategory.contains("crustaceans")) {
-					return "Crustaceans";
-				} else if(species.species_supercategory.contains("insects/spiders")) {
-					return "Insects/spiders";
-				} else if(species.species_supercategory.contains("molluscs")) {
-					return "Molluscs";
-				} else if(species.species_supercategory.contains("worms")) {
-					return "Worms";
-				} else if(species.species_supercategory.contains("invertebrates")) {
-					return "Invertebrates";
-				} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
-					return "Flowers, trees, shrubs, ferns";
-				} else if(species.species_supercategory.equals("omit")) {
-					return "omit";
-				} else {
-					System.out.println("Handle\t"+Species_common_name+"\t"+species.species_supercategory);	
+					if(species.species_supercategory.contains("fish")) {
+						return "Fish";
+					} else if(species.species_supercategory.contains("algae")) {
+						return "Algae";
+					} else if(species.species_supercategory.contains("crustaceans")) {
+						return "Crustaceans";
+					} else if(species.species_supercategory.contains("insects/spiders")) {
+						return "Insects/spiders";
+					} else if(species.species_supercategory.contains("molluscs")) {
+						return "Molluscs";
+					} else if(species.species_supercategory.contains("worms")) {
+						return "Worms";
+					} else if(species.species_supercategory.contains("invertebrates")) {
+						return "Invertebrates";
+					} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
+						return "Flowers, trees, shrubs, ferns";
+					} else if(species.species_supercategory.equals("omit")) {
+						return "omit";
+					} else {
+						System.out.println("Handle\t"+Species_common_name+"\t"+species.species_supercategory);	
+					}
 				}
+			} else {
+				System.out.println("missing in hashtable:\t"+"*"+Species_common_name.toLowerCase()+"*");
 			}
-		} else {
-			System.out.println("missing in hashtable:\t"+"*"+Species_common_name.toLowerCase()+"*");
 		}
-
 		return null;
 	}
 
@@ -1132,52 +1174,5 @@ public class RecordQSAR_ToolBox {
 		}
 
 
-	}
-
-
-
-	void getSpeciesSuperCategoryHashtable() {
-
-		String toxvalVersion=ParseToxVal.versionProd;
-
-
-		Connection conn=SqlUtilities.getConnectionDSSTOX();
-
-		//Need to create a dictionary to map all fish by common name:
-		Hashtable<String, List<Species>> htSuperCategory = createSupercategoryHashtable(conn);
-
-		putEntry(htSuperCategory, "phytoplankton", "omit");
-		putEntry(htSuperCategory, "common shrimp", "omit");
-		putEntry(htSuperCategory, "baskettail dragonfly", "omit");
-		putEntry(htSuperCategory, "common bay mussel", "omit");
-		putEntry(htSuperCategory, "depressed river mussel", "omit");
-		putEntry(htSuperCategory, "clams", "omit");
-		putEntry(htSuperCategory, "tadpole", "omit");
-		putEntry(htSuperCategory, "algae, algal mat", "omit");
-		putEntry(htSuperCategory, "schizothrix calcicola", "omit");
-
-		putEntry(htSuperCategory, "biwi lake gudgeon, goby or willow shiner", "fish");
-		putEntry(htSuperCategory, "willow shiner", "fish");
-		putEntry(htSuperCategory, "golden ide", "fish");
-		putEntry(htSuperCategory, "gobi", "fish");
-		putEntry(htSuperCategory, "topmouth gudgeon", "fish");
-		putEntry(htSuperCategory, "shorthead redhorse", "fish");
-		putEntry(htSuperCategory, "golden redhorse", "fish");
-		putEntry(htSuperCategory, "medaka, high-eyes", "fish");
-		putEntry(htSuperCategory, "brook silverside", "fish");
-		putEntry(htSuperCategory, "coho salmon", "fish");
-		putEntry(htSuperCategory, "lemon shark", "fish");
-
-		System.out.println(gson.toJson(htSuperCategory));
-
-		JsonUtilities.savePrettyJson(htSuperCategory, "data\\experimental\\Arnot 2006\\htSuperCategory.json");
-
-	}
-	
-	public static void main(String[] args) {
-		RecordQSAR_ToolBox r=new RecordQSAR_ToolBox();
-		//		r.parseRecordsFromExcel();
-		r.getSpeciesSuperCategoryHashtable();
-		
 	}
 }

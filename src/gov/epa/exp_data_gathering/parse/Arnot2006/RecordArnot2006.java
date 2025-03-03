@@ -787,6 +787,23 @@ public class RecordArnot2006 {
 		putEntry(htSuperCategory, "brook silverside", "fish");
 		putEntry(htSuperCategory, "coho salmon", "fish");
 		putEntry(htSuperCategory, "lemon shark", "fish");
+		putEntry(htSuperCategory, "common carp", "fish");
+		putEntry(htSuperCategory, "three-spined stickleback", "fish");
+		putEntry(htSuperCategory, "fathead minnow", "fish");
+		putEntry(htSuperCategory, "american flagfish", "fish");
+		putEntry(htSuperCategory, "guppy", "fish");
+		putEntry(htSuperCategory, "mosquito fish", "fish");
+		putEntry(htSuperCategory, "rainbow trout", "fish");
+		putEntry(htSuperCategory, "sheepshead minnow", "fish");
+		putEntry(htSuperCategory, "carp", "fish");
+		putEntry(htSuperCategory, "medaka", "fish");
+		putEntry(htSuperCategory, "bluegill sunfish", "fish");
+		putEntry(htSuperCategory, "perch", "fish");
+		putEntry(htSuperCategory, "goldfish", "fish");
+		putEntry(htSuperCategory, "channel catfish", "fish");
+		putEntry(htSuperCategory, "spot", "fish");
+		putEntry(htSuperCategory, "banded tilapia", "fish");
+
 
 		System.out.println(gson.toJson(htSuperCategory));
 

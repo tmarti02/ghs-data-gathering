@@ -2,19 +2,25 @@ package gov.epa.exp_data_gathering.parse.QSAR_ToolBox;
 
 import java.io.File;
 import java.io.FileReader;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
+import gov.epa.QSAR.utilities.JsonUtilities;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
 
 public class ParseQSAR_ToolBox extends Parse {
+	
+	String propertyName;
 
 	public static String fileNameAcuteToxicityDB="acute oral toxicity db.xlsx";
 	public static String fileNameAcuteToxicityEchaReach="echa reach acute toxicity by test material.xlsx";
@@ -28,15 +34,16 @@ public class ParseQSAR_ToolBox extends Parse {
 //	String fileName=fileNameAcuteToxicityDB;
 //	String fileName=fileNameSensitizationEchaReach;
 //	public String fileName=fileNameSensitization;
-//	String fileName=fileNameBCFCEFIC;
+	String fileName=fileNameBCFCEFIC;
 //	String fileName=fileNameBCFCanada;
-	String fileName=fileNameBCFNITE;
+//	String fileName=fileNameBCFNITE;
 	
 	
 	String original_source_name;
 	List<String>selectedEndpoints;
 	
 	public ParseQSAR_ToolBox(String propertyName) {
+		this.propertyName=propertyName;
 		sourceName = RecordQSAR_ToolBox.sourceName; // TODO Consider creating ExperimentalConstants.strSourceQSAR_ToolBox instead.
 		this.init();
 //		mainFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
@@ -116,6 +123,9 @@ public class ParseQSAR_ToolBox extends Parse {
 		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
 		try {
 			
+			Type type = new TypeToken<Hashtable<String, List<RecordQSAR_ToolBox.Species>>>(){}.getType();
+			Hashtable<String, List<gov.epa.exp_data_gathering.parse.QSAR_ToolBox.RecordQSAR_ToolBox.Species>>htSpecies=JsonUtilities.gsonPretty.fromJson(new FileReader("data\\experimental\\Arnot 2006\\htSuperCategory.json"), type);
+	
 			File Folder=new File(jsonFolder);
 			
 			if(Folder.listFiles()==null) {
@@ -133,24 +143,21 @@ public class ParseQSAR_ToolBox extends Parse {
 
 				for (RecordQSAR_ToolBox recordQSAR_ToolBox:tempRecords) {
 					
-					//Must change propertyName, limitToFish, limitToWhole Organism to switch between BCF filters. Can only filter if filename is CEFIC
-					boolean limitToFish=false;
-					boolean limitToWholeOrganism=false;
-					String propertyName=ExperimentalConstants.strBCF;
+					//Can only filter by whole body if filename is CEFIC
 					if(fileName.equals(fileNameBCFCEFIC)) {
 						
-						ExperimentalRecord erKinetic=recordQSAR_ToolBox.toExperimentalRecordBCF_Kinetic(propertyName, limitToFish, limitToWholeOrganism);
+						ExperimentalRecord erKinetic=recordQSAR_ToolBox.toExperimentalRecordBCF_Kinetic(propertyName, htSpecies);
 						if(erKinetic!=null)	recordsExperimental.add(erKinetic);
 		
-						ExperimentalRecord erSS=recordQSAR_ToolBox.toExperimentalRecordBCF_SS(propertyName, limitToFish, limitToWholeOrganism);
+						ExperimentalRecord erSS=recordQSAR_ToolBox.toExperimentalRecordBCF_SS(propertyName, htSpecies);
 						if(erSS!=null)	recordsExperimental.add(erSS);
 						
 		
 					} else if(fileName.equals(fileNameBCFCanada)) {
-						ExperimentalRecord erCanada=recordQSAR_ToolBox.toExperimentalRecordBCFCanada(propertyName, limitToFish, limitToWholeOrganism);
+						ExperimentalRecord erCanada=recordQSAR_ToolBox.toExperimentalRecordBCFCanada(propertyName);
 						if(erCanada!=null)	recordsExperimental.add(erCanada);
 					} else if(fileName.equals(fileNameBCFNITE)) {
-						ExperimentalRecord erNITE=recordQSAR_ToolBox.toExperimentalRecordBCFNITE(propertyName, limitToFish, limitToWholeOrganism);
+						ExperimentalRecord erNITE=recordQSAR_ToolBox.toExperimentalRecordBCFNITE(propertyName);
 						if(erNITE!=null)	recordsExperimental.add(erNITE);
 					} else {
 						ExperimentalRecord er=recordQSAR_ToolBox.toExperimentalRecord(original_source_name);
@@ -170,9 +177,11 @@ public class ParseQSAR_ToolBox extends Parse {
 
 
 	public static void main(String[] args) {
-		ParseQSAR_ToolBox p = new ParseQSAR_ToolBox(ExperimentalConstants.strBCF);
 		
-		p.generateOriginalJSONRecords=true;
+		String propertyName = ExperimentalConstants.strFishBCF;
+		ParseQSAR_ToolBox p = new ParseQSAR_ToolBox(propertyName);
+		
+		p.generateOriginalJSONRecords=false;
 		p.removeDuplicates=true;
 		
 		p.writeJsonExperimentalRecordsFile=true;
