@@ -29,14 +29,16 @@ public class ParseQSAR_ToolBox extends Parse {
 	public static String fileNameBCFCanada="Bioaccumulation Canada.xlsx";
 	public static String fileNameBCFCEFIC="Bioaccumulation Fish CEFIC LRI.xlsx";
 	public static String fileNameBCFNITE="Bioconcentration and LogKow NITE.xlsx";
+	public static String fileNameBCFNITE2="Bioconcentration and LogKow NITE v2.xlsx";
 	
 //	String fileName=fileNameAcuteToxicityEchaReach;
 //	String fileName=fileNameAcuteToxicityDB;
 //	String fileName=fileNameSensitizationEchaReach;
 //	public String fileName=fileNameSensitization;
-	String fileName=fileNameBCFCEFIC;
+//	String fileName=fileNameBCFCEFIC;
 //	String fileName=fileNameBCFCanada;
 //	String fileName=fileNameBCFNITE;
+	String fileName=fileNameBCFNITE2;
 	
 	
 	String original_source_name;
@@ -90,7 +92,7 @@ public class ParseQSAR_ToolBox extends Parse {
 			mainFolder+=File.separator+propertyName;//output json/excel in subfolder
 			jsonFolder= mainFolder;
 			new File(mainFolder).mkdirs();
-		} else if (fileName.equals(fileNameBCFNITE)) {
+		} else if (fileName.equals(fileNameBCFNITE) || fileName.equals(fileNameBCFNITE2)) {
 			removeDuplicates=true;
 			original_source_name="NITE";
 			selectedEndpoints = Arrays.asList(propertyName);
@@ -156,8 +158,8 @@ public class ParseQSAR_ToolBox extends Parse {
 					} else if(fileName.equals(fileNameBCFCanada)) {
 						ExperimentalRecord erCanada=recordQSAR_ToolBox.toExperimentalRecordBCFCanada(propertyName);
 						if(erCanada!=null)	recordsExperimental.add(erCanada);
-					} else if(fileName.equals(fileNameBCFNITE)) {
-						ExperimentalRecord erNITE=recordQSAR_ToolBox.toExperimentalRecordBCFNITE(propertyName);
+					} else if(fileName.equals(fileNameBCFNITE) || fileName.equals(fileNameBCFNITE2)) {
+						ExperimentalRecord erNITE=recordQSAR_ToolBox.toExperimentalRecordBCFNITE(propertyName, htSpecies);
 						if(erNITE!=null)	recordsExperimental.add(erNITE);
 					} else {
 						ExperimentalRecord er=recordQSAR_ToolBox.toExperimentalRecord(original_source_name);
