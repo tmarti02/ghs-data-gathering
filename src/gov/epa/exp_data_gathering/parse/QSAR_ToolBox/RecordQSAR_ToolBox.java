@@ -18,6 +18,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+
 import gov.epa.QSAR.utilities.JsonUtilities;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SqlUtilities;
@@ -851,6 +852,36 @@ public class RecordQSAR_ToolBox {
 		unitConverter.convertRecord(er);
 		return er;
 	}
+	
+	private void setConditions(ExperimentalRecord er) {
+		Temperature=Temperature.replace(" °C", "");
+		Temperature=Temperature.replace(" ± 1", "");
+		Temperature=Temperature.replace("±1", "");
+		if(!Temperature.equals("Not reported")) {
+			if(Temperature.contains("-")) {
+				String[] tempSplit = Temperature.split("-");
+				double tempMin=Double.parseDouble(tempSplit[0]);
+				double tempMax=Double.parseDouble(tempSplit[1]);
+				double tempAvg=(tempMin + tempMax)/2.0;
+				er.temperature_C=tempAvg;
+			} else {
+				er.temperature_C=Double.parseDouble(Temperature);
+			}
+		}
+		if(!pH.equals("Not reported")) {
+			pH=pH.replace(",", ".");
+			pH=pH.replace(" - ", "-");
+			if(pH.contains("-")) {
+				String[] pHsplit = pH.split("-");
+				double pHmin=Double.parseDouble(pHsplit[0]);
+				double pHmax=Double.parseDouble(pHsplit[1]);
+				double pHavg=(pHmin + pHmax)/2.0;
+				er.pH="" + pHavg;
+			} else {
+				er.pH=pH;
+			}
+		}
+	}
 
 	//Adds all metadata for each of BCF data sets
 	private void addMetadata(ExperimentalRecord er) {
@@ -864,13 +895,15 @@ public class RecordQSAR_ToolBox {
 			} else {
 				er.experimental_parameters.put("Reliability",Reliability_score);
 			}
+			if(Comments!=null) {
+				er.note=Comments;
+			}
 			er.reference=Reference_source;
 			er.experimental_parameters.put("Media type",Water_type);
 			er.experimental_parameters.put("Tissue", Organ);
 			er.experimental_parameters.put("Species latin",Test_organisms_species);
 			er.experimental_parameters.put("Species common",Species_common_name);
-			er.experimental_parameters.put("pH", pH);
-			er.experimental_parameters.put("Temperature", Temperature);
+			setConditions(er);
 			if(Statistics!=null) {
 				er.experimental_parameters.put("Formula", Statistics);
 			}
