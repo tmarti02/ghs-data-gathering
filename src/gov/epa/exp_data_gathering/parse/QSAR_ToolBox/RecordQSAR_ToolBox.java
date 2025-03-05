@@ -25,6 +25,8 @@ import gov.epa.database.SqlUtilities;
 import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
+import gov.epa.exp_data_gathering.parse.ParameterValue;
+import gov.epa.exp_data_gathering.parse.PublicSource;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.ToxVal.ParseToxVal;
 
@@ -911,18 +913,15 @@ public class RecordQSAR_ToolBox {
 			setTemperature(er);
 			setpH(er);
 			if(Statistics!=null) {
-				er.experimental_parameters.put("Formula", Statistics);
+				er.note=Statistics;
 			}
 			if(Duration_MinValue!=null) {
-				er.experimental_parameters.put("Duration_MinValue", Duration_MinValue);
+				er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", Duration_MinValue);
 			}
 			if(Duration_MaxValue!=null) {
 				er.experimental_parameters.put("Duration_MaxValue", Duration_MaxValue);
 			}
-			if(Duration_Unit!=null) {
-				er.experimental_parameters.put("Duration Units", Duration_Unit);
-			}
-			
+
 			LiteratureSource ls=new LiteratureSource();
 			er.literatureSource=ls;
 			if(Author!=null) {
@@ -936,21 +935,21 @@ public class RecordQSAR_ToolBox {
 		} else if(Database.equals("Bioaccumulation Canada")) {
 			er.experimental_parameters.put("Species latin",Test_organisms_species);
 			if(Duration_MeanValue!=null) {
-				er.experimental_parameters.put("Duration_MeanValue", Duration_MeanValue);
+				if(Duration_Unit.equals("h")) {
+					double duration=Double.parseDouble(Duration_MeanValue);
+					Duration_MeanValue="" + duration/24;
+				}
+				er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", Duration_MeanValue);
 			}
 			if(Duration_MinValue!=null) {
 				er.experimental_parameters.put("Duration_MinValue", Duration_MinValue);
 			}
+
 			er.experimental_parameters.put("Duration Units", Duration_Unit);
 		} else if(Database.equals("Bioconcentration and logKow NITE")) {
 			
-			er.url=Reference_source;
 			if(Duration_MeanValue!=null) {
-				er.experimental_parameters.put("Duration_MeanValue", Duration_MeanValue);
-			}
-			
-			if(Duration_Unit!=null) {
-				er.experimental_parameters.put("Duration Units", Duration_Unit);
+				er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", Duration_MeanValue);
 			}
 			
 			if(Temperature_MeanValue!=null) {
@@ -959,7 +958,13 @@ public class RecordQSAR_ToolBox {
 			}
 			
 			if(Exposure_concentration_MeanValue!=null) {
-				er.experimental_parameters.put("Exposure Concentration (mg/L)", Exposure_concentration_MeanValue);
+				ParameterValue pv=new ParameterValue();
+				pv.parameter.name="Water concentration";
+				pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+				double wc=Double.parseDouble(Exposure_concentration_MeanValue);					
+				pv.valuePointEstimate=wc*1e-3;
+				er.parameter_values=new ArrayList<>();
+				er.parameter_values.add(pv);
 			}
 			
 			if(Test_guideline!=null) {
@@ -967,12 +972,24 @@ public class RecordQSAR_ToolBox {
 			}
 			
 			if(Year!=null) {
-				er.experimental_parameters.put("Year", Year);
+				er.document_name="NITE " + Year;
 			}
+			
+			er.publicSourceOriginal=new PublicSource();
+			if(Reference_source.contains("jcheck")) {
+				er.publicSourceOriginal.name="J-Check";
+				er.publicSourceOriginal.url="https://www.nite.go.jp/chem/jcheck/top.action?request_locale=en";
+				er.publicSourceOriginal.description="J-CHECK is a database developed to provide the information regarding \"Act on the Evaluation of Chemical Substances and Regulation of Their Manufacture, etc. (commonly known as \"CSCL\") by the authorities of the law, Ministry of Health, Labour and Welfare, Ministry of Economy, Trade and Industry, and Ministry of the Environment. J-CHECK provides the information regarding CSCL, such as the list of CSCL, chemical safety information obtained in the existing chemicals survey program, risk assessment, etc. in cooperation with eChemPortal by OECD.";
+			} else if(Reference_source.contains("safe")) {
+				er.publicSourceOriginal.name="SAFE";
+				er.publicSourceOriginal.url="https://www.nite.go.jp/en/chem/qsar/evaluation.html";
+				er.publicSourceOriginal.description="By analyzing the biodegradation and bioconcentration data under Chemical Substances Control Law (CSCL), the National Institute of Technology and Evaluation (NITE) considers the applicability of Quantitative Structure-Activity Relationship (QSAR) and category approaches for CSCL and the expanding role of these methods in regulatory settings.";
+			}
+
 			if(Tissue_analyzed!=null) {
 				er.experimental_parameters.put("Media type",Water_type);
 				er.experimental_parameters.put("Tissue", Tissue_analyzed);
-				er.experimental_parameters.put("Formula", Statistics);
+				er.note=Statistics;
 			}
 		}
 	}
@@ -1111,8 +1128,19 @@ public class RecordQSAR_ToolBox {
 		if(Species_common_name!=null) {
 			er.experimental_parameters.put("Species common", Species_common_name);
 			String supercategory=getSpeciesSupercategory(htSpecies);
-			if(supercategory!=null)	er.experimental_parameters.put("Species supercategory", supercategory);
-
+			if(supercategory!=null)	{
+				er.experimental_parameters.put("Species supercategory", supercategory);
+			}
+			
+			if(limitToFish && supercategory!=null) {
+				if(!supercategory.equals("Fish")) {
+					er.keep=false;
+					er.reason="Not a fish species";
+				}
+			}
+		} else if(Superclass!=null && Superclass.toLowerCase().contains("actinopterygii")) {
+			er.experimental_parameters.put("Species supercategory", "Fish");
+			String supercategory="Fish";
 			
 			if(limitToFish && supercategory!=null) {
 				if(!supercategory.equals("Fish")) {
