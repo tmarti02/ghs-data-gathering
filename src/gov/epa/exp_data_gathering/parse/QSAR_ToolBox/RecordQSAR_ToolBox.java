@@ -18,6 +18,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+
 import gov.epa.QSAR.utilities.JsonUtilities;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SqlUtilities;
@@ -225,10 +226,12 @@ public class RecordQSAR_ToolBox {
 	public String Duration_MinValue;
 	public String Duration_MeanValue;
 	public String Duration_MaxValue;
-	
+	public String Temperature_MeanValue;
+	public String Exposure_concentration_MeanValue;
+	public String Tissue_analyzed;
 	
 
-	public static final String[] fieldNames = {"RecordNumber","CAS_Number","Chemical_name_s","SMILES","Molecular_formula","Predefined_substance_type","Additional_Ids","Identity","CAS_SMILES_relation","Comment","EndpointPath","Database","URL","Strain","Year_0","Year_1","Endpoint","Title_0","Title_1","Test_type","Conclusions","Reliability","Purpose_flag","Strain_other","GLP_compliance","Test_guideline","Test_type_other","Study_result_type","Applied_transforms","Harmonized_Template","Test_guideline_other","Qualifier_of_guideline","Bibliographic_source_0","Bibliographic_source_1","Route_of_administration","Test_organisms_species","Interpretation_of_results","Author_s_or_transferred_reference_0","Author_s_or_transferred_reference_1","Substance_Test_material_equality","Principles_of_method_if_other_than_guideline","Assigned_SMILES","Qualifier","Year","Title","Bibliographic_source","Type_of_inhalation_exposure","Route_of_administration_original","Author_s_or_transferred_reference","Interpretation_of_results_other","Year_2","Title_2","Bibliographic_source_2","Author_s_or_transferred_reference_2","Test_guideline_0","Test_guideline_1","Test_guideline_2","Qualifier_of_guideline_0","Qualifier_of_guideline_1","Qualifier_of_guideline_2","Type_of_coverage","Unit_details","Endpoint_other","Any_other_information_on_results_incl_tables","Test_organisms_species_other","APPLICANT_S_SUMMARY_AND_CONCLUSION_executive_summary","Test_guideline_other_2","Test_guideline_3","Qualifier_of_guideline_3","Type_of_inhalation_exposure_other","Route_of_administration_other","Type_of_coverage_other","TestMaterialIsNull","Route_of_administration_other_original","Year_3","Title_3","Test_guideline_other_1","Bibliographic_source_3","Author_s_or_transferred_reference_3","Test_guideline_other_0","Year_4","Title_4","Bibliographic_source_4","Author_s_or_transferred_reference_4","Year_5","Title_5","Bibliographic_source_5","Author_s_or_transferred_reference_5","Test_guideline_other_3","Year_6","Title_6","Bibliographic_source_6","Author_s_or_transferred_reference_6","Year_7","Year_8","Year_9","Title_7","Title_8","Title_9","Year_10","Title_10","Bibliographic_source_7","Bibliographic_source_8","Bibliographic_source_9","Bibliographic_source_10","Author_s_or_transferred_reference_7","Author_s_or_transferred_reference_8","Author_s_or_transferred_reference_9","Author_s_or_transferred_reference_10","Year_11","Title_11","Bibliographic_source_11","Author_s_or_transferred_reference_11","Year_12","Year_13","Year_14","Year_15","Year_16","Year_17","Year_18","Year_19","Title_12","Title_13","Title_14","Title_15","Title_16","Title_17","Title_18","Title_19","Bibliographic_source_12","Bibliographic_source_13","Bibliographic_source_14","Bibliographic_source_15","Bibliographic_source_16","Bibliographic_source_17","Bibliographic_source_18","Bibliographic_source_19","Author_s_or_transferred_reference_12","Author_s_or_transferred_reference_13","Author_s_or_transferred_reference_14","Author_s_or_transferred_reference_15","Author_s_or_transferred_reference_16","Author_s_or_transferred_reference_17","Author_s_or_transferred_reference_18","Author_s_or_transferred_reference_19","Test_guideline_4","Test_guideline_5","Test_guideline_other_4","Test_guideline_other_5","Qualifier_of_guideline_4","Qualifier_of_guideline_5","Duration_MeanValue","Duration_Qualifier","Duration_Unit","Duration_Scale","Duration_MinValue","Duration_MinQualifier","Duration_MaxValue","Duration_MaxQualifier","Duration","Value_MeanValue","Value_Qualifier","Value_Unit","Value_Scale","Value_MinValue","Value_MinQualifier","Value_MaxValue","Value_MaxQualifier","Original_value_MeanValue","Original_value_Qualifier","Original_value_Unit","Original_value_Scale","Original_value_MinValue","Original_value_MinQualifier","Original_value_MaxValue","Original_value_MaxQualifier","Organ","Type_of_method","Assay","Assay_original","Interpretation_Of_Results","Interpretation_Of_Results_other","Route_Of_Challenge_Exposure","Route_Of_Induction_Exposure","Assay_other","Route_Of_Challenge_Exposure_other","Route_Of_Induction_Exposure_other","Test_guideline_6","Test_guideline_7","Test_guideline_other_6","Test_guideline_other_7","Qualifier_of_guideline_6","Qualifier_of_guideline_7","Author","Comments","Identity_in_file","Institution_and_country","Test_method_Data_source","Reference_source","Record_ID","Test_guideline_qualifier","Type_of_method_detail_if_other","Test_guideline_detail_if_other","Test_guideline_qualifier_detail","Test_organisms_species_detail_if_other", "Reliability_score", "pH","Temperature", "Statistics", "Water_Type", "Species_common_name", "BCFss_lipid_MeanValue", "BCFss_lipid_Unit", "Duration_MinValue", "Duration_MeanValue", "Duration_MaxValue", "Superclass"};
+	public static final String[] fieldNames = {"RecordNumber","CAS_Number","Chemical_name_s","SMILES","Molecular_formula","Predefined_substance_type","Additional_Ids","Identity","CAS_SMILES_relation","Comment","EndpointPath","Database","URL","Strain","Year_0","Year_1","Endpoint","Title_0","Title_1","Test_type","Conclusions","Reliability","Purpose_flag","Strain_other","GLP_compliance","Test_guideline","Test_type_other","Study_result_type","Applied_transforms","Harmonized_Template","Test_guideline_other","Qualifier_of_guideline","Bibliographic_source_0","Bibliographic_source_1","Route_of_administration","Test_organisms_species","Interpretation_of_results","Author_s_or_transferred_reference_0","Author_s_or_transferred_reference_1","Substance_Test_material_equality","Principles_of_method_if_other_than_guideline","Assigned_SMILES","Qualifier","Year","Title","Bibliographic_source","Type_of_inhalation_exposure","Route_of_administration_original","Author_s_or_transferred_reference","Interpretation_of_results_other","Year_2","Title_2","Bibliographic_source_2","Author_s_or_transferred_reference_2","Test_guideline_0","Test_guideline_1","Test_guideline_2","Qualifier_of_guideline_0","Qualifier_of_guideline_1","Qualifier_of_guideline_2","Type_of_coverage","Unit_details","Endpoint_other","Any_other_information_on_results_incl_tables","Test_organisms_species_other","APPLICANT_S_SUMMARY_AND_CONCLUSION_executive_summary","Test_guideline_other_2","Test_guideline_3","Qualifier_of_guideline_3","Type_of_inhalation_exposure_other","Route_of_administration_other","Type_of_coverage_other","TestMaterialIsNull","Route_of_administration_other_original","Year_3","Title_3","Test_guideline_other_1","Bibliographic_source_3","Author_s_or_transferred_reference_3","Test_guideline_other_0","Year_4","Title_4","Bibliographic_source_4","Author_s_or_transferred_reference_4","Year_5","Title_5","Bibliographic_source_5","Author_s_or_transferred_reference_5","Test_guideline_other_3","Year_6","Title_6","Bibliographic_source_6","Author_s_or_transferred_reference_6","Year_7","Year_8","Year_9","Title_7","Title_8","Title_9","Year_10","Title_10","Bibliographic_source_7","Bibliographic_source_8","Bibliographic_source_9","Bibliographic_source_10","Author_s_or_transferred_reference_7","Author_s_or_transferred_reference_8","Author_s_or_transferred_reference_9","Author_s_or_transferred_reference_10","Year_11","Title_11","Bibliographic_source_11","Author_s_or_transferred_reference_11","Year_12","Year_13","Year_14","Year_15","Year_16","Year_17","Year_18","Year_19","Title_12","Title_13","Title_14","Title_15","Title_16","Title_17","Title_18","Title_19","Bibliographic_source_12","Bibliographic_source_13","Bibliographic_source_14","Bibliographic_source_15","Bibliographic_source_16","Bibliographic_source_17","Bibliographic_source_18","Bibliographic_source_19","Author_s_or_transferred_reference_12","Author_s_or_transferred_reference_13","Author_s_or_transferred_reference_14","Author_s_or_transferred_reference_15","Author_s_or_transferred_reference_16","Author_s_or_transferred_reference_17","Author_s_or_transferred_reference_18","Author_s_or_transferred_reference_19","Test_guideline_4","Test_guideline_5","Test_guideline_other_4","Test_guideline_other_5","Qualifier_of_guideline_4","Qualifier_of_guideline_5","Duration_MeanValue","Duration_Qualifier","Duration_Unit","Duration_Scale","Duration_MinValue","Duration_MinQualifier","Duration_MaxValue","Duration_MaxQualifier","Duration","Value_MeanValue","Value_Qualifier","Value_Unit","Value_Scale","Value_MinValue","Value_MinQualifier","Value_MaxValue","Value_MaxQualifier","Original_value_MeanValue","Original_value_Qualifier","Original_value_Unit","Original_value_Scale","Original_value_MinValue","Original_value_MinQualifier","Original_value_MaxValue","Original_value_MaxQualifier","Organ","Type_of_method","Assay","Assay_original","Interpretation_Of_Results","Interpretation_Of_Results_other","Route_Of_Challenge_Exposure","Route_Of_Induction_Exposure","Assay_other","Route_Of_Challenge_Exposure_other","Route_Of_Induction_Exposure_other","Test_guideline_6","Test_guideline_7","Test_guideline_other_6","Test_guideline_other_7","Qualifier_of_guideline_6","Qualifier_of_guideline_7","Author","Comments","Identity_in_file","Institution_and_country","Test_method_Data_source","Reference_source","Record_ID","Test_guideline_qualifier","Type_of_method_detail_if_other","Test_guideline_detail_if_other","Test_guideline_qualifier_detail","Test_organisms_species_detail_if_other", "Reliability_score", "pH","Temperature", "Statistics", "Water_Type", "Species_common_name", "BCFss_lipid_MeanValue", "BCFss_lipid_Unit", "Duration_MinValue", "Duration_MeanValue", "Duration_MaxValue", "Superclass", "Temperature_MeanValue", "Exposure_Concentration_MeanValue", "Tissue_analyzed"};
 
 	
 	public String lastUpdated;
@@ -851,6 +854,39 @@ public class RecordQSAR_ToolBox {
 		unitConverter.convertRecord(er);
 		return er;
 	}
+	
+	private void setTemperature(ExperimentalRecord er) {
+		Temperature=Temperature.replace(" °C", "");
+		Temperature=Temperature.replace(" ± 1", "");
+		Temperature=Temperature.replace("±1", "");
+		if(!Temperature.equals("Not reported")) {
+			if(Temperature.contains("-")) {
+				String[] tempSplit = Temperature.split("-");
+				double tempMin=Double.parseDouble(tempSplit[0]);
+				double tempMax=Double.parseDouble(tempSplit[1]);
+				double tempAvg=(tempMin + tempMax)/2.0;
+				er.temperature_C=tempAvg;
+			} else {
+				er.temperature_C=Double.parseDouble(Temperature);
+			}
+		}
+	}
+	
+	private void setpH(ExperimentalRecord er) {
+		if(!pH.equals("Not reported")) {
+			pH=pH.replace(",", ".");
+			pH=pH.replace(" - ", "-");
+			if(pH.contains("-")) {
+				String[] pHsplit = pH.split("-");
+				double pHmin=Double.parseDouble(pHsplit[0]);
+				double pHmax=Double.parseDouble(pHsplit[1]);
+				double pHavg=(pHmin + pHmax)/2.0;
+				er.pH="" + pHavg;
+			} else {
+				er.pH=pH;
+			}
+		}
+	}
 
 	//Adds all metadata for each of BCF data sets
 	private void addMetadata(ExperimentalRecord er) {
@@ -864,13 +900,16 @@ public class RecordQSAR_ToolBox {
 			} else {
 				er.experimental_parameters.put("Reliability",Reliability_score);
 			}
+			if(Comments!=null) {
+				er.note=Comments;
+			}
 			er.reference=Reference_source;
 			er.experimental_parameters.put("Media type",Water_type);
 			er.experimental_parameters.put("Tissue", Organ);
 			er.experimental_parameters.put("Species latin",Test_organisms_species);
 			er.experimental_parameters.put("Species common",Species_common_name);
-			er.experimental_parameters.put("pH", pH);
-			er.experimental_parameters.put("Temperature", Temperature);
+			setTemperature(er);
+			setpH(er);
 			if(Statistics!=null) {
 				er.experimental_parameters.put("Formula", Statistics);
 			}
@@ -904,14 +943,36 @@ public class RecordQSAR_ToolBox {
 			}
 			er.experimental_parameters.put("Duration Units", Duration_Unit);
 		} else if(Database.equals("Bioconcentration and logKow NITE")) {
-			if(Test_organisms_species!=null) {
-				er.experimental_parameters.put("Species latin",Test_organisms_species);
-			}
+			
+			er.url=Reference_source;
 			if(Duration_MeanValue!=null) {
 				er.experimental_parameters.put("Duration_MeanValue", Duration_MeanValue);
 			}
+			
 			if(Duration_Unit!=null) {
 				er.experimental_parameters.put("Duration Units", Duration_Unit);
+			}
+			
+			if(Temperature_MeanValue!=null) {
+				er.temperature_C=Double.parseDouble(Temperature_MeanValue);
+				setpH(er);
+			}
+			
+			if(Exposure_concentration_MeanValue!=null) {
+				er.experimental_parameters.put("Exposure Concentration (mg/L)", Exposure_concentration_MeanValue);
+			}
+			
+			if(Test_guideline!=null) {
+				er.experimental_parameters.put("Test guideline", Test_guideline);
+			}
+			
+			if(Year!=null) {
+				er.experimental_parameters.put("Year", Year);
+			}
+			if(Tissue_analyzed!=null) {
+				er.experimental_parameters.put("Media type",Water_type);
+				er.experimental_parameters.put("Tissue", Tissue_analyzed);
+				er.experimental_parameters.put("Formula", Statistics);
 			}
 		}
 	}
@@ -952,10 +1013,13 @@ public class RecordQSAR_ToolBox {
 	}
 
 	//Directly separates steady state and kinetic BCF values for NITE dataset and converts to experimental records different from other BCF data
-	public ExperimentalRecord toExperimentalRecordBCFNITE(String propertyName) {
+	public ExperimentalRecord toExperimentalRecordBCFNITE(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 		
 		boolean limitToFish=false;
 		if(propertyName.toLowerCase().contains("fish")) limitToFish=true;
+		
+		boolean limitToWholeBody=false;
+		if(propertyName.toLowerCase().contains("whole")) limitToWholeBody=true;
 		
 		ExperimentalRecord er=new ExperimentalRecord();
 		setSourceInformation(er);		
@@ -975,9 +1039,13 @@ public class RecordQSAR_ToolBox {
 				er.reason="Incorrect property";
 			}
 		}
-		Hashtable<String, List<Species>> htSpecies = null;
-		setSpeciesParameters(htSpecies, limitToFish, er);
-//		er.experimental_parameters.put("Measurement method",method);
+
+		setSpeciesParameters(htSpecies, limitToFish, er);	
+		if(limitToWholeBody && (Tissue_analyzed==null || !Tissue_analyzed.equals("Whole body"))) {
+			er.keep=false;
+			er.reason="Not whole body";
+		}
+
 		String BCF_mean=Original_value_MeanValue;
 		String BCF_units=ExperimentalConstants.str_L_KG;
 		try {
@@ -996,20 +1064,12 @@ public class RecordQSAR_ToolBox {
 		}
 		
 		er.property_category="bioconcentration";
-		
-		if(Duration_MeanValue!=null) {
-			er.experimental_parameters.put("Duration_MeanValue", Duration_MeanValue);
-		}
-		if(Duration_Unit!=null) {
-			er.experimental_parameters.put("Duration Units", Duration_Unit);
-		}
-
+		addMetadata(er);
 		
 		unitConverter.convertRecord(er);
-		if(er!=null) filterRecord(er, propertyName);
 		return er;
 	}
-	//Filters BCF values based on whole organism and fish
+	//Filters BCF values based on whole organism and fish. Only used if no common name
 	private void filterRecord(ExperimentalRecord er, String propertyName) {
 
 		boolean limitToFish=false;
@@ -1050,15 +1110,15 @@ public class RecordQSAR_ToolBox {
 		}
 		if(Species_common_name!=null) {
 			er.experimental_parameters.put("Species common", Species_common_name);
-		}
-		String supercategory=getSpeciesSupercategory(htSpecies);
-		if(supercategory!=null)	er.experimental_parameters.put("Species supercategory", supercategory);
+			String supercategory=getSpeciesSupercategory(htSpecies);
+			if(supercategory!=null)	er.experimental_parameters.put("Species supercategory", supercategory);
 
-		
-		if(limitToFish && supercategory!=null) {
-			if(!supercategory.equals("Fish")) {
-				er.keep=false;
-				er.reason="Not a fish species";
+			
+			if(limitToFish && supercategory!=null) {
+				if(!supercategory.equals("Fish")) {
+					er.keep=false;
+					er.reason="Not a fish species";
+				}
 			}
 		}
 	}

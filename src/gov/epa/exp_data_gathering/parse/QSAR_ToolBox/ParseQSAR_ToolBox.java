@@ -29,15 +29,16 @@ public class ParseQSAR_ToolBox extends Parse {
 	public static String fileNameSensitization="skin sensitization.xlsx";
 	public static String fileNameBCFCanada="Bioaccumulation Canada.xlsx";
 	public static String fileNameBCFCEFIC="Bioaccumulation Fish CEFIC LRI.xlsx";
-	public static String fileNameBCFNITE="Bioconcentration and LogKow NITE.xlsx";
+	public static String fileNameBCFNITE="Bioconcentration and LogKow NITE v2.xlsx";
 	
-//	String fileName=fileNameAcuteToxicityEchaReach;
-//	String fileName=fileNameAcuteToxicityDB;
-//	String fileName=fileNameSensitizationEchaReach;
-//	public String fileName=fileNameSensitization;
-	static String fileName=fileNameBCFCEFIC;
-//	String fileName=fileNameBCFCanada;
-//	String fileName=fileNameBCFNITE;
+//	static String fileName=fileNameAcuteToxicityEchaReach;
+//	static String fileName=fileNameAcuteToxicityDB;
+//	static String fileName=fileNameSensitizationEchaReach;
+//	static public String fileName=fileNameSensitization;
+//	static String fileName=fileNameBCFCEFIC;
+//	static String fileName=fileNameBCFCEFIC;
+//	static String fileName=fileNameBCFCanada;
+	static String fileName=fileNameBCFNITE;
 	
 	
 	String original_source_name;
@@ -158,7 +159,7 @@ public class ParseQSAR_ToolBox extends Parse {
 						ExperimentalRecord erCanada=recordQSAR_ToolBox.toExperimentalRecordBCFCanada(propertyName);
 						if(erCanada!=null)	recordsExperimental.add(erCanada);
 					} else if(fileName.equals(fileNameBCFNITE)) {
-						ExperimentalRecord erNITE=recordQSAR_ToolBox.toExperimentalRecordBCFNITE(propertyName);
+						ExperimentalRecord erNITE=recordQSAR_ToolBox.toExperimentalRecordBCFNITE(propertyName, htSpecies);
 						if(erNITE!=null)	recordsExperimental.add(erNITE);
 					} else {
 						ExperimentalRecord er=recordQSAR_ToolBox.toExperimentalRecord(original_source_name);
