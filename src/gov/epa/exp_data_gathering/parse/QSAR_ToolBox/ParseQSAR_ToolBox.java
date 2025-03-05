@@ -17,6 +17,7 @@ import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.Parse;
+import gov.epa.exp_data_gathering.parse.QSAR_ToolBox.RecordQSAR_ToolBox.Species;
 
 public class ParseQSAR_ToolBox extends Parse {
 	
@@ -34,7 +35,7 @@ public class ParseQSAR_ToolBox extends Parse {
 //	String fileName=fileNameAcuteToxicityDB;
 //	String fileName=fileNameSensitizationEchaReach;
 //	public String fileName=fileNameSensitization;
-	String fileName=fileNameBCFCEFIC;
+	static String fileName=fileNameBCFCEFIC;
 //	String fileName=fileNameBCFCanada;
 //	String fileName=fileNameBCFNITE;
 	
@@ -124,8 +125,8 @@ public class ParseQSAR_ToolBox extends Parse {
 		try {
 			
 			Type type = new TypeToken<Hashtable<String, List<RecordQSAR_ToolBox.Species>>>(){}.getType();
-			Hashtable<String, List<gov.epa.exp_data_gathering.parse.QSAR_ToolBox.RecordQSAR_ToolBox.Species>>htSpecies=JsonUtilities.gsonPretty.fromJson(new FileReader("data\\experimental\\Arnot 2006\\htSuperCategory.json"), type);
-	
+			Hashtable<String, List<Species>>htSpecies=JsonUtilities.gsonPretty.fromJson(new FileReader("data\\experimental\\Arnot 2006\\htSuperCategory.json"), type);
+
 			File Folder=new File(jsonFolder);
 			
 			if(Folder.listFiles()==null) {
@@ -171,24 +172,51 @@ public class ParseQSAR_ToolBox extends Parse {
 			ex.printStackTrace();
 		}
 
+		
+		Hashtable<String,ExperimentalRecords> htER = recordsExperimental.createExpRecordHashtableByCAS(ExperimentalConstants.str_L_KG);
+		ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, true);
+
+		
 		return recordsExperimental;
 	}
 	
+	static void runBCF() {
+		
+		fileName=fileNameBCFNITE;
 
-
+		List<String>properties=new ArrayList<>();
+		properties.add(ExperimentalConstants.strBCF);
+		properties.add(ExperimentalConstants.strFishBCF);
+		if(!fileName.equals(fileNameBCFCanada))properties.add(ExperimentalConstants.strFishBCFWholeBody);
+		
+		for (String propertyName:properties) {
+			ParseQSAR_ToolBox p = new ParseQSAR_ToolBox(propertyName);
+			p.generateOriginalJSONRecords=true;
+			p.removeDuplicates=true;
+			p.writeJsonExperimentalRecordsFile=true;
+			p.writeExcelExperimentalRecordsFile=true;
+			p.writeExcelFileByProperty=true;		
+			p.writeCheckingExcelFile=false;//creates random sample spreadsheet
+			p.createFiles();
+		}
+		
+	}
+	
 	public static void main(String[] args) {
 		
-		String propertyName = ExperimentalConstants.strFishBCF;
-		ParseQSAR_ToolBox p = new ParseQSAR_ToolBox(propertyName);
-		
-		p.generateOriginalJSONRecords=false;
-		p.removeDuplicates=true;
-		
-		p.writeJsonExperimentalRecordsFile=true;
-		p.writeExcelExperimentalRecordsFile=true;
-		p.writeExcelFileByProperty=true;		
-		p.writeCheckingExcelFile=false;//creates random sample spreadsheet
-		p.createFiles();
+		runBCF();
+
+//******************************************************************************
+//		fileName=fileNameAcuteToxicityDB;
+//		ParseQSAR_ToolBox p=new ParseQSAR_ToolBox(null);
+//		p.generateOriginalJSONRecords=true;
+//		p.removeDuplicates=true;
+//		p.writeJsonExperimentalRecordsFile=true;
+//		p.writeExcelExperimentalRecordsFile=true;
+//		p.writeExcelFileByProperty=true;		
+//		p.writeCheckingExcelFile=false;//creates random sample spreadsheet
+//		p.createFiles();
+
 		
 	}
 }
