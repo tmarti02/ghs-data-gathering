@@ -978,17 +978,19 @@ public class RecordQSAR_ToolBox {
 			er.publicSourceOriginal=new PublicSource();
 			if(Reference_source.contains("jcheck")) {
 				er.publicSourceOriginal.name="J-Check";
-				er.publicSourceOriginal.url="https://www.nite.go.jp/chem/jcheck/top.action?request_locale=en";
-				er.publicSourceOriginal.description="J-CHECK is a database developed to provide the information regarding \"Act on the Evaluation of Chemical Substances and Regulation of Their Manufacture, etc. (commonly known as \"CSCL\") by the authorities of the law, Ministry of Health, Labour and Welfare, Ministry of Economy, Trade and Industry, and Ministry of the Environment. J-CHECK provides the information regarding CSCL, such as the list of CSCL, chemical safety information obtained in the existing chemicals survey program, risk assessment, etc. in cooperation with eChemPortal by OECD.";
+//				er.publicSourceOriginal.url="https://www.nite.go.jp/chem/jcheck/top.action?request_locale=en";
+				er.publicSourceOriginal.url="https://www.nite.go.jp/en/chem/qsar/evaluation.html";
+//				er.publicSourceOriginal.description="J-CHECK is a database developed to provide the information regarding \"Act on the Evaluation of Chemical Substances and Regulation of Their Manufacture, etc. (commonly known as \"CSCL\") by the authorities of the law, Ministry of Health, Labour and Welfare, Ministry of Economy, Trade and Industry, and Ministry of the Environment. J-CHECK provides the information regarding CSCL, such as the list of CSCL, chemical safety information obtained in the existing chemicals survey program, risk assessment, etc. in cooperation with eChemPortal by OECD.";
+				er.publicSourceOriginal.description="Biodegradation and bioconcentration data conducted for the evaluations of new chemicals and existing chemicals under CSCL are available in OECD QSAR Toolbox version 3.0 data format (excel file).";
 			} else if(Reference_source.contains("safe")) {
 				er.publicSourceOriginal.name="SAFE";
 				er.publicSourceOriginal.url="https://www.nite.go.jp/en/chem/qsar/evaluation.html";
-				er.publicSourceOriginal.description="By analyzing the biodegradation and bioconcentration data under Chemical Substances Control Law (CSCL), the National Institute of Technology and Evaluation (NITE) considers the applicability of Quantitative Structure-Activity Relationship (QSAR) and category approaches for CSCL and the expanding role of these methods in regulatory settings.";
+				er.publicSourceOriginal.description="Biodegradation and bioconcentration data conducted for the evaluations of new chemicals and existing chemicals under CSCL are available in OECD QSAR Toolbox version 3.0 data format (excel file).";
 			}
 
 			if(Tissue_analyzed!=null) {
 				er.experimental_parameters.put("Media type",Water_type);
-				er.experimental_parameters.put("Tissue", Tissue_analyzed);
+				er.experimental_parameters.put("Response site", Tissue_analyzed);
 				er.note=Statistics;
 			}
 		}
