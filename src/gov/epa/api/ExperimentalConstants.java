@@ -291,6 +291,7 @@ public class ExperimentalConstants {
 
 //	public static final String strSourceEcotox="ECOTOX";
 	public static final String strSourceEcotox_2023_12_14="ECOTOX_2023_12_14";
+	public static final String strSourceEcotox_2024_12_12="ECOTOX_2024_12_12";
 	public static final String sourceNITE_OPPT = "NITE_OPPT";
 
 	public static final String strAutoIgnitionTemperature="Autoignition temperature";

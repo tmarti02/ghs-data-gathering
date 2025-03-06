@@ -30,7 +30,8 @@ import gov.epa.exp_data_gathering.parse.ToxVal.ToxValRecord;
  */
 public class RecordEcotox {
 	
-	public static String sourceName=ExperimentalConstants.strSourceEcotox_2023_12_14;
+//	public static String sourceName=ExperimentalConstants.strSourceEcotox_2023_12_14;
+	public static String sourceName=ExperimentalConstants.strSourceEcotox_2024_12_12;
 
 	public String property_name;
 	
@@ -509,7 +510,8 @@ public class RecordEcotox {
 //		System.out.println(sql);
 		
 		try {
-			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
+//			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
+			String databasePath = "data\\experimental\\ECOTOX_2024_12_12\\ecotox_ascii_12_12_2024.db";
 
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
 			ResultSet rs = stat.executeQuery(sql);
