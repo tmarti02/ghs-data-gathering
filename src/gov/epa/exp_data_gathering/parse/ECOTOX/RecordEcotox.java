@@ -948,6 +948,12 @@ public class RecordEcotox {
 		ls.year=publication_year;
 		ls.citation=author+" ("+publication_year+"). "+title+"."+source;
 		er.reference=ls.citation;
+		
+		if(ls.citation.contains("De Bruijn,J., and J. Hermens (1991)")) {
+			er.keep=false;
+			er.reason="Units conversion error";
+		}
+		
 
 		er.property_value_units_original=bcf1_unit.replace("ml/mg", "L/g").replace("ml/g", "L/kg");
 		er.property_category="bioconcentration";
