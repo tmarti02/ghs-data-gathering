@@ -579,8 +579,8 @@ public class ParseEcotox extends Parse {
 		String jsonPath = "data/experimental/"+source+File.separator+source+" "+ExperimentalConstants.strBCF+" original records.json";
 		List<RecordEcotox>recordsOriginal=null;
 		
-		if (createOriginalRecords) {
-			recordsOriginal=RecordEcotox.get_BCF_Records_From_DB(propertyName);
+		if (createOriginalRecords && propertyName.equals(ExperimentalConstants.strBCF)) {//only need to store one copy of original records
+			recordsOriginal=RecordEcotox.get_BCF_Records_From_DB(ExperimentalConstants.strBCF);
 			int howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(recordsOriginal,jsonPath);
 		} else {
 			try {
@@ -752,14 +752,14 @@ public class ParseEcotox extends Parse {
 //		p.getDaphniaMagnaData();
 //		p.getRainbowTroutData();
 //		p.getScudData();
-		p.getFatheadMinnowData();
+//		p.getFatheadMinnowData();
 //		p.getBluegillData();		
 		
 //		/************************************************************************
 		
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF,false);		
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF,false);
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody,false);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF,false);		
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF,false);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody,false);
 		
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCF,false);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCFWholeBody,false);

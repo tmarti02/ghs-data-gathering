@@ -486,6 +486,7 @@ public class RecordEcotox {
 		
 		String sql="select  t.test_id, dtxsid, cas_number, chemical_name, bcf1_mean ,bcf1_unit,\r\n"
 				+ " conc1_mean_op, conc1_mean, conc1_unit, conc1_min, conc1_max, conc1_min_op, conc1_max_op,"
+				+ "exposure_duration_mean_op,	exposure_duration_mean,exposure_duration_unit,"
 				+ "media_type, test_location, exposure_type,chem_analysis_method, s.common_name, s.latin_name,s.ecotox_group, rsc.description as 'response_site',\r\n"
 				+ " author, publication_year, title,source from tests t\r\n"
 				+ "	join results r on t.test_id=r.test_id\r\n"
