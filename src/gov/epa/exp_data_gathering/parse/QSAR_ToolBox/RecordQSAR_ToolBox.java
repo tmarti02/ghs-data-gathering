@@ -957,7 +957,12 @@ public class RecordQSAR_ToolBox {
 		} else if(Database.equals("Bioconcentration and logKow NITE")) {
 			
 			if(Duration_MeanValue!=null) {
-				er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", Duration_MeanValue);
+				ParameterValue pv=new ParameterValue();
+				pv.parameter.name="Exposure duration";
+				pv.unit.abbreviation="days";
+				double wc=Double.parseDouble(Duration_MeanValue);					
+				pv.valuePointEstimate=wc;
+				er.parameter_values.add(pv);
 			}
 			
 			if(Temperature_MeanValue!=null) {
@@ -974,7 +979,6 @@ public class RecordQSAR_ToolBox {
 				pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 				double wc=Double.parseDouble(Exposure_concentration_MeanValue);					
 				pv.valuePointEstimate=wc*1e-3;
-				er.parameter_values=new ArrayList<>();
 				er.parameter_values.add(pv);
 			}
 			
@@ -1083,6 +1087,7 @@ public class RecordQSAR_ToolBox {
 		if(propertyName.toLowerCase().contains("whole")) limitToWholeBody=true;
 		
 		ExperimentalRecord er=new ExperimentalRecord();
+		er.parameter_values=new ArrayList<>();
 		setSourceInformation(er);		
 		setIdentifiers(er);
 		

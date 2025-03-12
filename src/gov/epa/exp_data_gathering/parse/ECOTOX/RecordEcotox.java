@@ -922,7 +922,7 @@ public class RecordEcotox {
 		}
 
 		ExperimentalRecord er=new ExperimentalRecord();
-		
+		er.parameter_values=new ArrayList<>();
 		
 		er.property_name=property_name;
 
@@ -1023,7 +1023,7 @@ public class RecordEcotox {
 			er.reason="Not in water";
 		}
 		
-		
+		setExposureDuration(er);
 		er.experimental_parameters.put("Test location", test_location);
 		er.experimental_parameters.put("exposure_type", exposure_type);
 		er.experimental_parameters.put("chem_analysis_method", chem_analysis_method);
@@ -1050,7 +1050,44 @@ public class RecordEcotox {
 		return er;
 	}
 
-
+	private void setExposureDuration(ExperimentalRecord er) {
+		if(exposure_duration_mean!=null) {
+			ParameterValue pv=new ParameterValue();
+			pv.parameter.name="Exposure duration";
+			pv.valueQualifier=exposure_duration_mean_op;
+			
+			if(exposure_duration_unit.equals("d")){
+				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean);
+				pv.unit.abbreviation="days";
+			} else if(exposure_duration_unit.equals("h")){
+				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)/24;
+				pv.unit.abbreviation="days";
+			} else if(exposure_duration_unit.equals("wk")){
+				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)*7;
+				pv.unit.abbreviation="days";
+			} else if(exposure_duration_unit.equals("wk")){
+				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)*7;
+				pv.unit.abbreviation="days";
+			} else if(exposure_duration_unit.equals("mo")){
+				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)*30;
+				pv.unit.abbreviation="days";
+			} else if(exposure_duration_unit.equals("yr")){
+				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)*365;
+				pv.unit.abbreviation="days";
+			} else {
+				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean);
+				pv.unit.abbreviation=exposure_duration_unit;
+			}
+			
+			if(exposure_duration_mean_op!=null && exposure_duration_mean_op.equals("<=")) {
+				pv.valueMax=Double.parseDouble(exposure_duration_mean);
+				pv.valuePointEstimate=null;
+				pv.unit.abbreviation=exposure_duration_unit;
+			}
+			
+			er.parameter_values.add(pv);
+		}
+	}
 	private void setWaterConcentration(ExperimentalRecord er) {
 		
 //		String wc=null;
@@ -1131,7 +1168,6 @@ public class RecordEcotox {
 				pv.valueQualifier=this.conc1_mean_op;	
 		}
 				
-		er.parameter_values=new ArrayList<>();
 		er.parameter_values.add(pv);
 		
 //		System.out.println(er.property_value_units_original+"\t"+pv.unit.abbreviation);

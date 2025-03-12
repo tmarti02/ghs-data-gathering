@@ -259,6 +259,7 @@ public class RecordArnot2006 {
 		setLiteratureSource(er);
 
 		er.experimental_parameters=new LinkedHashMap<>();//keeps insertion order
+		er.parameter_values=new ArrayList<>();
 
 		setSpeciesParameters(htSpecies, limitToFish, er);
 		setResponseSite(limitToWholeBody, er);//Criterion 5
@@ -293,14 +294,24 @@ public class RecordArnot2006 {
 
 
 	private void setExposureDuration(ExperimentalRecord er) {
-		
-		//TODO store like water conc?
-
-		if(exposure_duration_days.contains("L")) {
-			er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", "Lifetime");
-		} else {
-			er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", exposure_duration_days);
+		if(exposure_duration_days.equals("L") || exposure_duration_days.equals("N/A")) {
+//			exposure_duration_days=exposure_duration_days.replace("L", "9999");
+			return;
 		}
+
+		ParameterValue pv=new ParameterValue();
+		pv.parameter.name="Exposure duration";
+		pv.unit.abbreviation="days";
+		double wc=Double.parseDouble(exposure_duration_days);					
+		pv.valuePointEstimate=wc;
+		
+		er.parameter_values.add(pv);
+
+//		if(exposure_duration_days.contains("L")) {
+//			er.experimental_parameters.put("Exposure duration", "Lifetime");
+//		} else {
+//			er.experimental_parameters.put("Exposure Duration (in days or Lifetime)", exposure_duration_days);
+//		}
 		compareT80_To_Exposure_Duration();
 	}
 
@@ -433,8 +444,7 @@ public class RecordArnot2006 {
 				pv.valuePointEstimate=wc*1e-6;
 				//	System.out.println(pv.valuePointEstimate+" g/L");
 			}
-
-			er.parameter_values=new ArrayList<>();
+			
 			er.parameter_values.add(pv);
 
 		} catch (Exception e) {
