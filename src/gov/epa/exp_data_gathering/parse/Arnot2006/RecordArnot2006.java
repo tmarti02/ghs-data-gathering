@@ -675,6 +675,10 @@ public class RecordArnot2006 {
 					return "Invertebrates";
 				} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
 					return "Flowers, trees, shrubs, ferns";
+				} else if(species.species_supercategory.contains("microorganisms")) {
+					return "microorganisms";
+				} else if(species.species_supercategory.equals("amphibians") || species.species_supercategory.equals("amphibians; standard test species")) {
+					return "amphibians";
 				} else if(species.species_supercategory.equals("omit")) {
 					return "omit";
 				} else {
@@ -776,15 +780,24 @@ public class RecordArnot2006 {
 		//Need to create a dictionary to map all fish by common name:
 		Hashtable<String, List<Species>> htSuperCategory = createSupercategoryHashtable(conn);
 
-		putEntry(htSuperCategory, "phytoplankton", "omit");
+		putEntry(htSuperCategory, "phytoplankton", "microorganisms");
 		putEntry(htSuperCategory, "common shrimp", "omit");
-		putEntry(htSuperCategory, "baskettail dragonfly", "omit");
-		putEntry(htSuperCategory, "common bay mussel", "omit");
-		putEntry(htSuperCategory, "depressed river mussel", "omit");
-		putEntry(htSuperCategory, "clams", "omit");
-		putEntry(htSuperCategory, "tadpole", "omit");
-		putEntry(htSuperCategory, "algae, algal mat", "omit");
+		putEntry(htSuperCategory, "baskettail dragonfly", "insects/spiders");
+		putEntry(htSuperCategory, "common bay mussel", "molluscs");
+		putEntry(htSuperCategory, "depressed river mussel", "molluscs");
+		putEntry(htSuperCategory, "clams", "molluscs");
+		putEntry(htSuperCategory, "tadpole", "amphibians");
+		putEntry(htSuperCategory, "algae, algal mat", "algae");
 		putEntry(htSuperCategory, "schizothrix calcicola", "omit");
+		putEntry(htSuperCategory, "buzzer midge", "insects/spiders");
+		putEntry(htSuperCategory, "narrowleaf cattail", "flowers, trees, shrubs, ferns");
+		putEntry(htSuperCategory, "northern leopard frog", "amphibians");
+		putEntry(htSuperCategory, "tadpole - northern leopard frog", "amphibians");
+		putEntry(htSuperCategory, "eastern tiger salamander", "amphibians");
+		putEntry(htSuperCategory, "mussel fatmucket", "molluscs");
+		putEntry(htSuperCategory, "sandworm", "worms");
+		putEntry(htSuperCategory, "hornwort", "flowers, trees, shrubs, ferns");
+
 
 		putEntry(htSuperCategory, "biwi lake gudgeon, goby or willow shiner", "fish");
 		putEntry(htSuperCategory, "willow shiner", "fish");
@@ -813,7 +826,13 @@ public class RecordArnot2006 {
 		putEntry(htSuperCategory, "channel catfish", "fish");
 		putEntry(htSuperCategory, "spot", "fish");
 		putEntry(htSuperCategory, "banded tilapia", "fish");
+		putEntry(htSuperCategory, "juvenile chinese rare minnow", "fish");
+		putEntry(htSuperCategory, "marine medaka", "fish");
+		putEntry(htSuperCategory, "zebra fish", "fish");
+		putEntry(htSuperCategory, "blackrock fish", "fish");
+		putEntry(htSuperCategory, "crusian carp", "fish");
 
+		
 
 		System.out.println(gson.toJson(htSuperCategory));
 

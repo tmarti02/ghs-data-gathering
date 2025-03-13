@@ -968,6 +968,7 @@ public class RecordQSAR_ToolBox {
 				pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 				double wc=Double.parseDouble(Exposure_concentration_MeanValue);					
 				pv.valuePointEstimate=wc*1e-3;
+//				System.out.println(wc +" mg/L "+ pv.valuePointEstimate + " g/L");
 				er.parameter_values.add(pv);
 			}
 			
@@ -1159,41 +1160,55 @@ public class RecordQSAR_ToolBox {
 	}
 	
 	private String getSpeciesSupercategory(Hashtable<String, List<Species>> htSpecies) {
-		if(htSpecies!=null) {
-			if(htSpecies.containsKey(Species_common_name.toLowerCase())) {
 
-				List<Species>speciesList=htSpecies.get(Species_common_name.toLowerCase());
+		if(htSpecies.containsKey(Species_common_name.toLowerCase())) {
 
-				for(Species species:speciesList) {
+			List<Species>speciesList=htSpecies.get(Species_common_name.toLowerCase());
 
-					if(species.species_supercategory.contains("fish")) {
-						return "Fish";
-					} else if(species.species_supercategory.contains("algae")) {
-						return "Algae";
-					} else if(species.species_supercategory.contains("crustaceans")) {
-						return "Crustaceans";
-					} else if(species.species_supercategory.contains("insects/spiders")) {
-						return "Insects/spiders";
-					} else if(species.species_supercategory.contains("molluscs")) {
-						return "Molluscs";
-					} else if(species.species_supercategory.contains("worms")) {
-						return "Worms";
-					} else if(species.species_supercategory.contains("invertebrates")) {
-						return "Invertebrates";
-					} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
-						return "Flowers, trees, shrubs, ferns";
-					} else if(species.species_supercategory.equals("omit")) {
-						return "omit";
-					} else {
-						System.out.println("Handle\t"+Species_common_name+"\t"+species.species_supercategory);	
-					}
+			for(Species species:speciesList) {
+
+
+				//				if(species.species_scientific!=null) {
+				//					if (!species.species_scientific.toLowerCase().equals(this.scientific_name.toLowerCase())) {
+				//						System.out.println(this.scientific_name+"\t"+species.species_scientific+"\tmismatch");
+				//					}
+				//				} else {
+				////					System.out.println(common_name+"\tspecies has null scientific");
+				//				}
+
+				if(species.species_supercategory.contains("fish")) {
+					return "Fish";
+				} else if(species.species_supercategory.contains("algae")) {
+					return "Algae";
+				} else if(species.species_supercategory.contains("crustaceans")) {
+					return "Crustaceans";
+				} else if(species.species_supercategory.contains("insects/spiders")) {
+					return "Insects/spiders";
+				} else if(species.species_supercategory.contains("molluscs")) {
+					return "Molluscs";
+				} else if(species.species_supercategory.contains("worms")) {
+					return "Worms";
+				} else if(species.species_supercategory.contains("invertebrates")) {
+					return "Invertebrates";
+				} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
+					return "Flowers, trees, shrubs, ferns";
+				} else if(species.species_supercategory.contains("microorganisms")) {
+					return "microorganisms";
+				} else if(species.species_supercategory.contains("amphibians")) {
+					return "amphibians";
+				} else if(species.species_supercategory.equals("omit")) {
+					return "omit";
+				} else {
+					System.out.println("Handle\t"+Species_common_name+"\t"+species.species_supercategory);	
 				}
-			} else {
-				System.out.println("missing in hashtable:\t"+"*"+Species_common_name.toLowerCase()+"*");
 			}
+		} else {
+			System.out.println("missing in hashtable:\t"+"*"+Species_common_name.toLowerCase()+"*");
 		}
+
 		return null;
 	}
+
 
 
 	static class Species {

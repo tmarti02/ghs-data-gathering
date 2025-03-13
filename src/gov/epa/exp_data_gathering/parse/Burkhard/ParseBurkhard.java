@@ -2,6 +2,7 @@ package gov.epa.exp_data_gathering.parse.Burkhard;
 
 import java.io.File;
 import java.io.FileReader;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,17 +17,15 @@ import java.util.Vector;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
+import gov.epa.QSAR.utilities.JsonUtilities;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.JSONUtilities;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
-import gov.epa.exp_data_gathering.parse.Parse;
-import gov.epa.exp_data_gathering.parse.Burkhard.RecordBurkhard;
-import gov.epa.exp_data_gathering.parse.ECOTOX.RecordEcotox;
-import gov.epa.exp_data_gathering.parse.Kodithala.RecordKodithala;
-import gov.epa.exp_data_gathering.parse.ToxVal.ParseToxVal;
+import gov.epa.exp_data_gathering.parse.Burkhard.RecordBurkhard.Species;
 import kong.unirest.json.JSONObject;
 
 public class ParseBurkhard  {
@@ -39,16 +38,6 @@ public class ParseBurkhard  {
 		String source=RecordBurkhard.sourceName;
 		boolean createOriginalRecords=false;
 
-		boolean limitToFish=false;
-		if(propertyName.toLowerCase().contains("fish")) {
-			limitToFish=true;
-		}
-
-		boolean limitToWholeOrganism=false;
-		if(propertyName.toLowerCase().contains("whole")) {
-			limitToWholeOrganism=true;
-		}
-
 //		boolean limitToStandardTestSpecies=false;
 //		if(propertyName.toLowerCase().contains("standard")) {
 //			limitToStandardTestSpecies=true;
@@ -56,7 +45,7 @@ public class ParseBurkhard  {
 
 		String jsonPath = "data/experimental/"+source+File.separator+source+" "+ExperimentalConstants.strBCF+" original records.json";
 		List<RecordBurkhard>recordsOriginal=null;
-
+		
 		if (createOriginalRecords) {
 			Vector<JsonObject> records = RecordBurkhard.parseBurkhardRecordsFromExcel();
 			for (int i=0;i<records.size();i++) {
@@ -82,51 +71,58 @@ public class ParseBurkhard  {
 		}
 
 		ExperimentalRecords experimentalRecords=new ExperimentalRecords();
-
 		//		Hashtable<String, Double> htMWfromDTXSID = getMolWeightHashtable();//usi
+		try {
+			Type type = new TypeToken<Hashtable<String, List<RecordBurkhard.Species>>>(){}.getType();
+			Hashtable<String, List<Species>>htSpecies=JsonUtilities.gsonPretty.fromJson(new FileReader("data\\experimental\\Arnot 2006\\htSuperCategory.json"), type);
 
-		int counter=0;
 
-		for (RecordBurkhard rb:recordsOriginal) {
+			int counter=0;
 
-			counter++;
+			for (RecordBurkhard rb:recordsOriginal) {
 
-			ExperimentalRecord erKinetic=rb.toExperimentalRecordBCF_Kinetic(propertyName,limitToWholeOrganism,limitToFish);
-			if(erKinetic!=null)	experimentalRecords.add(erKinetic);
+				counter++;
 
-			ExperimentalRecord erSS=rb.toExperimentalRecordBCF_SS(propertyName,limitToWholeOrganism,limitToFish);
-			if(erSS!=null)	experimentalRecords.add(erSS);
+				ExperimentalRecord erKinetic=rb.toExperimentalRecordBCF_Kinetic(propertyName, htSpecies);
+				if(erKinetic!=null)	experimentalRecords.add(erKinetic);
 
-		}
+				ExperimentalRecord erSS=rb.toExperimentalRecordBCF_SS(propertyName, htSpecies);
+				if(erSS!=null)	experimentalRecords.add(erSS);
+
+			}
 
 //		System.out.println(counter);
 
 
-		Hashtable<String, ExperimentalRecords> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_L_KG);
-		ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, true);
+			Hashtable<String, ExperimentalRecords> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_L_KG);
+			ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, true);
 		
-		Hashtable<String,Double>htMedian=ExperimentalRecords.calculateMedian(htER, true);
+			Hashtable<String,Double>htMedian=ExperimentalRecords.calculateMedian(htER, true);
 		
-		System.out.println("property="+propertyName);
-		System.out.println("originalRecords.size()="+recordsOriginal.size());
-		System.out.println("experimentalRecords.size()="+experimentalRecords.size());
-		//		
+			System.out.println("property="+propertyName);
+			System.out.println("originalRecords.size()="+recordsOriginal.size());
+			System.out.println("experimentalRecords.size()="+experimentalRecords.size());
+			//		
 
-		//Writer experimental records to Json file:
-		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + source;
-		mainFolder+=File.separator+propertyName;
-		new File(mainFolder).mkdirs();
+			//Writer experimental records to Json file:
+			String mainFolder = "Data" + File.separator + "Experimental" + File.separator + source;
+			mainFolder+=File.separator+propertyName;
+			new File(mainFolder).mkdirs();
 		
-		String fileNameJsonExperimentalRecords = source+" Experimental Records.json";
-		String fileNameJsonExperimentalRecordsBad = source+" Experimental Records-Bad.json";
-		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
+			String fileNameJsonExperimentalRecords = source+" Experimental Records.json";
+			String fileNameJsonExperimentalRecordsBad = source+" Experimental Records-Bad.json";
+			experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
 		
-		ExperimentalRecords experimentalRecordsBad = experimentalRecords.dumpBadRecords();
+			ExperimentalRecords experimentalRecordsBad = experimentalRecords.dumpBadRecords();
 
-		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
-		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
+			JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
+			JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
 
-		System.out.println("");
+			System.out.println("");
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 
 	}
 

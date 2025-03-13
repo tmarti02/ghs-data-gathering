@@ -2,8 +2,13 @@ package gov.epa.exp_data_gathering.parse.Burkhard;
 
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Vector;
 
 import com.google.gson.Gson;
@@ -18,6 +23,7 @@ import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.ParameterValue;
 import gov.epa.exp_data_gathering.parse.TextUtilities;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
+
 
 
 
@@ -185,7 +191,7 @@ public class RecordBurkhard {
 	}
 	
 	
-	private ExperimentalRecord toExperimentalRecordBAF(String propertyName) {
+	private ExperimentalRecord toExperimentalRecordBAF(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 				
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.experimental_parameters=new Hashtable<>();
@@ -256,7 +262,7 @@ public class RecordBurkhard {
 			er.reason = "untrusted study";
 		}
 		
-		addMetadata(er);
+		addMetadata(er, htSpecies);
 		
 		uc.convertRecord(er);
 		
@@ -266,7 +272,7 @@ public class RecordBurkhard {
 
 	
 	
-	ExperimentalRecord toExperimentalRecordBCF_Kinetic(String propertyName,boolean limitToWholeOrganism,boolean limitToFish) {
+	ExperimentalRecord toExperimentalRecordBCF_Kinetic(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 
 		String method="kinetic";
 		String Log_BCF_units=Log_BCF_Kinetic_units;
@@ -276,20 +282,25 @@ public class RecordBurkhard {
 		String Log_BCF_mean=Log_BCF_Kinetic_mean;
 						
 		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, Log_BCF_units,
-				Log_BCF_arithmetic_or_logarithmic, Log_BCF_min, Log_BCF_max, Log_BCF_mean);
+				Log_BCF_arithmetic_or_logarithmic, Log_BCF_min, Log_BCF_max, Log_BCF_mean, htSpecies);
 		
-		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+//		if(er!=null) filterRecord(er, propertyName);
 		return er;
 	}
 
 
 	private ExperimentalRecord toExperimentalRecordBCF(String propertyName, String method, String Log_BCF_units,
-			String Log_BCF_arithmetic_or_logarithmic, String Log_BCF_min, String Log_BCF_max, String Log_BCF_mean) {
+			String Log_BCF_arithmetic_or_logarithmic, String Log_BCF_min, String Log_BCF_max, String Log_BCF_mean, Hashtable<String, List<Species>> htSpecies) {
 		
 		if (!isNumeric(Log_BCF_mean) && !isNumeric(Log_BCF_max)) {
 			return null;
 		}
 
+		boolean limitToFish=false;
+		if(propertyName.toLowerCase().contains("fish")) limitToFish=true;
+		
+		boolean limitToWholeBody=false;
+		if(propertyName.toLowerCase().contains("whole")) limitToWholeBody=true;
 		
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.experimental_parameters=new Hashtable<>();
@@ -311,6 +322,19 @@ public class RecordBurkhard {
 		}
 				
 //		er.experimental_parameters.put("study quality",Study_Quality_BCF);
+		setSpeciesParameters(htSpecies, limitToFish, er);	
+		if(limitToWholeBody) {
+			if (Tissue == null || !Tissue.toLowerCase().contains("whole body")) {
+				er.keep = false;
+				er.reason = "Not whole body";
+			}
+		}
+		
+		if (Location == null
+				|| !Location.equals("laboratory")) {
+			er.keep = false;
+			er.reason = "Test location not in laboratory";
+		}
 		
 		try {
 			String property_value = Log_BCF_mean;
@@ -349,13 +373,13 @@ public class RecordBurkhard {
 			er.reason = "untrusted study";
 		}
 		er.property_category="bioconcentration";
-		addMetadata(er);
+		addMetadata(er, htSpecies);
 		
 		uc.convertRecord(er);
 		return er;
 	}
 	
-	ExperimentalRecord toExperimentalRecordBCF_SS(String propertyName,boolean limitToWholeOrganism,boolean limitToFish) {
+	ExperimentalRecord toExperimentalRecordBCF_SS(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 		
 		String method="steady state";
 		String Log_BCF_units=Log_BCF_Steady_State_units;
@@ -365,63 +389,152 @@ public class RecordBurkhard {
 		String Log_BCF_mean=Log_BCF_Steady_State_mean;
 						
 		ExperimentalRecord er = toExperimentalRecordBCF(propertyName, method, Log_BCF_units,
-				Log_BCF_arithmetic_or_logarithmic, Log_BCF_min, Log_BCF_max, Log_BCF_mean);		
-		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
+				Log_BCF_arithmetic_or_logarithmic, Log_BCF_min, Log_BCF_max, Log_BCF_mean, htSpecies);		
+//		if(er!=null) filterRecord(er, propertyName);
 		return er;
 	}
 	
+	static class Species {
+		Integer id;
+		String species_common;
+		String species_scientific;
+		String species_supercategory;
+		String habitat;
+	}
 	
-	private void filterRecord(ExperimentalRecord er,boolean limitToWholeOrganism,boolean limitToFish) {
+	private String getSpeciesSupercategory(Hashtable<String, List<Species>> htSpecies) {
 
-		if (limitToWholeOrganism) {
-			if (Tissue == null
-					|| !Tissue.equals("whole body")) {
-				er.keep = false;
-				er.reason = "Not whole body";
+		if(htSpecies.containsKey(Common_Name.toLowerCase())) {
+
+			List<Species>speciesList=htSpecies.get(Common_Name.toLowerCase());
+
+			for(Species species:speciesList) {
+
+
+				//				if(species.species_scientific!=null) {
+				//					if (!species.species_scientific.toLowerCase().equals(this.scientific_name.toLowerCase())) {
+				//						System.out.println(this.scientific_name+"\t"+species.species_scientific+"\tmismatch");
+				//					}
+				//				} else {
+				////					System.out.println(common_name+"\tspecies has null scientific");
+				//				}
+
+				if(species.species_supercategory.contains("fish")) {
+					return "Fish";
+				} else if(species.species_supercategory.contains("algae")) {
+					return "Algae";
+				} else if(species.species_supercategory.contains("crustaceans")) {
+					return "Crustaceans";
+				} else if(species.species_supercategory.contains("insects/spiders")) {
+					return "Insects/spiders";
+				} else if(species.species_supercategory.contains("molluscs")) {
+					return "Molluscs";
+				} else if(species.species_supercategory.contains("worms")) {
+					return "Worms";
+				} else if(species.species_supercategory.contains("invertebrates")) {
+					return "Invertebrates";
+				} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
+					return "Flowers, trees, shrubs, ferns";
+				} else if(species.species_supercategory.contains("microorganisms")) {
+					return "microorganisms";
+				} else if(species.species_supercategory.contains("amphibians")) {
+					return "amphibians";
+				} else if(species.species_supercategory.equals("omit")) {
+					return "omit";
+				} else {
+					System.out.println("Handle\t"+Common_Name+"\t"+species.species_supercategory);	
+				}
 			}
+		} else {
+			System.out.println("missing in hashtable:\t"+"*"+Common_Name.toLowerCase()+"*");
 		}
+		return null;
+	}
 
-		if (limitToFish) {
-			if (!class_taxonomy.toLowerCase().contains("actinopteri")
-					&& !class_taxonomy.toLowerCase().contains("actinopterygii")
-					&& !class_taxonomy.toLowerCase().contains("teleostei")) {
-				er.keep = false;
-				er.reason = "not a fish";
+	/**
+	 * this works for prod_dsstox- not v93 version since species table is different
+	 * 
+	 * @param tvq
+	 * @return
+	 */
+	public static Hashtable<String, List<Species>> createSupercategoryHashtable(Connection conn) {
+		Hashtable<String,List<Species>>htSpecies=new Hashtable<>();
+
+		String sql="select species_id, species_common, species_scientific, species_supercategory, habitat from species";
+
+		try {
+
+			Statement st = conn.createStatement();			
+			ResultSet rs = st.executeQuery(sql);
+
+			while (rs.next()) {
+
+				Species species=new Species();
+
+				species.id=rs.getInt(1);
+				species.species_common=rs.getString(2);
+				species.species_scientific=rs.getString(3);
+				species.species_supercategory=rs.getString(4);
+				species.habitat=rs.getString(5);
+
+				if(htSpecies.get(species.species_common)==null) {
+					List<Species>speciesList=new ArrayList<>();
+					speciesList.add(species);
+					htSpecies.put(species.species_common, speciesList);
+				} else {
+					List<Species>speciesList=htSpecies.get(species.species_common);
+					speciesList.add(species);
+				}
 			}
-		}
 
-		if (Location == null
-				|| !Location.equals("laboratory")) {
-			er.keep = false;
-			er.reason = "Test location not in laboratory";
-		}
 
-		// if (er.experimental_parameters.get("method") == null
-		// || !er.experimental_parameters.get("method").equals("steady state")) {
-		// er.keep = false;
-		// er.reason = "Not steady state";
-		// }
-		// if (er.experimental_parameters.get("media") == null
-		// || !er.experimental_parameters.get("media").equals("freshwater")) {
-		// er.keep = false;
-		// er.reason = "Not steady state";
-		// }
-		// if(!er.keep) {
-		// JsonObject jo=new JsonObject();
-		// jo.addProperty("reason", er.reason);
-		// jo.addProperty("property_name", er.property_name);
-		// jo.addProperty("tissue", er.experimental_parameters.get("tissue")+"");
-		// jo.addProperty("method", er.experimental_parameters.get("method")+"");
-		// jo.addProperty("media", er.experimental_parameters.get("media")+"");
-		// jo.addProperty("exposure_type",
-		// er.experimental_parameters.get("exposure_type")+"");
-		// System.out.println(gson.toJson(jo));
-		// }
+			//			System.out.println(sql);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return htSpecies;
+	}
+
+	void putEntry(Hashtable<String, List<Species>> htSpecies,String species_common,String supercategory) {
+
+		if(htSpecies.get(species_common)==null) {
+			List<Species>speciesList=new ArrayList<>();
+			Species species=new Species();
+			species.species_common=species_common;
+			species.species_supercategory=supercategory;
+			speciesList.add(species);
+			htSpecies.put(species_common, speciesList);
+		} else {
+			List<Species>speciesList=htSpecies.get(species_common);
+
+			Species species=new Species();
+			species.species_common=species_common;
+			species.species_supercategory=supercategory;
+			speciesList.add(species);
+		}
 
 
 	}
+
 	
-	private void addMetadata(ExperimentalRecord er) {
+	private void setSpeciesParameters(Hashtable<String, List<Species>> htSpecies, boolean limitToFish, ExperimentalRecord er) {
+		
+		er.experimental_parameters.put("Species latin",species_taxonomy);
+		er.experimental_parameters.put("Species common",Common_Name);
+		String supercategory=getSpeciesSupercategory(htSpecies);
+		if(supercategory!=null)	er.experimental_parameters.put("Species supercategory", supercategory);
+		
+		if(limitToFish && supercategory!=null) {
+			if(!supercategory.equals("Fish")) {
+				er.keep=false;
+				er.reason="Not a fish species";
+			}
+		}
+
+	}
+	
+	private void addMetadata(ExperimentalRecord er, Hashtable<String, List<Species>> htSpecies) {
 		
 		er.dsstox_substance_id = DTXSID;
 		er.source_name = sourceName;
@@ -441,10 +554,15 @@ public class RecordBurkhard {
 		er.experimental_parameters.put("Response site",Tissue);
 		er.experimental_parameters.put("Media type",Marine_Brackish_Freshwater);
 		er.experimental_parameters.put("Test location",Location);
-		er.experimental_parameters.put("Species latin",species_taxonomy);
-		er.experimental_parameters.put("Species common",Common_Name);
 //		er.experimental_parameters.put("Class taxonomy",class_taxonomy);
-		
+		if(days_of_uptake!=null) {
+			days_of_uptake=days_of_uptake.replace("24 hr", "1");
+			ParameterValue pv=new ParameterValue();
+			pv.parameter.name="Exposure duration";
+			pv.unit.abbreviation="days";
+			pv.valuePointEstimate=Double.parseDouble(days_of_uptake);
+			er.parameter_values.add(pv);
+		}
 		
 	}
 
@@ -492,16 +610,19 @@ public class RecordBurkhard {
 					String value=Exposure_Concentrations.substring(0, unitsIndex);
 					pv.valuePointEstimate=Double.parseDouble(value)/1e9;
 					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+//					System.out.println(value +" ng/L "+ pv.valuePointEstimate + " g/L");
 				} else if(Exposure_Concentrations.contains("mg/L")) {
 					unitsIndex = Exposure_Concentrations.indexOf("mg/L");
 					String value=Exposure_Concentrations.substring(0, unitsIndex);
 					pv.valuePointEstimate=Double.parseDouble(value)/1000;
 					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+//					System.out.println(value +" mg/L "+ pv.valuePointEstimate + " g/L");
 				} else if(Exposure_Concentrations.contains("ug/L")){
 					unitsIndex = Exposure_Concentrations.indexOf("ug/L");
 					String value=Exposure_Concentrations.substring(0, unitsIndex);
 					pv.valuePointEstimate=Double.parseDouble(value)/1e6;
 					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+//					System.out.println(value +" ug/L "+ pv.valuePointEstimate + " g/L");
 				} else if(Exposure_Concentrations.contains("mL")) {
 					unitsIndex = Exposure_Concentrations.indexOf("mL");
 					String value=Exposure_Concentrations.substring(0, unitsIndex);
@@ -521,5 +642,5 @@ public class RecordBurkhard {
 			er.parameter_values.add(pv);
 		}
 	}
-
+	
 }
