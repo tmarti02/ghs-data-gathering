@@ -169,7 +169,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return htER;
 	}
 	
-	public Hashtable<String, ExperimentalRecords> createExpRecordHashtableByCAS(String desiredUnits) {
+	public Hashtable<String, ExperimentalRecords> createExpRecordHashtableByCAS(String desiredUnits,boolean omitbadQualifer) {
 		
 		Hashtable<String,ExperimentalRecords>htER=new Hashtable<>();
 		
@@ -177,12 +177,15 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			
 			if(!er.keep) continue;
 			
+			if(omitbadQualifer && er.property_value_numeric_qualifier!=null 
+					&& !er.property_value_numeric_qualifier.equals("~")) continue;
+			
 			//Only use the ones with desiredUnits in the stats calcs:
 			if(er.property_value_units_final.equals(desiredUnits) || desiredUnits==null) {
 //				System.out.println(er.casrn+"\t"+er.property_value_point_estimate_final);
 				
 				String key=er.casrn;
-				if(key==null)key=er.chemical_name;
+//				if(key==null)key=er.chemical_name;
 				if(key==null)continue;
 				
 				if(htER.containsKey(key)) {
@@ -197,10 +200,15 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 				
 			}
 		}
+		
+		System.out.println("Number of kep unique chemicals with CAS="+htER.size());
 		return htER;
 	}
 
-	
+	static class SDResult {
+		int count;
+		double stdev;
+	}
 
 	/**
 	 * 
@@ -208,18 +216,18 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	 * @param recs
 	 * @return
 	 */
-	public static Double calculateSD(List<ExperimentalRecord> recs,boolean convertToLog) {
+	public static SDResult calculateSD(List<ExperimentalRecord> recs,boolean convertToLog) {
 		
 		Gson gson=new Gson();
 		
-		int count=0;
-		double avg=0;
 		
+		double avg=0;
+		SDResult sd=new SDResult();
 		
 		for (ExperimentalRecord er:recs) {
 			
 			Double value=er.property_value_point_estimate_final;
-
+			
 			if (value==null) {
 				if (er.property_value_min_final!=null && er.property_value_max_final!=null) {
 					value=(er.property_value_min_final+er.property_value_max_final)/2.0;	
@@ -234,38 +242,39 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			} else {
 				avg+=value;
 			}
-//			if (!er.property_value_units_final.equals(ExperimentalConstants.str_g_L)) continue;
-			count++;
+			sd.count++;
 		}
 		
-		if(count==0) return null;
+		if(sd.count==0) return sd;
 		
-		avg/=(double)count;
+		avg/=(double)sd.count;
 		
-//		System.out.println(count+"\t"+avg);
-		
-		
-		double SD=0;
+		sd.stdev=0;
 		
 		for (ExperimentalRecord er:recs) {
 			
-			if (er.property_value_point_estimate_final==null) continue;
+			Double value=er.property_value_point_estimate_final;
+			
+			if (value==null) {
+				if (er.property_value_min_final!=null && er.property_value_max_final!=null) {
+					value=(er.property_value_min_final+er.property_value_max_final)/2.0;	
+				} else {
+					continue;
+				}
+			}
 			
 			if(convertToLog) {
-				if(er.property_value_point_estimate_final==0) continue;
-				SD+=Math.pow(Math.log10(er.property_value_point_estimate_final)-avg,2);
+				if(value==0) continue;
+				sd.stdev+=Math.pow(Math.log10(value)-avg,2);
 			} else {
-				SD+=Math.pow(er.property_value_point_estimate_final-avg,2);
+				sd.stdev+=Math.pow(value-avg,2);
 			}
 		}
-		SD/=(double)count;
+		sd.stdev/=(double)sd.count;
+		sd.stdev=Math.sqrt(sd.stdev);
 		
-		SD=Math.sqrt(SD);
-//		System.out.println(count+"\t"+SD+"\t"+avg);
-		
-		
-		
-		return SD;
+//		System.out.println(sd.count+"\t"+sd.stdev);
+		return sd;
 		
 	}
 	
@@ -275,30 +284,32 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	
 	public static void calculateAvgStdDevOverAllChemicals(Hashtable<String, ExperimentalRecords> htER, boolean convertToLog,boolean omitSingleton) {
 		double avgSD=0;
+
 		int count=0;
 		int countOverall=0;
 
+		
 		for (String dtxsid:htER.keySet()) {
 			List<ExperimentalRecord> records=htER.get(dtxsid);
 						
 			if(omitSingleton)
 				if(records.size()<=1)continue;//dont include ones with only 1 value
 			
-			Double SD=ExperimentalRecords.calculateSD(records,convertToLog);//TODO need to determine SD when converted to log values
+			SDResult sdr=ExperimentalRecords.calculateSD(records,convertToLog);//TODO need to determine SD when converted to log values
 			
-			if(SD==null) continue;
+			if(sdr.count==0) continue;
 //			System.out.println(count+"\t"+SD);
 			
-			avgSD+=SD;
+			avgSD+=sdr.stdev;
 			count++;
-			countOverall+=records.size();
+			countOverall+=sdr.count;
 		}
 		
 		avgSD/=(double)count;
 		
-		DecimalFormat df=new DecimalFormat("0.00");
+		DecimalFormat df=new DecimalFormat("0.0000");
 		System.out.println("\nAvg SD\t"+df.format(avgSD));
-		System.out.println("Unique chemicals\t"+htER.size());
+		System.out.println("Unique chemicals\t"+count);
 		System.out.println("Kept records with correct units\t"+countOverall+"\n");
 	}
 	

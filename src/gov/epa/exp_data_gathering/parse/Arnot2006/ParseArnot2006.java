@@ -97,7 +97,7 @@ public class ParseArnot2006 extends Parse {
 //			System.out.println("Count failing duration calc:\t"+RecordArnot2006.countDurationNotOK);
 //			System.out.println("Count passing duration calc:\t"+RecordArnot2006.countDurationOK);
 
-			Hashtable<String,ExperimentalRecords> htER = recordsExperimental.createExpRecordHashtableByCAS(ExperimentalConstants.str_L_KG);
+			Hashtable<String,ExperimentalRecords> htER = recordsExperimental.createExpRecordHashtableByCAS(ExperimentalConstants.str_L_KG,true);
 			
 			boolean omitSingleton=true;
 			ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, true,omitSingleton);

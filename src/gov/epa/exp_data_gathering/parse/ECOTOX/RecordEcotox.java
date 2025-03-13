@@ -980,8 +980,8 @@ public class RecordEcotox {
 			er.reason="bad conc1_max_op:"+bcf1_max_op;
 		}
 
-		if(!er.keep)
-			System.out.println(er.reason);
+//		if(!er.keep)
+//			System.out.println(er.reason);
 
 		
 //			System.out.println(r.conc1_max_op+"\t"+r.conc1_min_op+"\t"+r.conc1_mean_op);
