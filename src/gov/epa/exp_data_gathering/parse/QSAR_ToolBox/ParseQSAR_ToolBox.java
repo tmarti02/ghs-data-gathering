@@ -148,10 +148,10 @@ public class ParseQSAR_ToolBox extends Parse {
 					//Can only filter by whole body if filename is CEFIC
 					if(fileName.equals(fileNameBCFCEFIC)) {
 						
-						ExperimentalRecord erKinetic=recordQSAR_ToolBox.toExperimentalRecordBCF_Kinetic(propertyName, htSpecies);
+						ExperimentalRecord erKinetic=recordQSAR_ToolBox.toExperimentalRecordBCF_NITE_Kinetic(propertyName, htSpecies);
 						if(erKinetic!=null)	recordsExperimental.add(erKinetic);
 		
-						ExperimentalRecord erSS=recordQSAR_ToolBox.toExperimentalRecordBCF_SS(propertyName, htSpecies);
+						ExperimentalRecord erSS=recordQSAR_ToolBox.toExperimentalRecordBCF_NITE_SS(propertyName, htSpecies);
 						if(erSS!=null)	recordsExperimental.add(erSS);
 						
 		

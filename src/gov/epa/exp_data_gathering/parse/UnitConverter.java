@@ -130,7 +130,7 @@ public class UnitConverter {
 
 		} else if (er.property_category != null) {
 			
-			if (er.property_category.toLowerCase().contains("bioconcentration")) {
+			if (er.property_category.toLowerCase().contains("bioconcentration") || er.property_category.toLowerCase().contains("bioaccumulation")) {
 				convertBCF(er);
 			} else if ( er.property_category.contentEquals(ExperimentalConstants.strAcuteOralToxicity) ||  
 					er.property_category.contentEquals(ExperimentalConstants.strAcuteDermalToxicity)) {
@@ -148,7 +148,8 @@ public class UnitConverter {
 				|| er.property_name.equals(ExperimentalConstants.strBIODEG_HL_HC)) {
 			convertKm(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strKOC)
-				|| er.property_name.equals(ExperimentalConstants.strBCF)) {
+				|| er.property_name.equals(ExperimentalConstants.strBCF)
+				|| er.property_name.equals(ExperimentalConstants.strBAF)) {
 			convertBCF(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strOH)) {
 			convertOH(er);
