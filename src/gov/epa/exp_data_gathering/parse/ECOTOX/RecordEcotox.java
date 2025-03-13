@@ -1056,7 +1056,7 @@ public class RecordEcotox {
 			pv.parameter.name="Exposure duration";
 			pv.valueQualifier=exposure_duration_mean_op;
 			
-			if(exposure_duration_unit.equals("d")){
+			if(exposure_duration_unit.equals("d") || exposure_duration_unit.equals("dpf")){
 				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean);
 				pv.unit.abbreviation="days";
 			} else if(exposure_duration_unit.equals("h")){
@@ -1085,6 +1085,9 @@ public class RecordEcotox {
 				pv.unit.abbreviation=exposure_duration_unit;
 			}
 			
+//			if(!exposure_duration_unit.equals("d")) {
+//				System.out.println("exposure_duration_mean:	" + exposure_duration_mean + "	exposure_duration_unit:	" + exposure_duration_unit + "	mean_converted:	" + pv.valuePointEstimate);
+//			}
 			er.parameter_values.add(pv);
 		}
 	}
