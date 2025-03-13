@@ -288,6 +288,14 @@ public class RecordQSAR_ToolBox {
 		}
 	}
 	
+	/**
+	 * For skin sensitization and acute toxicity
+	 * 
+	 * TODO break into separate methods
+	 * 
+	 * @param originalSourceName
+	 * @return
+	 */
 	public ExperimentalRecord toExperimentalRecord(String originalSourceName) {
 		ExperimentalRecord er=new ExperimentalRecord();
 		
@@ -963,6 +971,9 @@ public class RecordQSAR_ToolBox {
 			}
 			
 			if(Exposure_concentration_MeanValue!=null) {
+				
+//				System.out.println("Have water conc="+Exposure_concentration_MeanValue);
+				
 				ParameterValue pv=new ParameterValue();
 				pv.parameter.name="Water concentration";
 				pv.unit.abbreviation=ExperimentalConstants.str_g_L;
@@ -981,17 +992,23 @@ public class RecordQSAR_ToolBox {
 			}
 			
 			er.publicSourceOriginal=new PublicSource();
-			if(Reference_source.contains("jcheck")) {
-				er.publicSourceOriginal.name="J-Check";
-//				er.publicSourceOriginal.url="https://www.nite.go.jp/chem/jcheck/top.action?request_locale=en";
-				er.publicSourceOriginal.url="https://www.nite.go.jp/en/chem/qsar/evaluation.html";
-//				er.publicSourceOriginal.description="J-CHECK is a database developed to provide the information regarding \"Act on the Evaluation of Chemical Substances and Regulation of Their Manufacture, etc. (commonly known as \"CSCL\") by the authorities of the law, Ministry of Health, Labour and Welfare, Ministry of Economy, Trade and Industry, and Ministry of the Environment. J-CHECK provides the information regarding CSCL, such as the list of CSCL, chemical safety information obtained in the existing chemicals survey program, risk assessment, etc. in cooperation with eChemPortal by OECD.";
-				er.publicSourceOriginal.description="Biodegradation and bioconcentration data conducted for the evaluations of new chemicals and existing chemicals under CSCL are available in OECD QSAR Toolbox version 3.0 data format (excel file).";
-			} else if(Reference_source.contains("safe")) {
-				er.publicSourceOriginal.name="SAFE";
-				er.publicSourceOriginal.url="https://www.nite.go.jp/en/chem/qsar/evaluation.html";
-				er.publicSourceOriginal.description="Biodegradation and bioconcentration data conducted for the evaluations of new chemicals and existing chemicals under CSCL are available in OECD QSAR Toolbox version 3.0 data format (excel file).";
-			}
+			
+//			if(Reference_source.contains("jcheck")) {
+//				er.publicSourceOriginal.name="J-Check";
+////				er.publicSourceOriginal.url="https://www.nite.go.jp/chem/jcheck/top.action?request_locale=en";
+//				er.publicSourceOriginal.url="https://www.nite.go.jp/en/chem/qsar/evaluation.html";
+////				er.publicSourceOriginal.description="J-CHECK is a database developed to provide the information regarding \"Act on the Evaluation of Chemical Substances and Regulation of Their Manufacture, etc. (commonly known as \"CSCL\") by the authorities of the law, Ministry of Health, Labour and Welfare, Ministry of Economy, Trade and Industry, and Ministry of the Environment. J-CHECK provides the information regarding CSCL, such as the list of CSCL, chemical safety information obtained in the existing chemicals survey program, risk assessment, etc. in cooperation with eChemPortal by OECD.";
+//				er.publicSourceOriginal.description="Biodegradation and bioconcentration data conducted for the evaluations of new chemicals and existing chemicals under CSCL are available in OECD QSAR Toolbox version 3.0 data format (excel file).";
+//			} else if(Reference_source.contains("safe")) {
+//				er.publicSourceOriginal.name="SAFE";
+//				er.publicSourceOriginal.url="https://www.nite.go.jp/en/chem/qsar/evaluation.html";
+//				er.publicSourceOriginal.description="Biodegradation and bioconcentration data conducted for the evaluations of new chemicals and existing chemicals under CSCL are available in OECD QSAR Toolbox version 3.0 data format (excel file).";
+//			}
+			
+			//Simplify it because we cant find matching data in J-check:
+			er.publicSourceOriginal.name="Bioconcentration and logKow NITE";
+			er.publicSourceOriginal.url="https://www.nite.go.jp/en/chem/qsar/evaluation.html";
+			er.publicSourceOriginal.description="National Institute of Technology and Evaluation (Japan)";
 
 			if(Tissue_analyzed!=null) {
 				er.experimental_parameters.put("Media type",Water_type);
@@ -1001,8 +1018,15 @@ public class RecordQSAR_ToolBox {
 		}
 	}
 	
-	//Selects kinetic values for CEFIC data set
-	ExperimentalRecord toExperimentalRecordBCF_Kinetic(String propertyName, Hashtable<String, List<Species>> htSpecies) {
+
+	/**
+	 * Selects kinetic values for CEFIC data set
+	 *  
+	 * @param propertyName
+	 * @param htSpecies
+	 * @return
+	 */
+	ExperimentalRecord toExperimentalRecordBCF_NITE_Kinetic(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 		
 		String method="kinetic";
 		String BCF_units=ExperimentalConstants.str_L_KG;
@@ -1012,8 +1036,15 @@ public class RecordQSAR_ToolBox {
 //		if(er!=null) filterRecord(er, limitToWholeOrganism,limitToFish);
 		return er;
 	}
-	//Selects steady state values for CEFIC data set
-	ExperimentalRecord toExperimentalRecordBCF_SS(String propertyName, Hashtable<String, List<Species>> htSpecies) {
+
+	
+	/**
+	 * Selects steady state values for CEFIC data set 
+	 * @param propertyName
+	 * @param htSpecies
+	 * @return
+	 */
+	ExperimentalRecord toExperimentalRecordBCF_NITE_SS(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 
 		String method="steady state";
 		String BCF_mean=BCFss_lipid_MeanValue;
@@ -1023,7 +1054,12 @@ public class RecordQSAR_ToolBox {
 //		if(er!=null) filterRecord(er, propertyName);
 		return er;
 	}
-	//Selects kinetic values for Canada data set
+	
+	/**
+	 * Selects kinetic values for Canada data set 
+	 * @param propertyName
+	 * @return
+	 */
 	ExperimentalRecord toExperimentalRecordBCFCanada(String propertyName) {
 
 		String method="kinetic";
@@ -1036,7 +1072,13 @@ public class RecordQSAR_ToolBox {
 		return er;
 	}
 
-	//Directly separates steady state and kinetic BCF values for NITE dataset and converts to experimental records different from other BCF data
+	
+	/**
+	 * Directly separates steady state and kinetic BCF values for NITE dataset and converts to experimental records different from other BCF data 
+	 * @param propertyName
+	 * @param htSpecies
+	 * @return
+	 */
 	public ExperimentalRecord toExperimentalRecordBCFNITE(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 		
 		boolean limitToFish=false;
@@ -1094,7 +1136,13 @@ public class RecordQSAR_ToolBox {
 		unitConverter.convertRecord(er);
 		return er;
 	}
-	//Filters BCF values based on whole organism and fish. Only used if no common name
+	
+	
+	/**
+	 * Filters BCF values based on whole organism and fish. Only used if no common name 
+	 * @param er
+	 * @param propertyName
+	 */
 	private void filterRecord(ExperimentalRecord er, String propertyName) {
 
 		boolean limitToFish=false;
