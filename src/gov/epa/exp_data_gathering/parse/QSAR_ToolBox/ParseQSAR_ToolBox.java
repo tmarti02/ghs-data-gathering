@@ -148,10 +148,10 @@ public class ParseQSAR_ToolBox extends Parse {
 					//Can only filter by whole body if filename is CEFIC
 					if(fileName.equals(fileNameBCFCEFIC)) {
 						
-						ExperimentalRecord erKinetic=recordQSAR_ToolBox.toExperimentalRecordBCF_Kinetic(propertyName, htSpecies);
+						ExperimentalRecord erKinetic=recordQSAR_ToolBox.toExperimentalRecordBCF_NITE_Kinetic(propertyName, htSpecies);
 						if(erKinetic!=null)	recordsExperimental.add(erKinetic);
 		
-						ExperimentalRecord erSS=recordQSAR_ToolBox.toExperimentalRecordBCF_SS(propertyName, htSpecies);
+						ExperimentalRecord erSS=recordQSAR_ToolBox.toExperimentalRecordBCF_NITE_SS(propertyName, htSpecies);
 						if(erSS!=null)	recordsExperimental.add(erSS);
 						
 		
@@ -173,10 +173,10 @@ public class ParseQSAR_ToolBox extends Parse {
 			ex.printStackTrace();
 		}
 
-		
-		Hashtable<String,ExperimentalRecords> htER = recordsExperimental.createExpRecordHashtableByCAS(ExperimentalConstants.str_L_KG);
-		ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, true);
-
+		Hashtable<String,ExperimentalRecords> htER = recordsExperimental.createExpRecordHashtableByCAS(ExperimentalConstants.str_L_KG,true);
+		boolean convertToLog=true;
+		boolean omitSingleton=false;
+		ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, convertToLog,omitSingleton);
 		
 		return recordsExperimental;
 	}
@@ -191,14 +191,16 @@ public class ParseQSAR_ToolBox extends Parse {
 		if(!fileName.equals(fileNameBCFCanada))properties.add(ExperimentalConstants.strFishBCFWholeBody);
 		
 		for (String propertyName:properties) {
+			System.out.println(propertyName);
 			ParseQSAR_ToolBox p = new ParseQSAR_ToolBox(propertyName);
-			p.generateOriginalJSONRecords=true;
+			p.generateOriginalJSONRecords=false;
 			p.removeDuplicates=true;
 			p.writeJsonExperimentalRecordsFile=true;
 			p.writeExcelExperimentalRecordsFile=true;
 			p.writeExcelFileByProperty=true;		
 			p.writeCheckingExcelFile=false;//creates random sample spreadsheet
 			p.createFiles();
+			System.out.println("********************************************\n");
 		}
 		
 	}

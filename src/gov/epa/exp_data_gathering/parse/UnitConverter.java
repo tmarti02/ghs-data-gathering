@@ -1,6 +1,7 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
 
 import gov.epa.api.ExperimentalConstants;
@@ -893,6 +894,10 @@ public class UnitConverter {
 		return !er.flag;
 
 	}
+	
+	public static HashSet<String>missingDensityCasrns=new HashSet<>();
+	public static boolean printMissingDensityCas=true;
+	
 
 	private boolean convertSolubility(ExperimentalRecord er) {
 
@@ -903,7 +908,10 @@ public class UnitConverter {
 				er.flag = true;
 				er.updateNote("Conversion to mg/L not possible (missing density)");
 
-				System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
+				missingDensityCasrns.add(er.casrn);
+				
+				if(printMissingDensityCas)
+					System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
 
 				assignFinalFieldsWithoutConverting(er);
 				er.property_value_units_final = er.property_value_units_original;
@@ -923,7 +931,10 @@ public class UnitConverter {
 				er.flag = true;
 				er.updateNote("Conversion to mg/L not possible (missing density)");
 
-				System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
+				missingDensityCasrns.add(er.casrn);
+				
+				if(printMissingDensityCas)
+					System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
 
 				assignFinalFieldsWithoutConverting(er);
 				er.property_value_units_final = er.property_value_units_original;

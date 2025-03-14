@@ -322,6 +322,7 @@ public class ExperimentalConstants {
 
 	
 	public static final String strAcuteAquaticToxicity = "Acute aquatic toxicity";
+	public static final String strChronicAquaticToxicity = "Chronic aquatic toxicity";
 	public static final String strAcuteOralToxicity = "Acute oral toxicity";
 	public static final String strAcuteDermalToxicity = "Acute dermal toxicity";
 	public static final String strAcuteInhalationToxicity = "Acute inhalation toxicity";
