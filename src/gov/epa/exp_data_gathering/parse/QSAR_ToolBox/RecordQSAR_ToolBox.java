@@ -1178,43 +1178,81 @@ public class RecordQSAR_ToolBox {
 	
 	private void setSpeciesParameters(Hashtable<String, List<Species>> htSpecies, boolean limitToFish,
 			ExperimentalRecord er) {
+//		if(Species_common_name!=null) {
+//			er.experimental_parameters.put("Species common", Species_common_name);
+//			String supercategory=getSpeciesSupercategory(htSpecies);
+//			if(supercategory!=null)	{
+//				er.experimental_parameters.put("Species supercategory", supercategory);
+//			}
+//			
+//			if(limitToFish && supercategory!=null) {
+//				if(!supercategory.equals("Fish")) {
+//					er.keep=false;
+//					er.reason="Not a fish species";
+//				}
+//			}
+//		} else if(Superclass!=null && Superclass.toLowerCase().contains("actinopterygii")) {
+//			er.experimental_parameters.put("Species supercategory", "Fish");
+//			String supercategory="Fish";
+//			
+//			if(limitToFish && supercategory!=null) {
+//				if(!supercategory.equals("Fish")) {
+//					er.keep=false;
+//					er.reason="Not a fish species";
+//				}
+//			}
+//		}
+//		if(Test_organisms_species!=null && htSpecies.containsKey(Test_organisms_species.toLowerCase())) {
+//			List<Species>speciesList=htSpecies.get(Test_organisms_species.toLowerCase());
+//			
+//			for(Species species:speciesList) {
+//				if(Species_common_name==null) {
+//					Species_common_name=species.species_common;
+//				}
+//			}
+//		}
 		if(Test_organisms_species!=null) {
 			er.experimental_parameters.put("Species latin", Test_organisms_species);
+			String speciescommon=getSpeciesCommonName();
+			if(speciescommon!=null) {
+				er.experimental_parameters.put("Species common", speciescommon);
+			}
 		}
-		if(Species_common_name!=null) {
-			er.experimental_parameters.put("Species common", Species_common_name);
-			String supercategory=getSpeciesSupercategory(htSpecies);
-			if(supercategory!=null)	{
-				er.experimental_parameters.put("Species supercategory", supercategory);
-			}
-			
-			if(limitToFish && supercategory!=null) {
-				if(!supercategory.equals("Fish")) {
-					er.keep=false;
-					er.reason="Not a fish species";
-				}
-			}
-		} else if(Superclass!=null && Superclass.toLowerCase().contains("actinopterygii")) {
-			er.experimental_parameters.put("Species supercategory", "Fish");
-			String supercategory="Fish";
-			
-			if(limitToFish && supercategory!=null) {
-				if(!supercategory.equals("Fish")) {
-					er.keep=false;
-					er.reason="Not a fish species";
-				}
+		String supercategory=getSpeciesSupercategory(htSpecies);
+		if(supercategory!=null)	{
+			er.experimental_parameters.put("Species supercategory", supercategory);
+		}
+		
+		if(limitToFish && supercategory!=null) {
+			if(!supercategory.equals("Fish")) {
+				er.keep=false;
+				er.reason="Not a fish species";
 			}
 		}
 	}
 	
+	private String getSpeciesCommonName() {
+		
+			if(Test_organisms_species.toLowerCase().contains("carpio")){
+				return "Common carp";
+			} else if(Test_organisms_species.toLowerCase().contains("salmo gairdneri")) {
+				return "salmon";
+			} else if(Test_organisms_species.toLowerCase().contains("danio rerio")) {
+				return "zebrafish";
+			} else if(Test_organisms_species.toLowerCase().contains("lepomis macrochirus")) {
+				return "bluegill";
+			} else if(Test_organisms_species.toLowerCase().contains("oryzias latipes")) {
+				return "japanese ricefish";
+			} else return null;
+	}
+	
 	private String getSpeciesSupercategory(Hashtable<String, List<Species>> htSpecies) {
 
-		if(htSpecies.containsKey(Species_common_name.toLowerCase())) {
+		if(Species_common_name!=null && htSpecies.containsKey(Species_common_name.toLowerCase())) {
 
 			List<Species>speciesList=htSpecies.get(Species_common_name.toLowerCase());
 
 			for(Species species:speciesList) {
-
 
 				//				if(species.species_scientific!=null) {
 				//					if (!species.species_scientific.toLowerCase().equals(this.scientific_name.toLowerCase())) {
@@ -1250,7 +1288,7 @@ public class RecordQSAR_ToolBox {
 					System.out.println("Handle\t"+Species_common_name+"\t"+species.species_supercategory);	
 				}
 			}
-		} else {
+		} else if(Species_common_name!=null){
 			System.out.println("missing in hashtable:\t"+"*"+Species_common_name.toLowerCase()+"*");
 		}
 

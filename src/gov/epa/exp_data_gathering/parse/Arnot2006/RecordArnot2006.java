@@ -291,7 +291,68 @@ public class RecordArnot2006 {
 
 		return er;	
 	}
+	
+	public ExperimentalRecord toExperimentalRecordBAF(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 
+		//Not BCF:
+		if(!endpoint_sorting_category.equals("1.0")) return null; //Endpoint 2=total BCF (1=BAF,3=BCFfd,4=BAFmodeled)
+
+		boolean limitToFish=false;
+		if(propertyName.toLowerCase().contains("fish")) limitToFish=true;
+		
+		boolean limitToWholeBody=false;
+		if(propertyName.toLowerCase().contains("whole")) limitToWholeBody=true;
+		
+		
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.property_name=propertyName;
+		er.property_category="bioaccumulation";//so that unit converter can handle various BCF endpoints
+
+		String CAS=CASUtilities.fixIntegerCAS(casrn);
+		if(CASUtilities.isCAS_OK(CAS)) {
+			er.casrn=CAS;
+		} else {
+			System.out.println("Invalid CAS from database: " + casrn + " 	Invalid cas: " + CAS);
+		}
+
+		er.chemical_name=chemical_name;
+		er.source_name=sourceName;
+
+		setLiteratureSource(er);
+
+		er.experimental_parameters=new LinkedHashMap<>();//keeps insertion order
+		er.parameter_values=new ArrayList<>();
+
+		setSpeciesParameters(htSpecies, limitToFish, er);
+		setResponseSite(limitToWholeBody, er);//Criterion 5
+		setWaterConcentration(er);//Criterion 3
+		setExposureDuration(er);//Criterion 4
+		setChemAnalysisMethod(er);//Criterion 1
+		setExposureType(er);
+		setExposureMedia(er);
+		setCriteria(er);
+		
+		if(!temperature_mean_C.equals("N/A")) er.temperature_C=Double.parseDouble(temperature_mean_C);
+		if(!ph_mean.equals("N/A")) er.pH=ph_mean;
+		
+		er.property_value_units_original=ExperimentalConstants.str_LOG_L_KG;
+		er.property_value_string=LogBAF_WW_L_kg + " "+er.property_value_units_original;
+
+		try {
+			er.property_value_point_estimate_original=Double.parseDouble(LogBAF_WW_L_kg);
+		} catch(Exception ex) {
+			System.out.println("Cant convert BCF=\t"+LogBAF_WW_L_kg);
+			//System.out.println(gson.toJson(this));
+		}
+
+		if(comments!=null) {
+			er.note= comments;
+		}
+
+		uc.convertRecord(er);
+
+		return er;	
+	}
 
 	private void setExposureDuration(ExperimentalRecord er) {
 		if(exposure_duration_days.equals("L") || exposure_duration_days.equals("N/A")) {
@@ -592,6 +653,8 @@ public class RecordArnot2006 {
 			exposure_type=exposure_type.replace("Semi-S","Semi-Static");
 		} else if(exposure_type.equals("Lentic")) {
 			exposure_type="Lentic";
+		} else if(exposure_type.equals("Lotic")) {
+			exposure_type="Lotic";
 		} else if(exposure_type.equals("N/A")) {
 			//leave null
 		} else {
@@ -783,6 +846,7 @@ public class RecordArnot2006 {
 		putEntry(htSuperCategory, "phytoplankton", "microorganisms");
 		putEntry(htSuperCategory, "common shrimp", "omit");
 		putEntry(htSuperCategory, "baskettail dragonfly", "insects/spiders");
+		putEntry(htSuperCategory, "caddisfly larvae", "insects/spiders");
 		putEntry(htSuperCategory, "common bay mussel", "molluscs");
 		putEntry(htSuperCategory, "depressed river mussel", "molluscs");
 		putEntry(htSuperCategory, "clams", "molluscs");
@@ -796,7 +860,9 @@ public class RecordArnot2006 {
 		putEntry(htSuperCategory, "eastern tiger salamander", "amphibians");
 		putEntry(htSuperCategory, "mussel fatmucket", "molluscs");
 		putEntry(htSuperCategory, "sandworm", "worms");
+		putEntry(htSuperCategory, "oligocheate", "worms");
 		putEntry(htSuperCategory, "hornwort", "flowers, trees, shrubs, ferns");
+		putEntry(htSuperCategory, "orb snail family", "omit");
 
 
 		putEntry(htSuperCategory, "biwi lake gudgeon, goby or willow shiner", "fish");
@@ -831,7 +897,17 @@ public class RecordArnot2006 {
 		putEntry(htSuperCategory, "zebra fish", "fish");
 		putEntry(htSuperCategory, "blackrock fish", "fish");
 		putEntry(htSuperCategory, "crusian carp", "fish");
-
+		putEntry(htSuperCategory, "danio rerio", "fish");
+		putEntry(htSuperCategory, "salmo gairdneri", "fish");
+		putEntry(htSuperCategory, "smelt (small)", "fish");
+		putEntry(htSuperCategory, "smelt (large)", "fish");
+		putEntry(htSuperCategory, "salmonid", "fish");
+		putEntry(htSuperCategory, "pacific staghorn sculpin", "fish");
+		putEntry(htSuperCategory, "spotted sea trout", "fish");
+		putEntry(htSuperCategory, "stonecat", "fish");
+		putEntry(htSuperCategory, "brook silversides", "fish");
+		putEntry(htSuperCategory, "troutperch", "fish");
+		putEntry(htSuperCategory, "young of the year", "fish");
 		
 
 		System.out.println(gson.toJson(htSuperCategory));

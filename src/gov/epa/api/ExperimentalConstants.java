@@ -41,7 +41,9 @@ public class ExperimentalConstants {
 	public static final String strStandardFishBCF = "Standard test species fish bioconcentration factor";
 	public static final String strStandardFishBCFWholeBody = "Whole body Standard test species fish bioconcentration factor";
 //	public static final String strLogBCF_Fish_Whole_Body="LogBCF_Fish_Whole_Body";
-
+	public static final String strBAF = "Bioaccumulation factor";
+	public static final String strFishBAF = "Fish bioaccumulation factor";
+	public static final String strFishBAFWholeBody = "Whole body fish bioaccumulation factor";
 	
 	public static final String strLogKOC = "LogKOC";
 	public static final String strKOC = "Soil Adsorption Coefficient (Koc)";
