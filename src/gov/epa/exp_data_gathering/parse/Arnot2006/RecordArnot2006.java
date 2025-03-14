@@ -232,8 +232,20 @@ public class RecordArnot2006 {
 	
 	public ExperimentalRecord toExperimentalRecordBCF(String propertyName, Hashtable<String, List<Species>> htSpecies) {
 
-		//Not BCF:
-		if(!endpoint_sorting_category.equals("2.0")) return null; //Endpoint 2=total BCF (1=BAF,3=BCFfd,4=BAFmodeled)
+		ExperimentalRecord er=new ExperimentalRecord();
+		er.property_name=propertyName;
+
+		String strPropertyValue=null;
+		if(propertyName.contains("Bioconcentration factor")) {
+			if(!endpoint_sorting_category.equals("2.0")) return null;
+			strPropertyValue=LogBCF_WW_L_kg;
+			er.property_category="bioconcentration";//so that unit converter can handle various BCF endpoints
+		} else if(propertyName.equals("Bioaccumulation factor")) {
+			if(!endpoint_sorting_category.equals("1.0")) return null;
+			strPropertyValue=LogBAF_WW_L_kg;
+			er.property_category="bioaccumulation";//so that unit converter can handle various BCF endpoints
+
+		}
 
 		boolean limitToFish=false;
 		if(propertyName.toLowerCase().contains("fish")) limitToFish=true;
@@ -241,11 +253,6 @@ public class RecordArnot2006 {
 		boolean limitToWholeBody=false;
 		if(propertyName.toLowerCase().contains("whole")) limitToWholeBody=true;
 		
-		
-		ExperimentalRecord er=new ExperimentalRecord();
-		er.property_name=propertyName;
-		er.property_category="bioconcentration";//so that unit converter can handle various BCF endpoints
-
 		String CAS=CASUtilities.fixIntegerCAS(casrn);
 		if(CASUtilities.isCAS_OK(CAS)) {
 			er.casrn=CAS;
@@ -274,13 +281,12 @@ public class RecordArnot2006 {
 		if(!ph_mean.equals("N/A")) er.pH=ph_mean;
 		
 		er.property_value_units_original=ExperimentalConstants.str_LOG_L_KG;
-		er.property_value_string=LogBCF_WW_L_kg + " "+er.property_value_units_original;
+		er.property_value_string=strPropertyValue + " "+er.property_value_units_original;
 
 		try {
-			er.property_value_point_estimate_original=Double.parseDouble(LogBCF_WW_L_kg);
+			er.property_value_point_estimate_original=Double.parseDouble(strPropertyValue);
 		} catch(Exception ex) {
-			System.out.println("Cant convert BCF=\t"+LogBCF_WW_L_kg);
-			//System.out.println(gson.toJson(this));
+			System.out.println("Cant convert propertyValue=\t"+strPropertyValue);
 		}
 
 		if(comments!=null) {
@@ -292,67 +298,7 @@ public class RecordArnot2006 {
 		return er;	
 	}
 	
-	public ExperimentalRecord toExperimentalRecordBAF(String propertyName, Hashtable<String, List<Species>> htSpecies) {
-
-		//Not BCF:
-		if(!endpoint_sorting_category.equals("1.0")) return null; //Endpoint 2=total BCF (1=BAF,3=BCFfd,4=BAFmodeled)
-
-		boolean limitToFish=false;
-		if(propertyName.toLowerCase().contains("fish")) limitToFish=true;
-		
-		boolean limitToWholeBody=false;
-		if(propertyName.toLowerCase().contains("whole")) limitToWholeBody=true;
-		
-		
-		ExperimentalRecord er=new ExperimentalRecord();
-		er.property_name=propertyName;
-		er.property_category="bioaccumulation";//so that unit converter can handle various BCF endpoints
-
-		String CAS=CASUtilities.fixIntegerCAS(casrn);
-		if(CASUtilities.isCAS_OK(CAS)) {
-			er.casrn=CAS;
-		} else {
-			System.out.println("Invalid CAS from database: " + casrn + " 	Invalid cas: " + CAS);
-		}
-
-		er.chemical_name=chemical_name;
-		er.source_name=sourceName;
-
-		setLiteratureSource(er);
-
-		er.experimental_parameters=new LinkedHashMap<>();//keeps insertion order
-		er.parameter_values=new ArrayList<>();
-
-		setSpeciesParameters(htSpecies, limitToFish, er);
-		setResponseSite(limitToWholeBody, er);//Criterion 5
-		setWaterConcentration(er);//Criterion 3
-		setExposureDuration(er);//Criterion 4
-		setChemAnalysisMethod(er);//Criterion 1
-		setExposureType(er);
-		setExposureMedia(er);
-		setCriteria(er);
-		
-		if(!temperature_mean_C.equals("N/A")) er.temperature_C=Double.parseDouble(temperature_mean_C);
-		if(!ph_mean.equals("N/A")) er.pH=ph_mean;
-		
-		er.property_value_units_original=ExperimentalConstants.str_LOG_L_KG;
-		er.property_value_string=LogBAF_WW_L_kg + " "+er.property_value_units_original;
-
-		try {
-			er.property_value_point_estimate_original=Double.parseDouble(LogBAF_WW_L_kg);
-		} catch(Exception ex) {
-			System.out.println("Cant convert BCF=\t"+LogBAF_WW_L_kg);
-			//System.out.println(gson.toJson(this));
-		}
-
-		if(comments!=null) {
-			er.note= comments;
-		}
-
-		uc.convertRecord(er);
-
-		return er;	
-	}
+	
 
 	private void setExposureDuration(ExperimentalRecord er) {
 		if(exposure_duration_days.equals("L") || exposure_duration_days.equals("N/A")) {

@@ -86,12 +86,12 @@ public class ParseArnot2006 extends Parse {
 
 				for (RecordArnot2006 recordArnot2006:tempRecords) {
 
-					if(propertyName.contains("Biocentration factor")) {
+					if(propertyName.contains("Bioconcentration factor")) {
 						ExperimentalRecord er=recordArnot2006.toExperimentalRecordBCF(propertyName, htSpecies);
 						if(er!=null)						
 							recordsExperimental.add(er);
 					} else if(propertyName.equals("Bioaccumulation factor")) {
-						ExperimentalRecord er=recordArnot2006.toExperimentalRecordBAF(propertyName, htSpecies);
+						ExperimentalRecord er=recordArnot2006.toExperimentalRecordBCF(propertyName, htSpecies);
 						if(er!=null)						
 							recordsExperimental.add(er);
 					}
@@ -155,7 +155,9 @@ public class ParseArnot2006 extends Parse {
 //				ExperimentalConstants.strFishBCFWholeBody+"_OverallScore_1_or_2",
 //				ExperimentalConstants.strFishBCFWholeBody+"_OverallScore_1");		
 
-		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBAF);
+		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBAF,
+				ExperimentalConstants.strBCF);
+
 		for (String propertyName:propertyNames) {
 			
 			System.out.println("\n**********************\n"+propertyName);
