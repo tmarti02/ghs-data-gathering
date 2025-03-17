@@ -11,6 +11,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Vector;
 
+import org.apache.commons.math3.analysis.function.Exp;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -19,19 +22,21 @@ import com.google.gson.JsonObject;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.database.SqlUtilities;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.ParameterValue;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.ToxVal.ToxValRecord;
 
+
 /**
  * @author TMARTI02
  */
 public class RecordEcotox {
 	
-//	public static String sourceName=ExperimentalConstants.strSourceEcotox_2023_12_14;
 	public static String sourceName=ExperimentalConstants.strSourceEcotox_2024_12_12;
+	public static String databasePath = "data\\experimental\\ECOTOX_2024_12_12\\ecotox_ascii_12_12_2024.db";
 
 	public String property_name;
 	
@@ -52,7 +57,6 @@ public class RecordEcotox {
 	public String test_purity_max;
 	public String test_purity_comments;
 	public String test_characteristics;
-	public String species_number;
 	public String organism_habitat;
 	public String organism_source;
 	public String organism_source_comments;
@@ -101,6 +105,10 @@ public class RecordEcotox {
 	public String exposure_duration_unit;
 	public String exposure_duration_comments;
 	public String study_type;
+	
+	public String code;
+	public String description;
+	
 	public String study_type_comments;
 	public String test_type;
 	public String test_type_comments;
@@ -198,58 +206,75 @@ public class RecordEcotox {
 	public String effect_pct_comments;
 	public String conc1_type;
 	public String ion1;
+
 	public String conc1_mean_op;
-	public String conc1_mean;
+	public Double conc1_mean;
+
 	public String conc1_min_op;
-	public String conc1_min;
+	public Double conc1_min;
+	
 	public String conc1_max_op;
-	public String conc1_max;
+	public Double conc1_max;
+	
 	public String conc1_unit;
 	public String conc1_comments;
 	public String conc2_type;
+
 	public String ion2;
+	
 	public String conc2_mean_op;
-	public String conc2_mean;
+	public Double conc2_mean;
+	
 	public String conc2_min_op;
-	public String conc2_min;
-	public String conc2_max_op;
-	public String conc2_max;
+	public Double conc2_min;
+	
+	public String conc2_max_op;	
+	public Double conc2_max;
+	
 	public String conc2_unit;
 	public String conc2_comments;
+	
 	public String conc3_type;
 	public String ion3;
 	public String conc3_mean_op;
-	public String conc3_mean;
+	public Double conc3_mean;
 	public String conc3_min_op;
 	public String conc3_min;
 	public String conc3_max_op;
 	public String conc3_max;
 	public String conc3_unit;
 	public String conc3_comments;
+	
 	public String bcf1_mean_op;
-	public String bcf1_mean;
+	public Double bcf1_mean;
+
 	public String bcf1_min_op;
-	public String bcf1_min;
+	public Double bcf1_min;
+	
 	public String bcf1_max_op;
-	public String bcf1_max;
+	public Double bcf1_max;
+	
 	public String bcf1_unit;
 	public String bcf1_comments;
+	
 	public String bcf2_mean_op;
-	public String bcf2_mean;
+	public Double bcf2_mean;
 	public String bcf2_min_op;
 	public String bcf2_min;
 	public String bcf2_max_op;
 	public String bcf2_max;
 	public String bcf2_unit;
 	public String bcf2_comments;
+	
 	public String bcf3_mean_op;
-	public String bcf3_mean;
+	public Double bcf3_mean;
 	public String bcf3_min_op;
 	public String bcf3_min;
 	public String bcf3_max_op;
 	public String bcf3_max;
 	public String bcf3_unit;
 	public String bcf3_comments;
+	
 	public String significance_code;
 	public String significance_type;
 	public String significance_level_mean_op;
@@ -270,29 +295,33 @@ public class RecordEcotox {
 	public String organism_final_wt_max;
 	public String organism_final_wt_unit;
 	public String organism_final_wt_comments;
+	
 	public String intake_rate_mean_op;
-	public String intake_rate_mean;
+	public Double intake_rate_mean;
 	public String intake_rate_min_op;
 	public String intake_rate_min;
 	public String intake_rate_max_op;
 	public String intake_rate_max;
 	public String intake_rate_unit;
 	public String intake_rate_comments;
+	
 	public String lipid_pct_mean_op;
-	public String lipid_pct_mean;
+	public Double lipid_pct_mean;
 	public String lipid_pct_min_op;
 	public String lipid_pct_min;
 	public String lipid_pct_max_op;
 	public String lipid_pct_max;
 	public String lipid_pct_comments;
+	
 	public String dry_wet;
 	public String dry_wet_pct_mean_op;
-	public String dry_wet_pct_mean;
+	public Double dry_wet_pct_mean;
 	public String dry_wet_pct_min_op;
 	public String dry_wet_pct_min;
 	public String dry_wet_pct_max_op;
 	public String dry_wet_pct_max;
 	public String dry_wet_pct_comments;
+	
 	public String steady_state;
 	public String additional_comments;
 	public String companion_tag;
@@ -309,9 +338,25 @@ public class RecordEcotox {
 	public String title;
 	public String source;
 	public String publication_year;
+	public String doi;
 	
+	public String species_number;
 	public String latin_name;
 	public String common_name;
+	public String kingdom;
+	public String phylum_division;
+	public String subphylum_div;
+	public String superclass;
+	
+	public String class_;
+	public String tax_order;
+	public String family;
+	public String genus;
+	public String species;
+	public String subspecies;
+	public String variety;
+	public String ncbi_taxid;	
+	
 	
 	
 	transient Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
@@ -321,12 +366,13 @@ public class RecordEcotox {
 	static transient UnitConverter uc = new UnitConverter("Data" + File.separator + "density.txt");
 
 	
-	ExperimentalRecord toExperimentalRecordAcuteFishTox(int valueNumber) {
+	ExperimentalRecord toExperimentalRecordFishTox(String propertyName, int valueNumber) {
 
 		String conc_type=null;
-		String conc_mean=null;
-		String conc_min=null;
-		String conc_max=null;
+
+		Double conc_mean=null;
+		Double conc_min=null;
+		Double conc_max=null;
 		
 		String conc_mean_op=null;
 		String conc_min_op=null;
@@ -352,88 +398,124 @@ public class RecordEcotox {
 			conc_max_op=conc2_max_op;
 			conc_unit=conc2_unit;
 		}
+		
 
+		if(conc_min!=null && conc_min==0) conc_min=null;
 
 		if(conc_unit.equals("ml/L")) conc_unit="mL/L";
 		if(conc_unit.equals("ug/ml")) conc_unit="mg/L";
 					
 		ExperimentalRecord er=new ExperimentalRecord();
 		
-		er.dsstox_substance_id=dtxsid;
-		er.source_name=sourceName;
-		
-		String CAS1=cas_number.substring(0,cas_number.length()-3);
-		String CAS2=cas_number.substring(cas_number.length()-3,cas_number.length()-1);
-		String CAS3=cas_number.substring(cas_number.length()-1,cas_number.length());
-				
-		er.casrn=CAS1+"-"+CAS2+"-"+CAS3;
-		
-		er.chemical_name=chemical_name;
+		setChemicalIdentifiers(er);
 		
 //		System.out.println(cas_number+"\t"+er.casrn);
 		
-		er.property_name=property_name;
+		er.property_name=propertyName;
 		er.keep=true;
 		
-		LiteratureSource ls=new LiteratureSource();
-		er.literatureSource=ls;
-		ls.name=author+" ("+publication_year+")";
-		ls.author=author;
-		ls.title=title;
-		ls.year=publication_year;
-		ls.citation=author+" ("+publication_year+"). "+title+"."+source;
-
-		if(conc_mean==null) {
-			er.keep=false;
-			er.reason="No conc1_mean value";
-		} else if(conc_mean_op!=null && !conc_mean_op.equals("~")) {
-			er.keep=false;
-			er.reason="bad conc1_mean_op: "+conc_mean_op;
-		} else if(conc_min_op!=null && !conc_min_op.equals("~")) {
-			er.keep=false;
-			er.reason="bad conc1_min_op:"+conc_min_op;
-		} else if(conc_max_op!=null && !conc_max_op.equals("~")) {
-			er.keep=false;
-			er.reason="bad conc1_max_op:"+conc_max_op;
-		} else if(conc_unit==null || conc_unit.isBlank()) {
-			er.keep=false;
-			er.reason="Missing original units";
-//			System.out.println("missing units");
-		}
-
-
+		setLiteratureSource(er);
+		
+//		if(!er.property_name.equals(ExperimentalConstants.strAcuteAquaticToxicity)) {//only remove the operator ones if have a specific fish+duration property (for QSAR modeling)
+//			if(conc_mean==null) {
+//				er.keep=false;
+//				er.reason="No conc1_mean value";
+//			} else if(conc_mean_op!=null && !conc_mean_op.equals("~")) {
+//				er.keep=false;
+//				er.reason="bad conc1_mean_op: "+conc_mean_op;
+//			} else if(conc_min_op!=null && !conc_min_op.equals("~")) {
+//				er.keep=false;
+//				er.reason="bad conc1_min_op:"+conc_min_op;
+//			} else if(conc_max_op!=null && !conc_max_op.equals("~")) {
+//				er.keep=false;
+//				er.reason="bad conc1_max_op:"+conc_max_op;
+//			} else if(conc_unit==null || conc_unit.isBlank()) {
+//				er.keep=false;
+//				er.reason="Missing original units";
+//				//			System.out.println("missing units");
+//			}
+//		}
+		
+		
 		er.property_value_units_original=conc_unit;
 		
 		if (er.keep) {
-			er.property_value_point_estimate_original=Double.parseDouble(conc_mean);
 			
-			if(conc_min!=null && conc_max!=null) {
-				double log=Math.log10(Double.parseDouble(conc_max)/Double.parseDouble(conc_min));
+			if(conc_mean!=null) {
+				er.property_value_numeric_qualifier=conc_mean_op;
+				er.property_value_point_estimate_original=conc_mean;	
+				er.property_value_string=er.property_value_point_estimate_original+" "+conc_unit;
+			
+			} else  if(conc_min!=null && conc_max!=null) {
+
+				er.property_value_min_original=conc_min;
+				er.property_value_max_original=conc_max;
+				er.property_value_string=conc_min+" "+conc_unit+" < "+endpoint+" <"+conc_max+" "+conc_unit;
+
+				double log=Math.log10(conc_max/conc_min);
 				
 				if(log>1) {
 					er.keep=false;
 					er.reason="Range of min and max is too wide";
-//					System.out.println(min+"\t"+max);
+//					System.out.println("Range too wide:"+conc_min+" to "+conc_max+" "+conc_unit);
+				} else {
+//					er.property_value_point_estimate_original=Math.sqrt(conc_min*conc_max);
 				}
+				
+			} else if(conc_min!=null) {
+				er.property_value_min_original=conc_min;
+				er.property_value_string=endpoint+" > "+conc_min+" "+conc_unit;				
+			} else if (conc_max!=null) {
+				er.property_value_max_original=conc_max;
+				er.property_value_string=endpoint+" < "+conc_max+" "+conc_unit;				
+
 			}
+
 			
 //			System.out.println(r.conc1_max_op+"\t"+r.conc1_min_op+"\t"+r.conc1_mean_op);
 		} 
+
+
 		
-		er.experimental_parameters=new Hashtable<>();
+		er.experimental_parameters=new LinkedHashMap<>();//keeps insertion order
+		er.parameter_values=new ArrayList<>();
 		
 		er.experimental_parameters.put("test_id", test_id);
+		er.experimental_parameters.put("result_id", result_id);
+		
 		er.experimental_parameters.put("exposure_type", exposure_type);
 		er.experimental_parameters.put("chem_analysis_method", chem_analysis_method);
 		er.experimental_parameters.put("concentration_type", getConcentrationType(conc_type));
+
+		if(ParseEcotox.onlyExposureTypeSFR) {
+			if(!exposure_type.equals("Static") && !exposure_type.equals("Flow-through") &&!exposure_type.equals("Renewal")) {
+				er.keep=false;
+				er.reason="Invalid exposure type";
+			}
+		}
 		
-		er.property_value_string=er.property_value_point_estimate_original+" "+conc_unit;//TODO
+		
+		if(er.property_name.equals(ExperimentalConstants.strAcuteAquaticToxicity)
+				|| er.property_name.equals(ExperimentalConstants.strChronicAquaticToxicity)) {//general property
+			er.experimental_parameters.put("test_type", endpoint);
+			setObservationDuration(er);
+			addSpeciesParameters(er);
+		}
 		
 //		if(er.dsstox_substance_id.equals("DTXSID0034566")) {
 //			System.out.println("Found DTXSID0034566, keep="+er.keep+"\treason="+er.reason+"\t"+er.property_value_units_original+"\t"+valueNumber);
 //		}
 
-		er.property_category=ExperimentalConstants.strAcuteAquaticToxicity;
+		if(er.property_name.equals(ExperimentalConstants.strAcuteAquaticToxicity) || er.property_name.contains("LC50")) {
+			er.property_category=ExperimentalConstants.strAcuteAquaticToxicity;			
+		} else if(er.property_name.equals(ExperimentalConstants.strChronicAquaticToxicity)) {
+			er.property_category=ExperimentalConstants.strChronicAquaticToxicity;
+		}
+
+		
+		if(effect!=null) {
+			er.experimental_parameters.put("Effect", effect);
+		}
 		
 		if(er.keep) {
 			uc.convertRecord(er);
@@ -443,40 +525,138 @@ public class RecordEcotox {
 		
 	}
 	
-
-	static void setValue(String fieldName,String fieldValue,RecordEcotox rec) {
+	private void addSpeciesParameters(ExperimentalRecord er) {
+		er.experimental_parameters.put("Species latin", latin_name);
+		er.experimental_parameters.put("Species common", common_name);
+		String supercategory=getSpeciesSupercategory();
+		if(supercategory!=null) {
+			er.experimental_parameters.put("Species supercategory",supercategory);	
+//				System.out.println(ecotox_group+"\t"+common_name+"\t"+supercategory);
+//				System.out.println(common_name+"\t"+supercategory);
+		} else {
+			System.out.println(common_name+"\t"+ecotox_group+"\t"+common_name+"\tMissing supercategory");
+		}
 		
-		Field field;
-		try {
-			field = RecordEcotox.class.getField(fieldName);
-
-			String typeName = field.getGenericType().getTypeName();
-			fieldName = field.getName();
-
-			if (typeName.equals("java.lang.String")) {
-				field.set(rec, fieldValue);
-			} else if (typeName.equals("java.lang.Double")) {
-				field.set(rec, Double.parseDouble(fieldValue));
-			} else if (typeName.equals("java.lang.Long")) {
-				field.set(rec, Long.parseLong(fieldValue));
-			} else if (typeName.equals("java.lang.Integer")) {
-				field.set(rec, Integer.parseInt(fieldValue));
-				// } else if (typeName.equals("java.util.Date")) {
-				// Date d = rs.getDate(fieldName);
-				// field.set(rec, d);
-			} else {
-				System.out.println(typeName+" not handled");
-			}
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			
-		} 
-
+		String speciesType=getSpeciesType();
+		er.experimental_parameters.put("Species type", speciesType);
+		
 	}
+	
+		
 
-	public static List<RecordEcotox> get_BCF_Records_From_DB(String propertyName) {
+
+	private void setObservationDuration(ExperimentalRecord er) {
+		
+		String unit=obs_duration_unit;
+		Double mean=getValueInDays(obs_duration_mean,unit);
+		Double min=getValueInDays(obs_duration_min,unit);
+		if(min!=null && min==0) min=null;
+		Double max=getValueInDays(obs_duration_max,unit);
+		String meanOp=obs_duration_mean_op;
+		
+		if(mean==null && min==null && max==null)return;
+		
+//		if (unit.equals("NC") || unit.equals("NR")) return;
+		
+//		String parameterName="Observation duration";
+		String parameterName="Exposure duration";//to be consistent with Arnot 2006
+		
+		ParameterValue pv=new ParameterValue();
+		pv.parameter.name=parameterName;
+		pv.valueQualifier=meanOp;
+		pv.valuePointEstimate=mean;
+		pv.unit.abbreviation="days";
+
+		int type=-1;
+		if(mean!=null) {
+			type=1;
+			if(meanOp!=null && meanOp.contains("<")) {
+				type=2;
+				pv.valueMax=mean;
+				pv.valuePointEstimate=null;
+			} else if(meanOp!=null && meanOp.contains(">")) {
+				pv.valueMin=mean;
+				pv.valuePointEstimate=null;
+				type=3;
+			}
+			
+		} else if(min!=null && max!=null) {
+			type=4;
+			pv.valueMin=min;
+			pv.valueMax=max;
+		} else if(min!=null) {//doesnt happen for BCF?
+			type=5;
+			pv.valueMin=min;
+		} else if(max!=null) {//doesnt happen for BCF?
+			type=6;
+			pv.valueMax=max;
+		} else {
+			type=7;
+			return;
+		}
+		
+		er.parameter_values.add(pv);
+//		System.out.println("BCF obs dur type="+type+"\t"+meanOp+"\t"+mean+"\t"+min+"\t"+max+"\t"+unit);
+		
+	}
+	
+	private void setExposureDuration(ExperimentalRecord er) {
+		
+		String unit=exposure_duration_unit;		
+		Double mean=getValueInDays(exposure_duration_mean,unit);
+		Double min=getValueInDays(exposure_duration_min,unit);	
+		Double max=getValueInDays(exposure_duration_max,unit);
+		String meanOp=exposure_duration_mean_op;
+		
+		if(min!=null && min==0) min=null;
+		
+		if(mean==null && min==null && max==null)return;
+		
+//		if (unit.equals("NC") || unit.equals("NR")) return;
+		
+		String parameterName="Exposure duration";
+		
+		ParameterValue pv=new ParameterValue();
+		pv.parameter.name=parameterName;
+		pv.valueQualifier=meanOp;
+		pv.valuePointEstimate=mean;
+		pv.unit.abbreviation="days";
+
+		int type=-1;
+		if(mean!=null) {
+			type=1;
+			if(meanOp!=null && meanOp.contains("<")) {
+				type=2;
+				pv.valueMax=mean;
+				pv.valuePointEstimate=null;
+			} else if(meanOp!=null && meanOp.contains(">")) {
+				pv.valueMin=mean;
+				pv.valuePointEstimate=null;
+				type=3;
+			}
+			
+		} else if(min!=null && max!=null) {
+			type=4;
+			pv.valueMin=min;
+			pv.valueMax=max;
+		} else if(min!=null) {//doesnt happen for BCF?
+			type=5;
+			pv.valueMin=min;
+		} else if(max!=null) {//doesnt happen for BCF?
+			type=6;
+			pv.valueMax=max;
+		} else {
+			type=7;
+			return;
+		}
+		
+		er.parameter_values.add(pv);
+//		System.out.println("BCF exp dur type="+type+"\t"+meanOp+"\t"+mean+"\t"+min+"\t"+max+"\t"+unit);
+		
+	}
+	
+
+	public static List<RecordEcotox> get_BCF_Records_From_DB(String endpoint) {
 		List<RecordEcotox>records=new ArrayList<>();
 		
 		//TODO also get the following:
@@ -484,19 +664,24 @@ public class RecordEcotox {
 //		r.additional_comments: kinetic vs conc method for BCF
 //		r.obs_duration_mean_op, r.obs_duration_mean, r.obs_duration_unit
 		
-		String sql="select  t.test_id, dtxsid, cas_number, chemical_name, bcf1_mean ,bcf1_unit,\r\n"
-				+ " conc1_mean_op, conc1_mean, conc1_unit, conc1_min, conc1_max, conc1_min_op, conc1_max_op,"
-				+ "exposure_duration_mean_op,	exposure_duration_mean,exposure_duration_unit,"
-				+ "media_type, test_location, exposure_type,chem_analysis_method, s.common_name, s.latin_name,s.ecotox_group, rsc.description as 'response_site',\r\n"
-				+ " author, publication_year, title,source from tests t\r\n"
+//		String sql="select  r.endpoint, t.test_id, dtxsid, cas_number, chemical_name, bcf1_mean ,bcf1_unit,\r\n"
+//				+ " conc1_mean_op, conc1_mean, conc1_unit, conc1_min, conc1_max, conc1_min_op, conc1_max_op,\r\n"
+//				+ "exposure_duration_mean_op,	exposure_duration_mean,exposure_duration_unit,\r\n"
+//				+ "media_type, test_location, exposure_type,chem_analysis_method, s.common_name, s.latin_name,s.ecotox_group, rsc.description as 'response_site',\r\n"
+//				+ " author, publication_year, title,source from tests t\r\n"
+
+		String sql="select  * from tests t\r\n"
 				+ "	join results r on t.test_id=r.test_id\r\n"
 				+ "	join chemicals c on c.cas_number=t.test_cas\r\n"
 				+ "	left join references_ r2 on r2.reference_number=t.reference_number\r\n"
 				+ "	left join species s on t.species_number=s.species_number\r\n"
 				+ "	left join response_site_codes rsc on rsc.code=r.response_site\r\n"
-				+ "	where bcf1_mean is not null and (bcf1_mean_op ='~' or bcf1_mean_op='')\r\n"
+				+ "	where bcf1_mean is not null and endpoint ='"+endpoint+"';";
+//				+ "	where bcf1_mean is not null and endpoint like '%"+endpoint+"%';";//this will allow BCFD (dry weight)
+		
+//				+ "	where bcf1_mean is not null and (bcf1_mean_op ='~' or bcf1_mean_op='')\r\n"
 //				+ " and media_type like '%FW%' and test_location like '%LAB%'"				
-				+ "	order by cas_number";
+//				+ "	order by cas_number;";
 		
 //		String sql="select * from tests t\r\n"
 //				+ "	join results r on t.test_id=r.test_id\r\n"
@@ -508,11 +693,9 @@ public class RecordEcotox {
 ////				+ " and media_type like '%FW%' and test_location like '%LAB%'"				
 //				+ "	order by cas_number";
 
-//		System.out.println(sql);
+		System.out.println(sql);
 		
 		try {
-//			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
-			String databasePath = "data\\experimental\\ECOTOX_2024_12_12\\ecotox_ascii_12_12_2024.db";
 
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
 			ResultSet rs = stat.executeQuery(sql);
@@ -526,31 +709,12 @@ public class RecordEcotox {
 			int counter=0;
 			
 			while (rs.next()) {
-				
 				counter++;
 //				System.out.println(rs.getString(1));
 //				JsonObject jo = new JsonObject();
-
 				RecordEcotox rec=new RecordEcotox();
-				
-				for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-					
-					String columnLabel = rs.getMetaData().getColumnLabel(i);
-
-//					if(counter==1)					
-//						System.out.println(columnLabel);
-					
-					String columnValue = rs.getString(i);
-					
-					if (rs.getString(i) == null || rs.getString(i).isBlank())
-						continue;
-
-					setValue(columnLabel, columnValue, rec);
-//					System.out.println(rs.getMetaData().getColumnLabel(i));
-				}
-				
+				SqlUtilities.createRecord(rs, rec);
 				records.add(rec);
-				rec.property_name=propertyName;
 				
 				rec.setExposureType(htExposureType);
 				rec.setChemicalAnalysisMethod();
@@ -588,8 +752,6 @@ public class RecordEcotox {
 		
 				System.out.println(sql);
 		try {
-//			String databasePath = "data\\experimental\\ECOTOX\\ecotox_ascii_06_15_2023.db";
-			String databasePath = "data\\experimental\\ECOTOX_2023_12_14\\ecotox_ascii_12_14_2023.db";
 
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
 			ResultSet rs = stat.executeQuery(sql);
@@ -607,22 +769,8 @@ public class RecordEcotox {
 //				JsonObject jo = new JsonObject();
 
 				RecordEcotox rec=new RecordEcotox();
+				SqlUtilities.createRecord(rs, rec);
 				
-				for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-					
-					String columnLabel = rs.getMetaData().getColumnLabel(i);
-
-//					if(counter==1)					
-//						System.out.println(columnLabel);
-					
-					String columnValue = rs.getString(i);
-					
-					if (rs.getString(i) == null || rs.getString(i).isBlank())
-						continue;
-
-					setValue(columnLabel, columnValue, rec);
-//					System.out.println(rs.getMetaData().getColumnLabel(i));
-				}
 				rec.property_name=propertyName;
 				rec.setExposureType(htExposureType);
 				rec.setChemicalAnalysisMethod();
@@ -642,12 +790,119 @@ public class RecordEcotox {
 		return records;
 
 	}
+	
+	public static List<RecordEcotox> get_Acute_Tox_Records_From_DB() {
 
+		List<RecordEcotox>records=new ArrayList<>();
+
+		String sql = "select *\n" + "from tests t\n" + "join results r on t.test_id=r.test_id\n"
+				+ "join chemicals c on c.cas_number=t.test_cas\n"
+				+ "join references_ r2 on r2.reference_number=t.reference_number\n"
+				+ "left join species s on t.species_number=s.species_number\r\n"
+				+ "where media_type like '%FW%' and test_location like '%LAB%' and \r\n"
+				+ "(endpoint like '%LC50%' or endpoint like '%EC50%') and \r\n"
+				+ "measurement like '%MORT%';";//just use MORT to be safe
+//				+ "(measurement like '%MORT%' or measurement like '%SURV%');";
+		
+		//Note filter for duration happens later
+		
+	System.out.println(sql);
+		try {
+
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = stat.executeQuery(sql);
+
+			Hashtable<String,String>htExposureType=getExposureTypeLookup(databasePath);
+			
+			int counter=0;
+			while (rs.next()) {
+				counter++;
+//				System.out.println(rs.getString(1));
+				RecordEcotox rec=new RecordEcotox();
+				SqlUtilities.createRecord(rs, rec);
+				rec.setExposureType(htExposureType);
+				rec.setChemicalAnalysisMethod();
+				records.add(rec);
+			}
+//			System.out.println(records.size());
+//			System.out.println(gson.toJson(records));
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return records;
+	}
+
+	
+	public static List<RecordEcotox> get_Chronic_Tox_Records_From_DB() {
+
+		List<RecordEcotox>records=new ArrayList<>();
+
+		String sql = "select *\n" + "from tests t\n" + "join results r on t.test_id=r.test_id\n"
+				+ "join chemicals c on c.cas_number=t.test_cas\n"
+				+ "join references_ r2 on r2.reference_number=t.reference_number\n"
+				+ "left join species s on t.species_number=s.species_number\r\n"
+				+ "where media_type like '%FW%' and test_location like '%LAB%' and \r\n"
+				+ "(endpoint like '%LOEC%' or endpoint like '%NOEC%');";
+		
+		//Note filter for duration happens later
+		
+	System.out.println(sql);
+		try {
+
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = stat.executeQuery(sql);
+
+			Hashtable<String,String>htExposureType=getExposureTypeLookup(databasePath);
+			Hashtable<String,String>htEffect=getEffectLookup(databasePath);
+			
+			int counter=0;
+			while (rs.next()) {
+				counter++;
+//				System.out.println(rs.getString(1));
+				RecordEcotox rec=new RecordEcotox();
+				SqlUtilities.createRecord(rs, rec);
+				rec.setExposureType(htExposureType);//rather than table join, use hashtable, is this best way?
+				rec.setEffect(htEffect);//rather than table join, use hashtable, is this best way?
+				rec.setChemicalAnalysisMethod();
+				records.add(rec);
+			}
+//			System.out.println(records.size());
+//			System.out.println(gson.toJson(records));
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return records;
+	}
 	
 	public static Hashtable<String,String> getExposureTypeLookup(String databasePath) {
 
 		Hashtable<String,String>htDesc=new Hashtable<>();
 		String sql = "select code,description from exposure_type_codes;";
+		try {
+
+			Statement stat = SQLite_Utilities.getStatement(databasePath);
+			ResultSet rs = stat.executeQuery(sql);
+			while (rs.next()) {
+				String code= rs.getString(1);
+				String description= rs.getString(2);
+				htDesc.put(code, description);
+			}
+			
+			htDesc.put("U", "Not reported");
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return htDesc;
+	}
+	
+	
+	public static Hashtable<String,String> getEffectLookup(String databasePath) {
+
+		Hashtable<String,String>htDesc=new Hashtable<>();
+		String sql = "select code,description from effect_codes;";
 		try {
 
 			Statement stat = SQLite_Utilities.getStatement(databasePath);
@@ -743,6 +998,19 @@ public class RecordEcotox {
 	}
 	
 	
+
+	void setEffect(Hashtable<String,String>htDesc) {
+		
+		String code=effect.replace("/","");
+		if(htDesc.containsKey(code)) {
+			effect=htDesc.get(code);
+		} else {
+			System.out.println("Unknown effect code: "+code);
+		}
+		
+	}
+	
+	
 	void setTestLocation(Hashtable<String,String>htDesc) {
 		
 		String code=test_location.replace("/","");
@@ -769,7 +1037,7 @@ public class RecordEcotox {
 			chem_analysis_method="Unmeasured values (some measured values reported in article)";
 		} else if(cam.equals("U")) {
 			chem_analysis_method="Unmeasured";
-		} else if(cam.contains("NR")) {
+		} else if(cam.contains("NR") || cam.equals("--")) {
 			chem_analysis_method="Not reported";
 		} else if(cam.contains("NC")) {
 			chem_analysis_method="Not coded";
@@ -811,15 +1079,17 @@ public class RecordEcotox {
 	}
 	
 
-	public Double getStudyDurationValueInDays() {
+	public Double getValueInDays(String obs_duration,String units) {
 		
-		if(obs_duration_mean==null) return null;
+		if(obs_duration==null) return null;
+		Double studyDurationValue = Double.parseDouble(obs_duration);
 		
-		Double studyDurationValue = Double.parseDouble(obs_duration_mean);
-		
-		switch (obs_duration_unit) {
+		switch (units) {
 		
 		case "d":
+		case "dpf":
+		case "dph":
+		case "dpu":
 			return studyDurationValue;
 		case "wk":
 			return studyDurationValue *= 7.0;
@@ -828,14 +1098,20 @@ public class RecordEcotox {
 		case "yr":
 			return studyDurationValue *= 365.0;
 		case "h":
+		case "hpf":
+		case "hph":
 			return studyDurationValue /= 24.0;
 		case "mi"://minutes
 			return studyDurationValue /= 1440.0;
+		case "s"://seconds
+			return studyDurationValue /= (1440.0*60);
+
 		case "-":
+		case "NR":	
 //			System.out.println("No study duration units for ToxVal ID " + toxval_id);
 			return null;
 		default:
-			System.out.println("Unknown study duration units for ToxVal ID " + test_id + ": " + obs_duration_unit);
+//			System.out.println("Unknown observation duration units for ToxVal ID " + test_id + ": " + obs_duration_unit);
 			return null;
 		}
 		
@@ -844,7 +1120,7 @@ public class RecordEcotox {
 
 	public boolean isAcceptableDuration(Double durationDays) {
 
-		Double studyDurationValueInDays = getStudyDurationValueInDays();
+		Double studyDurationValueInDays = getValueInDays(obs_duration_mean,obs_duration_unit);
 
 		if (studyDurationValueInDays == null || studyDurationValueInDays < 0.95 * durationDays
 				|| studyDurationValueInDays > 1.05 * durationDays) {
@@ -862,6 +1138,11 @@ public class RecordEcotox {
 	
 	private String getSpeciesSupercategory() {
 
+		if(ecotox_group==null) {
+			System.out.println("Missing ecotox_group for "+common_name);
+			return null;
+		}
+		
 		String egLC=ecotox_group.toLowerCase();
 		
 		if(egLC.contains("fish")) {
@@ -903,19 +1184,73 @@ public class RecordEcotox {
 		return null;
 	}
 
+	private String getSpeciesType() {
 
+		if(ecotox_group==null) {
+//			System.out.println("Missing ecotox_group for "+common_name);
+			return null;
+		}
+		
+		String egLC=ecotox_group.toLowerCase();
+		
+		if(egLC.contains("standard")) {
+			return "standard";
+		} else if(egLC.contains("invasive")) {
+			return "invasive";
+		} else if(egLC.contains("nuisance")) {
+			return "nuisance";
+		}  else {
+			return "nondefined";
+//			System.out.println("Handle "+egLC);
+		}
+
+		
+	}
+
+	//Simple class so can look at values with gson
+	class BCF {
+		
+		public String bcf1_mean_op;
+		public Double bcf1_mean;
+
+		public String bcf1_min_op;
+		public Double bcf1_min;
+		
+		public String bcf1_max_op;
+		public Double bcf1_max;
+		
+		public String bcf1_unit;
+		public String bcf1_comments;
+
+		public String test_location;
+		public String media_type;
+
+		BCF(RecordEcotox r) {
+			this.bcf1_mean_op=r.bcf1_mean_op;
+			this.bcf1_mean=r.bcf1_mean;
+			this.bcf1_min_op=r.bcf1_min_op;
+			this.bcf1_min=r.bcf1_min;
+			this.bcf1_max_op=r.bcf1_max_op;
+			this.bcf1_max=r.bcf1_max;
+			this.bcf1_unit=r.bcf1_unit;
+			this.bcf1_comments=r.bcf1_comments;
+			this.test_location=r.test_location;
+			this.media_type=r.media_type;
+		}
+
+	}
+	
+	
 	public ExperimentalRecord toExperimentalRecordBCF(String propertyName) {
 		
 		boolean limitToFish=false;
 		if(propertyName.toLowerCase().contains("fish")) {
 			limitToFish=true;
 		}
-		
 		boolean limitToWholeBody=false;
 		if(propertyName.toLowerCase().contains("whole")) {
 			limitToWholeBody=true;
 		}
-
 		boolean limitToStandardTestSpecies=false;
 		if(propertyName.toLowerCase().contains("standard")) {
 			limitToStandardTestSpecies=true;
@@ -923,85 +1258,100 @@ public class RecordEcotox {
 
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.parameter_values=new ArrayList<>();
-		
-		er.property_name=property_name;
+		er.property_name=propertyName;
+
+
+		if(er.property_name==null) {
+			System.out.println("property_name not set for "+test_id);
+		}
+
+		if(propertyName.toLowerCase().contains("bioconcentration")) {
+			er.property_category="bioconcentration";
+			if(!test_location.equals("Lab")) {
+				er.keep=false;
+				er.reason="Test location not in Lab";
+			}
+		} else if (propertyName.toLowerCase().contains("bioaccumulation")) {
+			er.property_category="bioaccumulation";
+			System.out.println("BAF test_location:"+test_location);
+		}
 
 //		System.out.println(er.property_name);
+		setChemicalIdentifiers(er);
 		
-		er.dsstox_substance_id=dtxsid;
-		er.source_name=sourceName;
 		
-		String CAS1=cas_number.substring(0,cas_number.length()-3);
-		String CAS2=cas_number.substring(cas_number.length()-3,cas_number.length()-1);
-		String CAS3=cas_number.substring(cas_number.length()-1,cas_number.length());
-				
-		er.casrn=CAS1+"-"+CAS2+"-"+CAS3;
-		
-		er.chemical_name=chemical_name;
 		
 //		System.out.println(cas_number+"\t"+er.casrn);
-		
 		er.keep=true;
-		
-		LiteratureSource ls=new LiteratureSource();
-		er.literatureSource=ls;
-		ls.name=author+" ("+publication_year+")";
-		ls.author=author;
-		ls.title=title;
-		ls.year=publication_year;
-		ls.citation=author+" ("+publication_year+"). "+title+"."+source;
-		er.reference=ls.citation;
-		
-		if(ls.citation.contains("De Bruijn,J., and J. Hermens (1991)")) {
-			er.keep=false;
-			er.reason="Units conversion error";
-		}
-		
 
 		er.property_value_units_original=bcf1_unit.replace("ml/mg", "L/g").replace("ml/g", "L/kg");
-		er.property_category="bioconcentration";
+		er.property_value_point_estimate_original=bcf1_mean;
+		er.property_value_numeric_qualifier=bcf1_mean_op;
+
+//		System.out.println(bcf1_min_op+"\t"+bcf1_max_op);
+
+		//bcf1_min_op and bcf1_max_op are null in the db
 		
-		er.property_value_point_estimate_original=Double.parseDouble(bcf1_mean);
+
+		setLiteratureSource(er);
+		if(er.literatureSource.citation.contains("De Bruijn,J., and J. Hermens (1991)")) {
+			er.keep=false;
+			er.reason="Units conversion error for this journal article by ECOTOX group";
+		}
+
+		
+		if(bcf1_mean!=null) {
+			er.property_value_numeric_qualifier=bcf1_mean_op;
+			er.property_value_point_estimate_original=bcf1_mean;	
+			er.property_value_string=er.property_value_point_estimate_original+" "+bcf1_unit;//TODO
+
+		} else if(bcf1_min!=null && bcf1_max!=null) {
 			
-		if(bcf1_min!=null && bcf1_max!=null) {
-			double log=Math.log10(Double.parseDouble(bcf1_max)/Double.parseDouble(bcf1_min));
-				
+			double log=Math.log10(bcf1_max/bcf1_min);
 			if(log>1) {
 				er.keep=false;
 				er.reason="Range of min and max is too wide";
+			} else {
+//				er.property_value_point_estimate_original=Math.sqrt(bcf1_min*bcf1_max);
 			}
-		}
-		
-		if(bcf1_min_op!=null && !bcf1_min_op.equals("~")) {
-			er.keep=false;
-			er.reason="bad bcf1_min_op:"+bcf1_min_op;
-		} else if(bcf1_max_op!=null && !bcf1_max_op.equals("~")) {
-			er.keep=false;
-			er.reason="bad conc1_max_op:"+bcf1_max_op;
-		}
 
-//		if(!er.keep)
-//			System.out.println(er.reason);
+			er.property_value_min_original=bcf1_min;
+			er.property_value_max_original=bcf1_max;
+			er.property_value_string=bcf1_min+" "+bcf1_unit+" < "+endpoint+" <"+bcf1_max+" "+bcf1_unit;
+			
+		} else if(bcf1_min!=null) {
+			er.property_value_min_original=bcf1_min;
+			er.property_value_string=endpoint+" > "+bcf1_min+" "+bcf1_unit;				
+		} else if (bcf1_max!=null) {
+			er.property_value_max_original=bcf1_max;
+			er.property_value_string=endpoint+" < "+bcf1_max+" "+bcf1_unit;				
+		}
 
 		
 //			System.out.println(r.conc1_max_op+"\t"+r.conc1_min_op+"\t"+r.conc1_mean_op);
 		er.experimental_parameters=new LinkedHashMap<>();
 		er.experimental_parameters.put("test_id", test_id);
-		er.experimental_parameters.put("Species latin", latin_name);
-		er.experimental_parameters.put("Species common", common_name);
+
+		setSpeciesParameters(er); 
 		
-		String supercategory=getSpeciesSupercategory();
-		if(supercategory!=null) {
-			er.experimental_parameters.put("Species supercategory",supercategory);	
-		} 
 		if(limitToFish && ecotox_group!=null && !ecotox_group.toLowerCase().contains("fish")) {
 			er.keep=false;
 			er.reason="Not a fish species";
 		}
-
-		if(limitToWholeBody && (response_site==null || !response_site.toLowerCase().equals("whole organism"))) {
+		
+		if(description==null) {
+//			System.out.println(gson.toJson(this));
+		} else {
+			if(description.contains("Whole organism")) {
+				er.experimental_parameters.put("Response site", "Whole body");	
+			} else {
+				er.experimental_parameters.put("Response site", description);
+			} 
+		}
+		if(limitToWholeBody && (description==null || !description.equals("Whole organism")))  {
 			er.keep=false;
 			er.reason="Not whole body";
+//			System.out.println(description);
 		}
 
 		if(limitToStandardTestSpecies && ecotox_group!=null && !ecotox_group.toLowerCase().contains("standard")) {
@@ -1010,8 +1360,6 @@ public class RecordEcotox {
 		}
 		
 		er.experimental_parameters.put("Media type", media_type);
-		
-		
 		if (media_type.contains("water")) {
 			setWaterConcentration(er);
 			if (media_type.equals("Salt water")) {
@@ -1022,75 +1370,73 @@ public class RecordEcotox {
 			er.keep=false;
 			er.reason="Not in water";
 		}
+
+//		setExposureDuration(er);//we want the observation duration not the exposure duration
+		setObservationDuration(er);
 		
-		setExposureDuration(er);
 		er.experimental_parameters.put("Test location", test_location);
 		er.experimental_parameters.put("exposure_type", exposure_type);
 		er.experimental_parameters.put("chem_analysis_method", chem_analysis_method);
+
 		
-		if(response_site==null) {
-//			System.out.println(gson.toJson(this));
-		} else {
-			if(response_site.contains("Whole organism")) {
-				er.experimental_parameters.put("Response site", "Whole body");	
-			} else {
-				er.experimental_parameters.put("Response site", response_site);
-			} 
-		}
+//		if(er.keep)
+//			System.out.println(test_location);
 		
 		//TODO store t.test_radiolabel, r.additional_comments => calculation method = kinetic or conc
 		//Maybe omit radiolabeled ones since have no way to know if they corrected for metabolites when
 		//determining concentrations
 		
-		
 //		System.out.println(wc);
-		er.property_value_string=er.property_value_point_estimate_original+" "+bcf1_unit;//TODO
 		uc.convertRecord(er);
 		
+//		if(er.keep)
+//			System.out.println(gson.toJson(new BCF(this)));
+
+//		if(er.casrn.equals("7783-00-8")) {
+//			System.out.println(er.property_value_point_estimate_final+"\t"+ er.experimental_parameters.get("Species supercategory"));
+//		}
+
 		return er;
 	}
 
-	private void setExposureDuration(ExperimentalRecord er) {
-		if(exposure_duration_mean!=null) {
-			ParameterValue pv=new ParameterValue();
-			pv.parameter.name="Exposure duration";
-			pv.valueQualifier=exposure_duration_mean_op;
-			
-			if(exposure_duration_unit.equals("d") || exposure_duration_unit.equals("dpf")){
-				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean);
-				pv.unit.abbreviation="days";
-			} else if(exposure_duration_unit.equals("h")){
-				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)/24;
-				pv.unit.abbreviation="days";
-			} else if(exposure_duration_unit.equals("wk")){
-				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)*7;
-				pv.unit.abbreviation="days";
-			} else if(exposure_duration_unit.equals("wk")){
-				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)*7;
-				pv.unit.abbreviation="days";
-			} else if(exposure_duration_unit.equals("mo")){
-				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)*30;
-				pv.unit.abbreviation="days";
-			} else if(exposure_duration_unit.equals("yr")){
-				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean)*365;
-				pv.unit.abbreviation="days";
-			} else {
-				pv.valuePointEstimate=Double.parseDouble(exposure_duration_mean);
-				pv.unit.abbreviation=exposure_duration_unit;
-			}
-			
-			if(exposure_duration_mean_op!=null && exposure_duration_mean_op.equals("<=")) {
-				pv.valueMax=Double.parseDouble(exposure_duration_mean);
-				pv.valuePointEstimate=null;
-				pv.unit.abbreviation=exposure_duration_unit;
-			}
-			
-//			if(!exposure_duration_unit.equals("d")) {
-//				System.out.println("exposure_duration_mean:	" + exposure_duration_mean + "	exposure_duration_unit:	" + exposure_duration_unit + "	mean_converted:	" + pv.valuePointEstimate);
-//			}
-			er.parameter_values.add(pv);
+
+	private void setSpeciesParameters(ExperimentalRecord er) {
+		er.experimental_parameters.put("Species latin", latin_name);
+		er.experimental_parameters.put("Species common", common_name);
+		
+		String supercategory=getSpeciesSupercategory();
+		if(supercategory!=null) {
+			er.experimental_parameters.put("Species supercategory",supercategory);	
 		}
 	}
+
+
+	private void setChemicalIdentifiers(ExperimentalRecord er) {
+		er.dsstox_substance_id=dtxsid;
+		er.source_name=sourceName;
+		String CAS1=cas_number.substring(0,cas_number.length()-3);
+		String CAS2=cas_number.substring(cas_number.length()-3,cas_number.length()-1);
+		String CAS3=cas_number.substring(cas_number.length()-1,cas_number.length());
+		er.casrn=CAS1+"-"+CAS2+"-"+CAS3;
+		er.chemical_name=chemical_name;
+	}
+
+
+	private void setLiteratureSource(ExperimentalRecord er) {
+		LiteratureSource ls=new LiteratureSource();
+		er.literatureSource=ls;
+		ls.name=author+" ("+publication_year+")";
+		ls.author=author;
+		ls.title=title;
+		ls.year=publication_year;
+		ls.citation=author+" ("+publication_year+"). "+title+"."+source;
+		ls.doi=doi;
+		
+		er.reference=ls.citation;
+
+	}
+
+
 	private void setWaterConcentration(ExperimentalRecord er) {
 		
 //		String wc=null;
@@ -1136,9 +1482,9 @@ public class RecordEcotox {
 		ExperimentalRecord erWC=new ExperimentalRecord();
 		erWC.property_name=ExperimentalConstants.strWaterSolubility;
 		erWC.property_value_units_original=conc1_unit;
-		if(conc1_mean!=null) erWC.property_value_point_estimate_original=Double.parseDouble(conc1_mean);
-		if(conc1_min!=null) erWC.property_value_min_original=Double.parseDouble(conc1_min);
-		if(conc1_max!=null) erWC.property_value_max_original=Double.parseDouble(conc1_max);
+		if(conc1_mean!=null) erWC.property_value_point_estimate_original=conc1_mean;
+		if(conc1_min!=null) erWC.property_value_min_original=conc1_min;
+		if(conc1_max!=null) erWC.property_value_max_original=conc1_max;
 		erWC.property_value_numeric_qualifier=conc1_mean_op;
 		uc.convertRecord(erWC);
 		
@@ -1178,6 +1524,9 @@ public class RecordEcotox {
 //		er.experimental_parameters.put("Exposure concentration", pv);
 		
 	}
+
+
+	
 
 
 	

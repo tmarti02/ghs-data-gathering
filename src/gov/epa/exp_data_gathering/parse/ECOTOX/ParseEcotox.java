@@ -5,20 +5,33 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
+import gov.epa.QSAR.utilities.JsonUtilities;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.JSONUtilities;
 import gov.epa.exp_data_gathering.parse.Parse;
+import gov.epa.exp_data_gathering.parse.UnitConverter;
+import gov.epa.exp_data_gathering.parse.UtilitiesUnirest;
+import gov.epa.exp_data_gathering.parse.PubChem.RecordPubChem;
+import gov.epa.exp_data_gathering.parse.QSAR_ToolBox.ParseQSAR_ToolBox;
+import gov.epa.exp_data_gathering.parse.QSAR_ToolBox.RecordQSAR_ToolBox;
+import hazard.API_CCTE;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
+
+import org.apache.commons.math3.analysis.function.Exp;
+
 import java.util.ArrayList;
 /**
 * @author TMARTI02
@@ -31,47 +44,58 @@ public class ParseEcotox extends Parse {
 	String filepathWSexpLookup=folder+"WS_query_to_get_median_logWS_g_L.json";
 	String filepathWSpred=folder+"WS pred xgb.json";
 	
-//	String propertyName;
-//	Double durationDays;
-//	Integer species_number;
-//	boolean excludeByExposureType=true;
-//	boolean includeConc2=false;
-//
-//	public ParseEcotox(String propertyName, Integer speciesNumber,Double durationDays) {
-//		
-//		this.propertyName=propertyName;
-//		this.durationDays=durationDays;
-//		this.species_number=speciesNumber;
-//		
-//		sourceName = RecordEcotox.sourceName; 
-//		this.init();
-//		
-//		mainFolder = "Data" + File.separator + "Experimental" + File.separator + sourceName;
-//		jsonFolder= mainFolder;
-//		
-//		mainFolder+=File.separator+propertyName;//output json/excel in subfolder
-//
-//		new File(mainFolder).mkdirs();
-//
-//	}
+	static String propertyName;
+	static Double durationDays;
+	static 	Integer species_number;
 	
-//	@Override
-//	protected void createRecords() {
+	static boolean excludeByExposureType=false;
+	static boolean includeConc2=false;
+	static boolean onlyExposureTypeSFR=true;
 //
-//		if(generateOriginalJSONRecords) {
-//			
-//			List<RecordEcotox>recordsOriginal=null;
-//
-//			String jsonPath = "data/experimental/"+RecordEcotox.sourceName+File.separator+RecordEcotox.sourceName+" "+propertyName+" original records.json";
-//
-//			recordsOriginal=RecordEcotox.get_Acute_Tox_Records_From_DB(species_number,propertyName);
-//			System.out.println(recordsOriginal.size());
-//			int howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(recordsOriginal,jsonPath);
-//			
-//			System.out.println(recordsOriginal.size());
-//			writeOriginalRecordsToFile(recordsOriginal);
-//		}
-//	}
+	public ParseEcotox() {
+		sourceName = RecordEcotox.sourceName; 
+		
+//		System.out.println("in init propertyName="+propertyName);
+		
+		this.init(propertyName);
+	}
+	
+	@Override
+	protected void createRecords() {
+
+		if(generateOriginalJSONRecords) {
+			
+			List<RecordEcotox>recordsOriginal=null;
+
+			//Dont bother create duplicates for things like Fish BCF:
+			if(propertyName.equals(ExperimentalConstants.strBCF)) { 
+				recordsOriginal=RecordEcotox.get_BCF_Records_From_DB("BCF");
+			} else if(propertyName.equals(ExperimentalConstants.strBAF)) {
+				recordsOriginal=RecordEcotox.get_BCF_Records_From_DB("BAF");
+			} else if(propertyName.equals(ExperimentalConstants.strAcuteAquaticToxicity)) {
+				recordsOriginal=RecordEcotox.get_Acute_Tox_Records_From_DB();
+			} else if(propertyName.equals(ExperimentalConstants.strChronicAquaticToxicity)) {
+				recordsOriginal=RecordEcotox.get_Chronic_Tox_Records_From_DB();
+			}
+			
+			if(recordsOriginal!=null) {
+				lookForDuplicateResultIds(recordsOriginal);
+				writeOriginalRecordsToFile(recordsOriginal);
+			}
+			
+		}
+	}
+
+	private void lookForDuplicateResultIds(List<RecordEcotox> recordsOriginal) {
+		HashSet<String>resultIds=new HashSet<>();
+		for(RecordEcotox recordEcotox:recordsOriginal) {
+			if(resultIds.contains(recordEcotox.result_id)) {
+				System.out.println(recordEcotox.test_id+"\tDuplicate result_id");
+			}
+			resultIds.add(recordEcotox.result_id);
+		}
+		System.out.println("Done looking for dup result_ids");
+	}
 
 	ExtraMethods extraMethods=new ExtraMethods();
 	class ExtraMethods {
@@ -157,6 +181,10 @@ public class ParseEcotox extends Parse {
 		
 			
 		}
+		
+		
+		
+		
 
 		private void compareConcentrationTypeFactors(ExperimentalRecords experimentalRecords) {
 				Hashtable<String, Double>htER_A=createExpRecordHashtableConcentrationType(experimentalRecords, "Active ingredient");
@@ -192,7 +220,8 @@ public class ParseEcotox extends Parse {
 		}
 
 		private void lookAtLargestDeviations(Hashtable<String, RecordEcotox> htRecordEcotox,
-					Hashtable<String, List<ExperimentalRecord>> htER) {
+					Hashtable<String, ExperimentalRecords> htER) {
+			
 				for(String dtxsid:htER.keySet()) {
 					List<ExperimentalRecord>recs=htER.get(dtxsid);
 		
@@ -568,87 +597,7 @@ public class ParseEcotox extends Parse {
 
 		
 	}
-
-	public void getBCF_ExperimentalRecords(String propertyName,boolean excludeByExposureType) {
-
-		System.out.println("\n***************************\n"+propertyName);
-		
-		String source=RecordEcotox.sourceName;
-		boolean createOriginalRecords=true;
-		
-		String jsonPath = "data/experimental/"+source+File.separator+source+" "+ExperimentalConstants.strBCF+" original records.json";
-		List<RecordEcotox>recordsOriginal=null;
-		
-		if (createOriginalRecords && propertyName.equals(ExperimentalConstants.strBCF)) {//only need to store one copy of original records
-			recordsOriginal=RecordEcotox.get_BCF_Records_From_DB(ExperimentalConstants.strBCF);
-			int howManyOriginalRecordsFiles = JSONUtilities.batchAndWriteJSON(recordsOriginal,jsonPath);
-		} else {
-			try {
-				RecordEcotox[]records2 = gson.fromJson(new FileReader(jsonPath), RecordEcotox[].class);
-				recordsOriginal=Arrays.asList(records2);
-				System.out.println(recordsOriginal.size());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-				
-		ExperimentalRecords experimentalRecords=new ExperimentalRecords();
-
-		Hashtable<String,RecordEcotox>htRecordEcotox=new Hashtable<>();
-		
-//		Hashtable<String, Double> htMWfromDTXSID = getMolWeightHashtable();//usi
-						
-		for (RecordEcotox re:recordsOriginal) {
-
-//			if(re.dtxsid.equals("DTXSID0034566")) {
-//				System.out.println(gson.toJson(re));
-//			}
-			ExperimentalRecord er=re.toExperimentalRecordBCF(propertyName);
-			
-			experimentalRecords.add(er);
-			
-//			addExperimentalRecords(re, experimentalRecords,htMWfromDTXSID);//only gets you 3 more chemicals- almost all in g/L!
-			htRecordEcotox.put(re.test_id,re);
-		}
-		
-		if(excludeByExposureType) excludeByExposureType(experimentalRecords);
-		
-		Hashtable<String,ExperimentalRecords> htER = experimentalRecords.createExpRecordHashtableBySID(ExperimentalConstants.str_L_KG);
-		ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, true);
-
-		Hashtable<String,Double>htMedian=ExperimentalRecords.calculateMedian(htER, true);
-
-		
-//		compareExposureTypeFactors(experimentalRecords);
-//		compareConcentrationTypeFactors(experimentalRecords);
-		//Print the largest bad records:
-//		lookAtLargestDeviations(htRecordEcotox, htER);
-//		printRecords(htRecordEcotox, htER);
-		
-//		System.out.println("originalRecords.size()="+recordsOriginal.size());
-//		System.out.println("experimentalRecords.size()="+experimentalRecords.size());
-//		
-		
-		//Writer experimental records to Json file:
-		
-		String mainFolder = "Data" + File.separator + "Experimental" + File.separator + source;
-		mainFolder+=File.separator+propertyName;
-		new File(mainFolder).mkdirs();
-		
-		String fileNameJsonExperimentalRecords = source+" Experimental Records.json";
-		String fileNameJsonExperimentalRecordsBad = source+" Experimental Records-Bad.json";
-		experimentalRecords.toExcel_File_Split(mainFolder+File.separator+fileNameJsonExperimentalRecords.replace("json", "xlsx"),100000);
-		
-		ExperimentalRecords experimentalRecordsBad = experimentalRecords.dumpBadRecords();
-
-		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecords),mainFolder+File.separator+fileNameJsonExperimentalRecords);
-		JSONUtilities.batchAndWriteJSON(new Vector<ExperimentalRecord>(experimentalRecordsBad),mainFolder+File.separator+fileNameJsonExperimentalRecordsBad);
-
-//		for(String conc1_unit:RecordEcotox.conc1_units) {
-//			System.out.println(conc1_unit);
-//		}
-		
-	}
+	
 
 
 	private Hashtable<String, Double> getMolWeightHashtable() {
@@ -702,32 +651,137 @@ public class ParseEcotox extends Parse {
 	private void addExperimentalRecordsAcuteFishTox(RecordEcotox r, ExperimentalRecords recordsExperimental,boolean includeConc2 ) {
 		String source=RecordEcotox.sourceName;
 		
-		ExperimentalRecord er1=r.toExperimentalRecordAcuteFishTox(1);
-		
-		if(er1.keep) {			
-			recordsExperimental.add(er1);				
-		} else {
-//			System.out.println(r.test_id+"\t"+er1.dsstox_substance_id+"\t"+er1.reason);
-		}
+		ExperimentalRecord er1=r.toExperimentalRecordFishTox(propertyName, 1);
+		recordsExperimental.add(er1);				
 
 		if (includeConc2) {
 			//Dont keep second tox values? they agree half the time and the other half they are way off		
-			ExperimentalRecord er2=r.toExperimentalRecordAcuteFishTox(2);
-
-			if(er2.keep) {			
-				recordsExperimental.add(er2);	
-			} else {
-				//System.out.println(r.test_id+"\t"+er1.dsstox_substance_id+"\t"+er2.reason);
-			}
+			ExperimentalRecord er2=r.toExperimentalRecordFishTox(propertyName,2);
+			recordsExperimental.add(er2);	
 		}
 		
 //		if(er1.keep && er2.keep) {
 //			System.out.println(er1.dsstox_substance_id+"\t"+er1.property_value_point_estimate_final+"\t"+er2.property_value_point_estimate_final);
 //		}
-				
+		
+	}
+	
+	private void addExperimentalRecordsChronicFishTox(RecordEcotox r, ExperimentalRecords recordsExperimental,boolean includeConc2 ) {
+		String source=RecordEcotox.sourceName;
+		
+		ExperimentalRecord er1=r.toExperimentalRecordFishTox(propertyName, 1);
+		recordsExperimental.add(er1);				
+
+		if (includeConc2) {
+			//Dont keep second tox values? they agree half the time and the other half they are way off		
+			ExperimentalRecord er2=r.toExperimentalRecordFishTox(propertyName,2);
+			recordsExperimental.add(er2);	
+		}
+		
+//		if(er1.keep && er2.keep) {
+//			System.out.println(er1.dsstox_substance_id+"\t"+er1.property_value_point_estimate_final+"\t"+er2.property_value_point_estimate_final);
+//		}
 		
 	}
 
+
+	
+	@Override
+	protected ExperimentalRecords goThroughOriginalRecords() {
+		ExperimentalRecords recordsExperimental=new ExperimentalRecords();
+		try {
+
+			System.out.println(jsonFolder);
+			
+			File Folder=new File(jsonFolder);
+			
+			//Just use the original records that has them all:
+			if(Folder.getName().toLowerCase().contains("bioconcentration")) {
+				Folder =new File(Folder.getParentFile().getAbsoluteFile()+File.separator+ExperimentalConstants.strBCF);
+			} else if(Folder.getName().toLowerCase().contains("bioaccumulation")) {
+				Folder =new File(Folder.getParentFile().getAbsoluteFile()+File.separator+ExperimentalConstants.strBAF);
+			}
+			
+			if(Folder.listFiles()==null) {
+				System.out.println("No files in json folder:"+jsonFolder);
+				return null;
+			}
+			
+			List<RecordEcotox>recordsOriginal=new ArrayList<>();
+			
+			Hashtable<String,RecordEcotox>htRecordEcotox=new Hashtable<>();
+			
+			UnitConverter.printMissingDensityCas=false;
+			
+			for(File file:Folder.listFiles()) {
+				if(!file.getName().contains(".json")) continue;
+				if(!file.getName().contains(sourceName+" Original Records")) continue;
+				
+				RecordEcotox[] tempRecords = gson.fromJson(new FileReader(file), RecordEcotox[].class);
+				
+				System.out.println("\n"+file.getName()+"\t"+tempRecords.length);
+
+				for (RecordEcotox recordEcotox:tempRecords) {
+					
+					htRecordEcotox.put(recordEcotox.test_id,recordEcotox);
+					
+					recordsOriginal.add(recordEcotox);
+					
+					if(Folder.getName().equals(ExperimentalConstants.strBCF) || 
+							Folder.getName().equals(ExperimentalConstants.strBAF)) {
+						ExperimentalRecord er=recordEcotox.toExperimentalRecordBCF(propertyName);
+						if(er!=null) recordsExperimental.add(er);
+					} else if (propertyName.equals(ExperimentalConstants.strAcuteAquaticToxicity)){//Fish tox
+						addExperimentalRecordsAcuteFishTox(recordEcotox, recordsExperimental, includeConc2);
+					} else if (propertyName.equals(ExperimentalConstants.strChronicAquaticToxicity)){//Fish tox
+						addExperimentalRecordsChronicFishTox(recordEcotox, recordsExperimental, includeConc2);
+					}
+
+				}
+			}		
+			
+			if(excludeByExposureType) excludeByExposureType(recordsExperimental);
+
+			System.out.println("missingDensityCasrns:"+UnitConverter.missingDensityCasrns);
+//			for(String cas:UnitConverter.missingDensityCasrns) {
+//				System.out.println(cas);	
+//			}
+//			System.out.println("");
+			
+			String unitsCompare=null;
+			if(Folder.getName().equals(ExperimentalConstants.strBCF) || Folder.getName().equals(ExperimentalConstants.strBAF)) {
+				unitsCompare="L/kg";
+			} else {//Fish tox
+				unitsCompare="g/L";
+			}
+			
+			Hashtable<String,ExperimentalRecords> htER = recordsExperimental.createExpRecordHashtableByCAS(unitsCompare,true);
+			boolean convertToLog=true;
+			boolean omitSingleton=true;
+			ExperimentalRecords.calculateAvgStdDevOverAllChemicals(htER, convertToLog,omitSingleton);
+		
+//			addMissingDensities(true);//uses API to add extra entries to data/density.txt
+			
+//			extraMethods.compareExposureTypeFactors(recordsExperimental);
+//			extraMethods.compareConcentrationTypeFactors(experimentalRecords);
+
+			
+			//Print the largest bad records:
+//			extraMethods.lookAtLargestDeviations(htRecordEcotox, htER);
+//			extraMethods.printRecords(htRecordEcotox, htER);
+			
+//			assignLiteratureSourceNames(experimentalRecords);
+//			System.out.println(gson.toJson(experimentalRecords));		
+
+			System.out.println("originalRecords.size()="+recordsOriginal.size());
+			System.out.println("experimentalRecords.size()="+recordsExperimental.size());
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return recordsExperimental;
+	}
 
 
 	private Hashtable<String, Double> getHashtableWSpred()  {
@@ -746,20 +800,49 @@ public class ParseEcotox extends Parse {
 	
 	public static void main(String[] args) {
 		
+		UtilitiesUnirest.configUnirest(true);
+		
 		RecordEcotox.uc.debug=false;
+		
+//		SetVars.setFatheadMinnow();
+//		SetVars.setBluegill();
+//		SetVars.setRainbowTrout();
+		
 		ParseEcotox p = new ParseEcotox();
+		p.generateOriginalJSONRecords=false;
+		p.removeDuplicates=false;//cant delete duplicates because experimental params might be different but still have same number value
+		p.writeJsonExperimentalRecordsFile=true;
+		p.writeExcelExperimentalRecordsFile=true;
+		p.writeExcelFileByProperty=true;		
+		p.writeCheckingExcelFile=false;//creates random sample spreadsheet
 
-//		p.getDaphniaMagnaData();
-//		p.getRainbowTroutData();
-//		p.getScudData();
-//		p.getFatheadMinnowData();
-//		p.getBluegillData();		
+		
+//		List<String> propertyNames = Arrays.asList(ExperimentalConstants.strBCF, ExperimentalConstants.strFishBCF,
+//				ExperimentalConstants.strFishBCFWholeBody, ExperimentalConstants.strBAF,
+//				ExperimentalConstants.strFishBAF, ExperimentalConstants.strFishBAFWholeBody,
+//				ExperimentalConstants.strAcuteAquaticToxicity,ExperimentalConstants.strChronicAquaticToxicity);
+
+//		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strAcuteAquaticToxicity);
+//		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strChronicAquaticToxicity);
+
+//		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBAF,ExperimentalConstants.strBCF);
+
+		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBCF,ExperimentalConstants.strFishBCF,
+				ExperimentalConstants.strFishBCFWholeBody);
+		
+		for (String propertyName:propertyNames) {
+			ParseEcotox.propertyName=propertyName;
+			p.init(propertyName);
+			p.createFiles();		
+		}
+		
+//		p.getAcuteAquaticToxicityData();
 		
 //		/************************************************************************
 		
-		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF,false);		
-		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF,false);
-		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody,false);
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF,false);		
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF,false);
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody,false);
 		
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCF,false);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strStandardFishBCFWholeBody,false);
@@ -771,51 +854,54 @@ public class ParseEcotox extends Parse {
 
 	}
 
-	private  void getFatheadMinnowData() {
-		boolean excludeByExposureType=true;
-		boolean includeConc2=false;
-		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
-		int species_number=1;//species number in Ecotox species table
-		double durationDays=4.0;
-		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
-	}
 
-	private  void getScudData() {
-		boolean excludeByExposureType=true;
-		boolean includeConc2=false;
-		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_SCUD_LC50;
-		int species_number=6;//species number in Ecotox species table
-		double durationDays=4.0;
-		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
-	}
-
-	private  void getRainbowTroutData() {
-		boolean excludeByExposureType=true;
-		boolean includeConc2=false;
-		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_RAINBOW_TROUT_LC50;
-		int species_number=4;//species number in Ecotox species table
-		double durationDays=4.0;
-
-		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
-	}
-	private  void getDaphniaMagnaData() {
+	class SetVars {
 		
-		boolean excludeByExposureType=true;
-		boolean includeConc2=false;
-		String propertyName=ExperimentalConstants.strFORTY_EIGHT_HR_DAPHNIA_MAGNA_LC50;
-		int species_number=5;//species number in Ecotox species table
-		double durationDays=2.0;
-		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
-	}
-	private  void getBluegillData() {
-		boolean excludeByExposureType=true;
-		boolean includeConc2=false;
-		String propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_BLUEGILL_LC50;
-		String source=ExperimentalConstants.strSourceEcotox_2023_12_14;
-		int species_number=2;//species number in Ecotox species table
-		double durationDays=4.0;
+		//TODO just filter the Acute aquatic toxicity experimentalRecords when creating dataset
 		
-		getAcuteAquaticExperimentalRecords(excludeByExposureType, includeConc2, propertyName, species_number,durationDays);
+
+		//the species specific properties could be avoided by just loading acute aquatic toxicity and then filtering by species and observation time
+		
+		static void setFatheadMinnow() {
+			excludeByExposureType=true;
+			includeConc2=false;
+			propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_FATHEAD_MINNOW_LC50;
+			species_number=1;//species number in Ecotox species table
+			durationDays=4.0;
+		}
+
+		static  void setBluegill() {
+			excludeByExposureType=true;
+			includeConc2=false;
+			propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_BLUEGILL_LC50;
+			species_number=2;//species number in Ecotox species table
+			durationDays=4.0;
+		}
+
+		static void setDaphniaMagnaData() {
+			excludeByExposureType=true;
+			includeConc2=false;
+			propertyName=ExperimentalConstants.strFORTY_EIGHT_HR_DAPHNIA_MAGNA_LC50;
+			species_number=5;//species number in Ecotox species table
+			durationDays=2.0;
+		}
+
+		static void setRainbowTrout() {
+			excludeByExposureType=true;
+			includeConc2=false;
+			propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_RAINBOW_TROUT_LC50;
+			species_number=4;//species number in Ecotox species table
+			durationDays=4.0;
+		}
+		
+		static void setScud() {
+			excludeByExposureType=true;
+			includeConc2=false;
+			propertyName=ExperimentalConstants.strNINETY_SIX_HOUR_SCUD_LC50;
+			species_number=6;//species number in Ecotox species table
+			durationDays=4.0;
+		}
+		
 	}
 }
 

@@ -1,6 +1,8 @@
 package gov.epa.exp_data_gathering.parse;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -45,6 +47,7 @@ import gov.epa.exp_data_gathering.parse.Sander.ParseSander;
 import gov.epa.exp_data_gathering.parse.Takahashi.ParseTakahashi;
 import gov.epa.exp_data_gathering.parse.ThreeM.ParseThreeM;
 import gov.epa.exp_data_gathering.parse.Verheyen.ParseVerheyen;
+import hazard.API_CCTE;
 
 /**
  * @author gsinclair, tmartin, cramsland
@@ -116,6 +119,65 @@ public class Parse {
 		uc = new UnitConverter("Data" + File.separator + "density.txt");
 	}
 	
+	/**
+	 * Uses UnitConverter.missingDensityCasrns static variable in UnitConverter to add missing density entries
+	 * 
+	 * @param appendToFile
+	 */
+	public static void addMissingDensities(boolean appendToFile) {
+
+		System.out.println("\nMissing density casrns:");
+
+		if (appendToFile) {
+			try {
+				FileWriter fw=new FileWriter("data/density.txt",true);			
+
+				for (String missingDensityCAS:UnitConverter.missingDensityCasrns) {
+					//				System.out.println(missingDensityCAS);	
+					String smiles=API_CCTE.getSmilesFromCAS(missingDensityCAS);
+					if(smiles==null) continue;
+					
+					if(smiles.contains(".")) {
+						System.out.println(missingDensityCAS+"\t"+smiles+"\tSalt");
+						continue;
+					}
+
+					String densitySrc=API_CCTE.getTESTDensity(smiles);
+					if(densitySrc==null || densitySrc.contains("null")) continue;
+					
+					System.out.println(missingDensityCAS+"\t"+densitySrc);
+					fw.write(missingDensityCAS+"\t"+densitySrc+"\r\n");
+				}
+
+				System.out.println("");
+				
+				fw.flush();
+				fw.close();
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		} else {
+
+			for (String missingDensityCAS:UnitConverter.missingDensityCasrns) {
+				//				System.out.println(missingDensityCAS);	
+				String smiles=API_CCTE.getSmilesFromCAS(missingDensityCAS);
+				if(smiles==null) {
+					System.out.println(missingDensityCAS+"\tNo SMILES");
+					continue;
+				}
+				String densitySrc=API_CCTE.getTESTDensity(smiles);
+				if(densitySrc==null || densitySrc.contains("null")) {
+					System.out.println(missingDensityCAS+"\tNo Calculated density");
+					continue;
+				}
+				System.out.println(missingDensityCAS+"\t"+densitySrc);
+			}
+			System.out.println("");
+		}
+
+	}
 	
 	public void init(String subfolder) {
 		fileNameJSON_Records = sourceName +" Original Records.json";
