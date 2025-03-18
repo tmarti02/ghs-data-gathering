@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
@@ -12,11 +13,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class SqlUtilities {
 
@@ -95,10 +98,9 @@ public class SqlUtilities {
 		String port = System.getenv().get("DSSTOX_PORT");
 		String db = System.getenv().get("DSSTOX_DATABASE");
 
-
 		String url = "jdbc:mysql://" + host + ":" + port + "/" + db;
 
-		//		System.out.println(url);
+//		System.out.println(url);
 
 
 		String user = System.getenv().get("DSSTOX_USER");
@@ -115,6 +117,105 @@ public class SqlUtilities {
 		}
 	}
 
+	/**
+	 * Use reflection to store sql record into Java class
+	 * 
+	 * @param rs
+	 * @param r
+	 */
+	public static void createRecord(ResultSet rs, Object r) {
+		ResultSetMetaData rsmd;
+		try {
+			rsmd = rs.getMetaData();
+
+			int columnCount = rsmd.getColumnCount();
+
+			// The column count starts from 1
+			for (int i = 1; i <= columnCount; i++ ) {
+				String name = rsmd.getColumnLabel(i);
+				
+				if(name.equals("class")) name="class_";
+												
+				String val=rs.getString(i);
+				
+				if(val==null || val.equals("-") || val.isBlank()) continue;
+
+				//				System.out.println(name+"\t"+val);
+
+				if (val!=null) {
+					Field myField = r.getClass().getDeclaredField(name);	
+					
+					String type=myField.getType().getName();
+					
+					if (type.contentEquals("boolean")) {
+						myField.setBoolean(r, rs.getBoolean(i));
+					} else if (type.contentEquals("double")) {
+						myField.setDouble(r, rs.getDouble(i));
+					} else if (type.contentEquals("int")) {
+						myField.setInt(r, rs.getInt(i));
+					} else if (type.contentEquals("long")) {
+						myField.setLong(r, rs.getLong(i));
+
+					} else if (type.contentEquals("java.lang.Long") || type.contentEquals("java.lang.Double") || type.contentEquals("java.lang.Integer")) {
+						myField.set(r, rs.getObject(i));
+
+
+				//Following parses from string- so if need to change data types, this will let you do it:
+//					} else if (type.contentEquals("java.lang.Double")) {
+//						Double dvalue=(Double)rs.getObject(i);
+//						myField.set(r, dvalue);
+////						System.out.println(name+"\tDouble");
+//						try {
+//							Double dval=Double.parseDouble(val);						
+//							myField.set(r, dval);
+//						} catch (Exception ex) {
+//							System.out.println("Error parsing "+val+" for field "+name+" to Double for "+rs.getString(1));
+//						}
+//					} else if (type.contentEquals("java.lang.Integer")) {
+//						Integer ival=Integer.parseInt(val);
+//						myField.setInt(r,ival);
+					} else if (type.contentEquals("[B")) {		
+						myField.set(r,rs.getBytes(i));
+					} else if (type.contentEquals("java.lang.String")) {
+						myField.set(r, val);
+					} else if (type.contentEquals("java.util.Set")) {
+//						System.out.println(name+"\t"+val);
+						val=val.replace("[", "").replace("]", "");
+						
+						String  [] values = val.split(", ");
+						Set<String>list=new HashSet<>();
+						for (String value:values) {
+							list.add(value.trim());
+						}
+						myField.set(r,list);
+
+					} else if (type.contentEquals("java.util.List")) {
+						
+						//TODO use getArray instead and then convert array to list?
+						
+//						System.out.println(name+"\t"+val);
+						val=val.replace("[", "").replace("]", "");
+						
+						String  [] values = val.split(",");
+						ArrayList<String>list=new ArrayList<>();
+						for (String value:values) {
+							list.add(value.trim());
+						}
+						myField.set(r,list);
+					} else {
+						System.out.println("Need to implement: "+type);
+					}					
+										
+				}
+
+			}
+
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	public static Connection getConnectionToxValV93() {
 

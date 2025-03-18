@@ -133,6 +133,8 @@ public class SQLite_GetRecords {
 				String name = rsmd.getColumnLabel(i);
 												
 				String val=rs.getString(i);
+				
+				if(val.equals("-") || val.isBlank()) continue;
 
 				//				System.out.println(name+"\t"+val);
 
@@ -149,6 +151,7 @@ public class SQLite_GetRecords {
 						myField.setInt(r, Integer.parseInt(val));
 
 					} else if (type.contentEquals("java.lang.Double")) {
+						
 //						System.out.println(name+"\tDouble");
 						try {
 							Double dval=Double.parseDouble(val);						

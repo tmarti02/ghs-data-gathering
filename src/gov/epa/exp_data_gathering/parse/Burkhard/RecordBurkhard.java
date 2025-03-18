@@ -343,7 +343,7 @@ public class RecordBurkhard {
 				return null;
 			}
 			
-			if ((Log_BCF_min!=null) && (Log_BCF_max!=null)) {
+			if ((Log_BCF_min!=null) && (Log_BCF_max!=null)) {//in burkhard only have matching pairs of min and max
 				property_value = Log_BCF_min + "~" + Log_BCF_max;
 				er.property_value_max_original = Double.parseDouble(Log_BCF_max);
 				er.property_value_min_original = Double.parseDouble(Log_BCF_min);
