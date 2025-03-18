@@ -78,18 +78,38 @@ public class ParseBurkhard  {
 
 
 			int counter=0;
+			if(propertyName.toLowerCase().contains("bioconcentration")) {
+				for (RecordBurkhard rb:recordsOriginal) {
 
-			for (RecordBurkhard rb:recordsOriginal) {
+					counter++;
 
-				counter++;
+					ExperimentalRecord erKinetic=rb.toExperimentalRecordBCF_Kinetic(propertyName, htSpecies);
+					if(erKinetic!=null)	experimentalRecords.add(erKinetic);
 
-				ExperimentalRecord erKinetic=rb.toExperimentalRecordBCF_Kinetic(propertyName, htSpecies);
-				if(erKinetic!=null)	experimentalRecords.add(erKinetic);
+					ExperimentalRecord erSS=rb.toExperimentalRecordBCF_SS(propertyName, htSpecies);
+					if(erSS!=null)	experimentalRecords.add(erSS);
 
-				ExperimentalRecord erSS=rb.toExperimentalRecordBCF_SS(propertyName, htSpecies);
-				if(erSS!=null)	experimentalRecords.add(erSS);
+				}
+			} else if(propertyName.toLowerCase().contains("bioaccumulation")) {
+				for (RecordBurkhard rb:recordsOriginal) {
 
+					counter++;
+					
+					ExperimentalRecord er=rb.toExperimentalRecordBAF(propertyName, htSpecies);
+					if(er!=null) experimentalRecords.add(er);
+				}
 			}
+//			for (RecordBurkhard rb:recordsOriginal) {
+//
+//				counter++;
+//
+//				ExperimentalRecord erKinetic=rb.toExperimentalRecordBCF_Kinetic(propertyName, htSpecies);
+//				if(erKinetic!=null)	experimentalRecords.add(erKinetic);
+//
+//				ExperimentalRecord erSS=rb.toExperimentalRecordBCF_SS(propertyName, htSpecies);
+//				if(erSS!=null)	experimentalRecords.add(erSS);
+//
+//			}
 
 //		System.out.println(counter);
 
@@ -133,9 +153,12 @@ public class ParseBurkhard  {
 		//		p.generateOriginalJSONRecords=false;
 		//		p.createFiles();
 
-		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF);
-		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
-		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF);
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBAF);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAF);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAFWholeBody);
 	}
 
 }

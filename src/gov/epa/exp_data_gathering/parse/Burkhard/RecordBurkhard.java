@@ -189,12 +189,21 @@ public class RecordBurkhard {
 	}
 	
 	
-	private ExperimentalRecord toExperimentalRecordBAF(String propertyName, Hashtable<String, List<Species>> htSpecies) {
-				
+	ExperimentalRecord toExperimentalRecordBAF(String propertyName, Hashtable<String, List<Species>> htSpecies) {
+		
+		boolean limitToFish=false;
+		if(propertyName.toLowerCase().contains("fish")) limitToFish=true;
+		
+		boolean limitToWholeBody=false;
+		if(propertyName.toLowerCase().contains("whole")) limitToWholeBody=true;
+		
 		ExperimentalRecord er=new ExperimentalRecord();
 		er.experimental_parameters=new Hashtable<>();
-
-		er.experimental_parameters.put("Reliability", Study_Quality_BAF);
+		er.parameter_values=new ArrayList<>();
+		
+		if(Study_Quality_BAF!=null) {
+			er.experimental_parameters.put("Reliability", Study_Quality_BAF);
+		}
 //		er.reliability=Study_Quality_BAF;
 
 		
@@ -204,18 +213,46 @@ public class RecordBurkhard {
 		}
 		
 		er.property_name = propertyName;
+		setSpeciesParameters(htSpecies, limitToFish, er);	
+		if(limitToWholeBody) {
+			if (Tissue == null || !Tissue.toLowerCase().contains("whole body")) {
+				er.keep = false;
+				er.reason = "Not whole body";
+			}
+		}
 		
-
+		if(Log_BAF_units!=null && Log_BAF_units.toLowerCase().contains("kg-ww")) {
+			Log_BAF_units=Log_BAF_units.toLowerCase().replace("l/kg-ww", "L/kg");
+			er.updateNote("value based on wet weight");
+		}
+		
+		if(Log_BAF_units!=null && Log_BAF_units.toLowerCase().contains("kg-dw")) {
+			Log_BAF_units=Log_BAF_units.toLowerCase().replace("l/kg-dw", "L/kg");
+			er.updateNote("value based on dry weight");
+		}	
 //		er.property_value_units_original = Log_BAF_units;
+//		er.property_value_units_original = "log10("+Log_BAF_units+")";
+//		Log_BAF_units=Log_BAF_units.replace("L/kg-ww", "L/kg");
+//		Log_BAF_units=Log_BAF_units.replace("L/kg-dw", "L/kg");
+		if (Log_BAF_arithmetic_or_logarithmic!=null && Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+			er.property_value_units_original = Log_BAF_units;
+		} else {
+			er.property_value_units_original = Log_BAF_units;
+			er.property_value_units_original="log10("+er.property_value_units_original+")";
+		}
 		
-		er.property_value_units_original = "Log10("+Log_BAF_units+")";
-		
-		er.property_value_units_original.replace("(L/kg-ww)", "(L/kg)");
+//		if(Log_BAF_units.contains("L/kg")) {
+//			er.property_value_units_original.equals(ExperimentalConstants.str_LOG_L_KG);
+//		} else {
+//			er.property_value_units_original = Log_BAF_units;
+//		}
 		
 //		er.experimental_parameters.put("study quality",Study_Quality_BAF);
 		
 		try {
-			
+			if(Log_BAF_mean!=null) {
+				Log_BAF_mean=Log_BAF_mean.replace("?", "--");
+			}
 			String propertyValue = Log_BAF_mean;
 			
 			if (Log_BAF_min!=null && Log_BAF_max!=null) {
@@ -235,10 +272,10 @@ public class RecordBurkhard {
 				}
 
 			} else if (Log_BAF_arithmetic_or_logarithmic!=null
-					&& Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
+					&& Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic") && !Log_BAF_mean.toLowerCase().contains("na" ) && !Log_BAF_mean.toLowerCase().contains("n.a" ) && !Log_BAF_mean.toLowerCase().contains("n/a" ) && !Log_BAF_mean.toLowerCase().contains("n.d" ) && !Log_BAF_mean.toLowerCase().contains("nc") && !Log_BAF_mean.toLowerCase().contains("nd") && !Log_BAF_mean.contains("--" ) && !Log_BAF_mean.toLowerCase().contains("n.c" ) && !Log_BAF_mean.equals("-") && !Log_BAF_mean.contains("LOD")) {
 				er.property_value_string = propertyValue + " (arithmetic)";
 				er.property_value_point_estimate_original = Math.log10(Double.parseDouble(Log_BAF_mean));
-			} else {
+			} else if(Log_BAF_mean!=null && !Log_BAF_mean.toLowerCase().contains("na" ) && !Log_BAF_mean.toLowerCase().contains("n.a" ) && !Log_BAF_mean.toLowerCase().contains("n/a" ) && !Log_BAF_mean.toLowerCase().contains("n.d" ) && !Log_BAF_mean.toLowerCase().contains("nc") && !Log_BAF_mean.toLowerCase().contains("nd") && !Log_BAF_mean.contains("--" ) && !Log_BAF_mean.toLowerCase().contains("n.c" ) && !Log_BAF_mean.equals("-") && !Log_BAF_mean.contains("LOD")){
 				if (Log_BAF_mean.contains("<") || Log_BAF_mean.contains(">")) {
 					er.property_value_numeric_qualifier=Log_BAF_mean.substring(0,1);
 					Log_BAF_mean=Log_BAF_mean.substring(1,Log_BAF_mean.length());
@@ -402,51 +439,95 @@ public class RecordBurkhard {
 	
 	private String getSpeciesSupercategory(Hashtable<String, List<Species>> htSpecies) {
 
-		if(htSpecies.containsKey(Common_Name.toLowerCase())) {
+		if(Common_Name!=null && htSpecies.containsKey(Common_Name.toLowerCase())) {
+			
+				List<Species>speciesList=htSpecies.get(Common_Name.toLowerCase());
 
-			List<Species>speciesList=htSpecies.get(Common_Name.toLowerCase());
-
-			for(Species species:speciesList) {
+				for(Species species:speciesList) {
 
 
-				//				if(species.species_scientific!=null) {
-				//					if (!species.species_scientific.toLowerCase().equals(this.scientific_name.toLowerCase())) {
-				//						System.out.println(this.scientific_name+"\t"+species.species_scientific+"\tmismatch");
-				//					}
-				//				} else {
-				////					System.out.println(common_name+"\tspecies has null scientific");
-				//				}
+					//				if(species.species_scientific!=null) {
+					//					if (!species.species_scientific.toLowerCase().equals(this.scientific_name.toLowerCase())) {
+					//						System.out.println(this.scientific_name+"\t"+species.species_scientific+"\tmismatch");
+					//					}
+					//				} else {
+					////					System.out.println(common_name+"\tspecies has null scientific");
+					//				}
 
-				if(species.species_supercategory.contains("fish")) {
-					return "Fish";
-				} else if(species.species_supercategory.contains("algae")) {
-					return "Algae";
-				} else if(species.species_supercategory.contains("crustaceans")) {
-					return "Crustaceans";
-				} else if(species.species_supercategory.contains("insects/spiders")) {
-					return "Insects/spiders";
-				} else if(species.species_supercategory.contains("molluscs")) {
-					return "Molluscs";
-				} else if(species.species_supercategory.contains("worms")) {
-					return "Worms";
-				} else if(species.species_supercategory.contains("invertebrates")) {
-					return "Invertebrates";
-				} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
-					return "Flowers, trees, shrubs, ferns";
-				} else if(species.species_supercategory.contains("microorganisms")) {
-					return "microorganisms";
-				} else if(species.species_supercategory.contains("amphibians")) {
-					return "amphibians";
-				} else if(species.species_supercategory.equals("omit")) {
-					return "omit";
-				} else {
-					System.out.println("Handle\t"+Common_Name+"\t"+species.species_supercategory);	
+					if(species.species_supercategory.contains("fish")) {
+						return "Fish";
+					} else if(species.species_supercategory.contains("algae")) {
+						return "Algae";
+					} else if(species.species_supercategory.contains("crustaceans")) {
+						return "Crustaceans";
+					} else if(species.species_supercategory.contains("insects/spiders")) {
+						return "Insects/spiders";
+					} else if(species.species_supercategory.contains("molluscs")) {
+						return "Molluscs";
+					} else if(species.species_supercategory.contains("worms")) {
+						return "Worms";
+					} else if(species.species_supercategory.contains("invertebrates")) {
+						return "Invertebrates";
+					} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
+						return "Flowers, trees, shrubs, ferns";
+					} else if(species.species_supercategory.contains("microorganisms")) {
+						return "microorganisms";
+					} else if(species.species_supercategory.contains("amphibians")) {
+						return "amphibians";
+					} else if(species.species_supercategory.equals("omit")) {
+						return "omit";
+					}
 				}
+			} else if(htSpecies.containsKey(Species_Latin_Name.toLowerCase())) {
+
+				List<Species>speciesList=htSpecies.get(Species_Latin_Name.toLowerCase());
+
+				for(Species species:speciesList) {
+
+
+					//				if(species.species_scientific!=null) {
+					//					if (!species.species_scientific.toLowerCase().equals(this.scientific_name.toLowerCase())) {
+					//						System.out.println(this.scientific_name+"\t"+species.species_scientific+"\tmismatch");
+					//					}
+					//				} else {
+					////					System.out.println(common_name+"\tspecies has null scientific");
+					//				}
+
+					if(species.species_supercategory.contains("fish")) {
+						return "Fish";
+					} else if(species.species_supercategory.contains("algae")) {
+						return "Algae";
+					} else if(species.species_supercategory.contains("crustaceans")) {
+						return "Crustaceans";
+					} else if(species.species_supercategory.contains("insects/spiders")) {
+						return "Insects/spiders";
+					} else if(species.species_supercategory.contains("molluscs")) {
+						return "Molluscs";
+					} else if(species.species_supercategory.contains("worms")) {
+						return "Worms";
+					} else if(species.species_supercategory.contains("invertebrates")) {
+						return "Invertebrates";
+					} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
+						return "Flowers, trees, shrubs, ferns";
+					} else if(species.species_supercategory.contains("microorganisms")) {
+						return "microorganisms";
+					} else if(species.species_supercategory.contains("amphibians")) {
+						return "amphibians";
+					} else if(species.species_supercategory.equals("reptiles")) {
+						return "reptiles";
+					}else if(species.species_supercategory.equals("omit")) {
+						return "omit";
+					} else if(class_taxonomy.contains("Teleostei") || class_taxonomy.contains("Actinoper")){
+						return "Fish";	
+					} else {
+						System.out.println("Handle\t"+Species_Latin_Name+"\t"+species.species_supercategory);	
+					}
+				}
+			} else {
+				System.out.println("missing in hashtable:\t"+"*"+Species_Latin_Name.toLowerCase()+"*");
 			}
-		} else {
-			System.out.println("missing in hashtable:\t"+"*"+Common_Name.toLowerCase()+"*");
-		}
-		return null;
+//		}
+	return null;
 	}
 
 	/**
@@ -518,8 +599,10 @@ public class RecordBurkhard {
 	
 	private void setSpeciesParameters(Hashtable<String, List<Species>> htSpecies, boolean limitToFish, ExperimentalRecord er) {
 		
-		er.experimental_parameters.put("Species latin",species_taxonomy);
-		er.experimental_parameters.put("Species common",Common_Name);
+		er.experimental_parameters.put("Species latin",Species_Latin_Name);
+		if(Common_Name!=null) {
+			er.experimental_parameters.put("Species common",Common_Name);
+		}
 		String supercategory=getSpeciesSupercategory(htSpecies);
 		if(supercategory!=null)	er.experimental_parameters.put("Species supercategory", supercategory);
 		
@@ -575,10 +658,12 @@ public class RecordBurkhard {
 			Exposure_Concentrations=Exposure_Concentrations.replace("0.3, 1, 3, 10 & 30 ug/L (0.04, 0.14, 0.42, 1.4 and 4.2 uCi 14C-PFOA/L)", "0.3 to 30 ug/L");
 			Exposure_Concentrations=Exposure_Concentrations.replace("mixture ", "");
 			Exposure_Concentrations=Exposure_Concentrations.replace("Angus AFFF foam at 1000 ug/L", "1000 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L  PFDS: 15 ± 8 ng/L", "1000 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L  PFOS: 2.4 ± 1 ug/L", "1000 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L  PFHxS: 178 ± 58 ng/L", "1000 ug/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L  PFDS: 15 Â± 8 ng/L", "1000 ug/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L  PFOS: 2.4 Â± 1 ug/L", "1000 ug/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L  PFHxS: 178 Â± 58 ng/L", "1000 ug/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L", "1000 ug/L");
 			Exposure_Concentrations=Exposure_Concentrations.replace("100ug/L nominal  WebPlotDigitizer to get residues", "100 ug/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("? ","");
 			if(Exposure_Concentrations.contains(" to ")) {
 				unitsIndex = Exposure_Concentrations.indexOf("g/L")-1;
 				String value=Exposure_Concentrations.substring(0, unitsIndex);
@@ -590,11 +675,11 @@ public class RecordBurkhard {
 					pv.valueMin=Double.parseDouble(range[0])/1e6;
 					pv.valueMax=Double.parseDouble(range[1])/1e6;
 				}
-			} else if(Exposure_Concentrations.contains("±")) {
-				Exposure_Concentrations=Exposure_Concentrations.replace(" ± ", "±");
+			} else if(Exposure_Concentrations.contains("Â±")) {
+				Exposure_Concentrations=Exposure_Concentrations.replace(" Â± ", "Â±");
 				unitsIndex = Exposure_Concentrations.indexOf("g/L")-1;
 				String value=Exposure_Concentrations.substring(0, unitsIndex);
-				String[] range = value.split("±");
+				String[] range = value.split("Â±");
 				if(Exposure_Concentrations.contains("ng/L")) {
 					pv.valueMin=(Double.parseDouble(range[0])-Double.parseDouble(range[1]))/1e9;
 					pv.valueMax=(Double.parseDouble(range[0])+Double.parseDouble(range[1]))/1e9;
@@ -615,6 +700,11 @@ public class RecordBurkhard {
 					pv.valuePointEstimate=Double.parseDouble(value)/1000;
 					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 //					System.out.println(value +" mg/L "+ pv.valuePointEstimate + " g/L");
+				} else if(Exposure_Concentrations.contains("ug/g")) {
+					unitsIndex = Exposure_Concentrations.indexOf("ug/g");
+					String value=Exposure_Concentrations.substring(0, unitsIndex);
+					pv.valuePointEstimate=Double.parseDouble(value)/1000;
+					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 				} else if(Exposure_Concentrations.contains("ug/L")){
 					unitsIndex = Exposure_Concentrations.indexOf("ug/L");
 					String value=Exposure_Concentrations.substring(0, unitsIndex);
@@ -632,9 +722,13 @@ public class RecordBurkhard {
 					pv.valuePointEstimate=Double.parseDouble(value);
 					pv.unit.abbreviation=ExperimentalConstants.str_nM;
 				} else {
-					pv.valuePointEstimate=Double.parseDouble(Exposure_Concentrations);
-//					System.out.println("Units not handled:	" + Exposure_Concentrations);
+					try {
+						pv.valuePointEstimate=Double.parseDouble(Exposure_Concentrations);
+					} catch(NumberFormatException e) {
+						pv.valueText=Exposure_Concentrations;
+//						System.out.println("Units not handled:	" + Exposure_Concentrations);
 //					return;
+					}
 				}
 			}
 			er.parameter_values.add(pv);
