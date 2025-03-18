@@ -149,8 +149,10 @@ public class UnitConverter {
 				|| er.property_name.equals(ExperimentalConstants.strBIODEG_HL_HC)) {
 			convertKm(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strKOC)
-				|| er.property_name.equals(ExperimentalConstants.strBCF)
-				|| er.property_name.equals(ExperimentalConstants.strBAF)) {
+//				|| er.property_name.equals(ExperimentalConstants.strBCF)
+//				|| er.property_name.equals(ExperimentalConstants.strBAF)) {
+				|| er.property_name.toLowerCase().contains("bioconcentration factor")
+				|| er.property_name.toLowerCase().contains("bioaccumulation factor")) {
 			convertBCF(er);
 		} else if (er.property_name.equals(ExperimentalConstants.strOH)) {
 			convertOH(er);

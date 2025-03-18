@@ -236,14 +236,14 @@ public class RecordArnot2006 {
 		er.property_name=propertyName;
 
 		String strPropertyValue=null;
-		if(propertyName.contains("Bioconcentration factor")) {
+		if(propertyName.toLowerCase().contains("bioconcentration factor")) {
 			if(!endpoint_sorting_category.equals("2.0")) return null;
 			strPropertyValue=LogBCF_WW_L_kg;
 			er.property_category="bioconcentration";//so that unit converter can handle various BCF endpoints
-		} else if(propertyName.equals("Bioaccumulation factor")) {
+		} else if(propertyName.toLowerCase().contains("bioaccumulation factor")) {
 			if(!endpoint_sorting_category.equals("1.0")) return null;
 			strPropertyValue=LogBAF_WW_L_kg;
-			er.property_category="bioaccumulation";//so that unit converter can handle various BCF endpoints
+			er.property_category="bioaccumulation";//so that unit converter can handle various BAF endpoints
 
 		}
 
@@ -576,8 +576,6 @@ public class RecordArnot2006 {
 			} else if(exposure_media.contains("N/A")) {
 				exposure_media=null;
 			} else if(exposure_media.contains("Synthetic") || exposure_media.contains("Humic water") || exposure_media.contains("Brackish"))  {
-				exposure_media=exposure_media;
-			} else if(exposure_media.contains("")) {
 			} else {
 				System.out.println("Handle exposure_media="+exposure_media);
 			}
@@ -688,7 +686,9 @@ public class RecordArnot2006 {
 					return "microorganisms";
 				} else if(species.species_supercategory.equals("amphibians") || species.species_supercategory.equals("amphibians; standard test species")) {
 					return "amphibians";
-				} else if(species.species_supercategory.equals("omit")) {
+				} else if(species.species_supercategory.equals("reptiles")) {
+					return "reptiles";
+				}else if(species.species_supercategory.equals("omit")) {
 					return "omit";
 				} else {
 					System.out.println("Handle\t"+common_name+"\t"+species.species_supercategory);	
@@ -756,7 +756,7 @@ public class RecordArnot2006 {
 		return htSpecies;
 	}
 
-	void putEntry(Hashtable<String, List<Species>> htSpecies,String species_common,String supercategory) {
+	void putEntryCommon(Hashtable<String, List<Species>> htSpecies,String species_common,String supercategory) {
 
 		if(htSpecies.get(species_common)==null) {
 			List<Species>speciesList=new ArrayList<>();
@@ -777,7 +777,26 @@ public class RecordArnot2006 {
 
 	}
 
+	void putEntryLatin(Hashtable<String, List<Species>> htSpecies,String species_latin,String supercategory) {
 
+		if(htSpecies.get(species_latin)==null) {
+			List<Species>speciesList=new ArrayList<>();
+			Species species=new Species();
+			species.species_scientific=species_latin;
+			species.species_supercategory=supercategory;
+			speciesList.add(species);
+			htSpecies.put(species_latin, speciesList);
+		} else {
+			List<Species>speciesList=htSpecies.get(species_latin);
+
+			Species species=new Species();
+			species.species_scientific=species_latin;
+			species.species_supercategory=supercategory;
+			speciesList.add(species);
+		}
+
+
+	}
 
 	void getSpeciesSuperCategoryHashtable() {
 
@@ -789,71 +808,248 @@ public class RecordArnot2006 {
 		//Need to create a dictionary to map all fish by common name:
 		Hashtable<String, List<Species>> htSuperCategory = createSupercategoryHashtable(conn);
 
-		putEntry(htSuperCategory, "phytoplankton", "microorganisms");
-		putEntry(htSuperCategory, "common shrimp", "omit");
-		putEntry(htSuperCategory, "baskettail dragonfly", "insects/spiders");
-		putEntry(htSuperCategory, "caddisfly larvae", "insects/spiders");
-		putEntry(htSuperCategory, "common bay mussel", "molluscs");
-		putEntry(htSuperCategory, "depressed river mussel", "molluscs");
-		putEntry(htSuperCategory, "clams", "molluscs");
-		putEntry(htSuperCategory, "tadpole", "amphibians");
-		putEntry(htSuperCategory, "algae, algal mat", "algae");
-		putEntry(htSuperCategory, "schizothrix calcicola", "omit");
-		putEntry(htSuperCategory, "buzzer midge", "insects/spiders");
-		putEntry(htSuperCategory, "narrowleaf cattail", "flowers, trees, shrubs, ferns");
-		putEntry(htSuperCategory, "northern leopard frog", "amphibians");
-		putEntry(htSuperCategory, "tadpole - northern leopard frog", "amphibians");
-		putEntry(htSuperCategory, "eastern tiger salamander", "amphibians");
-		putEntry(htSuperCategory, "mussel fatmucket", "molluscs");
-		putEntry(htSuperCategory, "sandworm", "worms");
-		putEntry(htSuperCategory, "oligocheate", "worms");
-		putEntry(htSuperCategory, "hornwort", "flowers, trees, shrubs, ferns");
-		putEntry(htSuperCategory, "orb snail family", "omit");
+		putEntryCommon(htSuperCategory, "phytoplankton", "microorganisms");
+		putEntryCommon(htSuperCategory, "common shrimp", "omit");
+		putEntryCommon(htSuperCategory, "baskettail dragonfly", "insects/spiders");
+		putEntryCommon(htSuperCategory, "caddisfly larvae", "insects/spiders");
+		putEntryCommon(htSuperCategory, "common bay mussel", "molluscs");
+		putEntryCommon(htSuperCategory, "depressed river mussel", "molluscs");
+		putEntryCommon(htSuperCategory, "clams", "molluscs");
+		putEntryCommon(htSuperCategory, "tadpole", "amphibians");
+		putEntryCommon(htSuperCategory, "algae, algal mat", "algae");
+		putEntryCommon(htSuperCategory, "schizothrix calcicola", "omit");
+		putEntryCommon(htSuperCategory, "buzzer midge", "insects/spiders");
+		putEntryCommon(htSuperCategory, "narrowleaf cattail", "flowers, trees, shrubs, ferns");
+		putEntryCommon(htSuperCategory, "northern leopard frog", "amphibians");
+		putEntryCommon(htSuperCategory, "tadpole - northern leopard frog", "amphibians");
+		putEntryCommon(htSuperCategory, "eastern tiger salamander", "amphibians");
+		putEntryCommon(htSuperCategory, "mussel fatmucket", "molluscs");
+		putEntryCommon(htSuperCategory, "sandworm", "worms");
+		putEntryCommon(htSuperCategory, "oligocheate", "worms");
+		putEntryCommon(htSuperCategory, "hornwort", "flowers, trees, shrubs, ferns");
+		putEntryCommon(htSuperCategory, "orb snail family", "omit");
 
 
-		putEntry(htSuperCategory, "biwi lake gudgeon, goby or willow shiner", "fish");
-		putEntry(htSuperCategory, "willow shiner", "fish");
-		putEntry(htSuperCategory, "golden ide", "fish");
-		putEntry(htSuperCategory, "gobi", "fish");
-		putEntry(htSuperCategory, "topmouth gudgeon", "fish");
-		putEntry(htSuperCategory, "shorthead redhorse", "fish");
-		putEntry(htSuperCategory, "golden redhorse", "fish");
-		putEntry(htSuperCategory, "medaka, high-eyes", "fish");
-		putEntry(htSuperCategory, "brook silverside", "fish");
-		putEntry(htSuperCategory, "coho salmon", "fish");
-		putEntry(htSuperCategory, "lemon shark", "fish");
-		putEntry(htSuperCategory, "common carp", "fish");
-		putEntry(htSuperCategory, "three-spined stickleback", "fish");
-		putEntry(htSuperCategory, "fathead minnow", "fish");
-		putEntry(htSuperCategory, "american flagfish", "fish");
-		putEntry(htSuperCategory, "guppy", "fish");
-		putEntry(htSuperCategory, "mosquito fish", "fish");
-		putEntry(htSuperCategory, "rainbow trout", "fish");
-		putEntry(htSuperCategory, "sheepshead minnow", "fish");
-		putEntry(htSuperCategory, "carp", "fish");
-		putEntry(htSuperCategory, "medaka", "fish");
-		putEntry(htSuperCategory, "bluegill sunfish", "fish");
-		putEntry(htSuperCategory, "perch", "fish");
-		putEntry(htSuperCategory, "goldfish", "fish");
-		putEntry(htSuperCategory, "channel catfish", "fish");
-		putEntry(htSuperCategory, "spot", "fish");
-		putEntry(htSuperCategory, "banded tilapia", "fish");
-		putEntry(htSuperCategory, "juvenile chinese rare minnow", "fish");
-		putEntry(htSuperCategory, "marine medaka", "fish");
-		putEntry(htSuperCategory, "zebra fish", "fish");
-		putEntry(htSuperCategory, "blackrock fish", "fish");
-		putEntry(htSuperCategory, "crusian carp", "fish");
-		putEntry(htSuperCategory, "danio rerio", "fish");
-		putEntry(htSuperCategory, "salmo gairdneri", "fish");
-		putEntry(htSuperCategory, "smelt (small)", "fish");
-		putEntry(htSuperCategory, "smelt (large)", "fish");
-		putEntry(htSuperCategory, "salmonid", "fish");
-		putEntry(htSuperCategory, "pacific staghorn sculpin", "fish");
-		putEntry(htSuperCategory, "spotted sea trout", "fish");
-		putEntry(htSuperCategory, "stonecat", "fish");
-		putEntry(htSuperCategory, "brook silversides", "fish");
-		putEntry(htSuperCategory, "troutperch", "fish");
-		putEntry(htSuperCategory, "young of the year", "fish");
+		putEntryCommon(htSuperCategory, "biwi lake gudgeon, goby or willow shiner", "fish");
+		putEntryCommon(htSuperCategory, "willow shiner", "fish");
+		putEntryCommon(htSuperCategory, "golden ide", "fish");
+		putEntryCommon(htSuperCategory, "gobi", "fish");
+		putEntryCommon(htSuperCategory, "topmouth gudgeon", "fish");
+		putEntryCommon(htSuperCategory, "shorthead redhorse", "fish");
+		putEntryCommon(htSuperCategory, "golden redhorse", "fish");
+		putEntryCommon(htSuperCategory, "medaka, high-eyes", "fish");
+		putEntryCommon(htSuperCategory, "brook silverside", "fish");
+		putEntryCommon(htSuperCategory, "coho salmon", "fish");
+		putEntryCommon(htSuperCategory, "lemon shark", "fish");
+		putEntryCommon(htSuperCategory, "common carp", "fish");
+		putEntryCommon(htSuperCategory, "three-spined stickleback", "fish");
+		putEntryCommon(htSuperCategory, "fathead minnow", "fish");
+		putEntryCommon(htSuperCategory, "american flagfish", "fish");
+		putEntryCommon(htSuperCategory, "guppy", "fish");
+		putEntryCommon(htSuperCategory, "mosquito fish", "fish");
+		putEntryCommon(htSuperCategory, "rainbow trout", "fish");
+		putEntryCommon(htSuperCategory, "sheepshead minnow", "fish");
+		putEntryCommon(htSuperCategory, "carp", "fish");
+		putEntryCommon(htSuperCategory, "medaka", "fish");
+		putEntryCommon(htSuperCategory, "bluegill sunfish", "fish");
+		putEntryCommon(htSuperCategory, "perch", "fish");
+		putEntryCommon(htSuperCategory, "goldfish", "fish");
+		putEntryCommon(htSuperCategory, "channel catfish", "fish");
+		putEntryCommon(htSuperCategory, "spot", "fish");
+		putEntryCommon(htSuperCategory, "banded tilapia", "fish");
+		putEntryCommon(htSuperCategory, "juvenile chinese rare minnow", "fish");
+		putEntryCommon(htSuperCategory, "marine medaka", "fish");
+		putEntryCommon(htSuperCategory, "zebra fish", "fish");
+		putEntryCommon(htSuperCategory, "blackrock fish", "fish");
+		putEntryCommon(htSuperCategory, "crusian carp", "fish");
+		putEntryCommon(htSuperCategory, "danio rerio", "fish");
+		putEntryCommon(htSuperCategory, "salmo gairdneri", "fish");
+		putEntryCommon(htSuperCategory, "smelt (small)", "fish");
+		putEntryCommon(htSuperCategory, "smelt (large)", "fish");
+		putEntryCommon(htSuperCategory, "salmonid", "fish");
+		putEntryCommon(htSuperCategory, "pacific staghorn sculpin", "fish");
+		putEntryCommon(htSuperCategory, "spotted sea trout", "fish");
+		putEntryCommon(htSuperCategory, "stonecat", "fish");
+		putEntryCommon(htSuperCategory, "brook silversides", "fish");
+		putEntryCommon(htSuperCategory, "troutperch", "fish");
+		putEntryCommon(htSuperCategory, "young of the year", "fish");
+		
+		putEntryLatin(htSuperCategory, "pseudohemiculter dispar", "fish");
+		putEntryLatin(htSuperCategory, "mugil cephalus", "fish");
+		putEntryLatin(htSuperCategory, "channa asiatica", "fish");
+		putEntryLatin(htSuperCategory, "elops saurus", "fish");
+		putEntryLatin(htSuperCategory, "ambassis miops", "fish");
+		putEntryLatin(htSuperCategory, "clupea harengus membras", "fish");
+		putEntryLatin(htSuperCategory, "sprattus sprattus", "fish");
+		putEntryLatin(htSuperCategory, "pelophylax nigromaculatus", "amphibians");
+		putEntryLatin(htSuperCategory, "ruditapes philippinarum", "molluscs");
+		putEntryLatin(htSuperCategory, "ameiurus", "fish");
+		putEntryLatin(htSuperCategory, "macrobrachium nipponense", "omit");
+		putEntryLatin(htSuperCategory, "unionidae", "molluscs");
+		putEntryLatin(htSuperCategory, "reganisalanx brachyrostralis", "fish");
+		putEntryLatin(htSuperCategory, "carassius cuvieri", "fish");
+		putEntryLatin(htSuperCategory, "coilia mystus", "fish");
+		putEntryLatin(htSuperCategory, "culter mongolicus", "fish");
+		putEntryLatin(htSuperCategory, "misgurnus anguillicaudatus", "fish");
+		putEntryLatin(htSuperCategory, "rhodeus sinensis gunther", "fish");
+		putEntryLatin(htSuperCategory, "ctenogobius giurinus", "fish");
+		putEntryLatin(htSuperCategory, "sprattus sprattus", "fish");
+		putEntryLatin(htSuperCategory, "lepomis gibbosus", "fish");
+		putEntryLatin(htSuperCategory, "acanthogobius hasta, hexagrammos otakii, tridentiger trigonocephalus, carassius carassius, amblyeleotris diagonalis, tridentiger trigonocephalus, acanthogobius flavimanus, takifugu niphobles", "fish");
+		putEntryLatin(htSuperCategory, "anadara granosa, ostreidae, ruditapes philippinarum, unionoida, solen strictus", "molluscs");
+		putEntryLatin(htSuperCategory, "grapsidae, neocaridina heteropoda, paguridae, ocypodidae, petrolisthes cinctipes", "omit");
+		putEntryLatin(htSuperCategory, "columbellidae, littorina brevicula, monodonta labio, semisulcospira libertina", "omit");
+		putEntryLatin(htSuperCategory, "palaemon paucidens, alpheidae", "omit");
+		putEntryLatin(htSuperCategory, "acanthogobius flavimanus", "fish");
+		putEntryLatin(htSuperCategory, "canthogobius hasta", "fish");
+		putEntryLatin(htSuperCategory, "sopoda, hemiptera, amphipoda, nematoda", "omit");
+		putEntryLatin(htSuperCategory, "amphipoda", "omit");
+		putEntryLatin(htSuperCategory, "ephemeroptera, trichoptera, odonata, hemiptera, isopoda, amphipoda", "omit");
+		putEntryLatin(htSuperCategory, "leuciscus cephalus", "fish");
+		putEntryLatin(htSuperCategory, "mesozooplankton", "microorganisms");
+		putEntryLatin(htSuperCategory, "siniperca scherzeri", "fish");
+		putEntryLatin(htSuperCategory, "channa striata", "fish");
+		putEntryLatin(htSuperCategory, "eleotris fusca", "fish");
+		putEntryLatin(htSuperCategory, "varuna litterata", "omit");
+		putEntryLatin(htSuperCategory, "macrobrachium rosenbergii", "omit");
+		putEntryLatin(htSuperCategory, "pomacea canaliculata", "omit");
+		putEntryLatin(htSuperCategory, "corbicula fluminea", "molluscs");
+		putEntryLatin(htSuperCategory, "mytilus edulis, crassostrea gigas", "molluscs");
+		putEntryLatin(htSuperCategory, "erythroculter erythropterus", "fish");
+		putEntryLatin(htSuperCategory, "erythroculter dabryi", "fish");
+		putEntryLatin(htSuperCategory, "copepoda", "omit");
+		putEntryLatin(htSuperCategory, "mysidacea", "omit");
+		putEntryLatin(htSuperCategory, "cirrhinus molitorella", "fish");
+		putEntryLatin(htSuperCategory, "clarias fuscus", "fish");
+		putEntryLatin(htSuperCategory, "isopoda, hemiptera, amphipoda, nematoda", "omit");
+		putEntryLatin(htSuperCategory, "periphyton", "omit");
+		putEntryLatin(htSuperCategory, "gammarus", "omit");
+		putEntryLatin(htSuperCategory, "engraulis encrasicolus", "fish");
+		putEntryLatin(htSuperCategory, "argyrosomus regius", "fish");
+		putEntryLatin(htSuperCategory, "dicentrarchus labrax", "fish");
+		putEntryLatin(htSuperCategory, "dicentrarchus punctatus", "fish");
+		putEntryLatin(htSuperCategory, "littorina brevicula", "omit");
+		putEntryLatin(htSuperCategory, "mytilus edulis", "molluscs");
+		putEntryLatin(htSuperCategory, "neritidae", "omit");
+		putEntryLatin(htSuperCategory, "sebastes schlegeli", "fish");
+		putEntryLatin(htSuperCategory, "neosalanx tangkahkeii taihuensis", "fish");
+		putEntryLatin(htSuperCategory, "silurus glanis", "fish");
+		putEntryLatin(htSuperCategory, "acanthogobius hasta", "fish");	
+		putEntryLatin(htSuperCategory, "squalius laietanus", "fish");
+		putEntryLatin(htSuperCategory, "lumbriculus variegatus", "worms");
+		putEntryLatin(htSuperCategory, "hydrocharis dubia (blume) backer", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "ceratophyllum demersum l.", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "salvinia natans (l.) all.", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "megalobrama amblycephala", "fish");
+		putEntryLatin(htSuperCategory, "pseudorasbora parva", "fish");
+		putEntryLatin(htSuperCategory, "palinuridae", "omit");
+		putEntryLatin(htSuperCategory, "pelodiscus sinensis", "reptiles");
+		putEntryLatin(htSuperCategory, "limnocalanus macrurus, drepanopus bungei", "omit");
+		putEntryLatin(htSuperCategory, "mastacembelus armatus", "fish");
+		putEntryLatin(htSuperCategory, "alligator sinensis", "reptiles");
+		putEntryLatin(htSuperCategory, "potamogeton crispus l.", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "ceratophyllum demersum l.", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "ulothrix", "algae");
+		putEntryLatin(htSuperCategory, "vallisneria natans (lour.) hara", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "juncellus serotinus", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "typha angustifolia l.", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "phragmites australis", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "zizania latifolia", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "nelumbo nucifera gaertn.", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "scirpus validus vahl ", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "hemiculter leucisculus", "fish");
+		putEntryLatin(htSuperCategory, "megalobrama terminalis", "fish");
+		putEntryLatin(htSuperCategory, "acanthogobius hasta", "fish");
+		putEntryLatin(htSuperCategory, "liza dussumieri", "fish");
+		putEntryLatin(htSuperCategory, "silurus asotus", "fish");
+		putEntryLatin(htSuperCategory, "cipangopaludina chinensis", "omit");
+		putEntryLatin(htSuperCategory, "konosirus punctatus", "fish");
+		putEntryLatin(htSuperCategory, "ablennes hians", "fish");
+		putEntryLatin(htSuperCategory, "nibea coibor", "fish");
+		putEntryLatin(htSuperCategory, "scaradon punctatus", "fish");
+		putEntryLatin(htSuperCategory, "fugu rubripes", "fish");
+		putEntryLatin(htSuperCategory, "pleurogrammus monopterygius", "fish");
+		putEntryLatin(htSuperCategory, "sebastodes fuscescens", "fish");
+		putEntryLatin(htSuperCategory, "tridentiger barbatus", "fish");
+		putEntryLatin(htSuperCategory, "lepidotrigla microptera günther", "fish");
+		putEntryLatin(htSuperCategory, "cynoglossus robustus", "fish");
+		putEntryLatin(htSuperCategory, "lophius litulon", "fish");
+		putEntryLatin(htSuperCategory, "platycephalus indicus", "fish");
+		putEntryLatin(htSuperCategory, "platichthys bicoloratus", "fish");
+		putEntryLatin(htSuperCategory, "zoarces elongatus", "fish");
+		putEntryLatin(htSuperCategory, "odontamblyopus rubicundus", "fish");
+		putEntryLatin(htSuperCategory, "portunus trituberculatus", "omit");
+		putEntryLatin(htSuperCategory, "eucrata crenata de haan", "omit");
+		putEntryLatin(htSuperCategory, "oratosquilla oratoria", "omit");
+		putEntryLatin(htSuperCategory, "metapenaeus ensis de haan", "omit");
+		putEntryLatin(htSuperCategory, "loligo chinensis", "omit");
+		putEntryLatin(htSuperCategory, "octopus vulgaris", "omit");
+		putEntryLatin(htSuperCategory, "scapharca subcrenata", "molluscs");
+		putEntryLatin(htSuperCategory, "sinonovacula constricta", "molluscs");
+		putEntryLatin(htSuperCategory, "erythroculter erythropterus", "fish");
+		putEntryLatin(htSuperCategory, "rapana bezona linnaeus", "molluscs");
+		putEntryLatin(htSuperCategory, "urechis unicinctus", "worms");
+		putEntryLatin(htSuperCategory, "potamogeton", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "callitriche", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "bithynia tentaculata", "omit");
+		putEntryLatin(htSuperCategory, "viviparus", "omit");
+		putEntryLatin(htSuperCategory, "ceratophyllum demersum", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "salvinia natans", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "nelumbo nucifera", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "eichhornia crassipes", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "micropterus salmoides, barbus graellsii, cyprinus carpio", "fish");
+		putEntryLatin(htSuperCategory, "ambassis natalensis", "fish");
+		putEntryLatin(htSuperCategory, "rhabdosargus holubi", "fish");
+		putEntryLatin(htSuperCategory, "holothuria tubulosa", "omit");
+		putEntryLatin(htSuperCategory, "phytoplankton, zooplankton", "microorganisms");
+		putEntryLatin(htSuperCategory, "neogobius melanostomus", "fish");
+		putEntryLatin(htSuperCategory, "perca fluviatilis", "fish");
+		putEntryLatin(htSuperCategory, "lepomis megalotis, micropterus salmoides, gambusia, poecilia, cypriniformes, cyprinus carpio, siluriformes, decapoda", "omit");
+		putEntryLatin(htSuperCategory, "salvelinus alpinus", "fish");
+		putEntryLatin(htSuperCategory, "hemibarbus labeo", "fish");
+		putEntryLatin(htSuperCategory, "mysis relicta", "omit");
+		putEntryLatin(htSuperCategory, "diporeia hoyi", "omit");
+		putEntryLatin(htSuperCategory, "clibanarius infraspinatus", "omit");
+		putEntryLatin(htSuperCategory, "seriola quinqueradiata", "fish");
+		putEntryLatin(htSuperCategory, "sebastes schlegelii", "fish");
+		putEntryLatin(htSuperCategory, "oplegnathus fasciatus", "fish");
+		putEntryLatin(htSuperCategory, "trachemys scripta elegans, chinemys reevesii", "reptiles");
+		putEntryLatin(htSuperCategory, "lepidopus caudatus", "fish");
+		putEntryLatin(htSuperCategory, "micropogonias furnieri", "fish");
+		putEntryLatin(htSuperCategory, "perna perna", "molluscs");
+		putEntryLatin(htSuperCategory, "micropterus dolomieu, micropterus salmoides", "fish");
+		putEntryLatin(htSuperCategory, "esox niger", "fish");
+		putEntryLatin(htSuperCategory, "micropogonias furnieri", "fish");
+		putEntryLatin(htSuperCategory, "lateolabrax japonicus", "fish");
+		putEntryLatin(htSuperCategory, "conger myriaster", "fish");
+		putEntryLatin(htSuperCategory, "sebastiscus marmoratus", "fish");
+		putEntryLatin(htSuperCategory, "sebastes inermis", "fish");
+		putEntryLatin(htSuperCategory, "acanthopagrus schlegeli", "fish");
+		putEntryLatin(htSuperCategory, "trachurus japonicus", "fish");
+		putEntryLatin(htSuperCategory, "argyrosomus argentatus", "fish");
+		putEntryLatin(htSuperCategory, "paralichthys olivaceus", "fish");
+		putEntryLatin(htSuperCategory, "decapoda", "omit");
+		putEntryLatin(htSuperCategory, "micropterus salmoides", "fish");
+		putEntryLatin(htSuperCategory, "microzooplankton", "microorganisms");
+		putEntryLatin(htSuperCategory, "perna viridis", "molluscs");
+		putEntryLatin(htSuperCategory, "channa argus", "fish");
+		putEntryLatin(htSuperCategory, "gobio lozanoi", "fish");
+		putEntryLatin(htSuperCategory, "pseudochondrostoma polylepis", "fish");
+		putEntryLatin(htSuperCategory, "sprattus sprattus", "fish");
+		putEntryLatin(htSuperCategory, "barbus guiraonis, micropterus salmoides, alburnus alburnus, anguilla anguilla, gobio lozanoi, pseudochondrostoma polylepis, esox lucius, lepomis gibbosus, salmo trutta", "fish");
+		putEntryLatin(htSuperCategory, "mytilus edulis, crassostrea gigas", "molluscs");
+		putEntryLatin(htSuperCategory, "elops saurus", "fish");
+		putEntryLatin(htSuperCategory, "gastropoda", "molluscs");
+		putEntryLatin(htSuperCategory, "capitellidae", "worms");
+		putEntryLatin(htSuperCategory, "nereidae", "worms");
+		putEntryLatin(htSuperCategory, "sabellidae", "worms");
+		putEntryLatin(htSuperCategory, "penaeus monodon", "omit");
+		putEntryLatin(htSuperCategory, "metapenaeus ensis", "omit");
+		putEntryLatin(htSuperCategory, "carassius carassius", "fish");
+		putEntryLatin(htSuperCategory, "barbus graellsii", "fish");
+		putEntryLatin(htSuperCategory, "barbus guiraonis", "fish");
+		putEntryLatin(htSuperCategory, "stuckenia pectinata", "flowers, trees, shrubs, ferns");
+		
 		
 
 		System.out.println(gson.toJson(htSuperCategory));
