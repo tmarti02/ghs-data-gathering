@@ -20,6 +20,7 @@ import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.ParameterValue;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 
 
@@ -653,16 +654,20 @@ public class RecordBurkhard {
 			pv.parameter.name="Water Concentration";
 //			pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 			int unitsIndex = -1;
+
+			//The foam concentration doesnt tell you the PFAS concentration- so omit it:
+			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L", "").trim();
 			
 			Exposure_Concentrations=Exposure_Concentrations.replace("total concentration ", "");
 			Exposure_Concentrations=Exposure_Concentrations.replace("0.3, 1, 3, 10 & 30 ug/L (0.04, 0.14, 0.42, 1.4 and 4.2 uCi 14C-PFOA/L)", "0.3 to 30 ug/L");
 			Exposure_Concentrations=Exposure_Concentrations.replace("mixture ", "");
 			Exposure_Concentrations=Exposure_Concentrations.replace("Angus AFFF foam at 1000 ug/L", "1000 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L  PFDS: 15 Â± 8 ng/L", "1000 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L  PFOS: 2.4 Â± 1 ug/L", "1000 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L  PFHxS: 178 Â± 58 ng/L", "1000 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L", "1000 ug/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("PFDS: 15 ± 8 ng/L", "15 ± 8 ng/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("PFOS: 2.4 ± 1 ug/L", "2.4 ± 1 ug/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("PFHxS: 178 ± 58 ng/L", "178 ± 58 ng/L");
 			Exposure_Concentrations=Exposure_Concentrations.replace("100ug/L nominal  WebPlotDigitizer to get residues", "100 ug/L");
+			
+			
 			Exposure_Concentrations=Exposure_Concentrations.replace("? ","");
 			if(Exposure_Concentrations.contains(" to ")) {
 				unitsIndex = Exposure_Concentrations.indexOf("g/L")-1;
@@ -671,22 +676,29 @@ public class RecordBurkhard {
 				if(Exposure_Concentrations.contains("ng/L")) {
 					pv.valueMin=Double.parseDouble(range[0])/1e9;
 					pv.valueMax=Double.parseDouble(range[1])/1e9;
+					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 				} else if(Exposure_Concentrations.contains("ug/L")){
 					pv.valueMin=Double.parseDouble(range[0])/1e6;
 					pv.valueMax=Double.parseDouble(range[1])/1e6;
+					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 				}
-			} else if(Exposure_Concentrations.contains("Â±")) {
+			} else if(Exposure_Concentrations.contains("±")) {
 				Exposure_Concentrations=Exposure_Concentrations.replace(" Â± ", "Â±");
 				unitsIndex = Exposure_Concentrations.indexOf("g/L")-1;
+				int plusMinusIndex=Exposure_Concentrations.indexOf("±");
 				String value=Exposure_Concentrations.substring(0, unitsIndex);
-				String[] range = value.split("Â±");
+				
+				String[] range = value.split("±");
 				if(Exposure_Concentrations.contains("ng/L")) {
 					pv.valueMin=(Double.parseDouble(range[0])-Double.parseDouble(range[1]))/1e9;
 					pv.valueMax=(Double.parseDouble(range[0])+Double.parseDouble(range[1]))/1e9;
+					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 				} else if(Exposure_Concentrations.contains("ug/L")){
 					pv.valueMin=(Double.parseDouble(range[0])-Double.parseDouble(range[1]))/1e6;
 					pv.valueMax=(Double.parseDouble(range[0])+Double.parseDouble(range[1]))/1e6;
+					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 				}
+				
 			} else {
 				if(Exposure_Concentrations.contains("ng/L")) {
 					unitsIndex = Exposure_Concentrations.indexOf("ng/L");
@@ -731,6 +743,12 @@ public class RecordBurkhard {
 					}
 				}
 			}
+			
+			
+//			if(Exposure_Concentrations.contains("±"))				
+//				System.out.println(Exposure_Concentrations+"\t"+ParseUtilities.gson.toJson(pv));
+
+			
 			er.parameter_values.add(pv);
 		}
 	}
