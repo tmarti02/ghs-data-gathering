@@ -244,7 +244,7 @@ public class RecordArnot2006 {
 			if(!endpoint_sorting_category.equals("1.0")) return null;
 			strPropertyValue=LogBAF_WW_L_kg;
 			er.property_category="bioaccumulation";//so that unit converter can handle various BAF endpoints
-
+			er.property_category="bioaccumulation";//so that unit converter can handle various BCF endpoints
 		}
 
 		boolean limitToFish=false;
@@ -683,13 +683,13 @@ public class RecordArnot2006 {
 				} else if(species.species_supercategory.contains("flowers, trees, shrubs, ferns")) {
 					return "Flowers, trees, shrubs, ferns";
 				} else if(species.species_supercategory.contains("microorganisms")) {
-					return "microorganisms";
+					return "Microorganisms";
 				} else if(species.species_supercategory.equals("amphibians") || species.species_supercategory.equals("amphibians; standard test species")) {
 					return "amphibians";
 				} else if(species.species_supercategory.equals("reptiles")) {
 					return "reptiles";
-				}else if(species.species_supercategory.equals("omit")) {
-					return "omit";
+				} else if(species.species_supercategory.equals("omit")) {
+					return "Omit";
 				} else {
 					System.out.println("Handle\t"+common_name+"\t"+species.species_supercategory);	
 				}

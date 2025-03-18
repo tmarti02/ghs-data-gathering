@@ -583,7 +583,17 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 					if(headers.get(i).contains("exp_param_")) {
 
 						String fieldName=headers.get(i).replace("exp_param_","");
-						value = er.experimental_parameters.get(fieldName);
+						
+						if(er.experimental_parameters.containsKey(fieldName)) {
+							value = er.experimental_parameters.get(fieldName);	
+						} else {
+							for (ParameterValue pv:er.parameter_values) {
+								if(pv.parameter.name.equals(fieldName)) {
+									value=pv.toString();
+									break;
+								}
+							}
+						}
 
 					} else if(headers.get(i).contains("literature_source_")) {
 						String fieldName=headers.get(i).replace("literature_source_","");
@@ -627,7 +637,7 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 //							System.out.println(href);
 							
 						} catch (Exception ex) {
-							System.out.println("Invalid url:\t"+strValue);
+//							System.out.println("Invalid url:\t"+strValue);
 						}
 
 
@@ -682,6 +692,12 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 			if(er.experimental_parameters!=null) {			
 				for (String key:er.experimental_parameters.keySet()) {
 					if(!params.contains(key)) params.add(key);
+				}
+			}
+			
+			if(er.parameter_values!=null) {
+				for(ParameterValue pv:er.parameter_values) {
+					if(!params.contains(pv.parameter.name)) params.add(pv.parameter.name);
 				}
 			}
 		}

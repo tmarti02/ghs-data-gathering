@@ -136,7 +136,7 @@ public class UnitConverter {
 			} else if ( er.property_category.contentEquals(ExperimentalConstants.strAcuteOralToxicity) ||  
 					er.property_category.contentEquals(ExperimentalConstants.strAcuteDermalToxicity)) {
 				convertOralMammalianToxicity(er);			
-			}else if (er.property_category.toLowerCase().contains("acute aquatic toxicity")) {
+			}else if (er.property_category.equals(ExperimentalConstants.strAcuteAquaticToxicity) || er.property_category.equals(ExperimentalConstants.strChronicAquaticToxicity)) {
 				convertSolubility(er);
 			} else if (er.property_category.contentEquals(ExperimentalConstants.strAcuteInhalationToxicity)) {
 				convertInhalationMammalianToxicity(er);
@@ -268,7 +268,9 @@ public class UnitConverter {
 			if (er.casrn == null || htDensity.get(er.casrn) == null) {
 				er.flag = true;
 				er.updateNote("Conversion to mg/L not possible (missing density)");
-				System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
+
+				if(printMissingDensityCas)
+					System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
 				assignFinalFieldsWithoutConverting(er);
 				er.property_value_units_final = er.property_value_units_original;
 				return false;
@@ -285,7 +287,8 @@ public class UnitConverter {
 				er.flag = true;
 				er.updateNote("Conversion to mg/L not possible (missing density)");
 
-				System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
+				if(printMissingDensityCas)
+					System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
 
 				assignFinalFieldsWithoutConverting(er);
 				er.property_value_units_final = er.property_value_units_original;
@@ -480,6 +483,11 @@ public class UnitConverter {
 		er.property_value_units_final = ExperimentalConstants.str_binary;
 	}
 
+	/**
+	 * Note L/g ones were not converted because those ECOTOX records might be uncertain
+	 * 
+	 * @param er
+	 */
 	private void convertBCF(ExperimentalRecord er) {
 		
 //		System.out.println("enter convert bcf");
