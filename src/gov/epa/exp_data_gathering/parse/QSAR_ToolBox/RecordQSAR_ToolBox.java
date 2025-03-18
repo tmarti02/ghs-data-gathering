@@ -957,12 +957,7 @@ public class RecordQSAR_ToolBox {
 		} else if(Database.equals("Bioconcentration and logKow NITE")) {
 			
 			if(Duration_MeanValue!=null) {
-				ParameterValue pv=new ParameterValue();
-				pv.parameter.name="Exposure duration";
-				pv.unit.abbreviation="days";
-				double wc=Double.parseDouble(Duration_MeanValue);					
-				pv.valuePointEstimate=wc;
-				er.parameter_values.add(pv);
+				setObservationDuration(er);
 			}
 			
 			if(Temperature_MeanValue!=null) {
@@ -1018,7 +1013,56 @@ public class RecordQSAR_ToolBox {
 		}
 	}
 	
+private void setObservationDuration(ExperimentalRecord er) {
+		
+		String unit=Duration_Unit;
+		Double mean=getValueInDays(Duration_MeanValue,unit);
+		String parameterName="Exposure duration";
+		ParameterValue pv=new ParameterValue();
+		pv.parameter.name=parameterName;
+		pv.valuePointEstimate=mean;
+		pv.unit.abbreviation="days";
+		er.parameter_values.add(pv);
+}
 
+public Double getValueInDays(String obs_duration,String units) {
+	
+	if(obs_duration==null) return null;
+	Double studyDurationValue = Double.parseDouble(obs_duration);
+	
+	switch (units) {
+	
+	case "d":
+	case "dpf":
+	case "dph":
+	case "dpu":
+		return studyDurationValue;
+	case "wk":
+		return studyDurationValue *= 7.0;
+	case "mo":
+		return studyDurationValue *= 30.0;
+	case "yr":
+		return studyDurationValue *= 365.0;
+	case "h":
+	case "hpf":
+	case "hph":
+		return studyDurationValue /= 24.0;
+	case "mi"://minutes
+		return studyDurationValue /= 1440.0;
+	case "s"://seconds
+		return studyDurationValue /= (1440.0*60);
+
+	case "-":
+	case "NR":	
+//		System.out.println("No study duration units for ToxVal ID " + toxval_id);
+		return null;
+	default:
+//		System.out.println("Unknown observation duration units for ToxVal ID " + test_id + ": " + obs_duration_unit);
+		return null;
+	}
+	
+	
+}
 	/**
 	 * Selects kinetic values for CEFIC data set
 	 *  
@@ -1232,9 +1276,9 @@ public class RecordQSAR_ToolBox {
 	}
 	
 	private String getSpeciesCommonName() {
-		
+		if(Test_organisms_species!=null) {
 			if(Test_organisms_species.toLowerCase().contains("carpio")){
-				return "Common carp";
+				return "common carp";
 			} else if(Test_organisms_species.toLowerCase().contains("salmo gairdneri")) {
 				return "salmon";
 			} else if(Test_organisms_species.toLowerCase().contains("danio rerio")) {
@@ -1244,13 +1288,17 @@ public class RecordQSAR_ToolBox {
 			} else if(Test_organisms_species.toLowerCase().contains("oryzias latipes")) {
 				return "japanese ricefish";
 			} else return null;
+		} else {
+			return null;
+		}
 	}
 	
 	private String getSpeciesSupercategory(Hashtable<String, List<Species>> htSpecies) {
+		
+		String speciescommon=getSpeciesCommonName();
+		if(speciescommon!=null && htSpecies.containsKey(speciescommon.toLowerCase())) {
 
-		if(Species_common_name!=null && htSpecies.containsKey(Species_common_name.toLowerCase())) {
-
-			List<Species>speciesList=htSpecies.get(Species_common_name.toLowerCase());
+			List<Species>speciesList=htSpecies.get(speciescommon.toLowerCase());
 
 			for(Species species:speciesList) {
 
