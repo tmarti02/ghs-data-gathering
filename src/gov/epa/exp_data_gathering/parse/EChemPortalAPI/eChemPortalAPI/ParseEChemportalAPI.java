@@ -31,8 +31,8 @@ import gov.epa.exp_data_gathering.parse.PubChem.RecordPubChem;
 
 public class ParseEChemportalAPI extends Parse {
 	
-	String endpointKind=APIConstants.acuteToxicityOral;
-//	String endpointKind=APIConstants.skinSensitisation;
+//	String endpointKind=APIConstants.acuteToxicityOral;
+	public String endpointKind=APIConstants.skinSensitisation;
 	
 	public ParseEChemportalAPI () {
 		sourceName = "eChemPortalAPI";

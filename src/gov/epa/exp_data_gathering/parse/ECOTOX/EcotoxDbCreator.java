@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import gov.epa.ghs_data_gathering.Parse.ToxVal.SqlUtilities;
+
 public class EcotoxDbCreator {
 	
 	private static final int INSERT_BATCH_SIZE = 1000; // Modify as needed for performance
@@ -53,6 +55,20 @@ public class EcotoxDbCreator {
 			for (File asciiTableFile:asciiTableFiles) {
 				createAndPopulateTableFromAsciiTableFile(asciiTableFile, conn);
 			}
+			
+			SqlUtilities.runSQLUpdate(conn, url);//TMM not sure why this is needed
+			
+			List<String>indexes=new ArrayList<>();
+			indexes.add("CREATE INDEX if not exists chemicals_cas_number ON chemicals (cas_number);");
+			indexes.add("CREATE INDEX if not exists tests_test_id ON tests (test_id);");
+			indexes.add("CREATE INDEX if not exists results_test_id ON results (test_id);");
+			indexes.add("CREATE INDEX if not exists tests_reference_number ON tests (reference_number);");
+			indexes.add("CREATE INDEX if not exists references_reference_number ON references_ (reference_number);");
+			indexes.add("CREATE INDEX if not exists tests_species_number ON tests (species_number);");
+			
+			for (String index:indexes) SqlUtilities.runSQLUpdate(conn, index);
+
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -229,7 +245,10 @@ public class EcotoxDbCreator {
 //		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_06_15_2022";
 //		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_03_15_2023";
 //		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_06_15_2023";
-		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_12_14_2023";
+//		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX/ecotox_ascii_12_14_2023";
+		String ECOTOX_ASCII_FOLDER_PATH = "data/experimental/ECOTOX_2024_12_12/ecotox_ascii_12_12_2024";
+		
+		
 		create(ECOTOX_ASCII_FOLDER_PATH);
 	}
 

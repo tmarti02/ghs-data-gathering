@@ -6,6 +6,7 @@ package gov.epa.ghs_data_gathering.Parse.Exposure_MDH;
 import java.io.File;
 import java.io.FileReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 
 import com.google.gson.Gson;
@@ -44,7 +45,7 @@ public class ParseExposure_MDH extends Parse {
 	public static Vector<JsonObject> parseRecordsFromExcel() {
 		String mainFolderPath="AA Dashboard\\Data";
 		ExcelSourceReader esr = new ExcelSourceReader(fileName, mainFolderPath,sourceName,"Exposure Records");		
-		String [] fieldNames=esr.getHeaders();		
+		List<String> fieldNames=esr.getHeaders();		
 		HashMap<Integer,String> hm = ExcelSourceReader.generateDefaultMap(fieldNames, 0);
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(hm, 1);
 

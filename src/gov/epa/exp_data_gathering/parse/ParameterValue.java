@@ -61,7 +61,10 @@ public class ParameterValue {//Simplified version of hibernate class
 	    return bd.toPlainString();
 	}    
 
-	
+	/**
+	 * Method to display parameterValue in the ExperimentalRecord spreadsheets
+	 */
+	@Override
 	public String toString() {
 		
 		int n=3;

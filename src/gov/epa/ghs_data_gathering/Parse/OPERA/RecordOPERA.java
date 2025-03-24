@@ -1,16 +1,21 @@
 package gov.epa.ghs_data_gathering.Parse.OPERA;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import com.google.gson.JsonObject;
 import gov.epa.api.ScoreRecord;
 import gov.epa.database.SQLite_GetRecords;
+import gov.epa.database.SqlUtilities;
 
 public class RecordOPERA {
 
+	public int id;
 	public String DSSTOX_COMPOUND_ID;
 	public String LogOH_exp;
 	public String LogOH_pred;
@@ -844,6 +849,33 @@ public class RecordOPERA {
 	public String LogWS_pred_neighbor_3;
 	public String LogWS_pred_neighbor_4;
 	public String LogWS_pred_neighbor_5;
+	
+	public String CACO2_exp;
+	public String CACO2_pred;
+	public String CACO2_predRange;
+	public String AD_CACO2;
+	public String AD_index_CACO2;
+	public String Conf_index_CACO2;
+	public String CACO2_CAS_neighbor_1;
+	public String CACO2_CAS_neighbor_2;
+	public String CACO2_CAS_neighbor_3;
+	public String CACO2_CAS_neighbor_4;
+	public String CACO2_CAS_neighbor_5;
+	public String CACO2_DTXSID_neighbor_1;
+	public String CACO2_DTXSID_neighbor_2;
+	public String CACO2_DTXSID_neighbor_3;
+	public String CACO2_DTXSID_neighbor_4;
+	public String CACO2_DTXSID_neighbor_5;
+	public String CACO2_Exp_neighbor_1;
+	public String CACO2_Exp_neighbor_2;
+	public String CACO2_Exp_neighbor_3;
+	public String CACO2_Exp_neighbor_4;
+	public String CACO2_Exp_neighbor_5;
+	public String CACO2_pred_neighbor_1;
+	public String CACO2_pred_neighbor_2;
+	public String CACO2_pred_neighbor_3;
+	public String CACO2_pred_neighbor_4;
+	public String CACO2_pred_neighbor_5;
 
 
 	public static final String[] fieldNames = { "DSSTOX_COMPOUND_ID", "LogOH_exp", "LogOH_pred", "LogOH_predRange",
@@ -1077,7 +1109,8 @@ public class RecordOPERA {
 	 * @param stat
 	 * @return
 	 */
-	static Vector<JsonObject> getRecords(int minID, int maxID, Statement stat) {
+	@Deprecated
+	static List<JsonObject> getRecordsOld(int minID, int maxID, Statement stat) {
 		Vector<JsonObject>vec=new Vector<>();
 		
 		String sql="SELECT * FROM RESULTS WHERE ID>"+minID+" AND ID <= "+maxID;
@@ -1088,6 +1121,7 @@ public class RecordOPERA {
 			 ResultSetMetaData rsmd = rs.getMetaData();
 			 
 			 while (rs.next()) {
+				 				 				 
 				JsonObject jo=createJsonObject(rs,rsmd);
 				vec.add(jo);
 			}			 
@@ -1099,6 +1133,76 @@ public class RecordOPERA {
 		return vec;
 	}
 	
+	
+	/**
+	 * TODO  Would be faster if didnt get all cols
+	 * TODO Alternatively could get from PredictionDashboard in res_qsar once loaded
+	 * 
+	 * @param minID
+	 * @param maxID
+	 * @param stat
+	 * @return
+	 */
+	static List<RecordOPERA> getRecords(int minID, int maxID, Statement stat) {
+		
+		List<RecordOPERA>vec=new ArrayList<>();
+		
+		String sql="SELECT * FROM RESULTS WHERE ID>"+minID+" AND ID <= "+maxID;
+		 
+		 try {
+			 ResultSet rs = stat.executeQuery(sql);
+			 
+			 while (rs.next()) {
+				 RecordOPERA r=new RecordOPERA();
+				 SQLite_GetRecords.createRecord(rs, r);
+				 vec.add(r);
+			 }			 
+			 
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return vec;
+	}
+	
+
+	/**
+	 * Just get the fields needed to speed it up
+	 * 
+	 * @param minID
+	 * @param maxID
+	 * @param stat
+	 * @return
+	 */
+	static List<RecordOPERA> getRecords2(int minID, int maxID, Statement stat) {
+		
+		List<RecordOPERA>vec=new ArrayList<>();
+		
+		String sql = "SELECT DSSTOX_COMPOUND_ID, "
+				+ "r.LogBCF_exp, r.CERAPP_Ago_exp, r.CERAPP_Anta_exp, r.CoMPARA_Ago_exp,r.CoMPARA_Anta_exp, "
+				+ "r.LogBCF_pred, r.CERAPP_Ago_pred, r.CERAPP_Anta_pred, r.CoMPARA_Ago_pred, r.CoMPARA_Anta_pred, "
+				+ "r.AD_BCF, r.AD_CERAPP_Ago, r.AD_CERAPP_Anta,r.AD_CoMPARA_Ago,r.AD_CoMPARA_Anta,"
+				+ "r.AD_index_BCF, r.AD_index_CERAPP_Ago, r.AD_index_CERAPP_Anta, r.AD_index_CoMPARA_Ago, r.AD_index_CoMPARA_Anta,"
+				+ "r.Conf_index_BCF, r.Conf_index_CERAPP_Ago, r.Conf_index_CERAPP_Anta, r.Conf_index_CoMPARA_Ago,r.Conf_index_CoMPARA_Anta" + "\r\n" 
+				+ "FROM RESULTS r WHERE ID>" + minID + " AND ID <= " + maxID;		 
+		 try {
+			 ResultSet rs = stat.executeQuery(sql);
+			 
+			 while (rs.next()) {
+				 RecordOPERA r=new RecordOPERA();
+				 SQLite_GetRecords.createRecord(rs, r);
+				 vec.add(r);
+			 }			 
+			 
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return vec;
+	}
+	 
+	 
+	@Deprecated
 	public static JsonObject getRecordID(String cid,Statement stat) {
 		
 		

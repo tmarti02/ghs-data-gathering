@@ -236,6 +236,12 @@ public class DataRemoveDuplicateExperimentalValues {
 			
 			String tsi=reci.property_value_string;
 			
+			if(reci.property_name==null) {
+				System.out.println("When removing duplicates, no name:\t"+ParseUtilities.gson.toJson(reci)+"\n");
+				continue;
+			}
+
+			
 			for (int j=i+1;j<recs.size();j++) {
 
 //				if (i==j) continue;
@@ -243,6 +249,8 @@ public class DataRemoveDuplicateExperimentalValues {
 				ExperimentalRecord recj=recs.get(j);
 				
 				if (!recj.keep) continue;
+				
+				
 				
 				if(!reci.property_name.equals(recj.property_name)) continue;
 				
