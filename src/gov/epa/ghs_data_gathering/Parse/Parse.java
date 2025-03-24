@@ -18,6 +18,7 @@ import gov.epa.api.Chemical;
 import gov.epa.api.Chemicals;
 import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
+import gov.epa.exp_data_gathering.parse.JSONUtilities;
 import gov.epa.ghs_data_gathering.Parse.Annex13.Parse_Annex13;
 import gov.epa.ghs_data_gathering.Parse.CERAPP_EXP.ParseCERAPP_Exp;
 import gov.epa.ghs_data_gathering.Parse.COMPARA_EXP.ParseCOMPARA_Exp;
@@ -301,7 +302,7 @@ public class Parse {
 
 	}
 	
-	protected void writeOriginalRecordsToFile(Vector<?>records) {
+	protected void writeOriginalRecordsToFile(Object records) {
 
 		try {
 			GsonBuilder builder = new GsonBuilder();
@@ -323,6 +324,10 @@ public class Parse {
 			ex.printStackTrace();
 		}
 	}
+	
+	
+	
+	
 	
 	public static String fixChars(String str) {
 /**
@@ -659,7 +664,9 @@ $	\u0024	101940-13-0|Thiocyanic acid, (1,3,8,10-tetrahydro-1,3, 8,10-tetraoxoant
 		
 		if (writeJsonChemicalsFile) {
 			System.out.println("Writing json file for chemical records");
-			chemicals.toJSON_File(mainFolder+File.separator+fileNameJsonChemicalRecords);
+			String jsonPath=mainFolder+File.separator+fileNameJsonChemicalRecords;
+			JSONUtilities.batchAndWriteJSON(chemicals,jsonPath);
+//			chemicals.toJSON_File();
 		}
 
 		if (createDictionaryFile) {

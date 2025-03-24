@@ -92,6 +92,9 @@ public class RecordLookChem {
 	 */
 	private static Vector<String> getURLsFromDashboardRecords(Vector<RecordDashboard> records,int start,int end) {
 		String baseURL = "https://www.lookchem.com/cas-";
+		
+		//TODO use SDS links instead? https://www.lookchem.com/sds71-43-2.html
+		
 		Vector<String> urls = new Vector<String>();
 		for (int i = start; i < end; i++) {
 			String CAS = records.get(i).CASRN;

@@ -685,9 +685,9 @@ public class RecordArnot2006 {
 				} else if(species.species_supercategory.contains("microorganisms")) {
 					return "Microorganisms";
 				} else if(species.species_supercategory.equals("amphibians") || species.species_supercategory.equals("amphibians; standard test species")) {
-					return "amphibians";
+					return "Amphibians";
 				} else if(species.species_supercategory.equals("reptiles")) {
-					return "reptiles";
+					return "Reptiles";
 				} else if(species.species_supercategory.equals("omit")) {
 					return "Omit";
 				} else {

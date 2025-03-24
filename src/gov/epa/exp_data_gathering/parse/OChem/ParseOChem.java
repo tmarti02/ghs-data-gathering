@@ -188,7 +188,7 @@ public class ParseOChem extends Parse {
 		
 		p.generateOriginalJSONRecords=true;
 		p.howManyOriginalRecordsFiles=8;
-		p.removeDuplicates=false;//just in case, algorithm isnt bulletproof
+		p.removeDuplicates=false;//just in case, algorithm isnt bulletproof- TODO change to true since have updated the code
 //		System.out.println(p.removeDuplicates);
 		p.createFiles();
 //		p.getReferenceHashtable();

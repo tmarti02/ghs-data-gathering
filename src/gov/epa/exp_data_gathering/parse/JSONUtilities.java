@@ -14,12 +14,17 @@ import com.google.gson.GsonBuilder;
 public class JSONUtilities {
 
 	public static int batchAndWriteJSON(Vector<?> records, String baseFileName) {
+		return batchAndWriteJSON(records, baseFileName,100000 );
+	}
+	
+	
+	public static int batchAndWriteJSON(Vector<?> records, String baseFileName, int batchSize) {
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues();
 		Gson gson = builder.create();
 		int batch = 0;
 		
-		if (records.size() <= 100000) {
+		if (records.size() <= batchSize) {
 			String jsonRecords = gson.toJson(records);
 			writeJSONLineByLine(jsonRecords,baseFileName);
 			batch = 1;
@@ -30,7 +35,7 @@ public class JSONUtilities {
 			while (it.hasNext()) {
 				temp.add(it.next());
 				i++;
-				if (i!=0 && i%100000==0) {
+				if (i!=0 && i%batchSize==0) {
 					batch++;
 					String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".json")) + " " + batch + ".json";
 					String jsonRecords = gson.toJson(temp);
@@ -47,13 +52,19 @@ public class JSONUtilities {
 		return batch;
 	}
 	
+	
 	public static int batchAndWriteJSON(List<?> records, String baseFileName) {
+		return batchAndWriteJSON(records, baseFileName,100000 );
+	}
+
+	
+	public static int batchAndWriteJSON(List<?> records, String baseFileName, int batchSize) {
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting().disableHtmlEscaping().serializeSpecialFloatingPointValues();
 		Gson gson = builder.create();
 		int batch = 0;
 		
-		if (records.size() <= 100000) {
+		if (records.size() <= batchSize) {
 			String jsonRecords = gson.toJson(records);
 			writeJSONLineByLine(jsonRecords,baseFileName);
 			batch = 1;
@@ -64,7 +75,7 @@ public class JSONUtilities {
 			while (it.hasNext()) {
 				temp.add(it.next());
 				i++;
-				if (i!=0 && i%100000==0) {
+				if (i!=0 && i%batchSize==0) {
 					batch++;
 					String batchFileName = baseFileName.substring(0,baseFileName.indexOf(".json")) + " " + batch + ".json";
 					String jsonRecords = gson.toJson(temp);

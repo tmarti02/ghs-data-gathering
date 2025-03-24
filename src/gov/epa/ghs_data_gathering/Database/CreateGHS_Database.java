@@ -2,7 +2,10 @@ package gov.epa.ghs_data_gathering.Database;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 
 import java.sql.Connection;
@@ -10,8 +13,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.json.CDL;
 
 import gov.epa.QSAR.utilities.FileUtilities;
 import gov.epa.api.AADashboard;
@@ -280,6 +289,165 @@ public class CreateGHS_Database  {
 			String sqlAddIndex="CREATE INDEX "+indexName+" ON "+tableName+" (CAS)";
 			System.out.println(sqlAddIndex);
 			stat.executeUpdate(sqlAddIndex);			
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
+	
+	
+	public static void addBiowinPredictionsToToxvalv94() {
+
+		String dbPath="C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\0 java\\TEST_2020_03_18_EPA_Github\\databases\\toxval_v94.db";
+		String filepathBiowin3Preds="C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\0 java\\0 model_management\\hibernate_qsar_model_building\\data\\episuite\\biowin3 output from Java.txt";
+
+		String[] fieldNames = { "model_id", "chemical_id", "dtxsid", "model", 
+				"metric", "value", "units", "qualifier" };		
+		
+		try {
+			System.out.println("Adding episuite biowin3 predictions to models table");
+
+			Connection conn= MySQL_DB.getConnection(dbPath);
+			conn.setAutoCommit(false);
+
+			BufferedReader br = new BufferedReader(new FileReader(filepathBiowin3Preds));
+			String header = br.readLine();
+
+			String s = "insert into models values (";
+			for (int i = 1; i <= fieldNames.length; i++) {
+				s += "?";
+				if (i < fieldNames.length)
+					s += ",";
+			}
+			s += ");";
+
+			PreparedStatement prep = conn.prepareStatement(s);
+			
+			int counter = 0;
+
+			while (true) {
+				String Line = br.readLine();
+
+				counter++;
+				
+//				if (counter==100) break;
+
+				if (Line == null)
+					break;
+				
+//				System.out.println(Line);
+
+				if (!Line.isEmpty()) {
+					String []values=Line.split("\t");
+
+					String dtxsid=values[0];
+					
+					if(values[2].equals("null")) continue;
+					
+					float value=Float.parseFloat(values[2]);
+					
+					prep.setInt(1, counter);//model_id- just set manually since not set up to autonumber in db
+					prep.setInt(2, -1);//chemical_id- not needed
+					prep.setString(3, dtxsid);//dtxsid
+					prep.setString(4, "EpiSuite");//model
+					prep.setString(5, "Biodegradation Score");//metric
+					prep.setFloat(6, value);//metric
+					prep.setString(7, "unitless");//units
+					prep.setString(8, "=");//qualifier
+					prep.addBatch();
+				}
+
+				if (counter % 1000 == 0) {
+					// System.out.println(counter);
+					prep.executeBatch();
+				}
+			}
+
+			int[] count = prep.executeBatch();// do what's left
+			conn.setAutoCommit(true);
+
+			br.close();
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+	}
+	
+	public static void addModelRecordsToToxval() {
+
+		String dbPath="C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\0 java\\TEST_2020_03_18_EPA_Github\\databases\\toxval_v94.db";
+		String filepathRecords="C:\\Users\\TMARTI02\\OneDrive - Environmental Protection Agency (EPA)\\Comptox\\000 scientists\\Tony\\update toxval models\\update BCF biowin3 records in toxval models table.txt";
+
+		String[] fieldNames = { "model_id", "chemical_id", "dtxsid", "model", 
+				"metric", "value", "units", "qualifier" };		
+
+		try {
+			System.out.println("Adding records to models table");
+
+			Connection conn= MySQL_DB.getConnection(dbPath);
+
+			
+			Statement stat=conn.createStatement();
+
+			//***  Clear out old predictions from BIOWIN Java program ****
+			stat.executeUpdate("delete from models where model_id>0");
+			
+			conn.setAutoCommit(false);
+			
+			BufferedReader br = new BufferedReader(new FileReader(filepathRecords));
+			String header = br.readLine();
+
+			List<String>headers=Arrays.asList(header.split("\t"));
+
+			String s = "insert into models values (";
+			for (int i = 1; i <= fieldNames.length; i++) {
+				s += "?";
+				if (i < fieldNames.length)
+					s += ",";
+			}
+			s += ");";
+
+			PreparedStatement prep = conn.prepareStatement(s);
+
+			int counter = 0;
+
+			while (true) {
+				String Line = br.readLine();
+
+				counter++;
+
+				if (Line == null || Line.isEmpty())	break;
+
+				String []values=Line.split("\t");
+
+				prep.setInt(1, counter);//model_id- just set manually since not set up to autonumber in db
+				prep.setInt(2, -1);//chemical_id- not needed
+
+				String strValue=values[headers.indexOf("value")];
+				if(strValue.equals("null")) continue;
+				float value= Float.parseFloat(strValue);
+
+				prep.setString(3, values[headers.indexOf("dtxsid")]);//dtxsid
+				prep.setString(4, values[headers.indexOf("model")]);//model
+				prep.setString(5, values[headers.indexOf("metric")]);//metric
+				prep.setFloat(6, value);//value
+				prep.setString(7, values[headers.indexOf("units")]);//units
+				prep.setString(8, values[headers.indexOf("qualifier")]);//qualifier
+				prep.addBatch();
+			}
+
+			if (counter % 10000 == 0) {
+				 System.out.println(counter);
+				prep.executeBatch();
+			}
+
+
+			int[] count = prep.executeBatch();// do what's left
+			conn.setAutoCommit(true);
+
+			br.close();
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -651,9 +819,10 @@ public class CreateGHS_Database  {
 		//Create files for all sources:
 //		Parse.recreateFilesAllSources();
 		
-		boolean forMDH=true;
+		boolean forMDH=false;
 		
-		String date="2023_02_07";
+//		String date="2023_02_07";
+		String date="2025_03_10";
 		
 		String folder=AADashboard.dataFolder+"\\dictionary\\text output";
 		String textFileName="flat file "+date+".txt";		
@@ -662,7 +831,8 @@ public class CreateGHS_Database  {
 		String textFilePath=folder+"\\"+textFileName;
 
 		//Create flat file for all data:
-		ScoreRecord.createFlatFileFromAllSourcesSortedByCAS(forMDH, textFilePath);
+		ScoreRecord.createFlatFileFromAllSourcesSorted(forMDH, textFilePath);
+		
 		
 		//Get counts for each source:
 //		FlatFileRecord.analyzeRecords(textFilePath,folder+"/counts.txt");
@@ -706,7 +876,7 @@ public class CreateGHS_Database  {
 	
 	public static void main(String[] args) {
 
-		
+//		addModelRecordsToToxval();
 		createOverallDB();
 //		createSEEM3_DB();
 		

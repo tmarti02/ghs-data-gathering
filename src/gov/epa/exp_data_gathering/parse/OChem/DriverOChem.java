@@ -477,7 +477,7 @@ public class DriverOChem {
 		return articleIds;
 	}
 
-	private JsonArray parseRecordsFromCSV(String filepath) {
+	public static JsonArray parseRecordsFromCSV(String filepath) {
 
 		try {
 			

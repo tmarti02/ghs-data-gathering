@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -147,21 +148,18 @@ public class Chemicals extends ArrayList<Chemical> {
 			
 						
 			FileWriter fw=new FileWriter(filepath);
-			
 			fw.write(ScoreRecord.getHeader(del)+"\r\n");
-			
-			ArrayList<String>uniqueCAS=new ArrayList<>();
-			
+
+			HashSet<String>uniqueCAS=new HashSet<>();//much faster than arraylist to create unique list
 			
 			for (Chemical chemical:this) {
 				
 				ArrayList<String>lines=chemical.toStringArray(del);
-				
-				if (!uniqueCAS.contains(chemical.CAS)) uniqueCAS.add(chemical.CAS);
-				
+				uniqueCAS.add(chemical.CAS);
 				
 				for (String line:lines) {
-					line=line.replace("–", "-").replace("’", "'");//TODO use StringEscapeUtils?
+					
+//					line=line.replace("–", "-").replace("’", "'");//TODO use StringEscapeUtils?
 					fw.write(line+"\r\n");
 				}
 				
@@ -183,6 +181,7 @@ public class Chemicals extends ArrayList<Chemical> {
 	public String toJSON() {
 		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting();// makes it multiline and readable
+		builder.serializeSpecialFloatingPointValues();
 		Gson gson = builder.create();
 		
 

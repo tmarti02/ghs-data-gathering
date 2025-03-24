@@ -24,11 +24,11 @@ import gov.epa.api.ExperimentalConstants;
  */
 public class CompareExperimentalRecords {
 
-	static class Source {
+	public static class Source {
 		String sourceName;
 		String subfolder;
 
-		Source(String sourceName,String subfolder) {
+		public Source(String sourceName,String subfolder) {
 			this.sourceName=sourceName;
 			this.subfolder=subfolder;
 		}
@@ -36,11 +36,11 @@ public class CompareExperimentalRecords {
 
 	CompareMethods cm=new CompareMethods();
 	Comparisons c=new Comparisons();
-	ExperimentalRecordManipulator rm=new ExperimentalRecordManipulator();
+	public ExperimentalRecordManipulator rm=new ExperimentalRecordManipulator();
 
-	class ExperimentalRecordManipulator {
+	public class ExperimentalRecordManipulator {
 
-		private ExperimentalRecords getAllExperimentalRecords(List<Source> sources) {
+		public ExperimentalRecords getAllExperimentalRecords(List<Source> sources) {
 			ExperimentalRecords recsAll=new ExperimentalRecords();
 			for(Source source:sources) {
 				ExperimentalRecords recs=ExperimentalRecords.getExperimentalRecords(source.sourceName, source.subfolder);
@@ -151,7 +151,7 @@ public class CompareExperimentalRecords {
 				int middleVal2=vals.size()/2;
 				int middleVal1=middleVal2-1;
 				recs.medianValue=(vals.get(middleVal1)+vals.get(middleVal2))/2.0;
-		
+				
 			} else {//odd
 				int middleVal=vals.size()/2;
 				recs.medianValue=vals.get(middleVal);
@@ -194,7 +194,8 @@ public class CompareExperimentalRecords {
 				if(!er.property_value_units_final.equals(units)) continue;
 		
 				if(er.property_value_numeric_qualifier!=null) {
-					if (er.property_value_numeric_qualifier.contains("<") || er.property_value_numeric_qualifier.contains(">")) continue;
+//					if (er.property_value_numeric_qualifier.contains("<") || er.property_value_numeric_qualifier.contains(">")) continue;
+					if (!er.property_value_numeric_qualifier.equals("~")) continue;
 				}
 		
 				Double val=null;
@@ -531,6 +532,8 @@ public class CompareExperimentalRecords {
 		 */
 		private void compareBCF() {
 
+			printChemicalsInCommon=false;
+			
 			List<Source>sources1=new ArrayList<>();
 			List<Source>sources2=new ArrayList<>();
 
@@ -545,19 +548,19 @@ public class CompareExperimentalRecords {
 //			sources2.add(new Source("Arnot 2006",propertyName));
 			
 //			sources2.add(new Source("ECOTOX_2023_12_14",propertyName));
-			
-			
-			sources1.add(new Source("Arnot 2006",propertyName));
-			
-			sources2.add(new Source("ECOTOX_2023_12_14",propertyName));
-//			sources2.add(new Source("Arnot 2006",null));
-			
-//			
 
-			//		sources1.add(new Source("ECOTOX_2023_12_14",propertyName));
-			//		sources1.add(new Source("ToxVal_prod",propertyName));
-			//		sources2.add(new Source("Burkhard",propertyName));
+//			sources1.add(new Source("Arnot 2006",propertyName));
+			sources1.add(new Source("QSAR_Toolbox","BCF NITE//"+propertyName));//banding issue, only 37 new chemicals 
 
+			sources2.add(new Source("Arnot 2006",propertyName));
+			sources2.add(new Source("ECOTOX_2024_12_12",propertyName));
+//			sources2.add(new Source("QSAR_Toolbox","BCF NITE//"+propertyName));//banding issue, only 37 new chemicals 
+			sources2.add(new Source("Burkhard",propertyName));
+
+			
+			
+			
+//			sources2.add(new Source("QSAR_Toolbox","BCF CEFIC//"+propertyName));//banding issue, only 37 new chemicals
 
 			String units="L/kg";
 			cm.compare(sources1, sources2, propertyName, units,"cas");
@@ -598,6 +601,9 @@ public class CompareExperimentalRecords {
 
 	}
 
+	boolean printChemicalsInCommon=true;
+
+	
 	class CompareMethods {
 
 		void compare(List<Source>sources1, List<Source>sources2, String propertyName,String units,String idType) {
@@ -616,6 +622,8 @@ public class CompareExperimentalRecords {
 				tm2 = rm.getTreeMapByDTXSID(propertyName, units, recs2);
 			}
 
+			System.out.println("sources1:"+ParseUtilities.gson.toJson(sources1));
+			System.out.println("sources2:"+ParseUtilities.gson.toJson(sources2));
 
 			System.out.println("countWithMedian1="+getCountWithMedian(tm1));
 			System.out.println("countWithMedian2="+getCountWithMedian(tm2));
@@ -692,10 +700,9 @@ public class CompareExperimentalRecords {
 
 			DecimalFormat df=new DecimalFormat("0.00");
 
-//			boolean printValues=true;
-					boolean printValues=false;
+//			boolean printValues=false;
 
-			if(printValues) System.out.println("\nLogType\tkey\tLog10median_1\tLog10median_2\tdiff");
+			if(printChemicalsInCommon) System.out.println("\nLogType\tkey\tLog10median_1\tLog10median_2\tdiff");
 
 			List<Double>vals1=new ArrayList<>();
 			List<Double>vals2=new ArrayList<>();
@@ -715,7 +722,7 @@ public class CompareExperimentalRecords {
 					Double error=Math.abs(recs1.medianValue-recs2.medianValue);
 					vals1.add(recs1.medianValue);
 					vals2.add(recs2.medianValue);
-					if(printValues) {
+					if(printChemicalsInCommon) {
 						System.out.println("took log\t"+key+"\t"+df.format(recs1.medianValue)+"\t"+df.format(recs2.medianValue)+"\t"+df.format(error));					
 					}
 

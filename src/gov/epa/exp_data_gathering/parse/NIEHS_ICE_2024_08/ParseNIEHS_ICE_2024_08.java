@@ -17,11 +17,11 @@ import gov.epa.exp_data_gathering.parse.QSAR_ToolBox.RecordQSAR_ToolBox;
 
 public class ParseNIEHS_ICE_2024_08 extends Parse {
 
-	String fileNameAcuteOral="acute_oral.xlsx";
-	String fileNameSensitization="skin_sensitization.xlsx";
+	public static String fileNameAcuteOral="acute_oral.xlsx";
+	public static String fileNameSensitization="skin_sensitization.xlsx";
 	
 //	String fileName=fileNameAcuteOral;
-	String fileName=fileNameSensitization;
+	public String fileName=fileNameSensitization;
 	String sheetName;
 	
 	

@@ -36,7 +36,7 @@ public class ParseBurkhard  {
 	public void getBCF_ExperimentalRecords(String propertyName) {
 
 		String source=RecordBurkhard.sourceName;
-		boolean createOriginalRecords=false;
+		boolean createOriginalRecords=true;
 
 //		boolean limitToStandardTestSpecies=false;
 //		if(propertyName.toLowerCase().contains("standard")) {
@@ -157,8 +157,8 @@ public class ParseBurkhard  {
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
 //		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);
 		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBAF);
-		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAF);
-		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAFWholeBody);
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAF);
+//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAFWholeBody);
 	}
 
 }

@@ -596,7 +596,10 @@ public class FinalRecord {
 	
 
 	/**
-	 * Checks the guidelines for SkinSensitization-LLNA to ensure the data was tested properly. OECD guidelines 429 (equivalent to EPPA OPPTS 870.2600/EU Method B.42/SPL Standard Test Method 595.12) and 442B (equivalent to EU Method B.51) were used in the STopTox paper (Borba et al.) along with 442A.
+	 * Checks the guidelines for SkinSensitization-LLNA to ensure the data was
+	 * tested properly. OECD guidelines 429 (equivalent to EPPA OPPTS 870.2600/EU
+	 * Method B.42/SPL Standard Test Method 595.12) and 442B (equivalent to EU
+	 * Method B.51) were used in the STopTox paper (Borba et al.) along with 442A.
 	 * 
 	 * @param er
 	 * @param strGuidelinesQualifiers

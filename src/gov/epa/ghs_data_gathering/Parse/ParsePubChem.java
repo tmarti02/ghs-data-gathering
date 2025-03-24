@@ -811,7 +811,7 @@ public class ParsePubChem {
 			Vector<FlatFileRecord2>recordsPubchem=FlatFileRecord2.loadRecordsFromFile(filePathPubchemSource, "CAS", "|");
 			System.out.println("pubchem loaded");
 			
-			Vector<ScoreRecord>recordsMine=ScoreRecord.loadRecordsFromFile(filePathMine, "CAS", "|");
+			List<ScoreRecord>recordsMine=ScoreRecord.loadRecordsFromFile(filePathMine, "|");
 			System.out.println("Mine loaded");
 			
 			

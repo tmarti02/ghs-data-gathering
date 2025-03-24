@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.util.Vector;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import gov.epa.api.Chemical;
@@ -25,7 +26,8 @@ public class Parse_SEEM3 extends Parse {
 
 	@Override
 	protected void createRecords() {
-		Vector<JsonObject> records = RecordSEEM3.parseRecordsFromExcel();
+//		Vector<JsonObject> records = RecordSEEM3.parseRecordsFromExcel();
+		JsonArray records = RecordSEEM3.parseRecordsFromCSV();
 		writeOriginalRecordsToFile(records);
 	}
 
@@ -70,14 +72,23 @@ public class Parse_SEEM3 extends Parse {
 	    			
 		chemical.CAS=r.CAS;
 		chemical.name=r.Substance_Name.replace("|", "_");
+		
+		if(chemical.name.substring(0,1).equals("\"") && chemical.name.substring(chemical.name.length()-1,chemical.name.length()).equals("\"")) {
+			chemical.name=chemical.name.substring(1,chemical.name.length()-1);
+//			System.out.println(chemical.CAS+"\tfixed");
+		}
+		
+		chemical.dtxsid=r.dsstox_substance_id;
 
 		Score score=chemical.scoreExposure;
 		
 		//Agonist
 		ScoreRecord sr = new ScoreRecord(score.hazard_name,chemical.CAS,chemical.name);
+		sr.dtxsid=chemical.dtxsid;
+		
 		sr.source = r.sourceName;
 		
-		if (r.seem3_u95.equals("NA")) {
+		if (r.seem3_u95==null || r.seem3_u95.equals("NA")) {
 			sr.valueMass=Double.NaN;
 		} else {
 			sr.valueMass=Double.parseDouble(r.seem3_u95);	
@@ -122,9 +133,11 @@ public class Parse_SEEM3 extends Parse {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Parse_SEEM3 p = new Parse_SEEM3();
-		p.generateOriginalJSONRecords=false;
-		p.writeJsonChemicalsFile=false;
 		
+		p.generateOriginalJSONRecords=false;		
+		p.writeJsonChemicalsFile=false;
+		p.writeFlatFile=true;
+		p.createDictionaryFile=false;
 		p.createFiles();
 	}
 

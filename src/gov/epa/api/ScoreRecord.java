@@ -1,6 +1,7 @@
 package gov.epa.api;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -12,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +24,8 @@ import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import gov.epa.api.DsstoxLookup.DsstoxRecord;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.ghs_data_gathering.Utilities.Utilities;
 
 //Revised version of this class removed need to have FlatFileRecord class
@@ -29,10 +33,15 @@ import gov.epa.ghs_data_gathering.Utilities.Utilities;
 public class ScoreRecord {
 	public String hazardName;//used to be in FlatFileRecord
 	public String CAS;////used to be in FlatFileRecord
+	public String dtxsid;
+	public String dtxcid;//for checking against opera
+	
 	public String name;//chemical name
 	public String source;// where the record came from
 	public String sourceOriginal;// where the record came from
 	public String score;// i.e. L,M,H,VH
+	
+	public String sourceTable;// where the record came from
 	
 	public String listType;
 	
@@ -58,6 +67,7 @@ public class ScoreRecord {
 	
 	public String toxvalID;
 	public String testOrganism;//common name for animal used in testing
+	public String testOrganismType;
 //	public String reported_dose;
 //	public String normalized_dose;
 
@@ -74,7 +84,7 @@ public class ScoreRecord {
 	public String effect;
 
 	
-	public Double duration;
+	public String duration;
 	public String durationUnits;
 	
 	public String url;
@@ -83,7 +93,7 @@ public class ScoreRecord {
 
 
 //	All the fields in the class in the desired order:	
-		public static String[] allFieldNames= {"CAS","name","hazardName","source","sourceOriginal", 
+		public static String[] allFieldNames= {"dtxsid","CAS","name","hazardName","source","sourceOriginal", 
 				"score", "listType","route", "category", "hazardCode",
 				"hazardStatement", "rationale", "note","note2","toxvalID",
 				"testOrganism","testType","valueMassOperator","valueMass","valueMassUnits","effect",
@@ -369,6 +379,9 @@ public class ScoreRecord {
 		
 	}
 	
+	public ScoreRecord() {}
+	
+	
 	public ScoreRecord(String hazard_name,String CAS,String name) {
 		this.hazardName=hazard_name;
 		this.CAS=CAS;
@@ -606,7 +619,40 @@ public class ScoreRecord {
 //}
 
 	
-	public static Vector <ScoreRecord> loadRecordsFromFile(String filepath,String ID,String del) {
+	public static Vector <Object> loadRecordsFromFileAsObjects(String filepath,String del) {
+		
+		Vector <Object>records=new Vector();
+		
+		String Line="";
+		
+		try {
+			Scanner scanner = new Scanner(new File(filepath));
+			String header=scanner.nextLine();
+			List <String>hlist=Utilities.Parse(header, del);
+			 
+			while (scanner.hasNext()) {
+				Line=scanner.nextLine();
+				if (Line==null) break;
+				List <String>list=Utilities.Parse(Line, del);
+				ScoreRecord r=ScoreRecord.createRecord(hlist,list);
+				
+//				String valueID=list.get(hlist.indexOf(ID));
+//				records.put(valueID, r);
+				records.add(r);
+				
+	        }
+			scanner.close();
+			
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage()+"\t"+Line);
+			ex.printStackTrace();
+		}
+		return records;
+	}
+	
+	
+
+	public static List <ScoreRecord> loadRecordsFromFile(String filepath,String del) {
 		
 		Vector <ScoreRecord>records=new Vector();
 		
@@ -1093,23 +1139,23 @@ public class ScoreRecord {
 	
 
 	
-	public static void createFlatFileFromAllSourcesSortedByCAS(boolean forMDH, String outputPath) {
+	public static void createFlatFileFromAllSourcesSorted(boolean forMDH, String outputPath) {
 		AADashboard a=new AADashboard(forMDH);
 		String d="|";
 		
 		try {
 						
-			Hashtable<String,String>htCASName=new Hashtable<>();
+//			Hashtable<String,String>htCASName=new Hashtable<>();
 			
 			ArrayList<String>overallLines=new ArrayList<>();
+			
+			HashSet<String>identifiers=new HashSet<>();
 			
 			for (String source:a.sources) {
 				
 				String filePathFlatChemicalRecords = AADashboard.dataFolder+File.separator+source+File.separator+source +" Chemical Records.txt";
 
 				File file=new File(filePathFlatChemicalRecords);
-				
-								
 				
 				if (!file.exists())  {
 					System.out.println("*** "+source+" text file missing");
@@ -1142,7 +1188,6 @@ public class ScoreRecord {
 						continue;
 					}
 					
-					
 					ScoreRecord sr=ScoreRecord.createRecord(hlist, list);
 										
 					if (sr.CAS.isEmpty()) {
@@ -1151,20 +1196,32 @@ public class ScoreRecord {
 							continue;
 						}
 						
-						if (htCASName.get(sr.name)==null) {
-							String newCAS="NOCAS"+(htCASName.size()+1);
-							htCASName.put(sr.name,newCAS);
-							sr.CAS=newCAS;
-						} else {
-							sr.CAS=htCASName.get(sr.name);
-						}
+//						if (htCASName.get(sr.name)==null) {
+//							String newCAS="NOCAS"+(htCASName.size()+1);
+//							htCASName.put(sr.name,newCAS);
+//							sr.CAS=newCAS;
+//						} else {
+//							sr.CAS=htCASName.get(sr.name);
+//						}
 						
+					} else {
+						if(!ParseUtilities.isValidCAS(sr.CAS)) {
+//							System.out.println("Invalid cas for "+sr.name);
+							sr.CAS="";
+						}
 					}
 					
+					if(sr.dtxsid==null) {
+						identifiers.add(sr.CAS+"\t"+sr.name);
+					}
+					
+//					System.out.println(sr.dtxsid);
 					
 					overallLines.add(sr.toString("|"));
 				}
 			}
+			
+			System.out.println("Number of identifiers w/o sid="+identifiers.size());
 			
 			Collections.sort(overallLines);
 			
@@ -1177,12 +1234,172 @@ public class ScoreRecord {
 			fw.flush();
 			fw.close();
 			
+			
+			fw=new FileWriter(outputPath.replace(".txt", " identifiers.txt"));
+			fw.write("id\tname\tcas\r\n");
+
+			int counter=0;
+			for (String identifier:identifiers) {
+				fw.write(++counter+"\t"+identifier+"\r\n");
+			}
+			fw.flush();
+			fw.close();
+			
+			
 		
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		
 	}
+
+	static class Identifier{
+		int ID;
+		String casrn;
+		String name;
+		String dtxsid;
+	}
+
+	public static List<ScoreRecord> createScoreRecordsAllSourcesLookupDtxsidByCAS(boolean forMDH, String outputPath) {
+		
+		AADashboard a=new AADashboard(forMDH);
+		
+		try {
+			
+			List<ScoreRecord>scoreRecords=new ArrayList<>();
+
+			for (String source:a.sources) {
+				List<ScoreRecord>scoreRecordsSrc=getScoreRecords(source);
+				if(scoreRecordsSrc!=null) {
+					scoreRecords.addAll(scoreRecordsSrc);
+				}
+			}
+
+			lookup_dtxsid_from_casrn(scoreRecords);
+			
+//			for (String nameCAS:cantMapNameCAS) {
+//				System.out.println(nameCAS);
+//			}
+			
+			FileWriter fw=new FileWriter(outputPath);
+			fw.write(ScoreRecord.getHeader("|")+"\r\n");
+			for (ScoreRecord sr:scoreRecords) {
+				fw.write(sr.toString("|")+"\r\n");
+			}
+			fw.flush();
+			fw.close();
+			
+			return scoreRecords;
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
+		
+	}
+
+	public static void lookup_dtxsid_from_casrn(List<ScoreRecord> scoreRecords) {
+		HashSet<String>casrnsNoDtxsid=new HashSet<>();
+		for (ScoreRecord sr:scoreRecords) {
+			if(sr.dtxsid==null) {
+				if(sr.CAS!=null  && !sr.CAS.isBlank())
+					casrnsNoDtxsid.add(sr.CAS);
+			}
+		}
+		
+		System.out.println("casrnsNoDtxsid.size()="+casrnsNoDtxsid.size());
+//			System.out.println(casrnsNoDtxsid);
+		
+		if(casrnsNoDtxsid.size()==0) {
+			System.out.println("All chemicals have dtxsid");
+			return;
+		}
+		
+		DsstoxLookup dl=new DsstoxLookup();
+		List<DsstoxRecord>dsstoxRecords=dl.getDsstoxRecordsByCAS(casrnsNoDtxsid,true);
+		
+//		System.out.println("dsstoxRecords.size()="+dsstoxRecords.size());
+		
+		Hashtable<String,DsstoxRecord>htCAS=new Hashtable<>();
+		for (DsstoxRecord dr:dsstoxRecords) htCAS.put(dr.casrn, dr);
+		
+		HashSet<String>cantMapNameCAS=new HashSet<>();
+		
+		for (ScoreRecord sr:scoreRecords) {
+			if(sr.dtxsid==null) {
+				if(sr.CAS!=null && htCAS.containsKey(sr.CAS)) {
+					sr.dtxsid=htCAS.get(sr.CAS).dtxsid;
+//						System.out.println("Found by cas:\t"+sr.CAS+"\t"+sr.dtxsid);
+				} else {
+//					System.out.println("Cant get dtxsid:\t"+sr.CAS+"\t"+sr.name);
+					cantMapNameCAS.add(sr.CAS+"\t"+sr.name);
+				}
+			}
+		}
+		
+		System.out.println("cantMapNameCAS.size()="+cantMapNameCAS.size());
+	}
+
+	private static List<ScoreRecord> getScoreRecords(String source) throws IOException {
+		
+		
+		String filePathFlatChemicalRecords = AADashboard.dataFolder+File.separator+source+File.separator+source +" Chemical Records.txt";
+
+		File file=new File(filePathFlatChemicalRecords);
+		
+		if (!file.exists())  {
+			System.out.println("*** "+source+" text file missing");
+			return null;
+		} else {
+			Path path = Paths.get(file.getAbsolutePath());
+		    BasicFileAttributes attr =
+		        Files.readAttributes(path, BasicFileAttributes.class);
+		   		           
+			System.out.println(source+"\t"+attr.lastModifiedTime());
+		}
+		
+		ArrayList<String>lines=Utilities.readFileToArray(filePathFlatChemicalRecords);
+		
+		String header=lines.remove(0);
+		
+		LinkedList<String>hlist=Utilities.Parse(header, "|");
+
+		List<ScoreRecord> scoreRecords=new ArrayList<>();
+		for (String line:lines) {
+			line=line.replace("<br><br><br>","<br><br>");
+//					FlatFileRecord f=FlatFileRecord.createFlatFileRecord(line);
+			LinkedList<String>list=Utilities.Parse(line, "|");
+			
+			if (list.size()!=hlist.size()) {
+				System.out.println("mismatch in num columns:"+line);
+				continue;
+			}
+			ScoreRecord sr=ScoreRecord.createRecord(hlist, list);
+			
+			if (sr.CAS.isEmpty()) {
+				sr.CAS=null;
+				if (sr.name.isBlank()) {
+//					System.out.println(source+"\tCAS and name are null: "+line);
+					continue;
+				}
+			} else {
+
+				if(!ParseUtilities.isValidCAS(sr.CAS)) {
+//							System.out.println("Invalid cas for "+sr.name);
+					sr.CAS=null;
+					if (sr.name.isBlank()) {
+//						System.out.println(source+"\tCAS and name are null: "+line);
+						continue;
+					}
+				}
+			}
+			
+			
+			scoreRecords.add(sr);
+		}
+		return scoreRecords;
+	}
+	
 	
 	public static void createFlatFileFromSourceSortedByCAS(boolean forMDH, String outputPath,String source) {
 		AADashboard a=new AADashboard(forMDH);
@@ -1348,3 +1565,4 @@ public class ScoreRecord {
 	// }
 
 }
+

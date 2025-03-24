@@ -30,6 +30,9 @@ public class Chemical {
 
 	public String indexNumber;
 	public String EC_number;//EU classification number (or ID number from whatever source we got data from)
+	
+	public String dtxsid;
+	public String dtxcid;
 	public String name;// name of chemical (for display)
 	public String CAS;// chemical abstracts service number for chemical
 	

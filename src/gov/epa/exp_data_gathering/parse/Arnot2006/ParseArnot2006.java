@@ -155,8 +155,11 @@ public class ParseArnot2006 extends Parse {
 //				ExperimentalConstants.strFishBCFWholeBody+"_OverallScore_1_or_2",
 //				ExperimentalConstants.strFishBCFWholeBody+"_OverallScore_1");		
 
-		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBAF,
+		List<String>propertyNames=Arrays.asList(
 				ExperimentalConstants.strBCF,
+				ExperimentalConstants.strFishBCF,
+				ExperimentalConstants.strFishBCFWholeBody,
+				ExperimentalConstants.strBAF,
 				ExperimentalConstants.strFishBAF,
 				ExperimentalConstants.strFishBAFWholeBody);
 

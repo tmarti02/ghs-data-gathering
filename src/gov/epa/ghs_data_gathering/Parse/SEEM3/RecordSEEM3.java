@@ -4,11 +4,13 @@ import java.util.HashMap;
 import java.util.Vector;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.ScoreRecord;
 import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
+import gov.epa.exp_data_gathering.parse.OChem.DriverOChem;
 import gov.epa.ghs_data_gathering.Parse.ParseSIN;
 
 public class RecordSEEM3 {
@@ -34,6 +36,13 @@ public class RecordSEEM3 {
 	public static final String sourceName = ScoreRecord.strSourceSEEM3;
 	
 	private static final String fileName = "Ring2018-ExposurePreds.xlsx";
+	private static final String fileNameCsv = "Ring2018-ExposurePreds.csv";
+
+	
+	public static JsonArray parseRecordsFromCSV() {
+		String csvPath="AA Dashboard\\Data\\Seem3\\Excel files\\"+fileNameCsv;
+		return DriverOChem.parseRecordsFromCSV(csvPath);
+	}
 	
 	public static Vector<JsonObject> parseRecordsFromExcel() {
 		String mainFolderPath="AA Dashboard\\Data";

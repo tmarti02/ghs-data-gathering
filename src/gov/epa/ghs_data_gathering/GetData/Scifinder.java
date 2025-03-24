@@ -317,7 +317,7 @@ public class Scifinder {
 
 			}
 
-
+			br.close();
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -603,6 +603,8 @@ public class Scifinder {
 						System.out.println(ex.getMessage());
 					}
 				}
+				
+				br.close();
 			}
 
 		} catch (Exception ex) {
@@ -643,6 +645,7 @@ public class Scifinder {
 				}
 
 			}
+			br.close();
 
 		} catch (Exception ex) {
 			ex.printStackTrace();

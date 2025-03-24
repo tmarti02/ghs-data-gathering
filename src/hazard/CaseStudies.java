@@ -1034,11 +1034,13 @@ public class CaseStudies {
 	}
 
 	/**
-	 * Gets map by hazardName Skips records with score="N/A" or "I", listType="QSAR
-	 * Model"
+	 * Gets map by hazardName, can skip records with score="N/A" or "I", listType="QSAR Model"
 	 * 
 	 * @param hazardResult
 	 * @param maxAnalogRecords
+	 * @param keepNA
+	 * @param keepI
+	 * @param keepQSAR
 	 * @return
 	 */
 	TreeMap<String, List<hazard.ScoreRecord>> getMap(HazardResult hazardResult, int maxAnalogRecords,

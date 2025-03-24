@@ -417,7 +417,7 @@ public class SkinSensitizationReach {
 	}
 	
 	private Hashtable <String,String>getECHACASLookup(String filepath) {
-		Hashtable <String,String>ht=new Hashtable();
+		Hashtable <String,String>ht=new Hashtable<>();
 
 		try {
 			BufferedReader br=new BufferedReader(new FileReader(filepath));

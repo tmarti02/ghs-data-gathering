@@ -2,6 +2,7 @@ package gov.epa.ghs_data_gathering.Parse.DSSTox;
 
 import java.io.FileWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 
 import org.openscience.cdk.AtomContainer;
@@ -74,7 +75,7 @@ public class DSSToxExportToSDF {
 		ExcelSourceReader esr=new ExcelSourceReader();		
 		esr.getSheet(filepath, 0);
 						
-		String [] fieldNames=esr.getHeaders();		
+		List<String> fieldNames=esr.getHeaders();		
 		HashMap<Integer,String> hm = ExcelSourceReader.generateDefaultMap(fieldNames, 0);
 		Vector<JsonObject> records = esr.parseRecordsFromExcel(hm, 1);
 		

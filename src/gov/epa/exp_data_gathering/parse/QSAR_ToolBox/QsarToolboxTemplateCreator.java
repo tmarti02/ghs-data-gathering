@@ -20,10 +20,9 @@ public class QsarToolboxTemplateCreator {
 		File Folder=new File(folder);
 
 		List<String>sheetNames=Arrays.asList("Sheet1");
+
 		ExcelSourceReader esr=new ExcelSourceReader();
-		
 		esr.sourceName=sourceName;
-		
 		List<String>headers=esr.getAllHeadersFromExcelFilesInFolder(sheetNames,headerRowNum, Folder);
 		esr.createClassTemplateFiles(headers);
 
