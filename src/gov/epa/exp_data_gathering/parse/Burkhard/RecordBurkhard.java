@@ -261,21 +261,21 @@ public class RecordBurkhard {
 
 				if ((Log_BAF_arithmetic_or_logarithmic!=null)
 						&& Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic")) {
-					er.property_value_string = propertyValue2 + " (arithmetic)";
+					er.property_value_string = propertyValue2 + " " + Log_BAF_units;
 
-					er.property_value_max_original = Math.log10(Double.parseDouble(Log_BAF_min));
-					er.property_value_min_original = Math.log10(Double.parseDouble(Log_BAF_max));
+					er.property_value_max_original = Double.parseDouble(Log_BAF_min);
+					er.property_value_min_original = Double.parseDouble(Log_BAF_max);
 				} else {
 					er.property_value_max_original = Double.parseDouble(Log_BAF_min);
 					er.property_value_min_original = Double.parseDouble(Log_BAF_max);
-					er.property_value_string = propertyValue2 + " (log)";
+					er.property_value_string = propertyValue2 + "log10("+Log_BAF_units+")";
 
 				}
 
 			} else if (Log_BAF_arithmetic_or_logarithmic!=null
 					&& Log_BAF_arithmetic_or_logarithmic.toLowerCase().contains("arithmetic") && !Log_BAF_mean.toLowerCase().contains("na" ) && !Log_BAF_mean.toLowerCase().contains("n.a" ) && !Log_BAF_mean.toLowerCase().contains("n/a" ) && !Log_BAF_mean.toLowerCase().contains("n.d" ) && !Log_BAF_mean.toLowerCase().contains("nc") && !Log_BAF_mean.toLowerCase().contains("nd") && !Log_BAF_mean.contains("--" ) && !Log_BAF_mean.toLowerCase().contains("n.c" ) && !Log_BAF_mean.equals("-") && !Log_BAF_mean.contains("LOD")) {
-				er.property_value_string = propertyValue + " (arithmetic)";
-				er.property_value_point_estimate_original = Math.log10(Double.parseDouble(Log_BAF_mean));
+				er.property_value_string = propertyValue + " " + Log_BAF_units;
+				er.property_value_point_estimate_original = Double.parseDouble(Log_BAF_mean);
 			} else if(Log_BAF_mean!=null && !Log_BAF_mean.toLowerCase().contains("na" ) && !Log_BAF_mean.toLowerCase().contains("n.a" ) && !Log_BAF_mean.toLowerCase().contains("n/a" ) && !Log_BAF_mean.toLowerCase().contains("n.d" ) && !Log_BAF_mean.toLowerCase().contains("nc") && !Log_BAF_mean.toLowerCase().contains("nd") && !Log_BAF_mean.contains("--" ) && !Log_BAF_mean.toLowerCase().contains("n.c" ) && !Log_BAF_mean.equals("-") && !Log_BAF_mean.contains("LOD")){
 				if (Log_BAF_mean.contains("<") || Log_BAF_mean.contains(">")) {
 					er.property_value_numeric_qualifier=Log_BAF_mean.substring(0,1);
@@ -283,7 +283,7 @@ public class RecordBurkhard {
 				}
 				
 				er.property_value_point_estimate_original = Double.parseDouble(Log_BAF_mean);
-				er.property_value_string = propertyValue + " (log)";
+				er.property_value_string = propertyValue + "log10("+Log_BAF_units+")";
 
 			} else {
 				System.out.println(Log_BAF_arithmetic_or_logarithmic+"\t"+Log_BAF_mean+"\t"+Log_BAF_min+"\t"+Log_BAF_max);
@@ -667,9 +667,13 @@ public class RecordBurkhard {
 			Exposure_Concentrations=Exposure_Concentrations.replace("0.3, 1, 3, 10 & 30 ug/L (0.04, 0.14, 0.42, 1.4 and 4.2 uCi 14C-PFOA/L)", "0.3 to 30 ug/L");
 			Exposure_Concentrations=Exposure_Concentrations.replace("mixture ", "");
 //			Exposure_Concentrations=Exposure_Concentrations.replace("Angus AFFF foam at 1000 ug/L", "1000 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("PFDS: 15 ± 8 ng/L", "15 ± 8 ng/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("PFOS: 2.4 ± 1 ug/L", "2.4 ± 1 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("PFHxS: 178 ± 58 ng/L", "178 ± 58 ng/L");
+//			Exposure_Concentrations=Exposure_Concentrations.replace("PFDS: 15 ± 8 ng/L", "15 ± 8 ng/L");
+//			Exposure_Concentrations=Exposure_Concentrations.replace("PFOS: 2.4 ± 1 ug/L", "2.4 ± 1 ug/L");
+//			Exposure_Concentrations=Exposure_Concentrations.replace("PFHxS: 178 ± 58 ng/L", "178 ± 58 ng/L");
+
+			Exposure_Concentrations=Exposure_Concentrations.replace("PFDS: 15 Â± 8 ng/L", "15 Â± 8 ng/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("PFOS: 2.4 Â± 1 ug/L", "2.4 Â± 1 ug/L");
+			Exposure_Concentrations=Exposure_Concentrations.replace("PFHxS: 178 Â± 58 ng/L", "178 Â± 58 ng/L");
 			Exposure_Concentrations=Exposure_Concentrations.replace("100ug/L nominal  WebPlotDigitizer to get residues", "100 ug/L");
 			
 			
@@ -687,13 +691,16 @@ public class RecordBurkhard {
 					pv.valueMax=Double.parseDouble(range[1])/1e6;
 					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 				}
-			} else if(Exposure_Concentrations.contains("±")) {
+//			} else if(Exposure_Concentrations.contains("ï¿½")) {
+			} else if(Exposure_Concentrations.contains("Â±")) {
 				Exposure_Concentrations=Exposure_Concentrations.replace(" Â± ", "Â±");
 				unitsIndex = Exposure_Concentrations.indexOf("g/L")-1;
-				int plusMinusIndex=Exposure_Concentrations.indexOf("±");
+//				int plusMinusIndex=Exposure_Concentrations.indexOf("ï¿½");
+				int plusMinusIndex=Exposure_Concentrations.indexOf("Â±");
 				String value=Exposure_Concentrations.substring(0, unitsIndex);
 				
-				String[] range = value.split("±");
+//				String[] range = value.split("ï¿½");
+				String[] range = value.split("Â±");
 				if(Exposure_Concentrations.contains("ng/L")) {
 					pv.valueMin=(Double.parseDouble(range[0])-Double.parseDouble(range[1]))/1e9;
 					pv.valueMax=(Double.parseDouble(range[0])+Double.parseDouble(range[1]))/1e9;
@@ -750,7 +757,7 @@ public class RecordBurkhard {
 			}
 			
 			
-//			if(Exposure_Concentrations.contains("±"))				
+//			if(Exposure_Concentrations.contains("ï¿½"))				
 //				System.out.println(Exposure_Concentrations+"\t"+ParseUtilities.gson.toJson(pv));
 
 			
