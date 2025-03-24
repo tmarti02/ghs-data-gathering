@@ -649,112 +649,136 @@ public class RecordBurkhard {
 	}
 
 	private void setWaterConcentration(ExperimentalRecord er) {
-		if (Exposure_Concentrations!=null && !Exposure_Concentrations.isBlank()) {
+		if (Concentration_in_Water_mean!=null) {
+			Concentration_in_Water_mean=Concentration_in_Water_mean.replace("?","");	
+		}
+		if (Concentration_in_Water_mean!=null && !Concentration_in_Water_mean.isBlank()) {
 			ParameterValue pv=new ParameterValue();
 			pv.parameter.name="Water Concentration";
-//			pv.unit.abbreviation=ExperimentalConstants.str_g_L;
 			int unitsIndex = -1;
-
-			//The foam concentration doesnt tell you the PFAS concentration- so omit it:
-			Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L", "").trim();
-			
-			Exposure_Concentrations=Exposure_Concentrations.replace("total concentration ", "");
-			Exposure_Concentrations=Exposure_Concentrations.replace("0.3, 1, 3, 10 & 30 ug/L (0.04, 0.14, 0.42, 1.4 and 4.2 uCi 14C-PFOA/L)", "0.3 to 30 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("mixture ", "");
-			Exposure_Concentrations=Exposure_Concentrations.replace("Angus AFFF foam at 1000 ug/L", "1000 ug/L");
-//			Exposure_Concentrations=Exposure_Concentrations.replace("PFDS: 15 � 8 ng/L", "15 � 8 ng/L");
-//			Exposure_Concentrations=Exposure_Concentrations.replace("PFOS: 2.4 � 1 ug/L", "2.4 � 1 ug/L");
-//			Exposure_Concentrations=Exposure_Concentrations.replace("PFHxS: 178 � 58 ng/L", "178 � 58 ng/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("PFDS: 15 ± 8 ng/L", "15 ± 8 ng/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("PFOS: 2.4 ± 1 ug/L", "2.4 ± 1 ug/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("PFHxS: 178 ± 58 ng/L", "178 ± 58 ng/L");
-			Exposure_Concentrations=Exposure_Concentrations.replace("100ug/L nominal  WebPlotDigitizer to get residues", "100 ug/L");
-			
-			
-			Exposure_Concentrations=Exposure_Concentrations.replace("? ","");
-			if(Exposure_Concentrations.contains(" to ")) {
-				unitsIndex = Exposure_Concentrations.indexOf("g/L")-1;
-				String value=Exposure_Concentrations.substring(0, unitsIndex);
-				String[] range = value.split(" to ");
-				if(Exposure_Concentrations.contains("ng/L")) {
-					pv.valueMin=Double.parseDouble(range[0])/1e9;
-					pv.valueMax=Double.parseDouble(range[1])/1e9;
-					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
-				} else if(Exposure_Concentrations.contains("ug/L")){
-					pv.valueMin=Double.parseDouble(range[0])/1e6;
-					pv.valueMax=Double.parseDouble(range[1])/1e6;
-					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
-				}
-//			} else if(Exposure_Concentrations.contains("�")) {
-			} else if(Exposure_Concentrations.contains("±")) {
-				Exposure_Concentrations=Exposure_Concentrations.replace(" ± ", "±");
-				unitsIndex = Exposure_Concentrations.indexOf("g/L")-1;
-//				int plusMinusIndex=Exposure_Concentrations.indexOf("�");
-				int plusMinusIndex=Exposure_Concentrations.indexOf("±");
-				String value=Exposure_Concentrations.substring(0, unitsIndex);
-				
-//				String[] range = value.split("�");
-				String[] range = value.split("±");
-				if(Exposure_Concentrations.contains("ng/L")) {
-					pv.valueMin=(Double.parseDouble(range[0])-Double.parseDouble(range[1]))/1e9;
-					pv.valueMax=(Double.parseDouble(range[0])+Double.parseDouble(range[1]))/1e9;
-					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
-				} else if(Exposure_Concentrations.contains("ug/L")){
-					pv.valueMin=(Double.parseDouble(range[0])-Double.parseDouble(range[1]))/1e6;
-					pv.valueMax=(Double.parseDouble(range[0])+Double.parseDouble(range[1]))/1e6;
-					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
-				}
-				
-			} else {
-				if(Exposure_Concentrations.contains("ng/L")) {
-					unitsIndex = Exposure_Concentrations.indexOf("ng/L");
-					String value=Exposure_Concentrations.substring(0, unitsIndex);
-					pv.valuePointEstimate=Double.parseDouble(value)/1e9;
-					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
-//					System.out.println(value +" ng/L "+ pv.valuePointEstimate + " g/L");
-				} else if(Exposure_Concentrations.contains("mg/L")) {
-					unitsIndex = Exposure_Concentrations.indexOf("mg/L");
-					String value=Exposure_Concentrations.substring(0, unitsIndex);
-					pv.valuePointEstimate=Double.parseDouble(value)/1000;
-					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
-//					System.out.println(value +" mg/L "+ pv.valuePointEstimate + " g/L");
-				} else if(Exposure_Concentrations.contains("ug/g")) {
-					unitsIndex = Exposure_Concentrations.indexOf("ug/g");
-					String value=Exposure_Concentrations.substring(0, unitsIndex);
-					pv.valuePointEstimate=Double.parseDouble(value)/1000;
-					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
-				} else if(Exposure_Concentrations.contains("ug/L")){
-					unitsIndex = Exposure_Concentrations.indexOf("ug/L");
-					String value=Exposure_Concentrations.substring(0, unitsIndex);
-					pv.valuePointEstimate=Double.parseDouble(value)/1e6;
-					pv.unit.abbreviation=ExperimentalConstants.str_g_L;
-//					System.out.println(value +" ug/L "+ pv.valuePointEstimate + " g/L");
-				} else if(Exposure_Concentrations.contains("mL")) {
-					unitsIndex = Exposure_Concentrations.indexOf("mL");
-					String value=Exposure_Concentrations.substring(0, unitsIndex);
-					pv.valuePointEstimate=Double.parseDouble(value);
-					pv.unit.abbreviation="mL";
-				} else if(Exposure_Concentrations.contains("nM")) {
-					unitsIndex = Exposure_Concentrations.indexOf("nM");
-					String value=Exposure_Concentrations.substring(0, unitsIndex);
-					pv.valuePointEstimate=Double.parseDouble(value);
-					pv.unit.abbreviation=ExperimentalConstants.str_nM;
-				} else {
-					try {
-						pv.valuePointEstimate=Double.parseDouble(Exposure_Concentrations);
-					} catch(NumberFormatException e) {
-						pv.valueText=Exposure_Concentrations;
-//						System.out.println("Units not handled:	" + Exposure_Concentrations);
-//					return;
-					}
-				}
+			if(Concentration_in_Water_units!=null) {
+				Concentration_in_Water_units=Concentration_in_Water_units.replace("ng/g dw", "ng/g");
+				Concentration_in_Water_units=Concentration_in_Water_units.replace("ng/g-dw", "ng/g");
 			}
+			if(Concentration_in_Water_mean.contains("<")) {
+				pv.valueQualifier="<";
+				Concentration_in_Water_mean=Concentration_in_Water_mean.replace("<", "");
+			}
+			if(!Concentration_in_Water_mean.toLowerCase().contains("n") && !Concentration_in_Water_mean.contains("L") && !Concentration_in_Water_mean.contains("–")) {
+				if(Concentration_in_Water_units!=null && (Concentration_in_Water_units.equals("ug/L") || Concentration_in_Water_units.equals("ppb") || Concentration_in_Water_units.equals("ng/g") || Concentration_in_Water_units.equals("ng/ml"))) {
+					pv.valuePointEstimate=Double.parseDouble(Concentration_in_Water_mean)/1e6;
+					pv.unit.abbreviation=ExperimentalConstants.str_g_L;			
+				} else if(Concentration_in_Water_units!=null && (Concentration_in_Water_units.equals("mg/L") || Concentration_in_Water_units.equals("ppm"))) {
+					pv.valuePointEstimate=Double.parseDouble(Concentration_in_Water_mean)/1000;
+					pv.unit.abbreviation=ExperimentalConstants.str_g_L;	
+				} else if(Concentration_in_Water_units!=null && Concentration_in_Water_units.equals("ng/L")) {
+					pv.valuePointEstimate=Double.parseDouble(Concentration_in_Water_mean)/1e9;
+					pv.unit.abbreviation=ExperimentalConstants.str_g_L;	
+				} else if(Concentration_in_Water_units!=null && Concentration_in_Water_units.equals("pg/L")) {
+					pv.valuePointEstimate=Double.parseDouble(Concentration_in_Water_mean)/1e12;
+					pv.unit.abbreviation=ExperimentalConstants.str_g_L;	
+				} else {
+					pv.valuePointEstimate=Double.parseDouble(Concentration_in_Water_mean);
+				}
+			} else if(Concentration_in_Water_units!=null){
+				pv.valueText=Concentration_in_Water_mean;
+				pv.unit.abbreviation=Concentration_in_Water_units;
+			}
+//			} else if (Exposure_Concentrations!=null && !Exposure_Concentrations.isBlank() ) {
+//				//The foam concentration doesnt tell you the PFAS concentration- so omit it:
+//				Exposure_Concentrations=Exposure_Concentrations.replace("3M AFFF foam at 1000 ug/L", "").trim();
+//			
+//				Exposure_Concentrations=Exposure_Concentrations.replace("total concentration ", "");
+//				Exposure_Concentrations=Exposure_Concentrations.replace("0.3, 1, 3, 10 & 30 ug/L (0.04, 0.14, 0.42, 1.4 and 4.2 uCi 14C-PFOA/L)", "0.3 to 30 ug/L");
+//				Exposure_Concentrations=Exposure_Concentrations.replace("mixture ", "");
+//				Exposure_Concentrations=Exposure_Concentrations.replace("Angus AFFF foam at 1000 ug/L", "1000 ug/L");
+//				Exposure_Concentrations=Exposure_Concentrations.replace("PFDS: 15 ± 8 ng/L", "15 ± 8 ng/L");
+//				Exposure_Concentrations=Exposure_Concentrations.replace("PFOS: 2.4 ± 1 ug/L", "2.4 ± 1 ug/L");
+//				Exposure_Concentrations=Exposure_Concentrations.replace("PFHxS: 178 ± 58 ng/L", "178 ± 58 ng/L");
+//				Exposure_Concentrations=Exposure_Concentrations.replace("100ug/L nominal  WebPlotDigitizer to get residues", "100 ug/L");
+//			
+//			
+//				Exposure_Concentrations=Exposure_Concentrations.replace("? ","");
+//				pv.parameter.name="Water Concentration";
+//				if(Exposure_Concentrations.contains(" to ")) {
+//					unitsIndex = Exposure_Concentrations.indexOf("g/L")-1;
+//					String value=Exposure_Concentrations.substring(0, unitsIndex);
+//					String[] range = value.split(" to ");
+//					if(Exposure_Concentrations.contains("ng/L")) {
+//						pv.valueMin=Double.parseDouble(range[0])/1e9;
+//						pv.valueMax=Double.parseDouble(range[1])/1e9;
+//						pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+//					} else if(Exposure_Concentrations.contains("ug/L")){
+//						pv.valueMin=Double.parseDouble(range[0])/1e6;
+//						pv.valueMax=Double.parseDouble(range[1])/1e6;
+//						pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+//					}
+//				} else if(Exposure_Concentrations.contains("±")) {
+//					Exposure_Concentrations=Exposure_Concentrations.replace(" ± ", "±");
+//					unitsIndex = Exposure_Concentrations.indexOf("g/L")-1;
+//					int plusMinusIndex=Exposure_Concentrations.indexOf("±");
+//					String value=Exposure_Concentrations.substring(0, unitsIndex);
+//					String[] range = value.split("±");
+//					if(Exposure_Concentrations.contains("ng/L")) {
+//						pv.valueMin=(Double.parseDouble(range[0])-Double.parseDouble(range[1]))/1e9;
+//						pv.valueMax=(Double.parseDouble(range[0])+Double.parseDouble(range[1]))/1e9;
+//						pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+//					} else if(Exposure_Concentrations.contains("ug/L")){
+//						pv.valueMin=(Double.parseDouble(range[0])-Double.parseDouble(range[1]))/1e6;
+//						pv.valueMax=(Double.parseDouble(range[0])+Double.parseDouble(range[1]))/1e6;
+//						pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+//					}
+//				
+//				} else {
+//					if(Exposure_Concentrations.contains("ng/L")) {
+//						unitsIndex = Exposure_Concentrations.indexOf("ng/L");
+//						String value=Exposure_Concentrations.substring(0, unitsIndex);
+//						pv.valuePointEstimate=Double.parseDouble(value)/1e9;
+//						pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+////						System.out.println(value +" ng/L "+ pv.valuePointEstimate + " g/L");
+//					} else if(Exposure_Concentrations.contains("mg/L")) {
+//						unitsIndex = Exposure_Concentrations.indexOf("mg/L");
+//						String value=Exposure_Concentrations.substring(0, unitsIndex);
+//						pv.valuePointEstimate=Double.parseDouble(value)/1000;
+//						pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+////						System.out.println(value +" mg/L "+ pv.valuePointEstimate + " g/L");
+//					} else if(Exposure_Concentrations.contains("ug/g")) {
+//						unitsIndex = Exposure_Concentrations.indexOf("ug/g");
+//						String value=Exposure_Concentrations.substring(0, unitsIndex);
+//						pv.valuePointEstimate=Double.parseDouble(value)/1000;
+//						pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+//					} else if(Exposure_Concentrations.contains("ug/L")){
+//						unitsIndex = Exposure_Concentrations.indexOf("ug/L");
+//						String value=Exposure_Concentrations.substring(0, unitsIndex);
+//						pv.valuePointEstimate=Double.parseDouble(value)/1e6;
+//						pv.unit.abbreviation=ExperimentalConstants.str_g_L;
+////						System.out.println(value +" ug/L "+ pv.valuePointEstimate + " g/L");
+//					} else if(Exposure_Concentrations.contains("mL")) {
+//						unitsIndex = Exposure_Concentrations.indexOf("mL");
+//						String value=Exposure_Concentrations.substring(0, unitsIndex);
+//						pv.valuePointEstimate=Double.parseDouble(value);
+//						pv.unit.abbreviation="mL";
+//					} else if(Exposure_Concentrations.contains("nM")) {
+//						unitsIndex = Exposure_Concentrations.indexOf("nM");
+//						String value=Exposure_Concentrations.substring(0, unitsIndex);
+//						pv.valuePointEstimate=Double.parseDouble(value);
+//						pv.unit.abbreviation=ExperimentalConstants.str_nM;
+//					} else {
+//						try {
+//							pv.valuePointEstimate=Double.parseDouble(Exposure_Concentrations);
+//						} catch(NumberFormatException e) {
+//							pv.valueText=Exposure_Concentrations;
+////							System.out.println("Units not handled:	" + Exposure_Concentrations);
+////						return;
+//						}
+//					}
+//				}
+//			}
 			
 			
 //			if(Exposure_Concentrations.contains("�"))				
 //				System.out.println(Exposure_Concentrations+"\t"+ParseUtilities.gson.toJson(pv));
 
-			
 			er.parameter_values.add(pv);
 		}
 	}
