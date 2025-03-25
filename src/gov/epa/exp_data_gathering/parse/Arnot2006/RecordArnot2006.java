@@ -948,7 +948,6 @@ public class RecordArnot2006 {
 		putEntryLatin(htSuperCategory, "mastacembelus armatus", "fish");
 		putEntryLatin(htSuperCategory, "alligator sinensis", "reptiles");
 		putEntryLatin(htSuperCategory, "potamogeton crispus l.", "flowers, trees, shrubs, ferns");
-		putEntryLatin(htSuperCategory, "ceratophyllum demersum l.", "flowers, trees, shrubs, ferns");
 		putEntryLatin(htSuperCategory, "ulothrix", "algae");
 		putEntryLatin(htSuperCategory, "vallisneria natans (lour.) hara", "flowers, trees, shrubs, ferns");
 		putEntryLatin(htSuperCategory, "juncellus serotinus", "flowers, trees, shrubs, ferns");
@@ -993,7 +992,6 @@ public class RecordArnot2006 {
 		putEntryLatin(htSuperCategory, "callitriche", "flowers, trees, shrubs, ferns");
 		putEntryLatin(htSuperCategory, "bithynia tentaculata", "omit");
 		putEntryLatin(htSuperCategory, "viviparus", "omit");
-		putEntryLatin(htSuperCategory, "ceratophyllum demersum", "flowers, trees, shrubs, ferns");
 		putEntryLatin(htSuperCategory, "salvinia natans", "flowers, trees, shrubs, ferns");
 		putEntryLatin(htSuperCategory, "nelumbo nucifera", "flowers, trees, shrubs, ferns");
 		putEntryLatin(htSuperCategory, "eichhornia crassipes", "flowers, trees, shrubs, ferns");
@@ -1049,6 +1047,13 @@ public class RecordArnot2006 {
 		putEntryLatin(htSuperCategory, "barbus graellsii", "fish");
 		putEntryLatin(htSuperCategory, "barbus guiraonis", "fish");
 		putEntryLatin(htSuperCategory, "stuckenia pectinata", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "ceratophyllum demersum l.", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "juncellus serotinus", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "typha angustifolia l.", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "nelumbo nucifera gaertn.", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "scirpus validus vahl ", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "ceratophyllum demersum", "flowers, trees, shrubs, ferns");
+		putEntryLatin(htSuperCategory, "plankton", "microorganisms");
 		
 		
 
