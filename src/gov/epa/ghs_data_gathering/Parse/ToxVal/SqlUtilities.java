@@ -250,6 +250,9 @@ public class SqlUtilities {
 	
 	
 					} else {//string
+						
+//						System.out.println(name);
+						
 						prep.setString(fieldNum, (String)myField.get(r));
 						//						System.out.println(fieldNum+"\t"+fieldName+"\t"+myField.get(r));
 					}

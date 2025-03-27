@@ -1,6 +1,7 @@
 package gov.epa.exp_data_gathering.parse.OPERA;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
@@ -24,6 +25,7 @@ import org.json.CDL;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.AtomContainerSet;
 import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.iterator.IteratingSDFReader;
 
 import com.google.gson.Gson;
@@ -270,7 +272,7 @@ public class RecordOPERA {
 //		System.out.println(acs.getAtomContainerCount());
 		
 		for (int i=0;i<acs.getAtomContainerCount();i++) {
-			AtomContainer ac=(AtomContainer)acs.getAtomContainer(i);
+			IAtomContainer ac=acs.getAtomContainer(i);
 			RecordOPERA ro = createRecordOpera(ac,endpoint);
 			ro.file_name=filename;
 			records.add(ro);
@@ -359,7 +361,7 @@ public class RecordOPERA {
 	 * @param ac
 	 * @return
 	 */
-	private static RecordOPERA createRecordOpera(AtomContainer ac,String property_name) {
+	private static RecordOPERA createRecordOpera(IAtomContainer ac,String property_name) {
 		RecordOPERA ro=new RecordOPERA();
 		ro.property_name=property_name;
 
@@ -452,9 +454,9 @@ public class RecordOPERA {
 
 			while (mr.hasNext()) {
 
-				AtomContainer m=null;					
+				IAtomContainer m=null;					
 				try {
-					m = (AtomContainer)mr.next();
+					m = mr.next();
 				} catch (Exception e) {
 					e.printStackTrace();
 					break;
@@ -679,10 +681,16 @@ public class RecordOPERA {
 
 		if (filename == null) {
 			System.out.println("filename missing for " + property_name);
-			return null;
+			return records;
 		}
-
-
+		
+		File file=new File(folder+filename);
+		
+		if(!file.exists()) {
+			System.out.println(folder+filename+" missing");
+			return records;
+		}
+ 
 		try {
 			InputStream inputStream= new FileInputStream(folder+filename);
 			

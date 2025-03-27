@@ -61,6 +61,7 @@ public class Parse {
 	public String webpageFolder;
 	
 	public boolean removeDuplicates=true;
+	
 
 	protected String fileNameSourceExcel;//input excel spreadsheet
 	protected String fileNameHtmlZip;//input as zip file of webpages

@@ -42,6 +42,7 @@ import com.google.gson.JsonElement;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
+import gov.epa.exp_data_gathering.parse.Arnot2006.RecordArnot2006;
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Processing.FinalRecord;
 import gov.epa.exp_data_gathering.parse.EChemPortalAPI.Query.APIConstants;
 import gov.epa.ghs_data_gathering.Parse.Parse;
@@ -989,6 +990,21 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		return records;
 	}
 	
+	
+	public int removeBadRecords () {
+		int count=0;
+		for (int i=0;i<this.size();i++) {
+			ExperimentalRecord er=this.get(i);
+			if(!er.hasNumericFinalValue()) {//this shouldnt happen for kept records
+				System.out.println(ParseUtilities.gson.toJson(er));
+				this.remove(i--);
+				count++;
+			}
+		}
+		return count;
+	}
+
+	
 	public void getRecordsByProperty() {
 		TreeMap <String,ExperimentalRecords>map=new TreeMap<String,ExperimentalRecords>();
 
@@ -1049,13 +1065,25 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	public static ExperimentalRecords getExperimentalRecords(String sourceName, String subfolder) {
 		String folder="data\\experimental\\"+sourceName+"\\";
 		if(subfolder!=null) folder+=subfolder+"\\";
-		String filepath1=folder+sourceName+" Experimental Records.json";
 		
-		ExperimentalRecords experimentalRecords=ExperimentalRecords.loadFromJSON(filepath1);
+		File Folder=new File(folder);
+
+		ExperimentalRecords records=new ExperimentalRecords();
 		
-		System.out.println(filepath1+"\t"+experimentalRecords.size());
+		//TODO need to flag case where we accidentally have both numbered and non numbered jsons due to multiple parse runs with diff code
 		
-		return experimentalRecords;
+		for(File file:Folder.listFiles()) {
+			if(!file.getName().contains(".json")) continue;
+			if(file.getName().contains("Bad")) continue;
+			if(file.getName().contains("Original Records")) continue;
+			ExperimentalRecords experimentalRecords=ExperimentalRecords.loadFromJSON(file.getAbsolutePath());
+
+			System.out.println(file.getName()+"\t"+subfolder+"\t"+experimentalRecords.size());
+			records.addAll(experimentalRecords);
+		}
+		
+		
+		return records;
 	}
 	
 	public static ExperimentalRecords getExperimentalRecordsBad(String sourceName, String subfolder) {

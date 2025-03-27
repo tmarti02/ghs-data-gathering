@@ -17,11 +17,13 @@ import gov.epa.exp_data_gathering.parse.ParseUtilities;
 public class DsstoxLookup {
 	
 	
-	class DsstoxRecord {
+	public static class DsstoxRecord {
 		
-		String casrn;
-		String dtxsid;
-		String preferredName;
+		public String casrn;
+		public String dtxsid;
+		public String preferredName;
+		public Double molecularWeight;
+		public String smiles;
 	}
 	
 	
@@ -63,6 +65,35 @@ public class DsstoxLookup {
 		return dsstoxRecords;
 	}
 	
+	
+	public List<DsstoxRecord> getDsstoxRecordsByDTXSIDS(Collection<String> dtxsids) {
+		
+		List<DsstoxRecord> dsstoxRecords = new ArrayList<DsstoxRecord>();
+		List<String>dtxsidsBatch=new ArrayList<>();
+		
+		for (String dtxsid:dtxsids) {
+			dtxsidsBatch.add(dtxsid);
+
+			if(dtxsidsBatch.size()==1000) {
+				
+				List<DsstoxRecord> dsstoxRecordsBatch=findAsDsstoxRecordsByDtxsidsWithCompoundInfo(dtxsidsBatch);
+				dsstoxRecords.addAll(dsstoxRecordsBatch);
+//				System.out.println(casrnsBatch.size()+"\t"+dsstoxRecords.size());
+				dtxsidsBatch.clear();
+			}
+		}
+		//Do what's left
+		List<DsstoxRecord> dsstoxRecordsBatch=findAsDsstoxRecordsByDtxsidsWithCompoundInfo(dtxsidsBatch);
+		dsstoxRecords.addAll(dsstoxRecordsBatch);
+//		System.out.println(dsstoxRecordsBatch.size());
+		
+//		System.out.println(dsstoxRecordsBatch.size());
+
+//		System.out.println(casrnsBatch.size()+"\t"+dsstoxRecords.size());
+
+		return dsstoxRecords;
+	}
+
 
 	private List<DsstoxRecord> findAsDsstoxRecordsByCasrnIn(Collection<String> casrns) {
 		String sql="SELECT dsstox_substance_id,casrn, preferred_name FROM generic_substances gs where casrn ";
@@ -78,6 +109,39 @@ public class DsstoxLookup {
 				dr.dtxsid=rs.getString(1);
 				dr.casrn=rs.getString(2);
 				dr.preferredName=rs.getString(3);
+				recs.add(dr);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+//		System.out.println(sql);
+		return recs;
+	}
+	
+	private List<DsstoxRecord> findAsDsstoxRecordsByDtxsidsWithCompoundInfo(Collection<String> dtxsids) {
+		
+		String sql="SELECT dsstox_substance_id,casrn, preferred_name, c.mol_weight, c.smiles FROM generic_substances gs\n"+
+		"join generic_substance_compounds gsc on gs.id = gsc.fk_generic_substance_id\n"+
+		"join compounds c on gsc.fk_compound_id = c.id\n"+
+		"where dsstox_substance_id "+arrayToSqlIn(dtxsids)+";";
+		
+		
+//		String sql="SELECT dsstox_substance_id,casrn, preferred_name FROM generic_substances gs where casrn ";
+//		sql+=arrayToSqlIn(dtxsids)+";";
+		
+//		System.out.println(sql);
+		
+		ResultSet rs=SqlUtilities.runSQL2(SqlUtilities.getConnectionDSSTOX(), sql);
+		List<DsstoxRecord>recs=new ArrayList<>();
+		try {
+			while (rs.next()) {
+				DsstoxRecord dr=new DsstoxRecord();
+				dr.dtxsid=rs.getString(1);
+				dr.casrn=rs.getString(2);
+				dr.preferredName=rs.getString(3);
+				dr.molecularWeight=rs.getDouble(4);
+				dr.smiles=rs.getString(5);
 				recs.add(dr);
 			}
 		} catch (SQLException e) {

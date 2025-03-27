@@ -343,7 +343,8 @@ public class UnitConverter {
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_uM)
-				|| er.property_value_units_original.equals("umol/L")) {
+				|| er.property_value_units_original.equals("umol/L")
+				|| er.property_value_units_original.equals("nmol/ml")) {
 			convertAndAssignFinalFields(er, 1.0 / 1000000.0);
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
@@ -913,16 +914,17 @@ public class UnitConverter {
 	private boolean convertSolubility(ExperimentalRecord er) {
 
 		if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_m3)
-				|| er.property_value_units_original.equals("ul/L")) {
-
+				|| er.property_value_units_original.equals("ul/L")
+				|| er.property_value_units_original.equals("ml/m3")
+				|| er.property_value_units_original.equals("AI ul/L")) {
 			if (er.casrn == null || htDensity.get(er.casrn) == null) {
 				er.flag = true;
-				er.updateNote("Conversion to mg/L not possible (missing density)");
+				er.updateNote("Conversion to g/L not possible (missing density)");
 
 				missingDensityCasrns.add(er.casrn);
 				
 				if(printMissingDensityCas)
-					System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
+					System.out.println(er.casrn + "\tConversion to g/L not possible (missing density)");
 
 				assignFinalFieldsWithoutConverting(er);
 				er.property_value_units_final = er.property_value_units_original;
@@ -936,16 +938,18 @@ public class UnitConverter {
 				er.property_value_units_final = ExperimentalConstants.str_g_L;
 				er.updateNote("Converted using density: " + density + " g/mL");
 			}
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_L)) {
-
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mL_L)
+				||er.property_value_units_original.equals("ul/ml")
+				||er.property_value_units_original.equals("AI ml/L")) {
+						
 			if (er.casrn == null || htDensity.get(er.casrn) == null) {
 				er.flag = true;
-				er.updateNote("Conversion to mg/L not possible (missing density)");
+				er.updateNote("Conversion to g/L not possible (missing density)");
 
 				missingDensityCasrns.add(er.casrn);
 				
 				if(printMissingDensityCas)
-					System.out.println(er.casrn + "\tConversion to mg/L not possible (missing density)");
+					System.out.println(er.casrn + "\tConversion to g/L not possible (missing density)");
 
 				assignFinalFieldsWithoutConverting(er);
 				er.property_value_units_final = er.property_value_units_original;
@@ -964,15 +968,14 @@ public class UnitConverter {
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_L)
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL)
+				|| er.property_value_units_original.equals("mg/ml")
+				|| er.property_value_units_original.equals("g/dm3")
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_kg_m3)) {
 			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_m3)) {
 			// Added by TMM
 			convertAndAssignFinalFields(er, 1.0e-6);
-			er.property_value_units_final = ExperimentalConstants.str_g_L;
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_mL)) {
-			assignFinalFieldsWithoutConverting(er);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_log_mg_L)) {
 			powConvertAndAssignFinalFields(er, 1.0 / 1000.0);
@@ -996,19 +999,27 @@ public class UnitConverter {
 //			System.out.println(er.casrn+"\t"+er.property_value_point_estimate_final+"\t"+er.property_value_units_final);
 
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mM)||
-				er.property_value_units_original.equals(ExperimentalConstants.str_mmol_L)) {
+				er.property_value_units_original.equals(ExperimentalConstants.str_mmol_L)||
+				er.property_value_units_original.equals("AI mmol/L")||
+				er.property_value_units_original.equals("mol/m3")||
+				er.property_value_units_original.equals("AI mM")) {
 			convertAndAssignFinalFields(er, 1.0e-3);
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_uM)
 				|| er.property_value_units_original.equals("umol/L")
-				|| er.property_value_units_original.equals("mmol/m3")){
+				|| er.property_value_units_original.equals("mmol/m3")
+				|| er.property_value_units_original.equals("AI uM")
+				|| er.property_value_units_original.equals("nmol/ml")
+				|| er.property_value_units_original.equals("nmol/mL")){
 			convertAndAssignFinalFields(er, 1.0e-6);
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (need MW)");
-		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_nM)) {
+		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_nM) ||
+				er.property_value_units_original.equals("nmol/L")|| er.property_value_units_original.equals("pmol/mL")) {
+			
 			convertAndAssignFinalFields(er, 1.0e-9);
 			er.property_value_units_final = ExperimentalConstants.str_M;
 			er.flag = true;
@@ -1023,15 +1034,22 @@ public class UnitConverter {
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_mg_L)
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_mg_dm3)
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_ug_mL)
+				|| er.property_value_units_original.equals("g/m3")
+				|| er.property_value_units_original.equals("AI ug/ml")
+				|| er.property_value_units_original.equals("ug/cm3")
 				|| er.property_value_units_original.equals("AI mg/L")
+				|| er.property_value_units_original.equals("ae mg/L")
+				|| er.property_value_units_original.equals("ae ppm")
 				|| er.property_value_units_original.equals(ExperimentalConstants.str_ppm)
 				|| er.property_value_units_original.equals("AI ppm")) {
+			
 //			ppm is same as mg/L according to:
 //			https://cfpub.epa.gov/ncer_abstracts/index.cfm/fuseaction/display.files/fileid/14285
 			convertAndAssignFinalFields(er, 1.0 / 1000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ppb)
+				|| er.property_value_units_original.equals("ae ppb")
 				|| er.property_value_units_original.equals("AI ppb")) {
 			convertAndAssignFinalFields(er, 1.0 / 1.0e6);
 			// ppb = 1/1000 ppm = 1/1e6 g/L
@@ -1047,16 +1065,24 @@ public class UnitConverter {
 
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ug_L)
 				|| er.property_value_units_original.equals("AI ug/L")
+				|| er.property_value_units_original.equals("ae ug/L")
+				|| er.property_value_units_original.equals("ug/dm3")
+				|| er.property_value_units_original.equals("ng/mL")
+				|| er.property_value_units_original.equals("AI ng/mL")
 				|| er.property_value_units_original.equals("ng/ml")) {
 //			System.out.println("Converting ug/L");
 			convertAndAssignFinalFields(er, 1.0 / 1000000.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_ng_L)
+				|| er.property_value_units_original.equals("pg/ml")
 				|| er.property_value_units_original.equals("AI ng/L")) {
 			convertAndAssignFinalFields(er, 1.0 / 1e9);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 
+		} else if (er.property_value_units_original.equals("pg/L")) {
+			convertAndAssignFinalFields(er, 1.0 / 1e12);
+			er.property_value_units_final = ExperimentalConstants.str_g_L;
 		} else if (er.property_value_units_original.equals(ExperimentalConstants.str_g_100mL)) {
 			convertAndAssignFinalFields(er, 10.0);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
@@ -1172,10 +1198,48 @@ public class UnitConverter {
 			convertAndAssignFinalFields(er, oz_to_g / gal_to_L);
 			er.property_value_units_final = ExperimentalConstants.str_g_L;
 
+		} else if (er.property_value_units_original.equals("pCi/L")) { 
+			convertAndAssignFinalFields(er, 1.0e-12);
+			er.property_value_units_final = "Ci/L";
+		} else if (er.property_value_units_original.equals("nCi/L") || 
+				er.property_value_units_original.equals("pCi/mL")) {
+			convertAndAssignFinalFields(er, 1.0e-9);
+			er.property_value_units_final = "Ci/L";
+		} else if (er.property_value_units_original.equals("uCi/L")) {
+			convertAndAssignFinalFields(er, 1.0e-6);
+			er.property_value_units_final = "Ci/L";
+		} else if (er.property_value_units_original.equals("uCi/mL")||
+				er.property_value_units_original.equals("uCi/ml")) {
+			convertAndAssignFinalFields(er, 1.0e-3);
+			er.property_value_units_final = "Ci/L";
+
+		} else if (er.property_value_units_original.equals("kBq/mL")) {
+			convertAndAssignFinalFields(er, 1.0e6);
+			er.property_value_units_final = "Bq/L";
+
+		} else if (er.property_value_units_original.equals("kBq/L")||
+				er.property_value_units_original.equals("Bq/mL")) {
+			convertAndAssignFinalFields(er, 1.0e3);
+			er.property_value_units_final = "Bq/L";
+		} else if (er.property_value_units_original.equals("mBq/mL")||
+				er.property_value_units_original.equals("Bq/L")) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = "Bq/L";
+
+		} else if (er.property_value_units_original.equals("dpm/mL")) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = "dpm/mL";
+
+		} else if (er.property_value_units_original.equals("cpm/L")) {
+			assignFinalFieldsWithoutConverting(er);
+			er.property_value_units_final = "cpm/L";
+
+		} else if (er.property_value_units_original.equals("cpm/mL")) {
+			convertAndAssignFinalFields(er, 1.0e3);
+			er.property_value_units_final = "cpm/L";
 		} else if (er.property_value_units_original == null) {
 			er.keep = false;
 			er.reason = "Original units missing";
-
 		} else {
 			er.flag = true;
 			er.updateNote("Conversion to g/L not possible (unknown units)");

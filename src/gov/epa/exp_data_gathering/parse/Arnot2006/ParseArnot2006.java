@@ -161,14 +161,15 @@ public class ParseArnot2006 extends Parse {
 				ExperimentalConstants.strFishBCFWholeBody,
 				ExperimentalConstants.strBAF,
 				ExperimentalConstants.strFishBAF,
-				ExperimentalConstants.strFishBAFWholeBody);
+				ExperimentalConstants.strFishBAFWholeBody
+				);
 
 		for (String propertyName:propertyNames) {
 			
 			System.out.println("\n**********************\n"+propertyName);
 			
 			ParseArnot2006 p = new ParseArnot2006(propertyName);
-			p.generateOriginalJSONRecords=false;
+			p.generateOriginalJSONRecords=true;
 			p.writeCheckingExcelFile=false;
 			p.removeDuplicates=false;
 

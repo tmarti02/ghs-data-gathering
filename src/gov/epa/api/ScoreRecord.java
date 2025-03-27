@@ -96,7 +96,7 @@ public class ScoreRecord {
 		public static String[] allFieldNames= {"dtxsid","CAS","name","hazardName","source","sourceOriginal", 
 				"score", "listType","route", "category", "hazardCode",
 				"hazardStatement", "rationale", "note","note2","toxvalID",
-				"testOrganism","testType","valueMassOperator","valueMass","valueMassUnits","effect",
+				"testOrganism","testOrganismType","testType","valueMassOperator","valueMass","valueMassUnits","effect",
 				"duration","durationUnits","url","longRef"};
 		
 		//Following for displaying results of hazard comparison in webpage:	

@@ -88,6 +88,10 @@ public class ExperimentalConstants {
 	public static final String str_ug_L="ug/L";
 	public static final String str_ng_L="ng/L";
 	
+	public static final String str_Bq_mL = "Bq/mL";
+	public static final String str_mBq_mL = "mBq/mL";
+	public static final String str_kBq_mL = "kBq/mL";
+
 	
 	public static final String str_lb_ft3="lb/ft^3";
 	public static final String str_lb_gal="lb/gal";
@@ -244,6 +248,7 @@ public class ExperimentalConstants {
 	public static final String strSourceChemidplus="ChemIDplus";
 	public static final String strSourceChemidplus2024_12_04="ChemIDplus_2024_12_04";
 	public static final String strSourceOPERA="OPERA";
+	public static final String strSourceOPERA28="OPERA2.8";
 	public static final String strSourceOPERA29="OPERA2.9";
 	public static final String strSourceEpisuiteOriginal="EpisuiteOriginal";
 	public static final String strSourceEpisuiteISIS="EpisuiteISIS";

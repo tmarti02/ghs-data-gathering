@@ -137,10 +137,10 @@ public class ParseToxValBCFBAF {
 		sr.testOrganismType=(String)er.experimental_parameters.get("Species supercategory");
 
 		// Limit to fish:	
-		if(sr.testOrganismType==null || !sr.testOrganismType.equals("Fish")) {
-//			System.out.println("sr.testOrganismType="+sr.testOrganismType);
-			return null;
-		}
+//		if(sr.testOrganismType==null || !sr.testOrganismType.equals("Fish")) {
+////			System.out.println("sr.testOrganismType="+sr.testOrganismType);
+//			return null;
+//		}
 
 		String responseSite=(String)er.experimental_parameters.get("Response site");
 		//Only include whole body response site:
@@ -148,8 +148,7 @@ public class ParseToxValBCFBAF {
 //			System.out.println("responseSite="+responseSite);
 			return null;
 		}
-		
-		
+				
 //		if(er.property_value_min_final!=null || er.property_value_max_final!=null || (er.property_value_numeric_qualifier!=null && !er.property_value_numeric_qualifier.equals("~"))) {
 //			System.out.println(er.property_value_min_final+"\t"+er.property_value_max_final+"\t"+er.property_value_numeric_qualifier);
 ////			return null;
@@ -158,7 +157,6 @@ public class ParseToxValBCFBAF {
 		if(!er.property_value_units_final.equals(ExperimentalConstants.str_L_KG)) {
 			System.out.println("Invalid units:\t"+er.property_value_units_final);
 			return null;
-			
 		}
 		
 		setBioconcentrationScore(er, sr);
@@ -168,8 +166,8 @@ public class ParseToxValBCFBAF {
 			return null;		
 		}
 	
-		if(sr.duration!=null)
-			System.out.println(sr.testType+"\t"+sr.duration);
+//		if(sr.duration!=null)
+//			System.out.println(sr.testType+"\t"+sr.duration);
 		
 //		if(sr.valueMassOperator!=null) {
 //			System.out.println(er.casrn);
@@ -263,7 +261,9 @@ public class ParseToxValBCFBAF {
 		
 		
 		if(er.property_value_point_estimate_final!=null && (er.property_value_numeric_qualifier==null || er.property_value_numeric_qualifier.equals("~"))) {
-			logBCF=Math.log10(er.property_value_point_estimate_final);
+			if(er.property_value_point_estimate_final>0)//cant take log of zero
+				logBCF=Math.log10(er.property_value_point_estimate_final);
+			
 		} else if(er.property_value_min_final!=null && er.property_value_max_final!=null) {
 			double min=Math.log10(er.property_value_min_final);
 			double max=Math.log10(er.property_value_max_final);
@@ -289,7 +289,7 @@ public class ParseToxValBCFBAF {
 		} else if (logBCFmin!=null) {
 			setBioconcentrationScoreFromMin(logBCFmin, sr);
 		} else {
-			System.out.println("Cant set BCF score");
+//			System.out.println("Cant set BCF score");
 		}
 		
 

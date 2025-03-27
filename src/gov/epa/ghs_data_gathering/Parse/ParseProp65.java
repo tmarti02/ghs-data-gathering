@@ -230,7 +230,7 @@ public class ParseProp65 extends Parse {
 
 		// sr.hazard_statement="Carcinogenic to humans";
 		// sr.category="Group "+ir.Group;
-		sr.rationale = "Score of " + sr.score + " was assigned based on a carcinogenicity category of " + sr.category;
+		sr.rationale = "Score of " + sr.score + " was assigned based on a category of " + sr.category;
 
 		score.records.add(sr);
 

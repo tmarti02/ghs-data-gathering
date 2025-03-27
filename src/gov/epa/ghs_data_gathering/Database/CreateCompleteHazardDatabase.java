@@ -5,8 +5,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
 import com.google.gson.reflect.TypeToken;
 
 import java.sql.Connection;
@@ -18,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,12 +35,16 @@ import com.google.gson.GsonBuilder;
 
 import gov.epa.api.AADashboard;
 import gov.epa.api.Chemical;
+import gov.epa.api.DsstoxLookup;
+import gov.epa.api.DsstoxLookup.DsstoxRecord;
 import gov.epa.api.ExperimentalConstants;
 import gov.epa.api.FlatFileRecord2;
 import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
+
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecords;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.CompareExperimentalRecords;
 import gov.epa.exp_data_gathering.parse.CompareExperimentalRecords.ExperimentalRecordManipulator;
@@ -44,6 +54,7 @@ import gov.epa.ghs_data_gathering.Parse.OPERA.ParseOPERA;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.MySQL_DB;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseToxValDB;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.SqlUtilities;
+import gov.epa.ghs_data_gathering.Parse.ToxVal.Utilities;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf.ParseToxValBCFBAF;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_bcfbaf.RecordToxValBCFBAF;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseTable_cancer_summary.ParseToxValCancer;
@@ -886,6 +897,9 @@ public class CreateCompleteHazardDatabase {
 			Connection connModels= MySQL_DB.getConnection(dbPathDestModels);
 
 			//			fixEpisuiteJsons();
+			
+			//In the future these should be exported from mv_predicted_data from res_qsar
+			
 			createEPISUITE_BCF_BIOWIN3_From_PredictionDashboardJsons(connModels);
 			createOPERA_BCF_ER_AR_From_PredictionDashboardJsons(connModels,"OPERA2.8");
 		}
@@ -1393,57 +1407,20 @@ public class CreateCompleteHazardDatabase {
 			return htID;
 		}
 
+		@Deprecated
 		public void exportHazardRecords() {
-			String dbPathOldHazard="databases\\AA dashboard.db";
-			Connection connSrc= MySQL_DB.getConnection(dbPathOldHazard);
-			
-			String dbPathDest="databases\\RevisedHazardDB\\AA dashboard.db";
-			Connection connDest= MySQL_DB.getConnection(dbPathDest);
-
-			String tableName="HazardRecords";
 			
 			try {
-				
-				String [] varlist=ScoreRecord.allFieldNames;			
-				
-				Statement stat=connSrc.createStatement();
-				String sql=ParseToxValDB.createSQLQueryByTable2(tableName,varlist);				
 
-				System.out.println(sql);
-
-				ResultSet rs = stat.executeQuery(sql);
-
-				List<Object>scoreRecords=new ArrayList<>();
+				String dbPathOldHazard="databases\\AA dashboard.db";
+				Connection connSrc= MySQL_DB.getConnection(dbPathOldHazard);
+				List<Object> scoreRecords = getHazardRecords(connSrc);
 				
-				int counter=0;
+				String dbPathDest="databases\\RevisedHazardDB\\AA dashboard.db";
+				Connection connDest= MySQL_DB.getConnection(dbPathDest);
+				Statement statDest=connDest.createStatement();
 
-				HashSet<String>casrns=new HashSet<>();
-				
-				while (rs.next()) {						 
-					counter++;
-					
-					ScoreRecord sr=new ScoreRecord();			
-//					ParseToxValDB.createRecord(rs, sr);
-					SQLite_GetRecords.createRecord(rs, sr);
-
-					scoreRecords.add(sr);
-					
-					if(sr.CAS!=null && isValidCAS(sr.CAS)) casrns.add(sr.CAS);
-					
-//					System.out.println(gson.toJson(sr));
-					
-//					if(counter==10) break;
-					
-				}
-				
-				System.out.println(casrns.size());
-				for (String cas:casrns) {
-					System.out.println(cas);
-				}
-				
-				
-
-//				saveHazardRecords(stat, scoreRecords, null,false);
+				saveHazardRecords(statDest, scoreRecords, null,false);
 				//			System.out.println(gson.toJson(records));
 //				System.out.println(scoreRecords.size());
 
@@ -1454,6 +1431,86 @@ public class CreateCompleteHazardDatabase {
 			
 		}
 
+		private List<Object> getHazardRecords(Connection connSrc) throws SQLException {
+			
+			String [] varlist=ScoreRecord.allFieldNames;			
+
+			Statement stat=connSrc.createStatement();
+			String sql=ParseToxValDB.createSQLQueryByTable2("HazardRecords",varlist);				
+
+			System.out.println(sql);
+
+			ResultSet rs = stat.executeQuery(sql);
+
+			List<Object>scoreRecords=new ArrayList<>();
+			
+			int counter=0;
+
+			HashSet<String>casrns=new HashSet<>();
+			
+			while (rs.next()) {						 
+				counter++;
+				ScoreRecord sr=new ScoreRecord();			
+//					ParseToxValDB.createRecord(rs, sr);
+				SQLite_GetRecords.createRecord(rs, sr);
+				scoreRecords.add(sr);
+				
+				if(counter%10000==0) System.out.println(counter);
+				
+				if(sr.CAS!=null && isValidCAS(sr.CAS)) casrns.add(sr.CAS);
+//					System.out.println(gson.toJson(sr));
+//					if(counter==10) break;
+				
+			}
+			
+//			System.out.println(casrns.size());
+//			for (String cas:casrns) {
+//				System.out.println(cas);
+//			}
+
+			return scoreRecords;
+		}
+		
+
+		private void copyHazardRecords(Connection connSrc,Statement statDest) throws SQLException {
+			
+			String [] varlist=ScoreRecord.allFieldNames;			
+
+			Statement statSrc=connSrc.createStatement();
+			String sql=ParseToxValDB.createSQLQueryByTable2("HazardRecords",varlist);				
+//			System.out.println(sql);
+
+			ResultSet rs = statSrc.executeQuery(sql);
+
+			List<Object>scoreRecords=new ArrayList<>();
+			
+			int counter=0;
+			while (rs.next()) {						 
+				counter++;
+				ScoreRecord sr=new ScoreRecord();			
+				SQLite_GetRecords.createRecord(rs, sr);
+				scoreRecords.add(sr);
+				
+				if(scoreRecords.size()==1000) {
+					saveHazardRecords(statDest, scoreRecords, null,false);
+					scoreRecords.clear();//clear it so dont run out of memory
+				}
+				
+				if(counter%10000==0) System.out.println("\t"+counter);
+				
+			}
+
+			//Do what's left
+			if (scoreRecords.size()>0)
+				saveHazardRecords(statDest, scoreRecords, null,false);
+			
+		}
+		
+		
+		/**
+		 * TODO in future pull records from res_qsar instead so that everything is mapped and converted
+		 * 
+		 */
 		void createAquaticToxDatabase() {
 
 			boolean lookupDTXSIDs=true;//from cas using dsstox
@@ -1467,8 +1524,8 @@ public class CreateCompleteHazardDatabase {
 			Connection conn= MySQL_DB.getConnection(dbPath);
 			Statement stat = MySQL_DB.getStatement(conn);
 
-			String sqlDelete="Delete from HazardRecords where ID>0;";
-			SqlUtilities.runSQLUpdate(conn, sqlDelete);
+//			String sqlDelete="Delete from HazardRecords where ID>0;";
+//			SqlUtilities.runSQLUpdate(conn, sqlDelete);
 			
 			List<Source>sources=new ArrayList<>();
 
@@ -1476,58 +1533,57 @@ public class CreateCompleteHazardDatabase {
 			 * Arnot: 
 			 * 		BCF: OK 
 			 * 		BAF: OK 
-			 * 		Acute: N/A
-			 * 		Chronic: N/A
 			 * 
 			 * Burkhard: 
 			 * 		BCF: Need to fix original values 
 			 * 		BAF:Need to fix original values
-			 * 		Acute: N/A
-			 * 		Chronic: N/A
 			 *  
 			 * ECOTOX:
-			 * 		BCF: ?
-			 * 		BAF: ?
-			 * 		Acute: ?
-			 * 		Chronic: ?
+			 * 		BCF: OK
+			 * 		BAF: OK- not much
+			 * 		Acute: OK
+			 * 		Chronic: OK
 			 * 
 			 * QSAR_Toolbox/NITE: 
 			 * 		BCF: Done
-			 * 		BAF: No data
-			 * 		Acute: N/A
-			 * 		Chronic: N/A
-			 * 		TODO does QSAR toolbox have any toxa acute/chronic data?
-			 */
+			 * 		TODO does QSAR toolbox have any tox acute/chronic data as specific db?
+			 */			
+
+			String propertyName=null;
 			
+			propertyName=ExperimentalConstants.strBCF;
+			sources.add(new Source("Arnot 2006",propertyName));
+			sources.add(new Source("Burkhard",propertyName));
+			sources.add(new Source("ECOTOX_2024_12_12",propertyName));
+			sources.add(new Source("QSAR_Toolbox","BCF NITE//"+propertyName)); 
 
-			String propertyName=ExperimentalConstants.strBCF;
-//			sources.add(new Source("Arnot 2006",propertyName));
-//			sources.add(new Source("Burkhard",propertyName));
-//			sources.add(new Source("ECOTOX_2024_12_12",propertyName));
-//			sources.add(new Source("QSAR_Toolbox","BCF NITE//"+propertyName));//banding issue, only 37 new chemicals 
-
-//TODO create experimentalRecords for BAF records (Arnot, ECOTOX, etc)
 			propertyName=ExperimentalConstants.strBAF;
 			sources.add(new Source("Arnot 2006",propertyName));
 			sources.add(new Source("Burkhard",propertyName));
 			sources.add(new Source("ECOTOX_2024_12_12",propertyName));
 
+			propertyName=ExperimentalConstants.strAcuteAquaticToxicity;
+			sources.add(new Source("ECOTOX_2024_12_12",propertyName));
 			
-//			String propertyName=ExperimentalConstants.strAcuteAquaticToxicity;
-//			sources.add(new Source("ECOTOX_2024_12_12",propertyName));
-			
-//			propertyName=ExperimentalConstants.strChronicAquaticToxicity;
-//			sources.add(new Source("ECOTOX_2024_12_12",propertyName));
-
+			propertyName=ExperimentalConstants.strChronicAquaticToxicity;
+			sources.add(new Source("ECOTOX_2024_12_12",propertyName));
 
 			CompareExperimentalRecords cer=new CompareExperimentalRecords();
 			ExperimentalRecords experimentalRecords=cer.rm.getAllExperimentalRecords(sources);
-			//TODO is it better to get from exp_prop schema in res_qsar after all these are loaded?
+						
 //			System.out.println(gson.toJson(recsBCF));
 
+			int countRemoved=experimentalRecords.removeBadRecords();
+			
+//			if(true)return;
+			
+			getMW_For_Molar_Records(experimentalRecords);
+			
 			List<ScoreRecord> scoreRecords=new ArrayList<>();
 			HashSet<String>casrns=new HashSet<>();
+			
 			for (ExperimentalRecord er:experimentalRecords) {
+				
 //				if(er.casrn!=null && er.casrn.equals("50-04-4")) { 
 //					System.out.println(gson.toJson(er)+"\n");
 //				}
@@ -1535,6 +1591,7 @@ public class CreateCompleteHazardDatabase {
 						|| er.property_name.equals(ExperimentalConstants.strBAF)) {
 					ScoreRecord sr=ParseToxValBCFBAF.createScoreRecord(er);
 					if(sr==null) continue;
+					
 					scoreRecords.add(sr);
 					casrns.add(sr.CAS);
 				
@@ -1542,11 +1599,11 @@ public class CreateCompleteHazardDatabase {
 						|| er.property_name.equals(ExperimentalConstants.strChronicAquaticToxicity)) {
 					ScoreRecord sr=CreateAquaticToxicityRecords.createDurationRecord(er);
 					if(sr==null) continue;
+					
 					scoreRecords.add(sr);
 					casrns.add(sr.CAS);
 				}
 			}
-			
 			
 			if(lookupDTXSIDs)
 				ScoreRecord.lookup_dtxsid_from_casrn(scoreRecords);//gets from dsstox based on casrn
@@ -1568,6 +1625,70 @@ public class CreateCompleteHazardDatabase {
 				e.printStackTrace();
 			}
 			
+		}
+
+		private void getMW_For_Molar_Records(ExperimentalRecords experimentalRecords) {
+
+			HashSet<String>casrnsNoDtxsid=new HashSet<>();
+			for (ExperimentalRecord er:experimentalRecords) {
+				if(er.property_value_units_final==null)continue;
+				if(!er.property_value_units_final.equals("M"))continue;
+				if(er.dsstox_substance_id==null) {
+					if(er.casrn!=null  && !er.casrn.isBlank())
+						casrnsNoDtxsid.add(er.casrn);
+				}
+			}
+			
+			DsstoxLookup dl=new DsstoxLookup();
+			List<DsstoxRecord>dsstoxRecords=dl.getDsstoxRecordsByCAS(casrnsNoDtxsid,true);
+//			System.out.println("casrnsNoDtxsid.size()="+casrnsNoDtxsid.size());
+//			System.out.println("dsstoxRecords.size()="+dsstoxRecords.size());
+			
+			Hashtable<String,DsstoxRecord>htCAS=new Hashtable<>();
+			for (DsstoxRecord dr:dsstoxRecords) htCAS.put(dr.casrn, dr);
+			
+			HashSet<String>cantMapNameCAS=new HashSet<>();
+			
+			for (ExperimentalRecord er:experimentalRecords) {
+				if(er.dsstox_substance_id==null) {
+					if(er.casrn!=null && htCAS.containsKey(er.casrn)) {
+						er.dsstox_substance_id=htCAS.get(er.casrn).dtxsid;//assign SID from CAS
+					} else {
+						cantMapNameCAS.add(er.casrn+"\t"+er.chemical_name);
+					}
+				}
+			}
+			
+			HashSet <String>dtxsidsNeedMW=new HashSet<>();
+			for (ExperimentalRecord er:experimentalRecords) {
+				if(er.property_value_units_final.equals("M")) {
+					if(er.dsstox_substance_id!=null) {
+						dtxsidsNeedMW.add(er.dsstox_substance_id);//keep track of which sids need MW
+					} 
+				}
+			}
+
+			System.out.println("dtxsidsNeedMW.size()="+dtxsidsNeedMW.size());
+			
+			dsstoxRecords=dl.getDsstoxRecordsByDTXSIDS(dtxsidsNeedMW);
+
+			Hashtable<String,DsstoxRecord>htSID=new Hashtable<>();
+			for (DsstoxRecord dr:dsstoxRecords) htSID.put(dr.dtxsid, dr);
+
+			for (ExperimentalRecord er:experimentalRecords) {
+				if(er.property_value_units_final.equals("M")) {
+					if(er.dsstox_substance_id!=null) {
+						if(htSID.containsKey(er.dsstox_substance_id)) {
+							DsstoxRecord dr=htSID.get(er.dsstox_substance_id);
+							er.molecular_weight=dr.molecularWeight;//assign MW from the sid record
+//							System.out.println(er.dsstox_substance_id+"\t"+er.molecular_weight);
+						} else {
+//							System.out.println(er.dsstox_substance_id+"\tN/A");
+						}
+						
+					} 
+				}
+			}
 		}
 		
 		void createMainHazardDatabase() {
@@ -1619,9 +1740,45 @@ public class CreateCompleteHazardDatabase {
 		//		}
 		//		
 			}
+
+			public void createCompleteHazardDatabase() {
+
+				String folder = "databases\\RevisedHazardDB\\";
+				String dbPathDest = folder + "HazardRecordsComplete.db";
+				
+				try {
+//					Utilities.CopyFile(fileSrc, new File(dbPathDest));//just copy this one as use as starting point since biggest
+
+					Files.copy(Paths.get(folder+"HazardRecordsModels.db"),
+				            Paths.get(dbPathDest), StandardCopyOption.REPLACE_EXISTING);
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+				List<String> dbNames = Arrays.asList("AA dashboard.db", "Aquatic toxicity.db", 
+						"toxval_v96.db");
+				
+//				List<String> dbNames = Arrays.asList("toxval_v96.db");
+
+				try {
+
+					Connection connDest = MySQL_DB.getConnection(dbPathDest);
+					Statement statDest = connDest.createStatement();
+
+					for (String dbName : dbNames) {
+						System.out.println("\n"+dbName);
+						Connection connSrc = MySQL_DB.getConnection(folder + dbName);
+						copyHazardRecords(connSrc,statDest);
+					}
+
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
 		
-
-
 	}
 
 
@@ -1646,9 +1803,9 @@ public class CreateCompleteHazardDatabase {
 		
 //		c.hazardRecordCreator.createHazardRecordsFromToxvalCopyTables(connDest,versionToxVal);
 //		c.hazardRecordCreator.createHazardRecordsModelResults();
-//		c.hazardRecordCreator.exportHazardRecords();
 //		c.hazardRecordCreator.createMainHazardDatabase();
-		c.hazardRecordCreator.createAquaticToxDatabase();
+//		c.hazardRecordCreator.createAquaticToxDatabase();
+		c.hazardRecordCreator.createCompleteHazardDatabase();
 
 		//TODO take current hazard database and add dtxsids from the cas or alternate cas
 		//TODO BCF from Arnot, Ecotox, NITE, and Burkhard from experimentalRecords jsons or from res_qsar records

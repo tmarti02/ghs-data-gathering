@@ -24,6 +24,9 @@ public class ExperimentalRecord {
 	public String synonyms;//	Pipe deliminated synonyms (only if provided in the reference)
 	public String smiles;//Simplified Molecular Input Line Entry System for molecular structure (only if provided in the reference)
 	
+	public Double molecular_weight;//for convenience (not stored in db)
+	
+	
 	public String property_name;//	Name of the property (use  "options_property_names" lookup table to consistently populate the field)
 
 	public String property_category;
@@ -246,6 +249,17 @@ public class ExperimentalRecord {
 		
 	}
 
+	public boolean hasNumericFinalValue() {
+		
+		if(this.property_value_units_final==null) return false; 
+		
+		if(this.property_value_point_estimate_final==null && this.property_value_min_final==null && this.property_value_max_final==null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
 	
 	public boolean isValidPointEstimatePossible() {
 		if (property_value_numeric_qualifier!=null && !property_value_numeric_qualifier.equals("~")) { 

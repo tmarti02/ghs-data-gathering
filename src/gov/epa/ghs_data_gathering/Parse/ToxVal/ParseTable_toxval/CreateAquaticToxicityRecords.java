@@ -9,6 +9,7 @@ import gov.epa.api.Score;
 import gov.epa.api.ScoreRecord;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.ParameterValue;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.ghs_data_gathering.Parse.ToxVal.ParseToxValDB;
 
 public class CreateAquaticToxicityRecords {
@@ -119,30 +120,31 @@ public class CreateAquaticToxicityRecords {
 		return valid_latin_names.contains(species_scientific);
 	}
 	
+	//TODO make a method where the record is created using an experimental record from mv_experimental_data
+	
 	
 	public static ScoreRecord createDurationRecord(ExperimentalRecord er) {
 
-		ScoreRecord sr = new ScoreRecord(Chemical.strAcute_Aquatic_Toxicity,er.casrn,er.chemical_name);	
+		ScoreRecord sr = new ScoreRecord();
+		sr.CAS=er.casrn;
+		sr.name=er.chemical_name;
 		sr.dtxsid=er.dsstox_substance_id;
 		sr.source = er.source_name;
 		
 		String test_id=(String)er.experimental_parameters.get("test_id");
 		String result_id=(String)er.experimental_parameters.get("result_id");
+		
 		String testType=(String)er.experimental_parameters.get("test_type");
 		String effect=(String)er.experimental_parameters.get("Effect");
 		String species_super_category=(String)er.experimental_parameters.get("Species supercategory");
 
 		Double study_dur_in_days = getStudyDurationDays(er);
+
 		if(study_dur_in_days==null) {
 //			System.out.println("Couldnt get study duration for test_id="+test_id+", result_id="+result_id);
 			return null;
 		}
 
-		if(er.property_value_point_estimate_final==null) {
-			System.out.println("No point estimate for test_id="+test_id+", result_id="+result_id);
-			return null;
-		}
-		
 		double diff=0.1;
 		double diff4day=Math.abs(4.0-study_dur_in_days)/4.0;
 		double diff2day=Math.abs(2.0-study_dur_in_days)/2.0;
@@ -156,11 +158,11 @@ public class CreateAquaticToxicityRecords {
 //		boolean crustacean2day = species_super_category.toLowerCase().contains("crustacean") && study_dur_in_days==2;
 //		boolean algae3or4day = species_super_category.toLowerCase().contains("algae") && (study_dur_in_days==3 || study_dur_in_days==4);
 		
-		String species_scientific=(String)er.experimental_parameters.get("Species latin");
+//		String species_scientific=(String)er.experimental_parameters.get("Species latin");
 		String species_common=(String)er.experimental_parameters.get("Species common");
 
-		String species_type=(String)er.experimental_parameters.get("Species type");
-		boolean validSpecies=validAquaticSpeciesToxvalv94(species_scientific);
+//		String species_type=(String)er.experimental_parameters.get("Species type");
+//		boolean validSpecies=validAquaticSpeciesToxvalv94(species_scientific);
 
 //		System.out.println(species_common+"\t"+species_type+"\t"+validSpecies);
 		
@@ -174,10 +176,36 @@ public class CreateAquaticToxicityRecords {
 		
 		sr.valueMassOperator=er.property_value_numeric_qualifier;
 		if(sr.valueMassOperator==null)sr.valueMassOperator="";
+
+		if(er.property_value_point_estimate_final==null && er.property_value_min_final!=null && er.property_value_max_final!=null) {
+			if(er.property_value_max_final>0 && er.property_value_min_final>0) {
+				if(er.property_value_max_final<10*er.property_value_min_final) {
+					er.property_value_point_estimate_final=Math.sqrt(er.property_value_min_final*er.property_value_max_final);
+				}
+			}
+		}
+		
+		if(er.property_value_point_estimate_final==null) {
+//			System.out.println("No point estimate for test_id="+test_id+", result_id="+result_id);
+			return null;
+		}
 		
 		sr.valueMass = er.property_value_point_estimate_final;
 		sr.valueMassUnits = er.property_value_units_final;
 		
+		if(!er.property_value_units_final.equals("g/L")) {
+			if (er.property_value_units_final.equals("M") && er.molecular_weight!=null) {
+				
+//				System.out.println(er.dsstox_substance_id+"\t"+er.molecular_weight);
+				
+				er.property_value_point_estimate_final*=er.molecular_weight;
+//				System.out.println(er.casrn+"\t"+er.dsstox_substance_id+"\tNeed MW");
+			} else {
+//				System.out.println("here3\t"+er.property_value_units_final+"\t"+er.molecular_weight);
+				return null;
+			}
+		}
+
 		sr.listType=ScoreRecord.typeScreening;//experimental data
 		sr.testOrganismType=species_super_category;
 		sr.testOrganism=species_common;
@@ -202,16 +230,29 @@ public class CreateAquaticToxicityRecords {
 			sr.url=er.publicSourceOriginal.url;
 		}
 		
-
 		if ((testType.contentEquals("LC50") || testType.contentEquals("EC50")) &&  validAcute) {
+			sr.hazardName=Chemical.strAcute_Aquatic_Toxicity;
 			setAquaticToxAcuteScore(sr);
+		
 		} else if ((study_dur_in_days>6) && (testType.contentEquals("NOEC") || testType.contentEquals("LOEC"))) {
+
 //  	For chronic aquatic toxicity, the GHS criteria document says "durations can vary widely depending on the test purpose
 //		(anywhere from 7 days to over 200 days).
 //		So we're making the criteria > 6 days.	"							
+
+			sr.hazardName=Chemical.strChronic_Aquatic_Toxicity;
 			setAquaticToxChronicScore(sr);
+		
 		} else {
 //			System.out.println("Couldnt create record for test_id="+test_id+", result_id="+result_id+",testType="+testType+",studyDuration="+study_dur_in_days+",species_super_category="+species_super_category);
+			return null;
+		}
+		
+		if(sr.score==null) {
+			if(!er.property_value_numeric_qualifier.contains(">") && !er.property_value_numeric_qualifier.contains("<")) {
+				System.out.println("Null score");
+				System.out.println(ParseUtilities.gson.toJson(er));
+			}
 			return null;
 		}
 
@@ -226,14 +267,35 @@ public class CreateAquaticToxicityRecords {
 		if(er.parameter_values!=null) {
 			for (ParameterValue pv:er.parameter_values) {
 				if(pv.parameter.name.equals("Observation duration")) {
-					if(pv.valuePointEstimate!=null && pv.unit.abbreviation.equals("days")) {
+					if(!pv.unit.abbreviation.equals("days")) continue;
+					
+					if(pv.valueQualifier!=null && !pv.valueQualifier.equals("~")) {
+//						System.out.println("VQ="+pv.valueQualifier);
+						continue;
+					}
+					
+					if(pv.valuePointEstimate!=null) {
 						study_dur_in_days=pv.valuePointEstimate;
+						
+//						System.out.println(pv.valueQualifier+"\t"+pv.valuePointEstimate);
+						
+					} else if (pv.valueMin!=null && pv.valueMax!=null) {
+						study_dur_in_days=(pv.valueMin+pv.valueMax)/2.0;
+//						System.out.println(pv.valueMin+"\t"+pv.valueMax);
 					} else {
+//						System.out.println(ParseUtilities.gson.toJson(pv));
 //						System.out.println("Cant set observation duration for result_id="+er.experimental_parameters.get("result_id"));
 					}
 				}
 			}
 		}
+		
+//		if(study_dur_in_days==null) {
+//			ParseUtilities.gson.toJson(er.parameter_values);
+//		} else {
+//			System.out.println(study_dur_in_days);
+//		}
+		
 		return study_dur_in_days;
 	}
 	
@@ -406,11 +468,12 @@ public class CreateAquaticToxicityRecords {
 				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
 
-		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
+//		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
+		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~")) {
 
 			if (dose < 0.1) {
 				sr.score = ScoreRecord.scoreVH;
-				sr.rationale = sr.testType+" < 1 mg/L";
+				sr.rationale = sr.testType+" < 0.1 mg/L";
 			} else if (dose >= 0.1 && dose <= 1) {
 				sr.score = ScoreRecord.scoreH;
 				sr.rationale = "0.1 mg/L <= "+sr.testType+" <=1 mg/L";
@@ -466,7 +529,8 @@ public class CreateAquaticToxicityRecords {
 				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
 
-		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
+//		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~") || sr.valueMassOperator.equals(">=") || sr.valueMassOperator.equals("<=")) {
+		} else if (sr.valueMassOperator.equals("") || sr.valueMassOperator.equals("=") || sr.valueMassOperator.equals("~")) {
 
 			if (dose < 1) {
 				sr.score = ScoreRecord.scoreVH;

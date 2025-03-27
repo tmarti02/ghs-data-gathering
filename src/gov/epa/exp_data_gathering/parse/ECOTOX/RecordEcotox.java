@@ -498,9 +498,11 @@ public class RecordEcotox {
 		if(er.property_name.equals(ExperimentalConstants.strAcuteAquaticToxicity)
 				|| er.property_name.equals(ExperimentalConstants.strChronicAquaticToxicity)) {//general property
 			er.experimental_parameters.put("test_type", endpoint);
-			setObservationDuration(er);
+			setObservationDuration(er,"Observation duration");
 			addSpeciesParameters(er);
 		}
+		
+	
 		
 //		if(er.dsstox_substance_id.equals("DTXSID0034566")) {
 //			System.out.println("Found DTXSID0034566, keep="+er.keep+"\treason="+er.reason+"\t"+er.property_value_units_original+"\t"+valueNumber);
@@ -516,10 +518,22 @@ public class RecordEcotox {
 		if(effect!=null) {
 			er.experimental_parameters.put("Effect", effect);
 		}
+
+
+		if(er.property_value_point_estimate_original==null && er.property_value_min_original==null && er.property_value_max_original==null ) {
+			er.keep=false;
+			er.reason="No final numerical value";
+		}
+
+		if(er.property_value_units_original.equals("NR")) {
+			er.keep=false;
+			er.reason="Units missing";
+		}
 		
 		if(er.keep) {
 			uc.convertRecord(er);
 		}
+		
 		
 		return er;
 		
@@ -545,7 +559,7 @@ public class RecordEcotox {
 		
 
 
-	private void setObservationDuration(ExperimentalRecord er) {
+	private void setObservationDuration(ExperimentalRecord er,String parameterName) {
 		
 		String unit=obs_duration_unit;
 		Double mean=getValueInDays(obs_duration_mean,unit);
@@ -559,7 +573,7 @@ public class RecordEcotox {
 //		if (unit.equals("NC") || unit.equals("NR")) return;
 		
 //		String parameterName="Observation duration";
-		String parameterName="Exposure duration";//to be consistent with Arnot 2006
+////		String parameterName="Exposure duration";//to be consistent with Arnot 2006
 		
 		ParameterValue pv=new ParameterValue();
 		pv.parameter.name=parameterName;
@@ -600,7 +614,14 @@ public class RecordEcotox {
 		
 	}
 	
-	private void setExposureDuration(ExperimentalRecord er) {
+	/**
+	 * Use observation duration in ecotox instead
+	 * 
+	 * @param er
+	 * @param parameterName
+	 */
+	@Deprecated
+	private void setExposureDuration(ExperimentalRecord er,String parameterName) {
 		
 		String unit=exposure_duration_unit;		
 		Double mean=getValueInDays(exposure_duration_mean,unit);
@@ -614,7 +635,7 @@ public class RecordEcotox {
 		
 //		if (unit.equals("NC") || unit.equals("NR")) return;
 		
-		String parameterName="Exposure duration";
+//		String parameterName="Observation duration";
 		
 		ParameterValue pv=new ParameterValue();
 		pv.parameter.name=parameterName;
@@ -1240,7 +1261,12 @@ public class RecordEcotox {
 
 	}
 	
-	
+	/**
+	 * Converts Ecotox record to experimentalRecord. 
+	 * 
+	 * @param propertyName
+	 * @return
+	 */
 	public ExperimentalRecord toExperimentalRecordBCF(String propertyName) {
 		
 		boolean limitToFish=false;
@@ -1360,19 +1386,16 @@ public class RecordEcotox {
 		}
 		
 		er.experimental_parameters.put("Media type", media_type);
+		
 		if (media_type.contains("water")) {
-			setWaterConcentration(er);
-			if (media_type.equals("Salt water")) {
-				er.keep=false;
-				er.reason="Salt water";
-			}
+			setWaterConcentration(er);			
 		} else {
 			er.keep=false;
 			er.reason="Not in water";
 		}
 
 //		setExposureDuration(er);//we want the observation duration not the exposure duration
-		setObservationDuration(er);
+		setObservationDuration(er,"Exposure duration");//to be consistent with Arnot 2006
 		
 		er.experimental_parameters.put("Test location", test_location);
 		er.experimental_parameters.put("exposure_type", exposure_type);
@@ -1461,21 +1484,44 @@ public class RecordEcotox {
 ////		System.out.println(wc);
 //	}
 
-		conc1_unit=conc1_unit.replace("ug/ml", ExperimentalConstants.str_ug_mL);
-		conc1_unit=conc1_unit.replace("ng/ml", ExperimentalConstants.str_ug_L);
-		conc1_unit=conc1_unit.replace("nmol/L",ExperimentalConstants.str_nM);
-		conc1_unit=conc1_unit.replace("nmol/ml",ExperimentalConstants.str_uM);
-		conc1_unit=conc1_unit.replace("pmol/ml",ExperimentalConstants.str_nM);
-		conc1_unit=conc1_unit.replace("AI ug/mL",ExperimentalConstants.str_mg_L);
 		
+		conc1_unit=conc1_unit=conc1_unit=conc1_unit.replace("/ml", "/mL");
+		
+//		conc1_unit=conc1_unit.replace("ug/ml", ExperimentalConstants.str_mg_L);
+//		conc1_unit=conc1_unit.replace("ug/cm3", ExperimentalConstants.str_mg_L);
+//
+//		conc1_unit=conc1_unit.replace("ng/ml", ExperimentalConstants.str_ug_L);
+//		conc1_unit=conc1_unit.replace("AI ng/mL",ExperimentalConstants.str_ug_L);
+//
+//		conc1_unit=conc1_unit.replace("nmol/L",ExperimentalConstants.str_nM);
+//		conc1_unit=conc1_unit.replace("nmol/ml",ExperimentalConstants.str_uM);
+//		conc1_unit=conc1_unit.replace("pmol/ml",ExperimentalConstants.str_nM);
+//		conc1_unit=conc1_unit.replace("AI ug/mL",ExperimentalConstants.str_mg_L);
+//		
+//		conc1_unit=conc1_unit.replace("Bq/ml",ExperimentalConstants.str_Bq_mL);
+//		conc1_unit=conc1_unit.replace("kBq/ml",ExperimentalConstants.str_kBq_mL);
+//		conc1_unit=conc1_unit.replace("Bq/L",ExperimentalConstants.str_mBq_mL);
+		
+		
+//		mBq/ml
+//		dpm/ml
+//		cpm/L
+//		uCi/L
+//		ueq/L
 		
 		//if the units are in mass/mass these are probably organism concentration
 		// and not actually the water concentration:
-		if(conc1_unit.contains("ug/g") || conc1_unit.contains("ng/g") || 
-				conc1_unit.contains("ug/kg") || conc1_unit.contains("mg/kg")) 
+		
+		if(conc1_unit.contains("/g") ||  conc1_unit.contains("/acre") ||
+				conc1_unit.contains("/kg")) 
 			return;//not water concentration
 		
-		if(conc1_unit.equals("ug") || conc1_unit.equals("ng")) {
+		if(conc1_unit.equals("ug/d") || conc1_unit.equals("mg") || conc1_unit.equals("ng/d") ||
+				conc1_unit.equals("mCi mg") || conc1_unit.equals("ppm diet") || conc1_unit.equals("cpm") ||
+				conc1_unit.equals("ug") || conc1_unit.equals("ng") || conc1_unit.equals("uCi") || 
+				conc1_unit.equals("ul") || conc1_unit.equals("NR") || conc1_unit.equals("mCi/mmol") ||
+				conc1_unit.equals("Bq") || conc1_unit.equals("Bq/g")  || conc1_unit.equals("umol") || 
+				conc1_unit.equals("g/ha") || conc1_unit.equals("AI g/ha")  ) {
 			return;//not water concentration
 		}
 		
@@ -1487,6 +1533,10 @@ public class RecordEcotox {
 		if(conc1_max!=null) erWC.property_value_max_original=conc1_max;
 		erWC.property_value_numeric_qualifier=conc1_mean_op;
 		uc.convertRecord(erWC);
+		
+//		if(erWC.flag) {
+//			System.out.println(erWC.property_value_units_original+"\tflagged");
+//		}
 		
 		
 		if(er.keep) {			

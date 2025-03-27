@@ -152,13 +152,14 @@ public class ParseBurkhard  {
 		ParseBurkhard p = new ParseBurkhard();
 		//		p.generateOriginalJSONRecords=false;
 		//		p.createFiles();
-
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF);
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);
+//
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBCF);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCF);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBCFWholeBody);
 		p.getBCF_ExperimentalRecords(ExperimentalConstants.strBAF);
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAF);
-//		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAFWholeBody);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAF);
+		p.getBCF_ExperimentalRecords(ExperimentalConstants.strFishBAFWholeBody);
+		
 	}
 
 }

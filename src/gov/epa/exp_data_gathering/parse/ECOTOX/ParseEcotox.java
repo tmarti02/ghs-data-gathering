@@ -49,8 +49,12 @@ public class ParseEcotox extends Parse {
 	static 	Integer species_number;
 	
 	static boolean excludeByExposureType=false;
+	static boolean excludeSaltWater=false;
 	static boolean includeConc2=false;
 	static boolean onlyExposureTypeSFR=true;
+	
+//	boolean excludeSaltWater=false;
+
 //
 	public ParseEcotox() {
 		sourceName = RecordEcotox.sourceName; 
@@ -643,7 +647,33 @@ public class ParseEcotox extends Parse {
 		
 		System.out.println("Count omitted by exposure_type="+count);
 
+
 	}
+	
+	private void excludeBySaltWater(ExperimentalRecords records) {
+
+		int count=0;
+		for(ExperimentalRecord er:records) {
+			
+			if(!er.keep) continue;
+			
+			if(er.experimental_parameters.get("Media type")!=null) {
+				String media_type=(String)er.experimental_parameters.get("Media type");
+				media_type=media_type.toLowerCase();
+				
+				if(media_type.contains("salt")) {
+//					System.out.println(er.experimental_parameters.get("exposure_type"));
+					er.keep=false;
+					er.reason="Salt water";
+					count++;
+				}
+			}
+		}
+		
+		System.out.println("Count omitted by salt water="+count);
+
+	}
+
 
 	
 
@@ -741,6 +771,11 @@ public class ParseEcotox extends Parse {
 			}		
 			
 			if(excludeByExposureType) excludeByExposureType(recordsExperimental);
+			
+			if(excludeSaltWater) {
+				excludeBySaltWater(recordsExperimental);
+			}
+			
 
 			System.out.println("missingDensityCasrns:"+UnitConverter.missingDensityCasrns);
 //			for(String cas:UnitConverter.missingDensityCasrns) {
@@ -802,7 +837,7 @@ public class ParseEcotox extends Parse {
 		
 		UtilitiesUnirest.configUnirest(true);
 		
-		RecordEcotox.uc.debug=false;
+		RecordEcotox.uc.debug=true;
 		
 //		SetVars.setFatheadMinnow();
 //		SetVars.setBluegill();
@@ -817,18 +852,24 @@ public class ParseEcotox extends Parse {
 		p.writeCheckingExcelFile=false;//creates random sample spreadsheet
 
 		
-//		List<String> propertyNames = Arrays.asList(ExperimentalConstants.strBCF, ExperimentalConstants.strFishBCF,
-//				ExperimentalConstants.strFishBCFWholeBody, ExperimentalConstants.strBAF,
-//				ExperimentalConstants.strFishBAF, ExperimentalConstants.strFishBAFWholeBody,
-//				ExperimentalConstants.strAcuteAquaticToxicity,ExperimentalConstants.strChronicAquaticToxicity);
+		List<String> propertyNames = Arrays.asList(ExperimentalConstants.strBCF, ExperimentalConstants.strFishBCF,
+				ExperimentalConstants.strFishBCFWholeBody, ExperimentalConstants.strBAF,
+				ExperimentalConstants.strFishBAF, ExperimentalConstants.strFishBAFWholeBody,
+				ExperimentalConstants.strAcuteAquaticToxicity,ExperimentalConstants.strChronicAquaticToxicity);
 
-//		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strAcuteAquaticToxicity);
+//		List<String> propertyNames = Arrays.asList(ExperimentalConstants.strBCF, ExperimentalConstants.strFishBCF,
+//		ExperimentalConstants.strFishBCFWholeBody, ExperimentalConstants.strBAF,
+//		ExperimentalConstants.strFishBAF, ExperimentalConstants.strFishBAFWholeBody);
+
+//		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strAcuteAquaticToxicity,ExperimentalConstants.strChronicAquaticToxicity);
 //		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strChronicAquaticToxicity);
 
 //		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBAF,ExperimentalConstants.strBCF);
 
-		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBCF,ExperimentalConstants.strFishBCF,
-				ExperimentalConstants.strFishBCFWholeBody);
+//		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBCF,ExperimentalConstants.strFishBCF,
+//				ExperimentalConstants.strFishBCFWholeBody);
+		
+//		List<String> propertyNames = Arrays.asList(ExperimentalConstants.strBCF);
 		
 		for (String propertyName:propertyNames) {
 			ParseEcotox.propertyName=propertyName;

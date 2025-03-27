@@ -26,6 +26,7 @@ import gov.epa.exp_data_gathering.parse.ExcelSourceReader;
 import gov.epa.exp_data_gathering.parse.ExperimentalRecord;
 import gov.epa.exp_data_gathering.parse.LiteratureSource;
 import gov.epa.exp_data_gathering.parse.ParameterValue;
+import gov.epa.exp_data_gathering.parse.ParseUtilities;
 import gov.epa.exp_data_gathering.parse.PublicSource;
 import gov.epa.exp_data_gathering.parse.UnitConverter;
 import gov.epa.exp_data_gathering.parse.ToxVal.ParseToxVal;
@@ -1152,6 +1153,7 @@ public Double getValueInDays(String obs_duration,String units) {
 		}
 
 		setSpeciesParameters(htSpecies, limitToFish, er);	
+		
 		if(limitToWholeBody && (Tissue_analyzed==null || !Tissue_analyzed.equals("Whole body"))) {
 			er.keep=false;
 			er.reason="Not whole body";
@@ -1178,6 +1180,13 @@ public Double getValueInDays(String obs_duration,String units) {
 		addMetadata(er);
 		
 		unitConverter.convertRecord(er);
+		
+		if(!er.hasNumericFinalValue()) {
+			er.keep=false;
+			er.reason="No numeric final value";
+			System.out.println(ParseUtilities.gson.toJson(this));
+		}
+
 		return er;
 	}
 	

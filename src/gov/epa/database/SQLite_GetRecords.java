@@ -131,7 +131,9 @@ public class SQLite_GetRecords {
 			// The column count starts from 1
 			for (int i = 1; i <= columnCount; i++ ) {
 				String name = rsmd.getColumnLabel(i);
-												
+
+				if(rs.getObject(i)==null)continue;
+				
 				String val=rs.getString(i);
 				
 				if(val.equals("-") || val.isBlank()) continue;
@@ -139,6 +141,11 @@ public class SQLite_GetRecords {
 				//				System.out.println(name+"\t"+val);
 
 				if (val!=null) {
+					
+					if(r.getClass().getDeclaredField(name)==null) {
+						continue;
+					}
+					
 					Field myField = r.getClass().getDeclaredField(name);	
 					
 					String type=myField.getType().getName();

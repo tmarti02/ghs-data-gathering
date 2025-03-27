@@ -186,8 +186,9 @@ public class ParseQSAR_ToolBox extends Parse {
 		fileName=fileNameBCFNITE;
 
 		List<String>properties=new ArrayList<>();
+		
 		properties.add(ExperimentalConstants.strBCF);
-		properties.add(ExperimentalConstants.strFishBCF);
+		properties.add(ExperimentalConstants.strFishBCF);		
 		if(!fileName.equals(fileNameBCFCanada))properties.add(ExperimentalConstants.strFishBCFWholeBody);
 		
 		for (String propertyName:properties) {

@@ -27,7 +27,8 @@ public class ParseOPERA extends Parse {
 	String userName="tmarti02";
 	
 	public ParseOPERA() {
-		sourceName = ExperimentalConstants.strSourceOPERA29;
+//		sourceName = ExperimentalConstants.strSourceOPERA29;
+		sourceName = ExperimentalConstants.strSourceOPERA28;
 		this.init();
 //		this.writeFlatFile=true;
 	}
@@ -166,6 +167,9 @@ public class ParseOPERA extends Parse {
 			er.setComboID("\t");
 		}
 		
+		recordsExperimental.getRecordsByProperty();
+		
+		
 		Collections.sort(recordsExperimental,new CustomComparator());
 		return recordsExperimental;
 	}
@@ -274,7 +278,7 @@ public class ParseOPERA extends Parse {
 		} else if(ro.property_name.equals(ExperimentalConstants.strORAL_RAT_LD50)) {
 			ExperimentalRecord er = ro.toExperimentalRecord(dayOnly,sourceName,ro.property_name);
 			if(ro.CATMoS_LD50_str==null) return;
-			er.property_category="acute oral toxicity";
+			er.property_category=ExperimentalConstants.strAcuteOralToxicity;
 			
 			//Use detailed code to get qualifier, min/max/point estimates: 
 			TextUtilities.getNumericalValue(er, ro.CATMoS_LD50_str, ro.CATMoS_LD50_str.length(), false);

@@ -308,6 +308,8 @@ public class RecordArnot2006 {
 
 		ParameterValue pv=new ParameterValue();
 		pv.parameter.name="Exposure duration";
+//		pv.parameter.name="Observation duration";//to be consistent with ecotox
+		
 		pv.unit.abbreviation="days";
 		double wc=Double.parseDouble(exposure_duration_days);					
 		pv.valuePointEstimate=wc;

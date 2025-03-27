@@ -936,7 +936,7 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 								}
 
 								
-								sr.duration=Double.parseDouble(strValue);
+								sr.duration=strValue;
 								sr.durationUnits=units;
 								
 //								System.out.println("\nvalue="+value);
