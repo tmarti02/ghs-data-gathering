@@ -180,6 +180,7 @@ public class CreateAquaticToxicityRecords {
 		if(er.property_value_point_estimate_final==null && er.property_value_min_final!=null && er.property_value_max_final!=null) {
 			if(er.property_value_max_final>0 && er.property_value_min_final>0) {
 				if(er.property_value_max_final<10*er.property_value_min_final) {
+					//Take geometric avg:
 					er.property_value_point_estimate_final=Math.sqrt(er.property_value_min_final*er.property_value_max_final);
 				}
 			}
@@ -190,22 +191,24 @@ public class CreateAquaticToxicityRecords {
 			return null;
 		}
 		
-		sr.valueMass = er.property_value_point_estimate_final;
-		sr.valueMassUnits = er.property_value_units_final;
 		
-		if(!er.property_value_units_final.equals("g/L")) {
-			if (er.property_value_units_final.equals("M") && er.molecular_weight!=null) {
-				
-//				System.out.println(er.dsstox_substance_id+"\t"+er.molecular_weight);
-				
-				er.property_value_point_estimate_final*=er.molecular_weight;
-//				System.out.println(er.casrn+"\t"+er.dsstox_substance_id+"\tNeed MW");
+		if (er.property_value_units_final.equals("M")) {
+			if (er.molecular_weight != null) {
+				sr.valueMass = er.property_value_point_estimate_final * er.molecular_weight * 1000;
+//				System.out.println(er.casrn+"\t"+sr.valueMass+"\tmg/L");
 			} else {
-//				System.out.println("here3\t"+er.property_value_units_final+"\t"+er.molecular_weight);
+//				System.out.println("MW missing for " + er.casrn);
 				return null;
 			}
+		} else if (er.property_value_units_final.equals("g/L")) {
+			sr.valueMass = er.property_value_point_estimate_final * 1000.0;
+		} else {
+//			System.out.println("Handle " + er.property_value_units_final);
+			return null;
 		}
-
+		sr.valueMassUnits = "mg/L";
+		
+		
 		sr.listType=ScoreRecord.typeScreening;//experimental data
 		sr.testOrganismType=species_super_category;
 		sr.testOrganism=species_common;
@@ -249,9 +252,11 @@ public class CreateAquaticToxicityRecords {
 		}
 		
 		if(sr.score==null) {
-			if(!er.property_value_numeric_qualifier.contains(">") && !er.property_value_numeric_qualifier.contains("<")) {
-				System.out.println("Null score");
-				System.out.println(ParseUtilities.gson.toJson(er));
+			if(er.property_value_numeric_qualifier!=null) {
+				if(!er.property_value_numeric_qualifier.contains(">") && !er.property_value_numeric_qualifier.contains("<")) {
+					System.out.println("Null score");
+					System.out.println(ParseUtilities.gson.toJson(er));
+				}
 			}
 			return null;
 		}
@@ -336,6 +341,8 @@ public class CreateAquaticToxicityRecords {
 	public static void createDurationRecord(Chemical chemical, RecordToxVal tr) {
 
 //		System.out.println("aquatic");
+		
+		//TODO if there's eco records in toxval, need to convert units prior to creating the scoreRecord
 		
 		Double study_dur_in_days=null;
 		double study_duration_value = Double.parseDouble(tr.study_duration_value);
@@ -433,8 +440,10 @@ public class CreateAquaticToxicityRecords {
 	private static void setAquaticToxChronicScore(ScoreRecord sr) {
 
 		sr.rationale = "route: " + sr.route + ", ";
-		double dose = sr.valueMass;
-		String strDose = ParseToxVal.formatDose(dose);	
+			
+		double dose = sr.valueMass;//assumes is in mg/L
+		String strDose = ParseToxVal.formatDose(dose);		
+
 
 		/* DfE criteria:
 		 * NOEC or LOEC
@@ -494,7 +503,8 @@ public class CreateAquaticToxicityRecords {
 	private static void setAquaticToxAcuteScore(ScoreRecord sr) {
 
 		sr.rationale = "route: " + sr.route + ", ";
-		double dose = sr.valueMass;
+		
+		double dose = sr.valueMass;//assumes is in mg/L
 		String strDose = ParseToxVal.formatDose(dose);		
 
 		/* DfE criteria:
@@ -525,7 +535,6 @@ public class CreateAquaticToxicityRecords {
 			} else {
 				sr.score = ScoreRecord.scoreNA;
 				sr.rationale = sr.testType+" does not provide enough information to assign a score";
-
 				// System.out.println(chemical.CAS + "\tless than operator detected for oral\t" + dose);
 			}
 

@@ -844,7 +844,7 @@ public class ParseEcotox extends Parse {
 //		SetVars.setRainbowTrout();
 		
 		ParseEcotox p = new ParseEcotox();
-		p.generateOriginalJSONRecords=false;
+		p.generateOriginalJSONRecords=true;
 		p.removeDuplicates=false;//cant delete duplicates because experimental params might be different but still have same number value
 		p.writeJsonExperimentalRecordsFile=true;
 		p.writeExcelExperimentalRecordsFile=true;
@@ -852,10 +852,10 @@ public class ParseEcotox extends Parse {
 		p.writeCheckingExcelFile=false;//creates random sample spreadsheet
 
 		
-		List<String> propertyNames = Arrays.asList(ExperimentalConstants.strBCF, ExperimentalConstants.strFishBCF,
-				ExperimentalConstants.strFishBCFWholeBody, ExperimentalConstants.strBAF,
-				ExperimentalConstants.strFishBAF, ExperimentalConstants.strFishBAFWholeBody,
-				ExperimentalConstants.strAcuteAquaticToxicity,ExperimentalConstants.strChronicAquaticToxicity);
+//		List<String> propertyNames = Arrays.asList(ExperimentalConstants.strBCF, ExperimentalConstants.strFishBCF,
+//				ExperimentalConstants.strFishBCFWholeBody, ExperimentalConstants.strBAF,
+//				ExperimentalConstants.strFishBAF, ExperimentalConstants.strFishBAFWholeBody,
+//				ExperimentalConstants.strAcuteAquaticToxicity,ExperimentalConstants.strChronicAquaticToxicity);
 
 //		List<String> propertyNames = Arrays.asList(ExperimentalConstants.strBCF, ExperimentalConstants.strFishBCF,
 //		ExperimentalConstants.strFishBCFWholeBody, ExperimentalConstants.strBAF,
@@ -863,6 +863,7 @@ public class ParseEcotox extends Parse {
 
 //		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strAcuteAquaticToxicity,ExperimentalConstants.strChronicAquaticToxicity);
 //		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strChronicAquaticToxicity);
+		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strAcuteAquaticToxicity);
 
 //		List<String>propertyNames=Arrays.asList(ExperimentalConstants.strBAF,ExperimentalConstants.strBCF);
 

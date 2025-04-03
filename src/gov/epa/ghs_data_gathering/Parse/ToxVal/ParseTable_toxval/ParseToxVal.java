@@ -210,6 +210,7 @@ public class ParseToxVal  {
 	}
 
 	private static void handleEco(Chemical chemical, RecordToxVal r) {
+		//note there isnt any eco in toxval anymore
 		CreateAquaticToxicityRecords.createDurationRecord(chemical, r);			
 	}
 	

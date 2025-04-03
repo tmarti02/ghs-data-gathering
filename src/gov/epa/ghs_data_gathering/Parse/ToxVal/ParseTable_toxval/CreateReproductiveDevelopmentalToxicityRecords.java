@@ -64,31 +64,37 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 		if(!CreateAcuteMammalianToxicityRecords.isOkMammalianSpecies(r)) return;
 
 		Score score=getScore(chemical, r);
+		
+		if (r.toxval_units.contentEquals("mg/m3")){//fix prior to creating score record
+			// change value and units
+			// 1 mg/L = 1000 mg/m3
+			double toxval_numeric2 = Double.parseDouble(r.toxval_numeric)/1000.0;
+			r.toxval_numeric = toxval_numeric2 + "";
+			r.toxval_units = "mg/L";
+		}
+		
 		ScoreRecord sr=ParseToxVal.saveToxValInfo(score,r,chemical);
 		
+		String exposureRouteLC=r.exposure_route.toLowerCase();
+		String toxvalSubtypeLC=r.toxval_subtype.toLowerCase();
 		
 		if (r.toxval_type.contains("NOAEL") || r.toxval_type.contains("LOAEL")) {
 			//			System.out.println("NOAEL or LOAEL\t"+score.hazard_name+"\t"+r.toxval_units+"\t"+r.exposure_route+"\t"+r.toxval_subtype);
+			
 			if (r.toxval_units.contentEquals("mg/kg-day") &&
-					(r.exposure_route.contentEquals("oral") || r.toxval_subtype.toLowerCase().contains("oral"))) {
-				setScore(sr, chemical, "Oral", 50, 250);				
+					(exposureRouteLC.contentEquals("oral") || toxvalSubtypeLC.contains("oral"))) {
+				setScore(sr, chemical, "Oral", 50, 250,"mg/kg-day");				
 				//		System.out.println("creating RepDev oral record");
 			} else if(r.toxval_units.contentEquals("mg/kg-day") &&
-					(r.exposure_route.contentEquals("dermal") || r.toxval_subtype.toLowerCase().contains("dermal"))) {
-				setScore(sr, chemical, "Dermal", 100, 500);
-			} else if((r.toxval_units.contentEquals("mg/L") || r.toxval_units.contentEquals("mg/m3")) &&
-					(r.exposure_route.contentEquals("inhalation") || r.toxval_subtype.toLowerCase().contains("inhalation"))) {
-				if (r.toxval_units.contentEquals("mg/m3")){
-
-					// change value and units
-					// 1 mg/L = 1000 mg/m3
-
-					double toxval_numeric2 = Double.parseDouble(r.toxval_numeric)/1000.0;
-					r.toxval_numeric = toxval_numeric2 + "";
-					r.toxval_units = "mg/L (converted from mg/m3)";
-				}
-				setScore(sr, chemical, "Inhalation", 1, 2.5);
-				//				System.out.println("creating rep/dev inhalation record");
+					(exposureRouteLC.contentEquals("dermal") || toxvalSubtypeLC.contains("dermal"))) {
+				setScore(sr, chemical, "Dermal", 100, 500,"mg/kg-day");
+			} else if((r.toxval_units.contentEquals("mg/L")) &&
+					(exposureRouteLC.contentEquals("inhalation") || toxvalSubtypeLC.contains("inhalation"))) {
+				setScore(sr, chemical, "Inhalation", 1, 2.5,"mg/L");
+			} else {
+//				if(!exposureRouteLC.contains("injection") && !exposureRouteLC.contains("not specified")) {
+//					System.out.println("Bad units\t"+r.toxval_units+"\t"+r.exposure_route+"\t"+r.toxval_subtype);	
+//				}
 			}
 		}
 		
@@ -180,12 +186,11 @@ public class CreateReproductiveDevelopmentalToxicityRecords {
 
 	}
 
-	public static void setScore(ScoreRecord sr, Chemical chemical, String route, double dose1, double dose2) {
+	public static void setScore(ScoreRecord sr, Chemical chemical, String route, double dose1, double dose2,String units) {
 
 		
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
-		String units="mg/kg-day";
 		
 		if (sr.valueMassOperator.equals(">")) {
 			if (dose >= dose2) {

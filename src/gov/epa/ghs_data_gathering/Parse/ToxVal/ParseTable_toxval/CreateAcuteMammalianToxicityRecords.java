@@ -262,6 +262,10 @@ public class CreateAcuteMammalianToxicityRecords {
 			return;
 		}
 
+		if (!tr.toxval_units.contains("mg/kg")){
+			System.out.println("Invalid units for acute oral");
+			return;
+		}
 
 		if(!isOkMammalianSpecies(tr)) return;
 
@@ -282,6 +286,11 @@ public class CreateAcuteMammalianToxicityRecords {
 		// System.out.println("Creating AcuteMammalianToxicityDermalRecord");
 		if (!tr.toxval_type.contentEquals("LD50")) { 
 			//			System.out.println("invalid dermal toxval_type="+tr.toxval_type);
+			return;
+		}
+		
+		if (!tr.toxval_units.contains("mg/kg")){
+			System.out.println("Invalid units for acute dermal");
 			return;
 		}
 
@@ -317,16 +326,19 @@ public class CreateAcuteMammalianToxicityRecords {
 		//		System.out.println("Creating AcuteMammalianToxicityInhalationRecord");
 
 		if (tr.toxval_units.contentEquals("mg/m3")){
-
 			// change value and units
 			/* 1 mg/L = 1000 mg/m3
 			 * need to add code for mg/m3
 			 */
-
 			double toxval_numeric2 = Double.parseDouble(tr.toxval_numeric)/1000.0;
 			tr.toxval_numeric = toxval_numeric2 + "";
-			tr.toxval_units = "mg/L (converted from mg/m3)";
+			tr.toxval_units = "mg/L";
 
+		}
+		
+		if (!tr.toxval_units.contains("mg/L")){
+			System.out.println("Invalid units for acute inhalation");
+			return;
 		}
 
 		//TODO - do we only want to use LC50? I know richard might not restrict to LC50s

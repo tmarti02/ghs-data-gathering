@@ -80,10 +80,10 @@ public class CreateCompleteHazardDatabase {
 
 	//	ParseToxValDB p=new ParseToxValDB();
 
-	class RecordChemical {
-		String dtxsid;
-		String casrn;
-		String name;
+	public class RecordChemical {
+		public String dtxsid;
+		public String casrn;
+		public String name;
 	}
 
 	MySqlExport mySqlExport=new MySqlExport();
@@ -1796,14 +1796,14 @@ public class CreateCompleteHazardDatabase {
 //			String dbPathDest="databases/toxval_"+versionToxVal+".db";
 //			connSrc= MySQL_DB.getConnection(dbPathDest);
 //		}
-
-//		String dbPathDest="databases\\RevisedHazardDB\\toxval_"+versionToxVal+".db";
-//		Connection connDest= MySQL_DB.getConnection(dbPathDest);
+//
+		String dbPathDest="databases\\RevisedHazardDB\\toxval_"+versionToxVal+".db";
+		Connection connDest= MySQL_DB.getConnection(dbPathDest);
 //		c.mySqlExport.createToxValCopy(connSrc, connDest,versionToxVal);
 		
 //		c.hazardRecordCreator.createHazardRecordsFromToxvalCopyTables(connDest,versionToxVal);
 //		c.hazardRecordCreator.createHazardRecordsModelResults();
-//		c.hazardRecordCreator.createMainHazardDatabase();
+		c.hazardRecordCreator.createMainHazardDatabase();
 //		c.hazardRecordCreator.createAquaticToxDatabase();
 		c.hazardRecordCreator.createCompleteHazardDatabase();
 

@@ -157,7 +157,7 @@ public class ScoreRecord {
 	public static final String sourceAcute_Toxicity_Data_from_EPA_HPVIS = "Acute Toxicity Data from EPA HPVIS";
 	public static final String sourceReproductive_Toxicity_Data_In_Vitro_from_EPA_HPVIS = "Reproductive Toxicity Data in Vitro from EPA HPVIS";
 
-	public static final String sourceToxVal="ToxVal";
+	public static final String sourceToxVal="ToxVal v96";
 	public static final String strSourceCERAPP_Exp="CERAPP_Exp";//in vitro evaluation set from CERAPP EHP paper
 	public static final String strSourceCOMPARA_Exp="COMPARA_Exp";//in vitro evaluation set from COMPARA EHP paper
 	public static final String strSourceOPERA_MDH="OPERA_MDH";

@@ -104,7 +104,7 @@ public class ParameterValue {//Simplified version of hibernate class
 				return pointEstimate;
 			}
 		} else if (valueMin!=null && valueMax!=null) {
-			return strValMin+ " < value < " +strValMax;
+			return strValMin+ " - " +strValMax;
 		} else if (valueMin!=null) {
 			return " > "+strValMin;
 		} else if (valueMax!=null) {

@@ -834,6 +834,8 @@ public class RecordEcotox {
 			ResultSet rs = stat.executeQuery(sql);
 
 			Hashtable<String,String>htExposureType=getExposureTypeLookup(databasePath);
+			Hashtable<String,String>htEffect=getEffectLookup(databasePath);
+
 			
 			int counter=0;
 			while (rs.next()) {
@@ -841,6 +843,7 @@ public class RecordEcotox {
 //				System.out.println(rs.getString(1));
 				RecordEcotox rec=new RecordEcotox();
 				SqlUtilities.createRecord(rs, rec);
+				rec.setEffect(htEffect);//rather than table join, use hashtable, is this best way?
 				rec.setExposureType(htExposureType);
 				rec.setChemicalAnalysisMethod();
 				records.add(rec);
@@ -1299,7 +1302,7 @@ public class RecordEcotox {
 			}
 		} else if (propertyName.toLowerCase().contains("bioaccumulation")) {
 			er.property_category="bioaccumulation";
-			System.out.println("BAF test_location:"+test_location);
+//			System.out.println("BAF test_location:"+test_location);
 		}
 
 //		System.out.println(er.property_name);

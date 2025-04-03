@@ -1831,7 +1831,7 @@ public class ParseToxValDB {
 			// The column count starts from 1
 			for (int i = 1; i <= columnCount; i++ ) {
 				String name = rsmd.getColumnLabel(i);
-				//				System.out.println(name);								
+//				System.out.println(name);								
 				String val=rs.getString(i);
 
 				//				logger.warn(name+"\t"+val);

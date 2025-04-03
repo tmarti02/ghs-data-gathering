@@ -822,9 +822,6 @@ private Vector<NewZealandRecord> parseHTML_Files_in_Zip(String zipFilePath) {
 
 		sr.rationale = "Score was assigned based on a category of " + sr.category + ".";
 
-		
-		
-		
 //		if (toxJustification.indexOf("<br>") == 0) {
 //			toxJustification = toxJustification.substring(4, toxJustification.length()).trim();
 //		}

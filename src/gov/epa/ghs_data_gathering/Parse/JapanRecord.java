@@ -730,8 +730,8 @@ public class JapanRecord {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-//		JapanRecord.downloadWebpages();
-		JapanRecord.downloadWebpagesToDatabase();
+		JapanRecord.downloadWebpages();
+//		JapanRecord.downloadWebpagesToDatabase();
 	}
 
 }

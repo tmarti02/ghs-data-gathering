@@ -93,8 +93,6 @@ public class ParseToxValBCFBAF {
 		sr.source = er.source_name;
 
 		if(er.literatureSource!=null) {
-			sr.longRef=er.literatureSource.citation;
-			sr.sourceOriginal=er.literatureSource.author+", "+er.literatureSource.year;
 //			System.out.println(sr.sourceOriginal);
 		}
 		
@@ -103,7 +101,13 @@ public class ParseToxValBCFBAF {
 			sr.url=er.publicSourceOriginal.url;
 		} else if (er.original_source_name!=null) {
 			sr.sourceOriginal=er.original_source_name;
+		} else if(er.literatureSource!=null) {
+			sr.longRef=er.literatureSource.citation;
+			sr.sourceOriginal=er.literatureSource.name;
 		}
+		
+//		System.out.println(sr.sourceOriginal);
+		
 
 		sr.listType=ScoreRecord.typeScreening;//experimental data
 		
@@ -132,18 +136,18 @@ public class ParseToxValBCFBAF {
 			}
 		}
 
+		String responseSite=(String)er.experimental_parameters.get("Response site");
 
 		sr.testOrganism=(String)er.experimental_parameters.get("Species common");
 		sr.testOrganismType=(String)er.experimental_parameters.get("Species supercategory");
 
 		// Limit to fish:	
-//		if(sr.testOrganismType==null || !sr.testOrganismType.equals("Fish")) {
-////			System.out.println("sr.testOrganismType="+sr.testOrganismType);
-//			return null;
-//		}
+		if(sr.testOrganismType==null || !sr.testOrganismType.equals("Fish")) {
+//			System.out.println("sr.testOrganismType="+sr.testOrganismType);
+			return null;
+		}
 
-		String responseSite=(String)er.experimental_parameters.get("Response site");
-		//Only include whole body response site:
+		//Only include whole body response site://get double the chemicals if dont exclude
 		if (responseSite==null || !responseSite.toLowerCase().contains("whole body")) {
 //			System.out.println("responseSite="+responseSite);
 			return null;

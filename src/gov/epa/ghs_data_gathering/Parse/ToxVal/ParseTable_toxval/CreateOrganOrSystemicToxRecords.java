@@ -54,8 +54,19 @@ public class CreateOrganOrSystemicToxRecords {
 				score=chemical.scoreSystemic_Toxicity_Repeat_Exposure;
 			}
 		}
-//  Note that "Systemic Toxicity" actually could be Organ or Systemic Toxicity.		
+		
 
+		//  Note that "Systemic Toxicity" actually could be Organ or Systemic Toxicity.		
+
+		if (tr.toxval_units.contentEquals("mg/m3")){//need to fix this prior to creating the score record
+			// change value and units
+			// 1 mg/L = 1000 mg/m3
+			double toxval_numeric2 = Double.parseDouble(tr.toxval_numeric)/1000.0;
+			tr.toxval_numeric = toxval_numeric2 + "";
+			tr.toxval_units = "mg/L";
+//			System.out.println(tr.casrn+"\tfixed mg/L");
+		}
+		
 		
 		ScoreRecord sr = ParseToxVal.saveToxValInfo(score,tr, chemical);		
 		sr.duration=study_dur_in_days+"";
@@ -63,8 +74,12 @@ public class CreateOrganOrSystemicToxRecords {
 
 		//		System.out.println("duration="+sr.duration+" days");
 
+		String exposureRouteLC=tr.exposure_route.toLowerCase();
+		String toxvalSubtypeLC=tr.toxval_subtype.toLowerCase();
 
-		if ((tr.exposure_route.contentEquals("oral") || tr.toxval_subtype.toLowerCase().contains("oral"))
+		
+
+		if ((exposureRouteLC.contentEquals("oral") || toxvalSubtypeLC.contains("oral"))
 				&& tr.toxval_units.contentEquals("mg/kg-day")) {
 			/* if (study_dur_in_days <= 91.0 && study_dur_in_days >= 89.0) { 
 			   Broadening the range to be more inclusive (90 + or - 5).
@@ -72,97 +87,90 @@ public class CreateOrganOrSystemicToxRecords {
 
 			if (study_dur_in_days >= 725.0 && study_dur_in_days <= 735.0) {
 			//	System.out.println("2 year oral");
-				setScore(sr, chemical, "2 year", "Oral", 1.25, 12.5);
+				setScore(sr, chemical, "2 year", "Oral", 1.25, 12.5,"mg/kg-day");
 				
 			} else if (study_dur_in_days >= 360.0 && study_dur_in_days <= 370.0) {
 			//	System.out.println("1 year oral");
-				setScore(sr, chemical, "1 year", "Oral", 2.5, 25);
+				setScore(sr, chemical, "1 year", "Oral", 2.5, 25,"mg/kg-day");
 				
 			} else if (study_dur_in_days >= 175.0 && study_dur_in_days <= 185.0) {
-				setScore(sr, chemical, "6 month", "Oral", 5, 50);
+				setScore(sr, chemical, "6 month", "Oral", 5, 50,"mg/kg-day");
 
 			} else if (study_dur_in_days >= 85.0 && study_dur_in_days <= 95.0)	{				
-				setScore(sr, chemical, "3 months", "Oral", 10, 100);
+				setScore(sr, chemical, "3 months", "Oral", 10, 100,"mg/kg-day");
 
 			} else if (study_dur_in_days >= 40.0 && study_dur_in_days <= 50.0) {
 				/*All three of these time categories now have a range of 10. */		
-				setScore(sr, chemical, "40 - 50 day", "Oral", 20, 200);
+				setScore(sr, chemical, "40 - 50 day", "Oral", 20, 200,"mg/kg-day");
 
 				/* } else if (study_dur_in_days <= 31.0 && study_dur_in_days >= 27.0) {
 			   Broadening the range to be more inclusive (28 + or - 5)*/
 			} else if (study_dur_in_days >= 23.0 && study_dur_in_days <= 33.0) {
-				setScore(sr, chemical, "1 month", "Oral", 30, 300);
+				setScore(sr, chemical, "1 month", "Oral", 30, 300,"mg/kg-day");
 			}
 
 
-		} else if ((tr.exposure_route.contentEquals("dermal")  || tr.toxval_subtype.toLowerCase().contains("dermal"))
+		} else if ((exposureRouteLC.contentEquals("dermal")  || toxvalSubtypeLC.toLowerCase().contains("dermal"))
 				&& tr.toxval_units.contentEquals("mg/kg-day")) {
 			/* if (study_dur_in_days <= 91.0 && study_dur_in_days >= 89.0) {
 				Broadening the range to be more inclusive (90 + or - 5).
 				Also switching the order for more logical reading. */
 
 			if (study_dur_in_days >= 725.0 && study_dur_in_days <= 735.0)	{				
-				setScore(sr, chemical, "2 year", "Dermal", 2.5, 25);
+				setScore(sr, chemical, "2 year", "Dermal", 2.5, 25,"mg/kg-day");
 				
 			} else if (study_dur_in_days >= 360.0 && study_dur_in_days <= 370.0) {
-				setScore(sr, chemical, "1 year", "Dermal", 5, 50);	
+				setScore(sr, chemical, "1 year", "Dermal", 5, 50,"mg/kg-day");	
 				
 			} else if (study_dur_in_days >= 175.0 && study_dur_in_days <= 185.0) {
-				setScore(sr, chemical, "6 month", "Dermal", 10, 100);	
+				setScore(sr, chemical, "6 month", "Dermal", 10, 100,"mg/kg-day");	
 
 			} else if (study_dur_in_days >= 85.0 && study_dur_in_days <= 95.0) {
 				/*Got error when tried to use "=". It said "<=" was expected.*/							
-				setScore(sr, chemical, "3 month", "Dermal", 20, 200);
+				setScore(sr, chemical, "3 month", "Dermal", 20, 200,"mg/kg-day");
 
 			} else if (study_dur_in_days >= 40.0 && study_dur_in_days <= 50.0) {
-				setScore(sr, chemical, "40 - 50 day", "Dermal", 40, 400);
+				setScore(sr, chemical, "40 - 50 day", "Dermal", 40, 400,"mg/kg-day");
 				/* } else if (study_dur_in_days <= 31.0 && study_dur_in_days >= 27.0) {
 			Broadening the range to be more inclusive (28 + or - 5)*/
 			} else if (study_dur_in_days >= 23.0 && study_dur_in_days <= 33.0) {
-				setScore(sr, chemical, "1 month", "Dermal", 60, 600);
+				setScore(sr, chemical, "1 month", "Dermal", 60, 600,"mg/kg-day");
 			}
 
-		} else if ((tr.exposure_route.contentEquals("inhalation") || tr.toxval_subtype.toLowerCase().contains("inhalation"))
-				&& (tr.toxval_units.contentEquals("mg/L") || tr.toxval_units.contentEquals("mg/m3"))) {
+		} else if ((exposureRouteLC.contentEquals("inhalation") || toxvalSubtypeLC.toLowerCase().contains("inhalation"))
+				&& (tr.toxval_units.contentEquals("mg/L"))) {
 
-			if (tr.toxval_units.contentEquals("mg/m3")){
-
-				// change value and units
-				// 1 mg/L = 1000 mg/m3
-
-				double toxval_numeric2 = Double.parseDouble(tr.toxval_numeric)/1000.0;
-				tr.toxval_numeric = toxval_numeric2 + "";
-				tr.toxval_units = "mg/L (converted from mg/m3)";
-			}
-
-
+			
 			if (study_dur_in_days >= 725.0 && study_dur_in_days <= 735.0)	{				
-				setScore(sr, chemical, "2 year", "Inhalation", 0.025, 0.125);
+				setScore(sr, chemical, "2 year", "Inhalation", 0.025, 0.125,"mg/L");
 				
 			} else if (study_dur_in_days >= 360.0 && study_dur_in_days <= 370.0) {
-				setScore(sr, chemical, "1 year", "Inhalation", 0.05, 0.25);
+				setScore(sr, chemical, "1 year", "Inhalation", 0.05, 0.25,"mg/L");
 				
 			} else if (study_dur_in_days >= 175.0 && study_dur_in_days <= 185.0) {
-				setScore(sr, chemical, "6 month", "Inhalation", 0.1, 0.5);
+				setScore(sr, chemical, "6 month", "Inhalation", 0.1, 0.5,"mg/L");
 
 				/* if (study_dur_in_days <= 91.0 && study_dur_in_days >= 89.0) {
 			Broadening the range to be more inclusive (90 + or - 5).
 			Also switching the order for more logical reading. */
 			} else if (study_dur_in_days >= 85.0 && study_dur_in_days <= 95.0) {
 				/*Got error when tried to use "=". It said "<=" was expected.*/			
-				setScore(sr, chemical, "3 month", "Inhalation", 0.2, 1);
+				setScore(sr, chemical, "3 month", "Inhalation", 0.2, 1,"mg/L");
 
 			} else if (study_dur_in_days >= 40.0 && study_dur_in_days <= 50.0) {
-				setScore(sr, chemical, "40 - 50 day", "Inhalation", 0.4, 2);
+				setScore(sr, chemical, "40 - 50 day", "Inhalation", 0.4, 2,"mg/L");
 				/* } else if (study_dur_in_days <= 31.0 && study_dur_in_days >= 27.0) {
 			Broadening the range to be more inclusive (28 + or - 5)*/
 			} else if (study_dur_in_days >= 23.0 && study_dur_in_days <= 33.0) {
-				setScore(sr, chemical, "1 month", "Inhalation", 0.6, 3);
+				setScore(sr, chemical, "1 month", "Inhalation", 0.6, 3,"mg/L");
 			}
 
+		} else {
+//			if(!exposureRouteLC.contains("injection") && !exposureRouteLC.contains("not specified")) {
+//				System.out.println("Bad units\t"+tr.toxval_units+"\t"+tr.exposure_route+"\t"+tr.toxval_subtype);	
+//			}
 		}
-
-
+		
 
 		if (tr.study_type.contentEquals("single limit dose") ||
 				tr.study_duration_class.contentEquals("single dose")) {
@@ -170,18 +178,17 @@ public class CreateOrganOrSystemicToxRecords {
 					tr.exposure_route.contentEquals("oral")) {
 				//	study_dur_in_days >= 0.0 && study_dur_in_days <= 1.0) {		
 
-				setSingleDoseScore(sr, chemical, 300, 2000, 3000, "Oral");//Leora- is this correct?
+				setSingleDoseScore(sr, chemical, 300, 2000, 3000, "Oral","mg/kg");//Leora- is this correct?
 
 			} else if (tr.toxval_units.contentEquals("mg/kg") &&
 					tr.exposure_route.contentEquals("dermal")) {	
 
-				setSingleDoseScore(sr, chemical, 1000, 2000, 3000, "Dermal");
+				setSingleDoseScore(sr, chemical, 1000, 2000, 3000, "Dermal","mg/kg");
 
 
-			} else if ((tr.toxval_units.contentEquals("mg/L") ||
-					tr.toxval_units.contentEquals("mg/m3")) &&
+			} else if ((tr.toxval_units.contentEquals("mg/L")) &&
 					tr.exposure_route.contentEquals("inhalation")) {
-				setSingleDoseScore(sr, chemical, 10, 20, 30, "Inhalation");
+				setSingleDoseScore(sr, chemical, 10, 20, 30, "Inhalation","mg/L");
 			}
 		}
 
@@ -261,12 +268,12 @@ public class CreateOrganOrSystemicToxRecords {
 
 
 	public static void setScore(ScoreRecord sr, Chemical chemical, String duration,
-			String route, double dose1, double dose2) {
+			String route, double dose1, double dose2,String units) {
 
 
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
-		String units="mg/kg-day";
+//		String units="mg/kg-day";
 
 		if (sr.valueMassOperator.equals(">")) {
 			if (dose >= dose2) {
@@ -307,14 +314,8 @@ public class CreateOrganOrSystemicToxRecords {
 		}
 	}
 
-
-
-
-
 	private static void setSingleDoseScore(ScoreRecord sr, Chemical chemical, double dose1,
-			double dose2, double dose3, String route) {
-
-		String units="mg/kg";
+			double dose2, double dose3, String route,String units) {
 
 		double dose = sr.valueMass;
 		String strDose = ParseToxVal.formatDose(dose);
