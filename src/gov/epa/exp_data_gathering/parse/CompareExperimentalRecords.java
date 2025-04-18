@@ -17,7 +17,10 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import com.google.gson.Gson;
 
 import gov.epa.QSAR.utilities.MatlabChart;
+import gov.epa.api.DsstoxLookup;
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.api.ScoreRecord;
+import gov.epa.api.DsstoxLookup.DsstoxRecord;
 
 /**
  * @author TMARTI02
@@ -34,8 +37,8 @@ public class CompareExperimentalRecords {
 		}
 	}
 
-	CompareMethods cm=new CompareMethods();
-	Comparisons c=new Comparisons();
+	public CompareMethods cm=new CompareMethods();
+	public Comparisons c=new Comparisons();
 	public ExperimentalRecordManipulator rm=new ExperimentalRecordManipulator();
 
 	public class ExperimentalRecordManipulator {
@@ -45,6 +48,19 @@ public class CompareExperimentalRecords {
 			for(Source source:sources) {
 				ExperimentalRecords recs=ExperimentalRecords.getExperimentalRecords(source.sourceName, source.subfolder);
 				recsAll.addAll(recs);
+			}
+			return recsAll;
+		}
+		
+		public ExperimentalRecords getAllExperimentalRecords(List<Source> sources,String propertyName) {
+			ExperimentalRecords recsAll=new ExperimentalRecords();
+			for(Source source:sources) {
+				ExperimentalRecords recs=ExperimentalRecords.getExperimentalRecords(source.sourceName, source.subfolder);
+				
+				for (ExperimentalRecord er:recs) {
+					if(!er.property_name.contentEquals(propertyName)) continue;
+					recsAll.add(er);	
+				}
 			}
 			return recsAll;
 		}
@@ -537,48 +553,36 @@ public class CompareExperimentalRecords {
 			List<Source>sources1=new ArrayList<>();
 			List<Source>sources2=new ArrayList<>();
 
-//			String propertyName=ExperimentalConstants.strBCF;
+			String propertyName=ExperimentalConstants.strBCF;
 //			String propertyName=ExperimentalConstants.strFishBCF;
-			String propertyName=ExperimentalConstants.strFishBCFWholeBody;
+//			String propertyName=ExperimentalConstants.strFishBCFWholeBody;
 
 //			sources1.add(new Source("Burkhard",propertyName));
 //			sources1.add(new Source("ECOTOX_2023_12_14",propertyName));
-////			sources2.add(new Source("ToxVal_prod",propertyName));
-////			sources2.add(new Source("Arnot 2006",null));
+//			sources2.add(new Source("ToxVal_prod",propertyName));
+//			sources2.add(new Source("Arnot 2006",null));
 //			sources2.add(new Source("Arnot 2006",propertyName));
 			
 //			sources2.add(new Source("ECOTOX_2023_12_14",propertyName));
 
-//			sources1.add(new Source("Arnot 2006",propertyName));
-			sources1.add(new Source("QSAR_Toolbox","BCF NITE//"+propertyName));//banding issue, only 37 new chemicals 
+			sources1.add(new Source("Arnot 2006",propertyName));
+//			sources1.add(new Source("QSAR_Toolbox","BCF NITE//"+propertyName));//banding issue, only 37 new chemicals 
 
-			sources2.add(new Source("Arnot 2006",propertyName));
-			sources2.add(new Source("ECOTOX_2024_12_12",propertyName));
+//			sources2.add(new Source("Arnot 2006",propertyName));
+//			sources2.add(new Source("ECOTOX_2024_12_12",propertyName));
 //			sources2.add(new Source("QSAR_Toolbox","BCF NITE//"+propertyName));//banding issue, only 37 new chemicals 
-			sources2.add(new Source("Burkhard",propertyName));
+//			sources2.add(new Source("Burkhard",propertyName));
+			sources2.add(new Source("OPERA2.8",null));
 
-			
-			
-			
 //			sources2.add(new Source("QSAR_Toolbox","BCF CEFIC//"+propertyName));//banding issue, only 37 new chemicals
 
 			String units="L/kg";
-			cm.compare(sources1, sources2, propertyName, units,"cas");
+//			cm.compare(sources1, sources2, propertyName, units,"cas");
+			cm.compare(sources1, sources2, propertyName, units,"sid");
 //			cm.compare(sources1, sources2, propertyName, units,"cas","Species supercategory","Fish");
 			
 			
 			//We get more records if we use both even though they overlap a bit
-			
-//			data\experimental\ECOTOX_2023_12_14\Fish bioconcentration factor\ECOTOX_2023_12_14 Experimental Records.json	6867
-//			data\experimental\ToxVal_prod\Fish bioconcentration factor\ToxVal_prod Experimental Records.json	3975
-//			countWithMedian1=584
-//			countWithMedian2=750
-//			countIn1Not2=275
-//			countIn2Not1=441
-//			countInEither=1025
-//			Need to handle units
-//			Count in common=309
-//			MAE=0.36470741010844687
 			
 
 		}
@@ -604,13 +608,19 @@ public class CompareExperimentalRecords {
 	boolean printChemicalsInCommon=true;
 
 	
-	class CompareMethods {
+	public class CompareMethods {
 
 		void compare(List<Source>sources1, List<Source>sources2, String propertyName,String units,String idType) {
 
-			ExperimentalRecords recs1=rm.getAllExperimentalRecords(sources1);
-			ExperimentalRecords recs2=rm.getAllExperimentalRecords(sources2);
+			ExperimentalRecords recs1=rm.getAllExperimentalRecords(sources1,propertyName);
+			ExperimentalRecords recs2=rm.getAllExperimentalRecords(sources2,propertyName);
 
+
+			if(idType.equals("sid")) {
+				recs1.addDtxsids();
+				recs2.addDtxsids();
+			}
+			
 			TreeMap<String, ExperimentalRecords> tm1=null;
 			TreeMap<String, ExperimentalRecords> tm2=null;
 
@@ -630,7 +640,9 @@ public class CompareExperimentalRecords {
 			System.out.println("countIn1Not2="+getNewChemicalCount(tm1, tm2,false));
 			System.out.println("countIn2Not1="+getNewChemicalCount(tm2, tm1,false));
 			System.out.println("countInEither="+getCountInEither(tm2, tm1,false));
-
+			
+			
+			
 			compareChemicalsInCommon(tm1, tm2, units);
 
 		}
@@ -917,7 +929,7 @@ public class CompareExperimentalRecords {
 
 		}
 
-		private void createPlot(String units, List<Double> vals1, List<Double> vals2) {
+		public void createPlot(String units, List<Double> vals1, List<Double> vals2) {
 			double[]x = makeArray(vals1);
 			double[]y = makeArray(vals2);
 		
@@ -956,6 +968,50 @@ public class CompareExperimentalRecords {
 			ChartPanel cp=new ChartPanel(fig.chart);
 		
 		
+			JFrame jframe=new JFrame();
+			jframe.add(cp);
+			cp.setLayout(new FlowLayout(FlowLayout.LEFT));
+		
+			jframe.setSize(500,500);
+			jframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			jframe.setLocationRelativeTo(null);
+			jframe.setVisible(true);
+		}
+		
+		public void createPlot(String units, List<Double> vals1, List<Double> vals2,String source1,String source2) {
+			double[]x = makeArray(vals1);
+			double[]y = makeArray(vals2);
+		
+			MatlabChart fig = new MatlabChart(); // figure('Position',[100 100 640 480]);
+			fig.plot(x, y, "-r", 2.0f, "data"); // plot(x,y1,'-r','LineWidth',2);
+			fig.plot(y, y, "-b", 2.0f, "Y=X"); // plot(x,y1,'-r','LineWidth',2);
+
+			//        fig.plot(x, y2, ":k", 3.0f, "BAC");  // plot(x,y2,':k','LineWidth',3);
+		
+			fig.RenderPlot();                    // First render plot before modifying
+			fig.title(source1+" vs. "+source2);    // title('Stock 1 vs. Stock 2');
+			//      fig.xlim(10, 100);                   // xlim([10 100]);
+			//      fig.ylim(200, 300);                  // ylim([200 300]);
+		
+		
+			//TODO for some properties it wont be logged units in labels
+		
+			fig.xlabel("exp "+source1+" "+units);                  // xlabel('Days');
+			fig.ylabel("exp "+source2+" "+units);                 // ylabel('Price');
+			fig.grid("on","on");                 // grid on;
+			fig.legend("southeast");             // legend('AAPL','BAC','Location','northeast')
+			fig.font("Helvetica",15);            // .. 'FontName','Helvetica','FontSize',15
+			//      fig.saveas("MyPlot.jpeg",640,480);   // saveas(gcf,'MyPlot','jpeg');
+		
+			XYLineAndShapeRenderer xy=(XYLineAndShapeRenderer) fig.chart.getXYPlot().getRenderer();
+
+			xy.setSeriesShapesVisible(0, true);
+			xy.setSeriesLinesVisible(0, false);
+
+			xy.setSeriesShapesVisible(1, false);
+			xy.setSeriesLinesVisible(1, true);
+
+			ChartPanel cp=new ChartPanel(fig.chart);
 			JFrame jframe=new JFrame();
 			jframe.add(cp);
 			cp.setLayout(new FlowLayout(FlowLayout.LEFT));

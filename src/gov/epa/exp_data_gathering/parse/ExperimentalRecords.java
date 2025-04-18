@@ -39,7 +39,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
+import gov.epa.api.DsstoxLookup;
 import gov.epa.api.ExperimentalConstants;
+import gov.epa.api.DsstoxLookup.DsstoxRecord;
 import gov.epa.database.SQLite_GetRecords;
 import gov.epa.database.SQLite_Utilities;
 import gov.epa.exp_data_gathering.parse.Arnot2006.RecordArnot2006;
@@ -62,6 +64,39 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 	public Double medianValue=null;
 
 	public ExperimentalRecords() { }
+	
+	
+	void addDtxsids() {
+		
+		HashSet<String>casrnsNoDtxsid=new HashSet<>();
+		for (ExperimentalRecord er:this) {
+			if(er.dsstox_substance_id==null) {
+				if(er.casrn!=null  && !er.casrn.isBlank())
+					casrnsNoDtxsid.add(er.casrn);
+			}
+		}
+		
+		System.out.println("casrnsNoDtxsid.size()="+casrnsNoDtxsid.size());
+		if(casrnsNoDtxsid.size()==0)return;
+		
+		DsstoxLookup dl=new DsstoxLookup();
+		List<DsstoxRecord>dsstoxRecords=dl.getDsstoxRecordsByCAS(casrnsNoDtxsid,true);
+		System.out.println("dsstoxRecords.size()="+dsstoxRecords.size());
+		
+		Hashtable<String,DsstoxRecord>htCAS=new Hashtable<>();
+		for (DsstoxRecord dr:dsstoxRecords) htCAS.put(dr.casrn, dr);
+		
+		for (ExperimentalRecord er:this) {
+			if(er.dsstox_substance_id!=null) continue;
+			if(er.casrn==null || er.casrn.isBlank() ) continue;			
+			if(!htCAS.containsKey(er.casrn))continue;
+			
+			er.dsstox_substance_id=htCAS.get(er.casrn).dtxsid;
+		}
+	}
+	
+	
+	
 	
 	public ExperimentalRecords(FinalRecord rec) {
 		int size = 1;
@@ -1068,6 +1103,8 @@ public class ExperimentalRecords extends ArrayList<ExperimentalRecord> {
 		
 		File Folder=new File(folder);
 
+		System.out.println(folder);
+		
 		ExperimentalRecords records=new ExperimentalRecords();
 		
 		//TODO need to flag case where we accidentally have both numbered and non numbered jsons due to multiple parse runs with diff code
